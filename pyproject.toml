@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "translate-nwb"
+version = "0.1.0"
+description = "Translating NWB schema language to LinkML"
+authors = ["sneakers-the-rat <JLSaunders987@gmail.com>"]
+license = "GPL-3.0"
+readme = "README.md"
+packages = [{include = "translate_nwb"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+schema-automator = "^0.3.0"
+pydantic = "<2.0"
+pyyaml = "^6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
