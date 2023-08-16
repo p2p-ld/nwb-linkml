@@ -1,0 +1,27 @@
+{
+  "template": "https://github.com/linkml/linkml-project-cookiecutter",
+  "commit": "ef7ff16925321a2abdbaa5a2ba5db8aa83ebf24f",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "nwb-schema-language",
+      "__project_slug": "nwb_schema_language",
+      "github_org": "p2p_ld",
+      "__source_path": "src/nwb_schema_language/schema/nwb_schema_language.yaml",
+      "project_description": "Translation of the nwb-schema-language to LinkML",
+      "full_name": "Jonny Saunders",
+      "email": "j@nny.fyi",
+      "__author": "Jonny Saunders <j@nny.fyi>",
+      "license": "GNU GPL v3.0",
+      "main_schema_class": "Namespaces",
+      "create_python_classes": "Yes",
+      "use_schemasheets": "No",
+      "google_sheet_id": "1wVoaiFg47aT9YWNeRfTZ8tYHN8s8PAuDx5i2HUcDpvQ",
+      "google_sheet_tabs": "personinfo enums",
+      "__google_sheet_module": "personinfo_enums",
+      "github_token_for_pypi_deployment": "PYPI_PASSWORD",
+      "_template": "https://github.com/linkml/linkml-project-cookiecutter"
+    }
+  },
+  "directory": null
+}
