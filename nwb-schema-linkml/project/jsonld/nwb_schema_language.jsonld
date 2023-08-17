@@ -20,20 +20,8 @@
       "prefix_reference": "https://w3id.org/linkml/"
     },
     {
-      "prefix_prefix": "biolink",
-      "prefix_reference": "https://w3id.org/biolink/"
-    },
-    {
       "prefix_prefix": "schema",
       "prefix_reference": "http://schema.org/"
-    },
-    {
-      "prefix_prefix": "PATO",
-      "prefix_reference": "http://purl.obolibrary.org/obo/PATO_"
-    },
-    {
-      "prefix_prefix": "example",
-      "prefix_reference": "https://example.org/"
     }
   ],
   "default_prefix": "nwb_schema_language",
@@ -297,25 +285,163 @@
   ],
   "enums": [
     {
-      "name": "PersonStatus",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/PersonStatus",
+      "name": "reftype_options",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/ReftypeOptions",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
       "permissible_values": [
         {
-          "text": "ALIVE",
-          "description": "the person is living",
-          "meaning": "PATO:0001421"
+          "text": "ref",
+          "description": "Reference to another group or dataset of the given target_type"
         },
         {
-          "text": "DEAD",
-          "description": "the person is deceased",
-          "meaning": "PATO:0001422"
+          "text": "reference",
+          "description": "Reference to another group or dataset of the given target_type"
         },
         {
-          "text": "UNKNOWN",
-          "description": "the vital status is not known",
-          "todos": [
-            "map this to an ontology"
+          "text": "object",
+          "description": "Reference to another group or dataset of the given target_type"
+        },
+        {
+          "text": "region",
+          "description": "Reference to a region (i.e. subset) of another dataset of the given target_type"
+        }
+      ]
+    },
+    {
+      "name": "QuantityEnum",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/QuantityEnum",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "permissible_values": [
+        {
+          "text": "*",
+          "description": "Zero or more instances, equivalent to zero_or_many"
+        },
+        {
+          "text": "?",
+          "description": "Zero or one instances, equivalent to zero_or_one"
+        },
+        {
+          "text": "+",
+          "description": "One or more instances, equivalent to one_or_many"
+        },
+        {
+          "text": "zero_or_many",
+          "description": "Zero or more instances, equivalent to *"
+        },
+        {
+          "text": "one_or_many",
+          "description": "One or more instances, equivalent to +"
+        },
+        {
+          "text": "zero_or_one",
+          "description": "Zero or one instances, equivalent to ?"
+        }
+      ]
+    },
+    {
+      "name": "FlatDtype",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/FlatDtype",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "permissible_values": [
+        {
+          "text": "float",
+          "description": "single precision floating point (32 bit)"
+        },
+        {
+          "text": "float32",
+          "description": "single precision floating point (32 bit)"
+        },
+        {
+          "text": "double",
+          "description": "double precision floating point (64 bit)"
+        },
+        {
+          "text": "float64",
+          "description": "double precision floating point (64 bit)"
+        },
+        {
+          "text": "long",
+          "description": "signed 64 bit integer"
+        },
+        {
+          "text": "int64",
+          "description": "signed 64 bit integer"
+        },
+        {
+          "text": "int",
+          "description": "signed 32 bit integer"
+        },
+        {
+          "text": "int32",
+          "description": "signed 32 bit integer"
+        },
+        {
+          "text": "int16",
+          "description": "signed 16 bit integer"
+        },
+        {
+          "text": "short",
+          "description": "signed 16 bit integer"
+        },
+        {
+          "text": "int8",
+          "description": "signed 8 bit integer"
+        },
+        {
+          "text": "uint",
+          "description": "unsigned 32 bit integer"
+        },
+        {
+          "text": "uint32",
+          "description": "unsigned 32 bit integer"
+        },
+        {
+          "text": "uint16",
+          "description": "unsigned 16 bit integer"
+        },
+        {
+          "text": "uint8",
+          "description": "unsigned 8 bit integer"
+        },
+        {
+          "text": "uint64",
+          "description": "unsigned 64 bit integer"
+        },
+        {
+          "text": "numeric",
+          "description": "any numeric type (i.e., any int, uint, float)"
+        },
+        {
+          "text": "text",
+          "description": "8-bit Unicode"
+        },
+        {
+          "text": "utf",
+          "description": "8-bit Unicode"
+        },
+        {
+          "text": "utf8",
+          "description": "8-bit Unicode"
+        },
+        {
+          "text": "utf-8",
+          "description": "8-bit Unicode"
+        },
+        {
+          "text": "ascii",
+          "description": "ASCII text"
+        },
+        {
+          "text": "bool",
+          "description": "8 bit integer with valid values 0 or 1"
+        },
+        {
+          "text": "isodatetime",
+          "description": "ISO 8601 datetime string",
+          "examples": [
+            {
+              "value": "2018-09-28 14:43:54.123000+02:00"
+            }
           ]
         }
       ]
@@ -323,215 +449,1061 @@
   ],
   "slots": [
     {
-      "name": "id",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/id",
-      "description": "A unique identifier for a thing",
+      "name": "doc",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
+      "description": "Description of corresponding object.",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "mappings": [
-        "http://schema.org/identifier"
-      ],
-      "slot_uri": "http://schema.org/identifier",
-      "identifier": true,
-      "owner": "NamedThing",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
+      "owner": "CompoundDtype",
       "domain_of": [
-        "NamedThing"
+        "Namespace",
+        "Schema",
+        "Group",
+        "Attribute",
+        "Link",
+        "Dataset",
+        "CompoundDtype"
       ],
-      "range": "uriorcurie",
+      "range": "string",
       "required": true,
       "@type": "SlotDefinition"
     },
     {
       "name": "name",
       "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
-      "description": "A human-readable name for a thing",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "mappings": [
-        "http://schema.org/name"
-      ],
-      "slot_uri": "http://schema.org/name",
-      "owner": "NamedThing",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "owner": "CompoundDtype",
       "domain_of": [
-        "NamedThing"
+        "Namespace",
+        "Group",
+        "Attribute",
+        "Link",
+        "Dataset",
+        "CompoundDtype"
+      ],
+      "range": "string",
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "full_name",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/full_name",
+      "description": "Optional string with extended full name for the namespace.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/full_name",
+      "owner": "Namespace",
+      "domain_of": [
+        "Namespace"
       ],
       "range": "string",
       "@type": "SlotDefinition"
     },
     {
-      "name": "description",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/description",
-      "description": "A human-readable description for a thing",
+      "name": "version",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/version",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "mappings": [
-        "http://schema.org/description"
-      ],
-      "slot_uri": "http://schema.org/description",
-      "owner": "NamedThing",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/version",
+      "owner": "Namespace",
       "domain_of": [
-        "NamedThing"
+        "Namespace"
       ],
       "range": "string",
+      "required": true,
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
       "@type": "SlotDefinition"
     },
     {
-      "name": "primary_email",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/primary_email",
-      "description": "The main email address of a person",
+      "name": "date",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/date",
+      "description": "Date that a namespace was last modified or released",
+      "examples": [
+        {
+          "value": "2017-04-25 17:14:13",
+          "@type": "Example"
+        }
+      ],
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
       "mappings": [
-        "http://schema.org/email"
+        "http://schema.org/dateModified"
       ],
-      "slot_uri": "http://schema.org/email",
-      "owner": "Namespaces",
+      "slot_uri": "http://schema.org/dateModified",
+      "owner": "Namespace",
       "domain_of": [
-        "Namespaces"
-      ],
-      "range": "string",
-      "@type": "SlotDefinition"
-    },
-    {
-      "name": "birth_date",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/birth_date",
-      "description": "Date on which a person is born",
-      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "mappings": [
-        "http://schema.org/birthDate"
-      ],
-      "slot_uri": "http://schema.org/birthDate",
-      "owner": "Namespaces",
-      "domain_of": [
-        "Namespaces"
+        "Namespace"
       ],
       "range": "date",
       "@type": "SlotDefinition"
     },
     {
-      "name": "age_in_years",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/age_in_years",
-      "description": "Number of years since birth",
+      "name": "author",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/author",
+      "description": "List of strings with the names of the authors of the namespace.",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/age_in_years",
-      "owner": "Namespaces",
-      "domain_of": [
-        "Namespaces"
+      "mappings": [
+        "http://schema.org/author"
       ],
-      "range": "integer",
-      "@type": "SlotDefinition"
-    },
-    {
-      "name": "vital_status",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/vital_status",
-      "description": "living or dead status",
-      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/vital_status",
-      "owner": "Namespaces",
-      "domain_of": [
-        "Namespaces"
-      ],
-      "range": "PersonStatus",
-      "@type": "SlotDefinition"
-    },
-    {
-      "name": "namespacesCollection__entries",
-      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/entries",
+      "slot_uri": "http://schema.org/author",
       "multivalued": true,
-      "alias": "entries",
-      "owner": "NamespacesCollection",
+      "owner": "Namespace",
       "domain_of": [
-        "NamespacesCollection"
+        "Namespace"
       ],
-      "range": "Namespaces",
-      "inlined": true,
+      "range": "string",
+      "required": true,
       "@type": "SlotDefinition"
     },
     {
-      "name": "Namespaces_primary_email",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/primary_email",
-      "description": "The main email address of a person",
+      "name": "contact",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/contact",
+      "description": "List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
       "mappings": [
         "http://schema.org/email"
       ],
-      "is_a": "primary_email",
-      "domain": "Namespaces",
       "slot_uri": "http://schema.org/email",
-      "alias": "primary_email",
+      "multivalued": true,
+      "owner": "Namespace",
+      "domain_of": [
+        "Namespace"
+      ],
+      "range": "string",
+      "required": true,
+      "structured_pattern": {
+        "syntax": "{email}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "schema",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/schema",
+      "description": "List of the schema to be included in this namespace.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/schema",
+      "multivalued": true,
+      "owner": "Namespace",
+      "domain_of": [
+        "Namespace"
+      ],
+      "range": "Schema",
+      "inlined": true,
+      "inlined_as_list": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "source",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/source",
+      "description": "describes the name of the YAML (or JSON) file with the schema specification. The schema files should be located in the same folder as the namespace file.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/source",
+      "owner": "Schema",
+      "domain_of": [
+        "Schema"
+      ],
+      "range": "string",
+      "pattern": ".*\\.(yml|yaml|json)",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "namespace",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/namespace",
+      "description": "describes a named reference to another namespace. In contrast to source, this is a reference by name to a known namespace (i.e., the namespace is resolved during the build and must point to an already existing namespace). This mechanism is used to allow, e.g., extension of a core namespace (here the NWB core namespace) without requiring hard paths to the files describing the core namespace. Either source or namespace must be specified, but not both.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/namespace",
+      "owner": "Schema",
+      "domain_of": [
+        "Schema"
+      ],
+      "range": "string",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "namespaces",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/namespaces",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/namespaces",
+      "multivalued": true,
       "owner": "Namespaces",
       "domain_of": [
         "Namespaces"
       ],
-      "is_usage_slot": true,
-      "usage_slot_name": "primary_email",
+      "range": "Namespace",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "neurodata_types",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/neurodata_types",
+      "description": "an optional list of strings indicating which data types should be included from the given specification source or namespace. The default is null indicating that all data types should be included.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/neurodata_types",
+      "multivalued": true,
+      "owner": "Schema",
+      "domain_of": [
+        "Schema"
+      ],
       "range": "string",
-      "pattern": "^\\S+@[\\S+\\.]+\\S+",
+      "any_of": [
+        {
+          "range": "Dataset",
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "Group",
+          "@type": "AnonymousSlotExpression"
+        }
+      ],
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "title",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/title",
+      "description": "a descriptive title for a file for documentation purposes.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/title",
+      "owner": "Schema",
+      "domain_of": [
+        "Schema"
+      ],
+      "range": "string",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "neurodata_type_def",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/neurodata_type_def",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/neurodata_type_def",
+      "owner": "Dataset",
+      "domain_of": [
+        "Group",
+        "Dataset"
+      ],
+      "range": "string",
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "neurodata_type_inc",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/neurodata_type_inc",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/neurodata_type_inc",
+      "owner": "Dataset",
+      "domain_of": [
+        "Group",
+        "Dataset"
+      ],
+      "range": "string",
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "default_name",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/default_name",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/default_name",
+      "owner": "Dataset",
+      "domain_of": [
+        "Group",
+        "Dataset"
+      ],
+      "range": "string",
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "quantity",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/quantity",
+      "todos": [
+        "logic to check that the corresponding class can only be implemented quantity times."
+      ],
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/quantity",
+      "ifabsent": "int(1)",
+      "owner": "Dataset",
+      "domain_of": [
+        "Group",
+        "Link",
+        "Dataset"
+      ],
+      "range": "string",
+      "any_of": [
+        {
+          "range": "integer",
+          "minimum_value": 1,
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "QuantityEnum",
+          "@type": "AnonymousSlotExpression"
+        }
+      ],
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "linkable",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/linkable",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/linkable",
+      "owner": "Dataset",
+      "domain_of": [
+        "Group",
+        "Dataset"
+      ],
+      "range": "boolean",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "attributes",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/attributes",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/attributes",
+      "multivalued": true,
+      "owner": "Dataset",
+      "domain_of": [
+        "Group",
+        "Dataset"
+      ],
+      "range": "Attribute",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "datasets",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/datasets",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/datasets",
+      "multivalued": true,
+      "owner": "Group",
+      "domain_of": [
+        "Group"
+      ],
+      "range": "Dataset",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "groups",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/groups",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/groups",
+      "multivalued": true,
+      "owner": "Group",
+      "domain_of": [
+        "Group"
+      ],
+      "range": "Group",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "links",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/links",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/links",
+      "multivalued": true,
+      "owner": "Group",
+      "domain_of": [
+        "Group"
+      ],
+      "range": "Link",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "dtype",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/dtype",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/dtype",
+      "owner": "DtypeMixin",
+      "domain_of": [
+        "CompoundDtype",
+        "DtypeMixin"
+      ],
+      "range": "string",
+      "exactly_one_of": [
+        {
+          "range": "FlatDtype",
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "CompoundDtype",
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "ReferenceDtype",
+          "@type": "AnonymousSlotExpression"
+        }
+      ],
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "dims",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/dims",
+      "todos": [
+        "Can't quite figure out how to allow an array of arrays"
+      ],
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/dims",
+      "multivalued": true,
+      "owner": "Dataset",
+      "domain_of": [
+        "Attribute",
+        "Dataset"
+      ],
+      "range": "string",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "shape",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/shape",
+      "todos": [
+        "Can't quite figure out how to allow an array of arrays"
+      ],
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/shape",
+      "multivalued": true,
+      "owner": "Dataset",
+      "domain_of": [
+        "Attribute",
+        "Dataset"
+      ],
+      "range": "string",
+      "exactly_one_of": [
+        {
+          "range": "integer",
+          "minimum_value": 1,
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "equals_string": "null",
+          "@type": "AnonymousSlotExpression"
+        }
+      ],
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "value",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/value",
+      "description": "Optional constant, fixed value for the attribute.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/value",
+      "owner": "Dataset",
+      "domain_of": [
+        "Attribute",
+        "Dataset"
+      ],
+      "range": "AnyType",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "default_value",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/default_value",
+      "description": "Optional default value for variable-valued attributes.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/default_value",
+      "owner": "Dataset",
+      "domain_of": [
+        "Attribute",
+        "Dataset"
+      ],
+      "range": "AnyType",
+      "inlined": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "required",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/required",
+      "description": "Optional boolean key describing whether the attribute is required. Default value is True.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/required",
+      "ifabsent": "true",
+      "owner": "Attribute",
+      "domain_of": [
+        "Attribute"
+      ],
+      "range": "boolean",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "target_type",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/target_type",
+      "description": "Describes the neurodata_type of the target that the reference points to",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/target_type",
+      "owner": "ReferenceDtype",
+      "domain_of": [
+        "Link",
+        "ReferenceDtype"
+      ],
+      "range": "string",
+      "required": true,
+      "any_of": [
+        {
+          "range": "Dataset",
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "Group",
+          "@type": "AnonymousSlotExpression"
+        }
+      ],
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "reftype",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/reftype",
+      "description": "describes the kind of reference",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/reftype",
+      "owner": "ReferenceDtype",
+      "domain_of": [
+        "ReferenceDtype"
+      ],
+      "range": "reftype_options",
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "Namespace_name",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "is_a": "name",
+      "domain": "Namespace",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "alias": "name",
+      "owner": "Namespace",
+      "domain_of": [
+        "Namespace"
+      ],
+      "is_usage_slot": true,
+      "usage_slot_name": "name",
+      "range": "string",
+      "required": true,
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "Schema_doc",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
+      "description": "Description of corresponding object.",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "is_a": "doc",
+      "domain": "Schema",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
+      "alias": "doc",
+      "owner": "Schema",
+      "domain_of": [
+        "Schema"
+      ],
+      "is_usage_slot": true,
+      "usage_slot_name": "doc",
+      "range": "string",
+      "required": true,
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "Attribute_name",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "is_a": "name",
+      "domain": "Attribute",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "alias": "name",
+      "owner": "Attribute",
+      "domain_of": [
+        "Attribute"
+      ],
+      "is_usage_slot": true,
+      "usage_slot_name": "name",
+      "range": "string",
+      "required": true,
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "CompoundDtype_name",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "is_a": "name",
+      "domain": "CompoundDtype",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
+      "alias": "name",
+      "owner": "CompoundDtype",
+      "domain_of": [
+        "CompoundDtype"
+      ],
+      "is_usage_slot": true,
+      "usage_slot_name": "name",
+      "range": "string",
+      "required": true,
+      "structured_pattern": {
+        "syntax": "{protected_string}",
+        "interpolated": true,
+        "@type": "PatternExpression"
+      },
+      "@type": "SlotDefinition"
+    },
+    {
+      "name": "CompoundDtype_dtype",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/dtype",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "is_a": "dtype",
+      "domain": "CompoundDtype",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/dtype",
+      "alias": "dtype",
+      "owner": "CompoundDtype",
+      "domain_of": [
+        "CompoundDtype"
+      ],
+      "is_usage_slot": true,
+      "usage_slot_name": "dtype",
+      "range": "FlatDtype",
+      "required": true,
+      "exactly_one_of": [
+        {
+          "range": "FlatDtype",
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "CompoundDtype",
+          "@type": "AnonymousSlotExpression"
+        },
+        {
+          "range": "ReferenceDtype",
+          "@type": "AnonymousSlotExpression"
+        }
+      ],
       "@type": "SlotDefinition"
     }
   ],
   "classes": [
     {
-      "name": "NamedThing",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/NamedThing",
-      "description": "A generic grouping for any identifiable entity",
+      "name": "Namespace",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Namespace",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "mappings": [
-        "schema:Thing"
-      ],
       "slots": [
-        "id",
-        "name",
-        "description"
+        "doc",
+        "Namespace_name",
+        "full_name",
+        "version",
+        "date",
+        "author",
+        "contact",
+        "schema"
       ],
       "slot_usage": {},
-      "class_uri": "http://schema.org/Thing",
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Namespace",
       "@type": "ClassDefinition"
     },
     {
       "name": "Namespaces",
       "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Namespaces",
-      "description": "Represents a Namespaces",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "is_a": "NamedThing",
       "slots": [
-        "id",
-        "name",
-        "description",
-        "Namespaces_primary_email",
-        "birth_date",
-        "age_in_years",
-        "vital_status"
+        "namespaces"
       ],
       "slot_usage": {},
       "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Namespaces",
       "@type": "ClassDefinition"
     },
     {
-      "name": "NamespacesCollection",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/NamespacesCollection",
-      "description": "A holder for Namespaces objects",
+      "name": "Schema",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Schema",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
       "slots": [
-        "namespacesCollection__entries"
+        "source",
+        "namespace",
+        "Schema_doc",
+        "title",
+        "neurodata_types"
       ],
       "slot_usage": {},
-      "attributes": [
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Schema",
+      "rules": [
         {
-          "name": "entries",
-          "multivalued": true,
-          "range": "Namespaces",
-          "inlined": true,
-          "@type": "SlotDefinition"
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "namespace",
+                "value_presence": {
+                  "text": "ABSENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "source",
+                "required": true,
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "description": "If namespace is absent, source is required",
+          "@type": "ClassRule"
+        },
+        {
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "source",
+                "value_presence": {
+                  "text": "ABSENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "namespace",
+                "required": true,
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "description": "If source is absent, namespace is required.",
+          "@type": "ClassRule"
+        },
+        {
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "namespace",
+                "value_presence": {
+                  "text": "PRESENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "source",
+                "value_presence": {
+                  "text": "ABSENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "description": "If namespace is present, source is cannot be",
+          "@type": "ClassRule"
+        },
+        {
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "source",
+                "value_presence": {
+                  "text": "PRESENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "namespace",
+                "value_presence": {
+                  "text": "ABSENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "description": "If source is present, namespace cannot be.",
+          "@type": "ClassRule"
         }
       ],
-      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/NamespacesCollection",
-      "tree_root": true,
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "Group",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Group",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "mixins": [
+        "NamingMixin"
+      ],
+      "slots": [
+        "neurodata_type_def",
+        "neurodata_type_inc",
+        "name",
+        "default_name",
+        "doc",
+        "quantity",
+        "linkable",
+        "attributes",
+        "datasets",
+        "groups",
+        "links"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Group",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "Attribute",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Attribute",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "mixins": [
+        "DtypeMixin"
+      ],
+      "slots": [
+        "Attribute_name",
+        "dims",
+        "shape",
+        "value",
+        "default_value",
+        "doc",
+        "required",
+        "dtype"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Attribute",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "Link",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Link",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slots": [
+        "name",
+        "doc",
+        "target_type",
+        "quantity"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Link",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "Dataset",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Dataset",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "mixins": [
+        "DtypeMixin",
+        "NamingMixin"
+      ],
+      "slots": [
+        "neurodata_type_def",
+        "neurodata_type_inc",
+        "name",
+        "default_name",
+        "dims",
+        "shape",
+        "value",
+        "default_value",
+        "doc",
+        "quantity",
+        "linkable",
+        "attributes",
+        "dtype"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Dataset",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "ReferenceDtype",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/ReferenceDtype",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slots": [
+        "target_type",
+        "reftype"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/ReferenceDtype",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "CompoundDtype",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/CompoundDtype",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slots": [
+        "CompoundDtype_name",
+        "doc",
+        "CompoundDtype_dtype"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/CompoundDtype",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "DtypeMixin",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/DtypeMixin",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "mixin": true,
+      "slots": [
+        "dtype"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/DtypeMixin",
+      "rules": [
+        {
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "dtype",
+                "range": "CompoundDtype",
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "dtype",
+                "multivalued": true,
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "@type": "ClassRule"
+        }
+      ],
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "NamingMixin",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/NamingMixin",
+      "description": "require either neurodata_type_def or name to be present",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "mixin": true,
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/NamingMixin",
+      "rules": [
+        {
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "neurodata_type_def",
+                "value_presence": {
+                  "text": "ABSENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "name",
+                "required": true,
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "description": "If not defining a new type, a name is required",
+          "@type": "ClassRule"
+        },
+        {
+          "preconditions": {
+            "slot_conditions": [
+              {
+                "name": "name",
+                "value_presence": {
+                  "text": "ABSENT",
+                  "@type": "PermissibleValue"
+                },
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "postconditions": {
+            "slot_conditions": [
+              {
+                "name": "neurodata_type_def",
+                "required": true,
+                "@type": "SlotDefinition"
+              }
+            ],
+            "@type": "AnonymousClassExpression"
+          },
+          "description": "If a name is not given, must be defining a new type",
+          "@type": "ClassRule"
+        }
+      ],
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "AnyType",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/AnyType",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "mappings": [
+        "linkml:Any"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/linkml/Any",
       "@type": "ClassDefinition"
     }
   ],
   "metamodel_version": "1.7.0",
   "source_file": "nwb_schema_language.yaml",
-  "source_file_date": "2023-08-16T15:45:06",
-  "source_file_size": 2270,
-  "generation_date": "2023-08-16T15:57:40",
+  "source_file_date": "2023-08-16T23:21:07",
+  "source_file_size": 10816,
+  "generation_date": "2023-08-16T23:21:36",
+  "settings": [
+    {
+      "setting_key": "email",
+      "setting_value": "\\S+@\\S+{\\.\\w}+"
+    },
+    {
+      "setting_key": "protected_string",
+      "setting_value": "^[A-Za-z_][A-Za-z0-9_]*$"
+    }
+  ],
   "@type": "SchemaDefinition",
   "@context": [
     "project/jsonld/nwb_schema_language.context.jsonld",

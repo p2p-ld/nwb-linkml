@@ -1,23 +1,82 @@
-// A generic grouping for any identifiable entity
-message NamedThing
+message Attribute
  {
-  uriorcurie id = 0
   string name = 0
-  string description = 0
+ repeated  string dims = 0
+ repeated  string shape = 0
+  anyType value = 0
+  anyType defaultValue = 0
+  string doc = 0
+  boolean required = 0
+  string dtype = 0
  }
-// Represents a Namespaces
+message CompoundDtype
+ {
+  string name = 0
+  string doc = 0
+  flatDtype dtype = 0
+ }
+message Dataset
+ {
+  string neurodataTypeDef = 0
+  string neurodataTypeInc = 0
+  string name = 0
+  string defaultName = 0
+ repeated  string dims = 0
+ repeated  string shape = 0
+  anyType value = 0
+  anyType defaultValue = 0
+  string doc = 0
+  string quantity = 0
+  boolean linkable = 0
+ repeated  attribute attributes = 0
+  string dtype = 0
+ }
+message Group
+ {
+  string neurodataTypeDef = 0
+  string neurodataTypeInc = 0
+  string name = 0
+  string defaultName = 0
+  string doc = 0
+  string quantity = 0
+  boolean linkable = 0
+ repeated  attribute attributes = 0
+ repeated  dataset datasets = 0
+ repeated  group groups = 0
+ repeated  link links = 0
+ }
+message Link
+ {
+  string name = 0
+  string doc = 0
+  string targetType = 0
+  string quantity = 0
+ }
+message Namespace
+ {
+  string doc = 0
+  string name = 0
+  string fullName = 0
+  string version = 0
+  date date = 0
+ repeated  string author = 0
+ repeated  string contact = 0
+ repeated  schema schema = 0
+ }
 message Namespaces
  {
-  uriorcurie id = 0
-  string name = 0
-  string description = 0
-  string primaryEmail = 0
-  date birthDate = 0
-  integer ageInYears = 0
-  personStatus vitalStatus = 0
+ repeated  namespace namespaces = 0
  }
-// A holder for Namespaces objects
-message NamespacesCollection
+message ReferenceDtype
  {
- repeated  namespaces entries = 0
+  string targetType = 0
+  reftypeOptions reftype = 0
+ }
+message Schema
+ {
+  string source = 0
+  string namespace = 0
+  string doc = 0
+  string title = 0
+ repeated  string neurodataTypes = 0
  }

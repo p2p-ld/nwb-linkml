@@ -1,23 +1,104 @@
-type NamedThing
+type AnyType
   {
-    id: Uriorcurie!
+  }
+
+type Attribute implements DtypeMixin
+  {
+    name: String!
+    dims: [String]
+    shape: [String]
+    value: AnyType
+    defaultValue: AnyType
+    doc: String!
+    required: Boolean
+    dtype: String
+  }
+
+type CompoundDtype
+  {
+    name: String!
+    doc: String!
+    dtype: FlatDtype!
+  }
+
+type Dataset implements DtypeMixin, NamingMixin
+  {
+    neurodataTypeDef: String
+    neurodataTypeInc: String
     name: String
-    description: String
+    defaultName: String
+    dims: [String]
+    shape: [String]
+    value: AnyType
+    defaultValue: AnyType
+    doc: String!
+    quantity: String
+    linkable: Boolean
+    attributes: [Attribute]
+    dtype: String
+  }
+
+interface DtypeMixin
+  {
+    dtype: String
+  }
+
+type Group implements NamingMixin
+  {
+    neurodataTypeDef: String
+    neurodataTypeInc: String
+    name: String
+    defaultName: String
+    doc: String!
+    quantity: String
+    linkable: Boolean
+    attributes: [Attribute]
+    datasets: [Dataset]
+    groups: [Group]
+    links: [Link]
+  }
+
+type Link
+  {
+    name: String
+    doc: String!
+    targetType: String!
+    quantity: String
+  }
+
+type Namespace
+  {
+    doc: String!
+    name: String!
+    fullName: String
+    version: String!
+    date: Date
+    author: [String]!
+    contact: [String]!
+    schema: [Schema]
   }
 
 type Namespaces
   {
-    id: Uriorcurie!
-    name: String
-    description: String
-    primaryEmail: String
-    birthDate: Date
-    ageInYears: Integer
-    vitalStatus: PersonStatus
+    namespaces: [Namespace]
   }
 
-type NamespacesCollection
+interface NamingMixin
   {
-    entries: [Namespaces]
+  }
+
+type ReferenceDtype
+  {
+    targetType: String!
+    reftype: ReftypeOptions
+  }
+
+type Schema
+  {
+    source: String
+    namespace: String
+    doc: String!
+    title: String
+    neurodataTypes: [String]
   }
 

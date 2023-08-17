@@ -5,6 +5,9 @@ description = "Translation of the nwb-schema-language to LinkML"
 authors = ["Jonny Saunders <j@nny.fyi>"]
 license = "GNU GPL v3.0"
 readme = "README.md"
+packages = [
+    { include = "nwb_schema_language", from="src"}
+]
 include = ["README.md", "src/nwb_schema_language/schema", "project"]
 
 [tool.poetry.dependencies]

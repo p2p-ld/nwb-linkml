@@ -11,86 +11,373 @@ see_also:
 prefixes:
   nwb_schema_language: https://w3id.org/p2p_ld/nwb-schema-language/
   linkml: https://w3id.org/linkml/
-  biolink: https://w3id.org/biolink/
   schema: http://schema.org/
-  PATO: http://purl.obolibrary.org/obo/PATO_
-  example: https://example.org/
+
 default_prefix: nwb_schema_language
 default_range: string
 
 imports:
   - linkml:types
 
-classes:
+settings:
+  email: "\\S+@\\S+{\\.\\w}+"
+  protected_string: "^[A-Za-z_][A-Za-z0-9_]*$"
 
-  NamedThing:
-    description: >-
-      A generic grouping for any identifiable entity
+classes:
+  Namespace:
     slots:
-      - id
+      - doc
       - name
-      - description
-    class_uri: schema:Thing
+      - full_name
+      - version
+      - date
+      - author
+      - contact
+      - schema
+    slot_usage:
+      name:
+        required: true
 
   Namespaces:
-    is_a: NamedThing
-    description: >-
-      Represents a Namespaces
     slots:
-      - primary_email
-      - birth_date
-      - age_in_years
-      - vital_status
-    slot_usage:
-      primary_email:
-        pattern: "^\\S+@[\\S+\\.]+\\S+"
+      - namespaces
 
-  NamespacesCollection:
-    tree_root: true
-    description: >-
-      A holder for Namespaces objects
-    attributes:
-      entries:
-        range: Namespaces
-        multivalued: true
-        inlined: true
+  Schema:
+    slots:
+      - source
+      - namespace
+      - doc
+      - title
+      - neurodata_types
+    slot_usage:
+      doc:
+        required: false
+    rules:
+      - preconditions: {slot_conditions: { namespace: { value_presence: ABSENT }}}
+        postconditions: {slot_conditions: { source: {required: true }}}
+        description: If namespace is absent, source is required
+      - preconditions: {slot_conditions: { source: { value_presence: ABSENT }}}
+        postconditions: {slot_conditions: { namespace: {required: true }}}
+        description: If source is absent, namespace is required.
+      - preconditions: { slot_conditions: { namespace: { value_presence: PRESENT }}}
+        postconditions: { slot_conditions: { source: { value_presence: ABSENT }}}
+        description: If namespace is present, source is cannot be
+      - preconditions: { slot_conditions: { source: { value_presence: PRESENT }}}
+        postconditions: { slot_conditions: { namespace: { value_presence: ABSENT }}}
+        description: If source is present, namespace cannot be.
+
+  Group:
+    mixins:
+      - NamingMixin
+    slots:
+      - neurodata_type_def
+      - neurodata_type_inc
+      - name
+      - default_name
+      - doc
+      - quantity
+      - linkable
+      - attributes
+      - datasets
+      - groups
+      - links
+
+  Attribute:
+    mixins:
+      - DtypeMixin
+    slots:
+      - name
+      - dims
+      - shape
+      - value
+      - default_value
+      - doc
+      - required
+    slot_usage:
+      name:
+        required: true
+
+  Link:
+    slots:
+      - name
+      - doc
+      - target_type
+      - quantity
+
+  Dataset:
+    mixins:
+      - DtypeMixin
+      - NamingMixin
+    slots:
+      - neurodata_type_def
+      - neurodata_type_inc
+      - name
+      - default_name
+      - dims
+      - shape
+      - value
+      - default_value
+      - doc
+      - quantity
+      - linkable
+      - attributes
+
+  ReferenceDtype:
+    slots:
+      - target_type
+      - reftype
+
+  CompoundDtype:
+    slots:
+      - name
+      - doc
+      - dtype
+    slot_usage:
+      name:
+        required: true
+      dtype:
+        required: true
+        range: FlatDtype
+
+  DtypeMixin:
+    mixin: true
+    slots:
+      - dtype
+    rules:
+      - preconditions:
+          slot_conditions:
+            dtype:
+              range: CompoundDtype
+        postconditions:
+          slot_conditions:
+            dtype:
+              multivalued: true
+
+  NamingMixin:
+    mixin: true
+    description: require either neurodata_type_def or name to be present
+    rules:
+      - preconditions: { slot_conditions: { neurodata_type_def: { value_presence: ABSENT } } }
+        postconditions: { slot_conditions: { name: { required: true } } }
+        description: If not defining a new type, a name is required
+      - preconditions: { slot_conditions: { name: { value_presence: ABSENT } } }
+        postconditions: { slot_conditions: { neurodata_type_def: { required: true } } }
+        description: If a name is not given, must be defining a new type
+
+  AnyType:
+    class_uri: linkml:Any
+
 
 slots:
-  id:
-    identifier: true
-    slot_uri: schema:identifier
-    range: uriorcurie
-    description: A unique identifier for a thing
+  # namespaces
+  doc:
+    required: true
+    description: Description of corresponding object.
   name:
-    slot_uri: schema:name
-    description: A human-readable name for a thing
-  description:
-    slot_uri: schema:description
-    description: A human-readable description for a thing
-  primary_email:
-    slot_uri: schema:email
-    description: The main email address of a person
-  birth_date:
-    slot_uri: schema:birthDate
+    structured_pattern:
+      syntax: "{protected_string}"
+      interpolated: true
+  full_name:
+    description: Optional string with extended full name for the namespace.
+  version:
+    required: true
+    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+  date:
     range: date
-    description: Date on which a person is born
-  age_in_years:
-    range: integer
-    description: Number of years since birth
-  vital_status:
-    range: PersonStatus
-    description: living or dead status
+    slot_uri: schema:dateModified
+    description: Date that a namespace was last modified or released
+    examples:
+      - value: 2017-04-25 17:14:13
+  author:
+    multivalued: true
+    required: true
+    slot_uri: schema:author
+    description: List of strings with the names of the authors of the namespace.
+  contact:
+    multivalued: true
+    required: true
+    slot_uri: schema:email
+    structured_pattern:
+      syntax: "{email}"
+      interpolated: true
+    description: List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.
+  schema:
+    multivalued: true
+    range: Schema
+    description: List of the schema to be included in this namespace.
+    inlined_as_list: true
+
+  # schema
+  source:
+    description: describes the name of the YAML (or JSON) file with the schema specification. The schema files should be located in the same folder as the namespace file.
+    pattern: ".*\\.(yml|yaml|json)"
+  namespace:
+    description: describes a named reference to another namespace. In contrast to source, this is a reference by name to a known namespace (i.e., the namespace is resolved during the build and must point to an already existing namespace). This mechanism is used to allow, e.g., extension of a core namespace (here the NWB core namespace) without requiring hard paths to the files describing the core namespace. Either source or namespace must be specified, but not both.
+  namespaces:
+    multivalued: true
+    range: Namespace
+  neurodata_types:
+    multivalued: true
+    any_of:
+      - range: Dataset
+      - range: Group
+    description: an optional list of strings indicating which data types should be included from the given specification source or namespace. The default is null indicating that all data types should be included.
+  title:
+    description: a descriptive title for a file for documentation purposes.
+
+  # groups
+  neurodata_type_def:
+    structured_pattern:
+      syntax: "{protected_string}"
+      interpolated: true
+  neurodata_type_inc:
+    structured_pattern:
+      syntax: "{protected_string}"
+      interpolated: true
+  default_name:
+    structured_pattern:
+      syntax: "{protected_string}"
+      interpolated: true
+  quantity:
+    any_of:
+      - range: integer
+        minimum_value: 1
+      - range: QuantityEnum
+    ifabsent: int(1)
+    todos:
+      - logic to check that the corresponding class can only be implemented quantity times.
+  linkable:
+    range: boolean
+
+  # Recursive properties
+  attributes:
+    range: Attribute
+    multivalued: true
+  datasets:
+    range: Dataset
+    multivalued: true
+  groups:
+    range: Group
+    multivalued: true
+  links:
+    range: Link
+    multivalued: true
+
+  # attributes
+  dtype:
+    exactly_one_of:
+      - range: FlatDtype
+      - range: CompoundDtype
+      - range: ReferenceDtype
+  dims:
+    multivalued: true
+    range: string
+    todos:
+      - Can't quite figure out how to allow an array of arrays
+  shape:
+    multivalued: true
+    exactly_one_of:
+      - range: integer
+        minimum_value: 1
+      - equals_string: "null"
+    todos:
+      - Can't quite figure out how to allow an array of arrays
+  value:
+    range: AnyType
+    description: Optional constant, fixed value for the attribute.
+  default_value:
+    range: AnyType
+    description: Optional default value for variable-valued attributes.
+  required:
+    range: boolean
+    description: Optional boolean key describing whether the attribute is required. Default value is True.
+    ifabsent: "true"
+
+  # links
+  target_type:
+    description: Describes the neurodata_type of the target that the reference points
+      to
+    required: true
+    any_of:
+      - range: Dataset
+      - range: Group
+  reftype:
+    description: describes the kind of reference
+    range: reftype_options
+
+
 
 enums:
-  PersonStatus:
+  reftype_options:
     permissible_values:
-      ALIVE:
-        description: the person is living
-        meaning: PATO:0001421
-      DEAD:
-        description: the person is deceased
-        meaning: PATO:0001422
-      UNKNOWN:
-        description: the vital status is not known
-        todos:
-          - map this to an ontology
+      ref: { description: Reference to another group or dataset of the given target_type }
+      reference: { description: Reference to another group or dataset of the given target_type }
+      object: { description: Reference to another group or dataset of the given target_type }
+      region: { description: Reference to a region (i.e. subset) of another dataset of the given target_type}
+  QuantityEnum:
+    permissible_values:
+      "*":
+        description: Zero or more instances, equivalent to zero_or_many
+      "?":
+        description: Zero or one instances, equivalent to zero_or_one
+      "+":
+        description: One or more instances, equivalent to one_or_many
+      "zero_or_many":
+        description: Zero or more instances, equivalent to *
+      "one_or_many":
+        description: One or more instances, equivalent to +
+      "zero_or_one":
+        description: Zero or one instances, equivalent to ?
+  FlatDtype:
+    permissible_values:
+      "float":
+        description: single precision floating point (32 bit)
+      "float32":
+        description: single precision floating point (32 bit)
+      "double":
+        description: double precision floating point (64 bit)
+      "float64":
+        description: double precision floating point (64 bit)
+      "long":
+        description: signed 64 bit integer
+      "int64":
+        description: signed 64 bit integer
+      "int":
+        description: signed 32 bit integer
+      "int32":
+        description: signed 32 bit integer
+      "int16":
+        description: signed 16 bit integer
+      "short":
+        description: signed 16 bit integer
+      "int8":
+        description: signed 8 bit integer
+      "uint":
+        description: unsigned 32 bit integer
+      "uint32":
+        description: unsigned 32 bit integer
+      "uint16":
+        description: unsigned 16 bit integer
+      "uint8":
+        description: unsigned 8 bit integer
+      "uint64":
+        description: unsigned 64 bit integer
+      "numeric":
+        description: any numeric type (i.e., any int, uint, float)
+      "text":
+        description: 8-bit Unicode
+      "utf":
+        description: 8-bit Unicode
+      "utf8":
+        description: 8-bit Unicode
+      "utf-8":
+        description: 8-bit Unicode
+      "ascii":
+        description: ASCII text
+      "bool":
+        description: 8 bit integer with valid values 0 or 1
+      "isodatetime":
+        description: ISO 8601 datetime string
+        examples:
+          - value: 2018-09-28T14:43:54.123+02:00
+

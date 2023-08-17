@@ -118,7 +118,7 @@ we need to map:
   - `neurodata_type_inc` -> `is_a`
 - Groups: 
 - Slots: Lots of properties are reused in the nwb spec, and LinkML lets us separate these out as slots
-- `quantity` needs a manual map
+- `quantity` needs a manual map to linkML's cardinality property
 - dims, shape, and dtypes: these should have been just attributes rather than put in the spec
   language, so we'll just make an Array class and use that.
   - dims and shape should probably be a dictionary so you don't need a zillion nulls, eg rather than 

@@ -43,31 +43,137 @@ linkml:Jsonpath xsd:string
 
 linkml:Sparqlpath xsd:string
 
-<NamedThing>  (
-    CLOSED {
-       (  $<NamedThing_tes> (  schema1:name @linkml:String ? ;
-             schema1:description @linkml:String ?
-          ) ;
-          rdf:type [ schema1:Thing ]
-       )
-    } OR @<Namespaces>
-)
-
-<Namespaces> CLOSED {
-    (  $<Namespaces_tes> (  &<NamedThing_tes> ;
-          rdf:type [ schema1:Thing ] ? ;
-          schema1:email @linkml:String ? ;
-          schema1:birthDate @linkml:Date ? ;
-          <age_in_years> @linkml:Integer ? ;
-          <vital_status> @<PersonStatus> ?
-       ) ;
-       rdf:type [ <Namespaces> ]
+<AnyType> CLOSED {
+    (  $<AnyType_tes> rdf:type . * ;
+       rdf:type [ linkml:Any ] ?
     )
 }
 
-<NamespacesCollection> CLOSED {
-    (  $<NamespacesCollection_tes> <entries> @<Namespaces> * ;
-       rdf:type [ <NamespacesCollection> ] ?
+<Attribute> CLOSED {
+    (  $<Attribute_tes> (  &<DtypeMixin_tes> ;
+          rdf:type [ <DtypeMixin> ] ? ;
+          <name> @linkml:String ;
+          <dims> @linkml:String * ;
+          <shape> @linkml:String * ;
+          <value> @<AnyType> ? ;
+          <default_value> @<AnyType> ? ;
+          <doc> @linkml:String ;
+          <required> @linkml:Boolean ? ;
+          <dtype> @linkml:String ?
+       ) ;
+       rdf:type [ <Attribute> ] ?
+    )
+}
+
+<CompoundDtype> CLOSED {
+    (  $<CompoundDtype_tes> (  <name> @linkml:String ;
+          <doc> @linkml:String ;
+          <dtype> @<FlatDtype>
+       ) ;
+       rdf:type [ <CompoundDtype> ] ?
+    )
+}
+
+<Dataset> CLOSED {
+    (  $<Dataset_tes> (  &<DtypeMixin_tes> ;
+          rdf:type [ <DtypeMixin> ] ? ;
+          &<NamingMixin_tes> ;
+          rdf:type [ <NamingMixin> ] ? ;
+          <neurodata_type_def> @linkml:String ? ;
+          <neurodata_type_inc> @linkml:String ? ;
+          <name> @linkml:String ? ;
+          <default_name> @linkml:String ? ;
+          <dims> @linkml:String * ;
+          <shape> @linkml:String * ;
+          <value> @<AnyType> ? ;
+          <default_value> @<AnyType> ? ;
+          <doc> @linkml:String ;
+          <quantity> @linkml:String ? ;
+          <linkable> @linkml:Boolean ? ;
+          <attributes> @<Attribute> * ;
+          <dtype> @linkml:String ?
+       ) ;
+       rdf:type [ <Dataset> ] ?
+    )
+}
+
+<DtypeMixin> {
+    (  $<DtypeMixin_tes> <dtype> @linkml:String ? ;
+       rdf:type [ <DtypeMixin> ] ?
+    )
+}
+
+<Group> CLOSED {
+    (  $<Group_tes> (  &<NamingMixin_tes> ;
+          rdf:type [ <NamingMixin> ] ? ;
+          <neurodata_type_def> @linkml:String ? ;
+          <neurodata_type_inc> @linkml:String ? ;
+          <name> @linkml:String ? ;
+          <default_name> @linkml:String ? ;
+          <doc> @linkml:String ;
+          <quantity> @linkml:String ? ;
+          <linkable> @linkml:Boolean ? ;
+          <attributes> @<Attribute> * ;
+          <datasets> @<Dataset> * ;
+          <groups> @<Group> * ;
+          <links> @<Link> *
+       ) ;
+       rdf:type [ <Group> ] ?
+    )
+}
+
+<Link> CLOSED {
+    (  $<Link_tes> (  <name> @linkml:String ? ;
+          <doc> @linkml:String ;
+          <target_type> @linkml:String ;
+          <quantity> @linkml:String ?
+       ) ;
+       rdf:type [ <Link> ] ?
+    )
+}
+
+<Namespace> CLOSED {
+    (  $<Namespace_tes> (  <doc> @linkml:String ;
+          <name> @linkml:String ;
+          <full_name> @linkml:String ? ;
+          <version> @linkml:String ;
+          schema1:dateModified @linkml:Date ? ;
+          schema1:author @linkml:String + ;
+          schema1:email @linkml:String + ;
+          <schema> @<Schema> *
+       ) ;
+       rdf:type [ <Namespace> ] ?
+    )
+}
+
+<Namespaces> CLOSED {
+    (  $<Namespaces_tes> <namespaces> @<Namespace> * ;
+       rdf:type [ <Namespaces> ] ?
+    )
+}
+
+<NamingMixin> {
+    (  $<NamingMixin_tes> rdf:type . * ;
+       rdf:type [ <NamingMixin> ] ?
+    )
+}
+
+<ReferenceDtype> CLOSED {
+    (  $<ReferenceDtype_tes> (  <target_type> @linkml:String ;
+          <reftype> @<ReftypeOptions> ?
+       ) ;
+       rdf:type [ <ReferenceDtype> ] ?
+    )
+}
+
+<Schema> CLOSED {
+    (  $<Schema_tes> (  <source> @linkml:String ? ;
+          <namespace> @linkml:String ? ;
+          <doc> @linkml:String ;
+          <title> @linkml:String ? ;
+          <neurodata_types> @linkml:String *
+       ) ;
+       rdf:type [ <Schema> ] ?
     )
 }
 

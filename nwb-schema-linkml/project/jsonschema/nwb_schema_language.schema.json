@@ -1,160 +1,571 @@
 {
     "$defs": {
-        "NamedThing": {
+        "AnyType": {
+            "additionalProperties": true,
+            "description": "",
+            "title": "AnyType",
+            "type": "object"
+        },
+        "Attribute": {
             "additionalProperties": false,
-            "description": "A generic grouping for any identifiable entity",
+            "description": "",
             "properties": {
-                "description": {
-                    "description": "A human-readable description for a thing",
+                "default_value": {
+                    "$ref": "#/$defs/AnyType",
+                    "description": "Optional default value for variable-valued attributes."
+                },
+                "dims": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "doc": {
+                    "description": "Description of corresponding object.",
                     "type": "string"
                 },
-                "id": {
-                    "description": "A unique identifier for a thing",
+                "dtype": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/FlatDtype"
+                        },
+                        {
+                            "$ref": "#/$defs/CompoundDtype"
+                        },
+                        {
+                            "$ref": "#/$defs/ReferenceDtype"
+                        }
+                    ],
                     "type": "string"
                 },
                 "name": {
-                    "description": "A human-readable name for a thing",
+                    "type": "string"
+                },
+                "required": {
+                    "description": "Optional boolean key describing whether the attribute is required. Default value is True.",
+                    "type": "boolean"
+                },
+                "shape": {
+                    "items": {
+                        "oneOf": [
+                            {
+                                "minimum": 1,
+                                "type": "integer"
+                            },
+                            {
+                                "const": "null"
+                            }
+                        ],
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "value": {
+                    "$ref": "#/$defs/AnyType",
+                    "description": "Optional constant, fixed value for the attribute."
+                }
+            },
+            "required": [
+                "name",
+                "doc"
+            ],
+            "title": "Attribute",
+            "type": "object"
+        },
+        "CompoundDtype": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "doc": {
+                    "description": "Description of corresponding object.",
+                    "type": "string"
+                },
+                "dtype": {
+                    "$ref": "#/$defs/FlatDtype"
+                },
+                "name": {
                     "type": "string"
                 }
             },
             "required": [
-                "id"
+                "name",
+                "doc",
+                "dtype"
             ],
-            "title": "NamedThing",
+            "title": "CompoundDtype",
+            "type": "object"
+        },
+        "Dataset": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "attributes": {
+                    "items": {
+                        "$ref": "#/$defs/Attribute"
+                    },
+                    "type": "array"
+                },
+                "default_name": {
+                    "type": "string"
+                },
+                "default_value": {
+                    "$ref": "#/$defs/AnyType",
+                    "description": "Optional default value for variable-valued attributes."
+                },
+                "dims": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "doc": {
+                    "description": "Description of corresponding object.",
+                    "type": "string"
+                },
+                "dtype": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/FlatDtype"
+                        },
+                        {
+                            "$ref": "#/$defs/CompoundDtype"
+                        },
+                        {
+                            "$ref": "#/$defs/ReferenceDtype"
+                        }
+                    ],
+                    "type": "string"
+                },
+                "linkable": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "neurodata_type_def": {
+                    "type": "string"
+                },
+                "neurodata_type_inc": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "anyOf": [
+                        {
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        {
+                            "$ref": "#/$defs/QuantityEnum"
+                        }
+                    ],
+                    "type": "string"
+                },
+                "shape": {
+                    "items": {
+                        "oneOf": [
+                            {
+                                "minimum": 1,
+                                "type": "integer"
+                            },
+                            {
+                                "const": "null"
+                            }
+                        ],
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "value": {
+                    "$ref": "#/$defs/AnyType",
+                    "description": "Optional constant, fixed value for the attribute."
+                }
+            },
+            "required": [
+                "doc"
+            ],
+            "title": "Dataset",
+            "type": "object"
+        },
+        "FlatDtype": {
+            "description": "",
+            "enum": [
+                "float",
+                "float32",
+                "double",
+                "float64",
+                "long",
+                "int64",
+                "int",
+                "int32",
+                "int16",
+                "short",
+                "int8",
+                "uint",
+                "uint32",
+                "uint16",
+                "uint8",
+                "uint64",
+                "numeric",
+                "text",
+                "utf",
+                "utf8",
+                "utf-8",
+                "ascii",
+                "bool",
+                "isodatetime"
+            ],
+            "title": "FlatDtype",
+            "type": "string"
+        },
+        "Group": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "attributes": {
+                    "items": {
+                        "$ref": "#/$defs/Attribute"
+                    },
+                    "type": "array"
+                },
+                "datasets": {
+                    "items": {
+                        "$ref": "#/$defs/Dataset"
+                    },
+                    "type": "array"
+                },
+                "default_name": {
+                    "type": "string"
+                },
+                "doc": {
+                    "description": "Description of corresponding object.",
+                    "type": "string"
+                },
+                "groups": {
+                    "items": {
+                        "$ref": "#/$defs/Group"
+                    },
+                    "type": "array"
+                },
+                "linkable": {
+                    "type": "boolean"
+                },
+                "links": {
+                    "items": {
+                        "$ref": "#/$defs/Link"
+                    },
+                    "type": "array"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "neurodata_type_def": {
+                    "type": "string"
+                },
+                "neurodata_type_inc": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "anyOf": [
+                        {
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        {
+                            "$ref": "#/$defs/QuantityEnum"
+                        }
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "doc"
+            ],
+            "title": "Group",
+            "type": "object"
+        },
+        "Link": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "doc": {
+                    "description": "Description of corresponding object.",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "anyOf": [
+                        {
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        {
+                            "$ref": "#/$defs/QuantityEnum"
+                        }
+                    ],
+                    "type": "string"
+                },
+                "target_type": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Dataset"
+                        },
+                        {
+                            "$ref": "#/$defs/Group"
+                        }
+                    ],
+                    "description": "Describes the neurodata_type of the target that the reference points to",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "doc",
+                "target_type"
+            ],
+            "title": "Link",
+            "type": "object"
+        },
+        "Namespace": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "author": {
+                    "description": "List of strings with the names of the authors of the namespace.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "contact": {
+                    "description": "List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "date": {
+                    "description": "Date that a namespace was last modified or released",
+                    "format": "date",
+                    "type": "string"
+                },
+                "doc": {
+                    "description": "Description of corresponding object.",
+                    "type": "string"
+                },
+                "full_name": {
+                    "description": "Optional string with extended full name for the namespace.",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "description": "List of the schema to be included in this namespace.",
+                    "items": {
+                        "$ref": "#/$defs/Schema"
+                    },
+                    "type": "array"
+                },
+                "version": {
+                    "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "doc",
+                "name",
+                "version",
+                "author",
+                "contact"
+            ],
+            "title": "Namespace",
             "type": "object"
         },
         "Namespaces": {
             "additionalProperties": false,
-            "description": "Represents a Namespaces",
+            "description": "",
             "properties": {
-                "age_in_years": {
-                    "description": "Number of years since birth",
-                    "type": "integer"
+                "namespaces": {
+                    "items": {
+                        "$ref": "#/$defs/Namespace"
+                    },
+                    "type": "array"
+                }
+            },
+            "title": "Namespaces",
+            "type": "object"
+        },
+        "QuantityEnum": {
+            "description": "",
+            "enum": [
+                "*",
+                "?",
+                "+",
+                "zero_or_many",
+                "one_or_many",
+                "zero_or_one"
+            ],
+            "title": "QuantityEnum",
+            "type": "string"
+        },
+        "ReferenceDtype": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "reftype": {
+                    "$ref": "#/$defs/ReftypeOptions",
+                    "description": "describes the kind of reference"
                 },
-                "birth_date": {
-                    "description": "Date on which a person is born",
-                    "format": "date",
+                "target_type": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Dataset"
+                        },
+                        {
+                            "$ref": "#/$defs/Group"
+                        }
+                    ],
+                    "description": "Describes the neurodata_type of the target that the reference points to",
                     "type": "string"
-                },
-                "description": {
-                    "description": "A human-readable description for a thing",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "A unique identifier for a thing",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "A human-readable name for a thing",
-                    "type": "string"
-                },
-                "primary_email": {
-                    "description": "The main email address of a person",
-                    "pattern": "^\\S+@[\\S+\\.]+\\S+",
-                    "type": "string"
-                },
-                "vital_status": {
-                    "$ref": "#/$defs/PersonStatus",
-                    "description": "living or dead status"
                 }
             },
             "required": [
-                "id"
+                "target_type"
             ],
-            "title": "Namespaces",
+            "title": "ReferenceDtype",
             "type": "object"
         },
-        "NamespacesCollection": {
-            "additionalProperties": false,
-            "description": "A holder for Namespaces objects",
-            "properties": {
-                "entries": {
-                    "additionalProperties": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/$defs/Namespaces__identifier_optional"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "type": "object"
-                }
-            },
-            "title": "NamespacesCollection",
-            "type": "object"
-        },
-        "Namespaces__identifier_optional": {
-            "additionalProperties": false,
-            "description": "Represents a Namespaces",
-            "properties": {
-                "age_in_years": {
-                    "description": "Number of years since birth",
-                    "type": "integer"
-                },
-                "birth_date": {
-                    "description": "Date on which a person is born",
-                    "format": "date",
-                    "type": "string"
-                },
-                "description": {
-                    "description": "A human-readable description for a thing",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "A unique identifier for a thing",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "A human-readable name for a thing",
-                    "type": "string"
-                },
-                "primary_email": {
-                    "description": "The main email address of a person",
-                    "pattern": "^\\S+@[\\S+\\.]+\\S+",
-                    "type": "string"
-                },
-                "vital_status": {
-                    "$ref": "#/$defs/PersonStatus",
-                    "description": "living or dead status"
-                }
-            },
-            "required": [],
-            "title": "Namespaces",
-            "type": "object"
-        },
-        "PersonStatus": {
+        "ReftypeOptions": {
             "description": "",
             "enum": [
-                "ALIVE",
-                "DEAD",
-                "UNKNOWN"
+                "ref",
+                "reference",
+                "object",
+                "region"
             ],
-            "title": "PersonStatus",
+            "title": "ReftypeOptions",
             "type": "string"
+        },
+        "Schema": {
+            "additionalProperties": false,
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "namespace": {}
+                        },
+                        "required": [
+                            "namespace"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "source": {}
+                        },
+                        "required": [
+                            "source"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "source": {}
+                        },
+                        "required": [
+                            "source"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "namespace": {}
+                        },
+                        "required": [
+                            "namespace"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "namespace": {}
+                        },
+                        "required": [
+                            "namespace"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "source": {}
+                        },
+                        "required": [
+                            "source"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "source": {}
+                        },
+                        "required": [
+                            "source"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "namespace": {}
+                        },
+                        "required": [
+                            "namespace"
+                        ]
+                    }
+                }
+            ],
+            "description": "",
+            "properties": {
+                "doc": {
+                    "description": "Description of corresponding object.",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "describes a named reference to another namespace. In contrast to source, this is a reference by name to a known namespace (i.e., the namespace is resolved during the build and must point to an already existing namespace). This mechanism is used to allow, e.g., extension of a core namespace (here the NWB core namespace) without requiring hard paths to the files describing the core namespace. Either source or namespace must be specified, but not both.",
+                    "type": "string"
+                },
+                "neurodata_types": {
+                    "description": "an optional list of strings indicating which data types should be included from the given specification source or namespace. The default is null indicating that all data types should be included.",
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/Dataset"
+                            },
+                            {
+                                "$ref": "#/$defs/Group"
+                            }
+                        ],
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "source": {
+                    "description": "describes the name of the YAML (or JSON) file with the schema specification. The schema files should be located in the same folder as the namespace file.",
+                    "pattern": ".*\\.(yml|yaml|json)",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "a descriptive title for a file for documentation purposes.",
+                    "type": "string"
+                }
+            },
+            "title": "Schema",
+            "type": "object"
         }
     },
     "$id": "https://w3id.org/p2p_ld/nwb-schema-language",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": true,
-    "description": "A holder for Namespaces objects",
     "metamodel_version": "1.7.0",
-    "properties": {
-        "entries": {
-            "additionalProperties": {
-                "anyOf": [
-                    {
-                        "$ref": "#/$defs/Namespaces__identifier_optional"
-                    },
-                    {
-                        "type": "null"
-                    }
-                ]
-            },
-            "type": "object"
-        }
-    },
     "title": "nwb-schema-language",
     "type": "object",
     "version": null
