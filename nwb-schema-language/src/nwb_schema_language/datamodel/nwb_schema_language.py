@@ -1,5 +1,5 @@
 # Auto generated from nwb_schema_language.yaml by pythongen.py version: 0.0.1
-# Generation date: 2023-08-16T23:21:37
+# Generation date: 2023-08-18T00:36:55
 # Schema: nwb-schema-language
 #
 # id: https://w3id.org/p2p_ld/nwb-schema-language
@@ -95,7 +95,6 @@ class Namespace(YAMLRoot):
         if self.date is not None and not isinstance(self.date, XSDDate):
             self.date = XSDDate(self.date)
 
-        print(self.schema)
         if not isinstance(self.schema, list):
             self.schema = [self.schema] if self.schema is not None else []
         self.schema = [v if isinstance(v, Schema) else Schema(**as_dict(v)) for v in self.schema]
@@ -115,7 +114,9 @@ class Namespaces(YAMLRoot):
     namespaces: Optional[Union[Union[dict, Namespace], List[Union[dict, Namespace]]]] = empty_list()
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
-        self._normalize_inlined_as_dict(slot_name="namespaces", slot_type=Namespace, key_name="doc", keyed=False)
+        if not isinstance(self.namespaces, list):
+            self.namespaces = [self.namespaces] if self.namespaces is not None else []
+        self.namespaces = [v if isinstance(v, Namespace) else Namespace(**as_dict(v)) for v in self.namespaces]
 
         super().__post_init__(**kwargs)
 
@@ -129,18 +130,13 @@ class Schema(YAMLRoot):
     class_name: ClassVar[str] = "Schema"
     class_model_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.Schema
 
-    doc: str = None
     source: Optional[str] = None
     namespace: Optional[str] = None
     title: Optional[str] = None
     neurodata_types: Optional[Union[str, List[str]]] = empty_list()
+    doc: Optional[str] = None
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
-        if self._is_empty(self.doc):
-            self.MissingRequiredField("doc")
-        if not isinstance(self.doc, str):
-            self.doc = str(self.doc)
-
         if self.source is not None and not isinstance(self.source, str):
             self.source = str(self.source)
 
@@ -153,6 +149,9 @@ class Schema(YAMLRoot):
         if not isinstance(self.neurodata_types, list):
             self.neurodata_types = [self.neurodata_types] if self.neurodata_types is not None else []
         self.neurodata_types = [v if isinstance(v, str) else str(v) for v in self.neurodata_types]
+
+        if self.doc is not None and not isinstance(self.doc, str):
+            self.doc = str(self.doc)
 
         super().__post_init__(**kwargs)
 
@@ -204,11 +203,34 @@ class Group(YAMLRoot):
 
         self._normalize_inlined_as_dict(slot_name="attributes", slot_type=Attribute, key_name="name", keyed=False)
 
-        self._normalize_inlined_as_dict(slot_name="datasets", slot_type=Dataset, key_name="doc", keyed=False)
+        if not isinstance(self.datasets, list):
+            self.datasets = [self.datasets] if self.datasets is not None else []
+        self.datasets = [v if isinstance(v, Dataset) else Dataset(**as_dict(v)) for v in self.datasets]
 
-        self._normalize_inlined_as_dict(slot_name="groups", slot_type=Group, key_name="doc", keyed=False)
+        if not isinstance(self.groups, list):
+            self.groups = [self.groups] if self.groups is not None else []
+        self.groups = [v if isinstance(v, Group) else Group(**as_dict(v)) for v in self.groups]
 
         self._normalize_inlined_as_dict(slot_name="links", slot_type=Link, key_name="doc", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass
+class Groups(YAMLRoot):
+    _inherited_slots: ClassVar[List[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.Groups
+    class_class_curie: ClassVar[str] = "nwb_schema_language:Groups"
+    class_name: ClassVar[str] = "Groups"
+    class_model_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.Groups
+
+    groups: Optional[Union[Union[dict, Group], List[Union[dict, Group]]]] = empty_list()
+
+    def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
+        if not isinstance(self.groups, list):
+            self.groups = [self.groups] if self.groups is not None else []
+        self.groups = [v if isinstance(v, Group) else Group(**as_dict(v)) for v in self.groups]
 
         super().__post_init__(**kwargs)
 
@@ -352,6 +374,25 @@ class Dataset(YAMLRoot):
 
         if self.dtype is not None and not isinstance(self.dtype, str):
             self.dtype = str(self.dtype)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass
+class Datasets(YAMLRoot):
+    _inherited_slots: ClassVar[List[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.Datasets
+    class_class_curie: ClassVar[str] = "nwb_schema_language:Datasets"
+    class_name: ClassVar[str] = "Datasets"
+    class_model_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.Datasets
+
+    datasets: Optional[Union[Union[dict, Dataset], List[Union[dict, Dataset]]]] = empty_list()
+
+    def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
+        if not isinstance(self.datasets, list):
+            self.datasets = [self.datasets] if self.datasets is not None else []
+        self.datasets = [v if isinstance(v, Dataset) else Dataset(**as_dict(v)) for v in self.datasets]
 
         super().__post_init__(**kwargs)
 
@@ -674,11 +715,11 @@ slots.target_type = Slot(uri=NWB_SCHEMA_LANGUAGE.target_type, name="target_type"
 slots.reftype = Slot(uri=NWB_SCHEMA_LANGUAGE.reftype, name="reftype", curie=NWB_SCHEMA_LANGUAGE.curie('reftype'),
                    model_uri=NWB_SCHEMA_LANGUAGE.reftype, domain=None, range=Optional[Union[str, "ReftypeOptions"]])
 
+slots.schema__doc = Slot(uri=NWB_SCHEMA_LANGUAGE.doc, name="schema__doc", curie=NWB_SCHEMA_LANGUAGE.curie('doc'),
+                   model_uri=NWB_SCHEMA_LANGUAGE.schema__doc, domain=None, range=Optional[str])
+
 slots.Namespace_name = Slot(uri=NWB_SCHEMA_LANGUAGE.name, name="Namespace_name", curie=NWB_SCHEMA_LANGUAGE.curie('name'),
                    model_uri=NWB_SCHEMA_LANGUAGE.Namespace_name, domain=Namespace, range=str)
-
-slots.Schema_doc = Slot(uri=NWB_SCHEMA_LANGUAGE.doc, name="Schema_doc", curie=NWB_SCHEMA_LANGUAGE.curie('doc'),
-                   model_uri=NWB_SCHEMA_LANGUAGE.Schema_doc, domain=Schema, range=str)
 
 slots.Attribute_name = Slot(uri=NWB_SCHEMA_LANGUAGE.name, name="Attribute_name", curie=NWB_SCHEMA_LANGUAGE.curie('name'),
                    model_uri=NWB_SCHEMA_LANGUAGE.Attribute_name, domain=Attribute, range=str)

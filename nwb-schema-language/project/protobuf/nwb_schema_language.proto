@@ -31,6 +31,10 @@ message Dataset
  repeated  attribute attributes = 0
   string dtype = 0
  }
+message Datasets
+ {
+ repeated  dataset datasets = 0
+ }
 message Group
  {
   string neurodataTypeDef = 0
@@ -44,6 +48,10 @@ message Group
  repeated  dataset datasets = 0
  repeated  group groups = 0
  repeated  link links = 0
+ }
+message Groups
+ {
+ repeated  group groups = 0
  }
 message Link
  {
@@ -76,7 +84,7 @@ message Schema
  {
   string source = 0
   string namespace = 0
-  string doc = 0
   string title = 0
  repeated  string neurodataTypes = 0
+  string doc = 0
  }

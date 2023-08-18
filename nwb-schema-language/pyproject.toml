@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "nwb_schema_linkml"
+name = "nwb_schema_language"
 version = "0.1.0"
 description = "Translation of the nwb-schema-language to LinkML"
 authors = ["Jonny Saunders <j@nny.fyi>"]

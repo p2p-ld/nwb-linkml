@@ -97,6 +97,12 @@ linkml:Sparqlpath xsd:string
     )
 }
 
+<Datasets> CLOSED {
+    (  $<Datasets_tes> <datasets> @<Dataset> * ;
+       rdf:type [ <Datasets> ] ?
+    )
+}
+
 <DtypeMixin> {
     (  $<DtypeMixin_tes> <dtype> @linkml:String ? ;
        rdf:type [ <DtypeMixin> ] ?
@@ -119,6 +125,12 @@ linkml:Sparqlpath xsd:string
           <links> @<Link> *
        ) ;
        rdf:type [ <Group> ] ?
+    )
+}
+
+<Groups> CLOSED {
+    (  $<Groups_tes> <groups> @<Group> * ;
+       rdf:type [ <Groups> ] ?
     )
 }
 
@@ -169,9 +181,9 @@ linkml:Sparqlpath xsd:string
 <Schema> CLOSED {
     (  $<Schema_tes> (  <source> @linkml:String ? ;
           <namespace> @linkml:String ? ;
-          <doc> @linkml:String ;
           <title> @linkml:String ? ;
-          <neurodata_types> @linkml:String *
+          <neurodata_types> @linkml:String * ;
+          <doc> @linkml:String ?
        ) ;
        rdf:type [ <Schema> ] ?
     )

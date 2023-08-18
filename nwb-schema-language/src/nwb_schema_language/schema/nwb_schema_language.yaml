@@ -46,10 +46,9 @@ classes:
     slots:
       - source
       - namespace
-      - doc
       - title
       - neurodata_types
-    slot_usage:
+    attributes:
       doc:
         required: false
     rules:
@@ -81,6 +80,10 @@ classes:
       - datasets
       - groups
       - links
+
+  Groups:
+    slots:
+      - groups
 
   Attribute:
     mixins:
@@ -122,6 +125,10 @@ classes:
       - linkable
       - attributes
 
+  Datasets:
+    slots:
+      - datasets
+
   ReferenceDtype:
     slots:
       - target_type
@@ -137,7 +144,10 @@ classes:
         required: true
       dtype:
         required: true
-        range: FlatDtype
+        any_of:
+          - range: ReferenceDtype
+          - range: FlatDtype
+        multivalued: false
 
   DtypeMixin:
     mixin: true
@@ -216,6 +226,7 @@ slots:
   namespaces:
     multivalued: true
     range: Namespace
+    inlined_as_list: true
   neurodata_types:
     multivalued: true
     any_of:
@@ -256,19 +267,22 @@ slots:
   datasets:
     range: Dataset
     multivalued: true
+    inlined_as_list: true
   groups:
     range: Group
     multivalued: true
+    inlined_as_list: true
   links:
     range: Link
     multivalued: true
 
   # attributes
   dtype:
-    exactly_one_of:
+    any_of:
       - range: FlatDtype
       - range: CompoundDtype
       - range: ReferenceDtype
+    multivalued: true
   dims:
     multivalued: true
     range: string
@@ -298,9 +312,9 @@ slots:
     description: Describes the neurodata_type of the target that the reference points
       to
     required: true
-    any_of:
-      - range: Dataset
-      - range: Group
+#    any_of:
+#      - range: Dataset
+#      - range: Group
   reftype:
     description: describes the kind of reference
     range: reftype_options

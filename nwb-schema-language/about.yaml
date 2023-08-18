@@ -3,5 +3,5 @@ name: nwb_schema_language
 author: Jonny Saunders <j@nny.fyi>
 description: Translation of the nwb-schema-language to LinkML
 source_schema_path: src/nwb_schema_language/schema/nwb_schema_language.yaml
-google_sheet_id: 1wVoaiFg47aT9YWNeRfTZ8tYHN8s8PAuDx5i2HUcDpvQ
-google_sheet_tabs: personinfo enums
+#google_sheet_id: 1wVoaiFg47aT9YWNeRfTZ8tYHN8s8PAuDx5i2HUcDpvQ
+#google_sheet_tabs: personinfo enums

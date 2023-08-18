@@ -457,7 +457,6 @@
       "owner": "CompoundDtype",
       "domain_of": [
         "Namespace",
-        "Schema",
         "Group",
         "Attribute",
         "Link",
@@ -635,6 +634,7 @@
       ],
       "range": "Namespace",
       "inlined": true,
+      "inlined_as_list": true,
       "@type": "SlotDefinition"
     },
     {
@@ -791,12 +791,14 @@
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
       "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/datasets",
       "multivalued": true,
-      "owner": "Group",
+      "owner": "Datasets",
       "domain_of": [
-        "Group"
+        "Group",
+        "Datasets"
       ],
       "range": "Dataset",
       "inlined": true,
+      "inlined_as_list": true,
       "@type": "SlotDefinition"
     },
     {
@@ -805,12 +807,14 @@
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
       "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/groups",
       "multivalued": true,
-      "owner": "Group",
+      "owner": "Groups",
       "domain_of": [
-        "Group"
+        "Group",
+        "Groups"
       ],
       "range": "Group",
       "inlined": true,
+      "inlined_as_list": true,
       "@type": "SlotDefinition"
     },
     {
@@ -838,7 +842,7 @@
         "DtypeMixin"
       ],
       "range": "string",
-      "exactly_one_of": [
+      "any_of": [
         {
           "range": "FlatDtype",
           "@type": "AnonymousSlotExpression"
@@ -982,6 +986,18 @@
       "@type": "SlotDefinition"
     },
     {
+      "name": "schema__doc",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
+      "alias": "doc",
+      "owner": "Schema",
+      "domain_of": [
+        "Schema"
+      ],
+      "range": "string",
+      "@type": "SlotDefinition"
+    },
+    {
       "name": "Namespace_name",
       "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/name",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
@@ -1002,25 +1018,6 @@
         "interpolated": true,
         "@type": "PatternExpression"
       },
-      "@type": "SlotDefinition"
-    },
-    {
-      "name": "Schema_doc",
-      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
-      "description": "Description of corresponding object.",
-      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
-      "is_a": "doc",
-      "domain": "Schema",
-      "slot_uri": "https://w3id.org/p2p_ld/nwb-schema-language/doc",
-      "alias": "doc",
-      "owner": "Schema",
-      "domain_of": [
-        "Schema"
-      ],
-      "is_usage_slot": true,
-      "usage_slot_name": "doc",
-      "range": "string",
-      "required": true,
       "@type": "SlotDefinition"
     },
     {
@@ -1085,7 +1082,7 @@
       "usage_slot_name": "dtype",
       "range": "FlatDtype",
       "required": true,
-      "exactly_one_of": [
+      "any_of": [
         {
           "range": "FlatDtype",
           "@type": "AnonymousSlotExpression"
@@ -1139,11 +1136,17 @@
       "slots": [
         "source",
         "namespace",
-        "Schema_doc",
         "title",
-        "neurodata_types"
+        "neurodata_types",
+        "schema__doc"
       ],
       "slot_usage": {},
+      "attributes": [
+        {
+          "name": "doc",
+          "@type": "SlotDefinition"
+        }
+      ],
       "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Schema",
       "rules": [
         {
@@ -1288,6 +1291,17 @@
       "@type": "ClassDefinition"
     },
     {
+      "name": "Groups",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Groups",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slots": [
+        "groups"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Groups",
+      "@type": "ClassDefinition"
+    },
+    {
       "name": "Attribute",
       "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Attribute",
       "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
@@ -1347,6 +1361,17 @@
       ],
       "slot_usage": {},
       "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Dataset",
+      "@type": "ClassDefinition"
+    },
+    {
+      "name": "Datasets",
+      "definition_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Datasets",
+      "from_schema": "https://w3id.org/p2p_ld/nwb-schema-language",
+      "slots": [
+        "datasets"
+      ],
+      "slot_usage": {},
+      "class_uri": "https://w3id.org/p2p_ld/nwb-schema-language/Datasets",
       "@type": "ClassDefinition"
     },
     {
@@ -1491,9 +1516,9 @@
   ],
   "metamodel_version": "1.7.0",
   "source_file": "nwb_schema_language.yaml",
-  "source_file_date": "2023-08-16T23:21:07",
-  "source_file_size": 10816,
-  "generation_date": "2023-08-16T23:21:36",
+  "source_file_date": "2023-08-18T00:28:45",
+  "source_file_size": 10952,
+  "generation_date": "2023-08-18T00:36:53",
   "settings": [
     {
       "setting_key": "email",

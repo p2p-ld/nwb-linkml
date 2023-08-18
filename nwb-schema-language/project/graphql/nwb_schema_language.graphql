@@ -38,6 +38,11 @@ type Dataset implements DtypeMixin, NamingMixin
     dtype: String
   }
 
+type Datasets
+  {
+    datasets: [Dataset]
+  }
+
 interface DtypeMixin
   {
     dtype: String
@@ -56,6 +61,11 @@ type Group implements NamingMixin
     datasets: [Dataset]
     groups: [Group]
     links: [Link]
+  }
+
+type Groups
+  {
+    groups: [Group]
   }
 
 type Link
@@ -97,8 +107,8 @@ type Schema
   {
     source: String
     namespace: String
-    doc: String!
     title: String
     neurodataTypes: [String]
+    doc: String
   }
 

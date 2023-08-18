@@ -36,6 +36,11 @@ CREATE TABLE "Dataset" (
 	PRIMARY KEY (neurodata_type_def, neurodata_type_inc, name, default_name, dims, shape, value, default_value, doc, quantity, linkable, attributes, dtype)
 );
 
+CREATE TABLE "Datasets" (
+	datasets TEXT, 
+	PRIMARY KEY (datasets)
+);
+
 CREATE TABLE "Group" (
 	neurodata_type_def TEXT, 
 	neurodata_type_inc TEXT, 
@@ -49,6 +54,11 @@ CREATE TABLE "Group" (
 	groups TEXT, 
 	links TEXT, 
 	PRIMARY KEY (neurodata_type_def, neurodata_type_inc, name, default_name, doc, quantity, linkable, attributes, datasets, groups, links)
+);
+
+CREATE TABLE "Groups" (
+	groups TEXT, 
+	PRIMARY KEY (groups)
 );
 
 CREATE TABLE "Link" (
@@ -85,8 +95,8 @@ CREATE TABLE "ReferenceDtype" (
 CREATE TABLE "Schema" (
 	source TEXT, 
 	namespace TEXT, 
-	doc TEXT NOT NULL, 
 	title TEXT, 
 	neurodata_types TEXT, 
-	PRIMARY KEY (source, namespace, doc, title, neurodata_types)
+	doc TEXT, 
+	PRIMARY KEY (source, namespace, title, neurodata_types, doc)
 );
