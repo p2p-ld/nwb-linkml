@@ -174,8 +174,8 @@ class DtypeMixin(ConfiguredBaseModel):
 class Attribute(DtypeMixin):
     
     name: str = Field(...)
-    dims: Optional[List[str]] = Field(default_factory=list)
-    shape: Optional[List[str]] = Field(default_factory=list)
+    dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
+    shape: Optional[List[Union[Any, int, str]]] = Field(default_factory=list)
     value: Optional[Any] = Field(None, description="""Optional constant, fixed value for the attribute.""")
     default_value: Optional[Any] = Field(None, description="""Optional default value for variable-valued attributes.""")
     doc: str = Field(..., description="""Description of corresponding object.""")
@@ -211,8 +211,8 @@ class Dataset(NamingMixin, DtypeMixin):
     neurodata_type_inc: Optional[str] = Field(None)
     name: Optional[str] = Field(None)
     default_name: Optional[str] = Field(None)
-    dims: Optional[List[str]] = Field(default_factory=list)
-    shape: Optional[List[str]] = Field(default_factory=list)
+    dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
+    shape: Optional[List[Union[Any, int, str]]] = Field(default_factory=list)
     value: Optional[Any] = Field(None, description="""Optional constant, fixed value for the attribute.""")
     default_value: Optional[Any] = Field(None, description="""Optional default value for variable-valued attributes.""")
     doc: str = Field(..., description="""Description of corresponding object.""")

@@ -13,6 +13,7 @@ include = ["README.md", "src/nwb_schema_language/schema", "project"]
 [tool.poetry.dependencies]
 python = "^3.9"
 linkml-runtime = "^1.1.24"
+pydantic = "<2"
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -24,6 +25,9 @@ linkml = "^1.3.5"
 mkdocs-material = "^8.2.8"
 mkdocs-mermaid2-plugin = "^0.6.0"
 schemasheets = "^0.1.14"
+
+[tool.poetry.scripts]
+run_patches = 'nwb_schema_language.patches:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]

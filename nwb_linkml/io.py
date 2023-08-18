@@ -9,7 +9,7 @@ from linkml_runtime.loaders import yaml_loader
 import yaml
 
 from nwb_schema_language import Namespaces, Group, Dataset
-from nwb_linkml.namespaces import GitRepo, NamespaceRepo
+from nwb_linkml.namespaces import GitRepo, NamespaceRepo, NWB_CORE_REPO
 
 
 
@@ -40,6 +40,13 @@ def load_schema_file(path:Path) -> List[Dataset | Group]:
     #schema.extend([Dataset(**dataset) for dataset in source.get('datasets', [])])
     #schema.extend([Group(**group) for group in source.get('groups', [])])
     return schema
+
+def load_nwb_core():
+    namespace_file = NWB_CORE_REPO.provide_from_git()
+    ns = load_namespaces(namespace_file)
+
+
+
 
 
 

@@ -216,6 +216,7 @@ slots:
     range: Schema
     description: List of the schema to be included in this namespace.
     inlined_as_list: true
+    alias: schema_
 
   # schema
   source:
@@ -285,17 +286,21 @@ slots:
     multivalued: true
   dims:
     multivalued: true
-    range: string
+    any_of:
+      - range: string
+      - range: AnyType
     todos:
-      - Can't quite figure out how to allow an array of arrays
+      - Can't quite figure out how to allow an array of arrays - see https://github.com/linkml/linkml/issues/895
   shape:
     multivalued: true
-    exactly_one_of:
+    any_of:
       - range: integer
         minimum_value: 1
       - equals_string: "null"
+        range: string
+      - range: AnyType
     todos:
-      - Can't quite figure out how to allow an array of arrays
+      - Can't quite figure out how to allow an array of arrays - see https://github.com/linkml/linkml/issues/895
   value:
     range: AnyType
     description: Optional constant, fixed value for the attribute.
