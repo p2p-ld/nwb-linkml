@@ -157,11 +157,11 @@ classes:
       - preconditions:
           slot_conditions:
             dtype:
-              range: CompoundDtype
+              range: FlatDtype
         postconditions:
           slot_conditions:
             dtype:
-              multivalued: true
+              multivalued: false
 
   NamingMixin:
     mixin: true
@@ -239,10 +239,12 @@ slots:
 
   # groups
   neurodata_type_def:
+    description: Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins
     structured_pattern:
       syntax: "{protected_string}"
       interpolated: true
   neurodata_type_inc:
+    description: Used alongside neurodata_type_def to indicate inheritance, naming, and mixins
     structured_pattern:
       syntax: "{protected_string}"
       interpolated: true

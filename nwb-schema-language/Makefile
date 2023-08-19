@@ -108,7 +108,12 @@ gen-project: $(PYMODEL)
 
 gen-pydantic: $(PYMODEL)
 	$(RUN) gen-pydantic $(SOURCE_SCHEMA_PATH) --pydantic_version 1 > $(PYMODEL)/nwb_schema_pydantic.py
-	$(RUN) run_patches --phase post_generation
+	$(RUN) run_patches --phase post_generation_pydantic
+
+gen-pydantic-test: $(PYMODEL)
+	$(RUN) gen-pydantic src/nwb_schema_language/schema/test_multival.yml --pydantic_version 1 > $(PYMODEL)/test_multival_pydantic.py
+#	$(RUN) run_patches --phase post_generation
+
 
 test: test-schema test-python test-examples
 

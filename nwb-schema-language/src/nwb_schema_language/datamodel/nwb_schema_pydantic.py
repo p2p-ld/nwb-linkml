@@ -168,7 +168,7 @@ class CompoundDtype(ConfiguredBaseModel):
 
 class DtypeMixin(ConfiguredBaseModel):
     
-    dtype: Optional[List[Union[CompoundDtype, FlatDtype, ReferenceDtype]]] = Field(default_factory=list)
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
     
 
 class Attribute(DtypeMixin):
@@ -180,7 +180,7 @@ class Attribute(DtypeMixin):
     default_value: Optional[Any] = Field(None, description="""Optional default value for variable-valued attributes.""")
     doc: str = Field(..., description="""Description of corresponding object.""")
     required: Optional[bool] = Field(True, description="""Optional boolean key describing whether the attribute is required. Default value is True.""")
-    dtype: Optional[List[Union[CompoundDtype, FlatDtype, ReferenceDtype]]] = Field(default_factory=list)
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
     
 
 class NamingMixin(ConfiguredBaseModel):
@@ -192,8 +192,8 @@ class NamingMixin(ConfiguredBaseModel):
 
 class Group(NamingMixin):
     
-    neurodata_type_def: Optional[str] = Field(None)
-    neurodata_type_inc: Optional[str] = Field(None)
+    neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
+    neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
     name: Optional[str] = Field(None)
     default_name: Optional[str] = Field(None)
     doc: str = Field(..., description="""Description of corresponding object.""")
@@ -207,8 +207,8 @@ class Group(NamingMixin):
 
 class Dataset(NamingMixin, DtypeMixin):
     
-    neurodata_type_def: Optional[str] = Field(None)
-    neurodata_type_inc: Optional[str] = Field(None)
+    neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
+    neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
     name: Optional[str] = Field(None)
     default_name: Optional[str] = Field(None)
     dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
@@ -219,7 +219,7 @@ class Dataset(NamingMixin, DtypeMixin):
     quantity: Optional[Union[QuantityEnum, int]] = Field(1)
     linkable: Optional[bool] = Field(None)
     attributes: Optional[List[Attribute]] = Field(default_factory=list)
-    dtype: Optional[List[Union[CompoundDtype, FlatDtype, ReferenceDtype]]] = Field(default_factory=list)
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
     
 
 
