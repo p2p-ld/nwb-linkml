@@ -1,9 +1,9 @@
 # Auto generated from nwb_schema_language.yaml by pythongen.py version: 0.0.1
 # Generation date: 2023-08-18T00:36:55
-# Schema: nwb-schema-language
+# Schema: nwb_schema_language
 #
 # id: https://w3id.org/p2p_ld/nwb-schema-language
-# description: Translation of the nwb-schema-language to LinkML
+# description: Translation of the nwb_schema_language to LinkML
 # license: GNU GPL v3.0
 
 import dataclasses

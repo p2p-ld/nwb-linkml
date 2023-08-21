@@ -27,8 +27,6 @@ def load_yaml(path:Path) -> dict:
 
     # apply maps
     maps = [m for m in Map.instances if m.phase == PHASES.postload]
-    print('got maps')
-    print(maps)
     for amap in maps:
         ns_dict = amap.apply(ns_dict)
     return ns_dict
