@@ -3,6 +3,7 @@ from typing import Dict
 
 
 from nwb_linkml import io
+from nwb_linkml.adapters.namespaces import NamespacesAdapter
 import shutil
 from pathlib import Path
 
@@ -17,6 +18,7 @@ def tmp_output_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def nwb_core_fixture() -> Dict[str, io.NamespaceBundle]:
+def nwb_core_fixture() -> NamespacesAdapter:
     nwb_core = io.load_nwb_core()
+    nwb_core.populate_imports()
     return nwb_core

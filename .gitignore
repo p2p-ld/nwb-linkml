@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 nwb.schema.json
+__tmp__
