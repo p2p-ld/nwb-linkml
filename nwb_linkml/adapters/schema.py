@@ -7,7 +7,7 @@ from typing import Optional, List, TYPE_CHECKING
 from pathlib import Path
 from pydantic import Field
 
-from nwb_linkml.adapters.adapter import Adapter
+from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.classes import ClassAdapter
 if TYPE_CHECKING:
     from nwb_linkml.adapters.namespaces import NamespacesAdapter
@@ -47,7 +47,7 @@ class SchemaAdapter(Adapter):
 
         return out_str
 
-    def build(self) -> SchemaDefinition:
+    def build(self) -> BuildResult:
         """
         Make the LinkML representation for this schema file
 
@@ -59,16 +59,25 @@ class SchemaAdapter(Adapter):
         """
         classes = [ClassAdapter(cls=dset) for dset in self.datasets]
         classes.extend(ClassAdapter(cls=group) for group in self.groups)
-        built_classes = [c.build() for c in classes]
+        built_results = None
+        for cls in classes:
+            if built_results is None:
+                built_results = cls.build()
+            else:
+                built_results += cls.build()
 
 
         sch = SchemaDefinition(
             name = self.name,
             id = self.name,
             imports = [i.name for i in self.imports],
-            classes=built_classes
+            classes=built_results.classes,
+            slots=built_results.slots,
+            types=built_results.types
         )
-        return sch
+        # every schema needs the language elements
+        sch.imports.append('nwb.language')
+        return BuildResult(schemas=[sch])
 
 
     @property

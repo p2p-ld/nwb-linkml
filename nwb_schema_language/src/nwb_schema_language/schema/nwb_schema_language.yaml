@@ -124,6 +124,7 @@ classes:
       - quantity
       - linkable
       - attributes
+      - groups
 
   Datasets:
     slots:

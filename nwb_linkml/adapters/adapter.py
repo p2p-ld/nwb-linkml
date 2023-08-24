@@ -1,11 +1,58 @@
 """
 Base class for adapters
 """
-from typing import List, Dict, Type, Generator, Any, Tuple
-from pydantic import BaseModel
+from abc import abstractmethod
+import warnings
+from dataclasses import dataclass, field
+from typing import List, Dict, Type, Generator, Any, Tuple, Optional
+from pydantic import BaseModel, Field, validator
+from linkml_runtime.linkml_model import Element, SchemaDefinition, ClassDefinition, SlotDefinition, TypeDefinition
+
+# SchemaDefClass = dataclass(SchemaDefinition).__pydantic_model__
+
+@dataclass
+class BuildResult:
+    # pass
+    schemas: List[SchemaDefinition] = field(default_factory=list)
+    classes: List[ClassDefinition] = field(default_factory=list)
+    slots: List[SlotDefinition] = field(default_factory=list)
+    types: List[TypeDefinition] = field(default_factory=list)
+
+    def __post_init__(self):
+        for field in ('schemas', 'classes', 'slots', 'types'):
+            attr = getattr(self, field)
+            if not isinstance(attr, list):
+                setattr(self, field, [attr])
+
+    def _dedupe(self, ours, others):
+        existing_names = [c.name for c in ours]
+        others_dedupe = [o for o in others if o.name not in existing_names]
+        return others_dedupe
+
+    def __add__(self, other:'BuildResult') -> 'BuildResult':
+        # if not isinstance(other, 'BuildResult'):
+        #     raise TypeError('Can only add two build results together')
+
+        self.schemas.extend(self._dedupe(self.schemas, other.schemas))
+        self.classes.extend(self._dedupe(self.classes, other.classes))
+        # existing_names = [c.name for c in self.classes]
+        # for newc in other.classes:
+        #     if newc.name in existing_names:
+        #         warnings.warn(f'Not creating duplicate class for {newc.name}')
+        #         continue
+        #     self.classes.append(newc)
+        # self.classes.extend(other.classes)
+        self.slots.extend(other.slots)
+        self.types.extend(other.types)
+        return self
+
 
 class Adapter(BaseModel):
-    pass
+    @abstractmethod
+    def build(self) -> 'BuildResult':
+        """
+        Generate the corresponding linkML element for this adapter
+        """
 
     def walk(self, input: BaseModel | list | dict):
         yield input

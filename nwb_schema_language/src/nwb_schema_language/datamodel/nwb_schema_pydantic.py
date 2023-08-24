@@ -219,6 +219,7 @@ class Dataset(NamingMixin, DtypeMixin):
     quantity: Optional[Union[QuantityEnum, int]] = Field(1)
     linkable: Optional[bool] = Field(None)
     attributes: Optional[List[Attribute]] = Field(default_factory=list)
+    datasets: Optional[List[Dataset]] = Field(default_factory=list)
     dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
     
 
