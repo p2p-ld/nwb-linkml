@@ -1,5 +1,5 @@
 """
-Maps to change the loaded .yaml from nwb schema before it's
+Maps to change the loaded .yaml from nwb schema before it's given to the nwb_schema_language models
 """
 
 from nwb_linkml.map import KeyMap, SCOPE_TYPES, PHASES
