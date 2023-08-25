@@ -1,0 +1,154 @@
+name: nwb.language
+description: Adapter objects to mimic the behavior of elements in the nwb-schema-language
+id: nwb.language
+imports:
+- linkml:types
+prefixes:
+  linkml:
+    prefix_prefix: linkml
+    prefix_reference: https://w3id.org/linkml
+default_prefix: nwb.language/
+types:
+  float:
+    name: float
+    typeof: float
+  float32:
+    name: float32
+    typeof: float
+  double:
+    name: double
+    typeof: double
+  float64:
+    name: float64
+    typeof: double
+  long:
+    name: long
+    typeof: integer
+  int64:
+    name: int64
+    typeof: integer
+  int:
+    name: int
+    typeof: integer
+  int32:
+    name: int32
+    typeof: integer
+  int16:
+    name: int16
+    typeof: integer
+  short:
+    name: short
+    typeof: integer
+  int8:
+    name: int8
+    typeof: integer
+  uint:
+    name: uint
+    typeof: integer
+    minimum_value: 0
+  uint32:
+    name: uint32
+    typeof: integer
+    minimum_value: 0
+  uint16:
+    name: uint16
+    typeof: integer
+    minimum_value: 0
+  uint8:
+    name: uint8
+    typeof: integer
+    minimum_value: 0
+  uint64:
+    name: uint64
+    typeof: integer
+    minimum_value: 0
+  numeric:
+    name: numeric
+    typeof: float
+  text:
+    name: text
+    typeof: string
+  utf:
+    name: utf
+    typeof: string
+  utf8:
+    name: utf8
+    typeof: string
+  utf_8:
+    name: utf_8
+    typeof: string
+  ascii:
+    name: ascii
+    typeof: string
+  bool:
+    name: bool
+    typeof: boolean
+  isodatetime:
+    name: isodatetime
+    typeof: date
+enums:
+  FlatDType:
+    name: FlatDType
+    permissible_values:
+      float:
+        text: float
+      float32:
+        text: float32
+      double:
+        text: double
+      float64:
+        text: float64
+      long:
+        text: long
+      int64:
+        text: int64
+      int:
+        text: int
+      int32:
+        text: int32
+      int16:
+        text: int16
+      short:
+        text: short
+      int8:
+        text: int8
+      uint:
+        text: uint
+      uint32:
+        text: uint32
+      uint16:
+        text: uint16
+      uint8:
+        text: uint8
+      uint64:
+        text: uint64
+      numeric:
+        text: numeric
+      text:
+        text: text
+      utf:
+        text: utf
+      utf8:
+        text: utf8
+      utf_8:
+        text: utf_8
+      ascii:
+        text: ascii
+      bool:
+        text: bool
+      isodatetime:
+        text: isodatetime
+classes:
+  Arraylike:
+    name: Arraylike
+    description: Container for arraylike information held in the dims, shape, and
+      dtype properties.this is a special case to be interpreted by downstream i/o.
+      this class has no slotsand is abstract by default.- Each slot within a subclass
+      indicates a possible dimension.- Only dimensions that are present in all the
+      dimension specifiers in the  original schema are required.- Shape requirements
+      are indicated using max/min cardinalities on the slot.
+    abstract: true
+  AnyType:
+    name: AnyType
+    description: Needed because some classes in hdmf-common are datasets without dtype
+    class_uri: linkml:Any

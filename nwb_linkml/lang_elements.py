@@ -20,27 +20,27 @@ FlatDType = EnumDefinition(
     permissible_values=[PermissibleValue(p) for p in FlatDtype_source.__members__.keys()],
 )
 
-DimNameSlot = SlotDefinition(
-    name="dim_name",
-    range="string",
-    description="The name of a dimension"
-)
-DimShapeSlot = SlotDefinition(
-    name="dim_shape",
-    range="integer",
-    required=False
-)
-DimClass = ClassDefinition(
-    name="Dimension",
-    slots=[DimNameSlot.name, DimShapeSlot.name],
-    description="A single dimension within a shape"
-)
-DimSlot = SlotDefinition(
-    name="dim",
-    range=DimClass.name,
-    multivalued=True,
-    description="Slot representing the dimensions that a Shape can have"
-)
+# DimNameSlot = SlotDefinition(
+#     name="dim_name",
+#     range="string",
+#     description="The name of a dimension"
+# )
+# DimShapeSlot = SlotDefinition(
+#     name="dim_shape",
+#     range="integer",
+#     required=False
+# )
+# DimClass = ClassDefinition(
+#     name="Dimension",
+#     slots=[DimNameSlot.name, DimShapeSlot.name],
+#     description="A single dimension within a shape"
+# )
+# DimSlot = SlotDefinition(
+#     name="dim",
+#     range=DimClass.name,
+#     multivalued=True,
+#     description="Slot representing the dimensions that a Shape can have"
+# )
 
 # ShapeClass = ClassDefinition(
 #     name="Shape",
@@ -61,14 +61,32 @@ for nwbtype, linkmltype in flat_to_linkml.items():
     )
     DTypeTypes.append(atype)
 
+Arraylike = ClassDefinition(
+    name="Arraylike",
+    description= ("Container for arraylike information held in the dims, shape, and dtype properties."
+                  "this is a special case to be interpreted by downstream i/o. this class has no slots"
+                  "and is abstract by default."
+                  "- Each slot within a subclass indicates a possible dimension."
+                  "- Only dimensions that are present in all the dimension specifiers in the"
+                  "  original schema are required."
+                  "- Shape requirements are indicated using max/min cardinalities on the slot."
+                  ),
+    abstract=True
+)
+
+AnyType = ClassDefinition(
+    name="AnyType",
+    class_uri="linkml:Any",
+    description="""Needed because some classes in hdmf-common are datasets without dtype"""
+)
 
 NwbLangSchema = SchemaDefinition(
     name="nwb.language",
     id='nwb.language',
     description="Adapter objects to mimic the behavior of elements in the nwb-schema-language",
     enums=[FlatDType],
-    slots=[DimNameSlot, DimShapeSlot, DimSlot],
-    classes=[DimClass],
+    # slots=[DimNameSlot, DimShapeSlot, DimSlot],
+    classes=[Arraylike, AnyType],
     types=DTypeTypes,
     imports=['linkml:types'],
     prefixes={'linkml': Prefix('linkml','https://w3id.org/linkml')}

@@ -1,0 +1,18 @@
+name: core
+description: NWB namespace
+id: core
+version: 2.6.0-alpha
+imports:
+- core.nwb.base
+- core.nwb.device
+- core.nwb.epoch
+- core.nwb.image
+- core.nwb.file
+- core.nwb.misc
+- core.nwb.behavior
+- core.nwb.ecephys
+- core.nwb.icephys
+- core.nwb.ogen
+- core.nwb.ophys
+- core.nwb.retinotopy
+default_prefix: core/

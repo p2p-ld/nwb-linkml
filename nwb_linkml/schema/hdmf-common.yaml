@@ -1,0 +1,9 @@
+name: hdmf-common
+description: Common data structures provided by HDMF
+id: hdmf-common
+version: 1.8.0
+imports:
+- hdmf-common.base
+- hdmf-common.table
+- hdmf-common.sparse
+default_prefix: hdmf-common/

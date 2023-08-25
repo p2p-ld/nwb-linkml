@@ -253,7 +253,7 @@ groups:
     dtype: text
     doc: Description of this collection of images.
   datasets:
-#  - neurodata_type_inc: Image
+  - neurodata_type_inc: Image
     doc: Images stored in this collection.
     quantity: '+'
   - name: order_of_images

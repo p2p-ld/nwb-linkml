@@ -4,7 +4,7 @@ Base class for adapters
 from abc import abstractmethod
 import warnings
 from dataclasses import dataclass, field
-from typing import List, Dict, Type, Generator, Any, Tuple, Optional
+from typing import List, Dict, Type, Generator, Any, Tuple, Optional, TypeVar, TypeVarTuple, Unpack
 from pydantic import BaseModel, Field, validator
 from linkml_runtime.linkml_model import Element, SchemaDefinition, ClassDefinition, SlotDefinition, TypeDefinition
 
@@ -46,6 +46,8 @@ class BuildResult:
         self.types.extend(other.types)
         return self
 
+T = TypeVar
+Ts = TypeVarTuple('Ts')
 
 class Adapter(BaseModel):
     @abstractmethod
@@ -84,7 +86,7 @@ class Adapter(BaseModel):
                 yield item[1]
 
 
-    def walk_types(self, input: BaseModel | list | dict, get_type: Type | List[Type] | Tuple[Type]):
+    def walk_types(self, input: BaseModel | list | dict, get_type: T | List[Unpack[Ts]] | Tuple[Unpack[T]]) -> Generator[T, None, None]:
         if not isinstance(get_type, (list, tuple)):
             get_type = [get_type]
 

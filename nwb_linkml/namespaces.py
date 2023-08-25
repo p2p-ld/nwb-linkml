@@ -154,8 +154,14 @@ class GitRepo:
                 self.cleanup()
             else:
                 if not self.check():
-                    warnings.warn('Destination directory is not empty and does not pass checks for correctness! pass force to overwrite')
-                return
+                    warnings.warn('Destination directory is not empty and does not pass checks for correctness! cleaning up')
+                    self.cleanup()
+                else:
+                    # already have it
+                    return
+        elif self.temp_directory.exists():
+            # exists but empty
+            self.cleanup()
 
         res = subprocess.run(['git', 'clone', str(self.namespace.repository), str(self.temp_directory)])
         if res.returncode != 0:

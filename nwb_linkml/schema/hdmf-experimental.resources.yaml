@@ -1,0 +1,149 @@
+name: hdmf-experimental.resources
+id: hdmf-experimental.resources
+imports:
+- hdmf-common.base
+- nwb.language
+default_prefix: hdmf-experimental.resources/
+classes:
+  HERD:
+    name: HERD
+    description: HDMF External Resources Data Structure. A set of six tables for tracking
+      external resource references in a file or across multiple files.
+    is_a: Container
+    attributes:
+      keys:
+        name: keys
+        description: A table for storing user terms that are used to refer to external
+          resources.
+        multivalued: false
+        range: HERD_keys
+        required: true
+      files:
+        name: files
+        description: A table for storing object ids of files used in external resources.
+        multivalued: false
+        range: HERD_files
+        required: true
+      entities:
+        name: entities
+        description: A table for mapping user terms (i.e., keys) to resource entities.
+        multivalued: false
+        range: HERD_entities
+        required: true
+      objects:
+        name: objects
+        description: A table for identifying which objects in a file contain references
+          to external resources.
+        multivalued: false
+        range: HERD_objects
+        required: true
+      object_keys:
+        name: object_keys
+        description: A table for identifying which objects use which keys.
+        multivalued: false
+        range: HERD_object_keys
+        required: true
+      entity_keys:
+        name: entity_keys
+        description: A table for identifying which keys use which entity.
+        multivalued: false
+        range: HERD_entity_keys
+        required: true
+  HERD_keys:
+    name: HERD_keys
+    description: A table for storing user terms that are used to refer to external
+      resources.
+    is_a: Data
+    attributes:
+      array:
+        name: array
+        range: HERD_keys_Array
+  HERD_keys_Array:
+    name: HERD_keys_Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: AnyType
+        required: true
+  HERD_files:
+    name: HERD_files
+    description: A table for storing object ids of files used in external resources.
+    is_a: Data
+    attributes:
+      array:
+        name: array
+        range: HERD_files_Array
+  HERD_files_Array:
+    name: HERD_files_Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: AnyType
+        required: true
+  HERD_entities:
+    name: HERD_entities
+    description: A table for mapping user terms (i.e., keys) to resource entities.
+    is_a: Data
+    attributes:
+      array:
+        name: array
+        range: HERD_entities_Array
+  HERD_entities_Array:
+    name: HERD_entities_Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: AnyType
+        required: true
+  HERD_objects:
+    name: HERD_objects
+    description: A table for identifying which objects in a file contain references
+      to external resources.
+    is_a: Data
+    attributes:
+      array:
+        name: array
+        range: HERD_objects_Array
+  HERD_objects_Array:
+    name: HERD_objects_Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: AnyType
+        required: true
+  HERD_object_keys:
+    name: HERD_object_keys
+    description: A table for identifying which objects use which keys.
+    is_a: Data
+    attributes:
+      array:
+        name: array
+        range: HERD_object_keys_Array
+  HERD_object_keys_Array:
+    name: HERD_object_keys_Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: AnyType
+        required: true
+  HERD_entity_keys:
+    name: HERD_entity_keys
+    description: A table for identifying which keys use which entity.
+    is_a: Data
+    attributes:
+      array:
+        name: array
+        range: HERD_entity_keys_Array
+  HERD_entity_keys_Array:
+    name: HERD_entity_keys_Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: AnyType
+        required: true

@@ -1,0 +1,614 @@
+name: core.nwb.misc
+id: core.nwb.misc
+imports:
+- core.nwb.base
+- hdmf-common.table
+- nwb.language
+default_prefix: core.nwb.misc/
+classes:
+  AbstractFeatureSeries:
+    name: AbstractFeatureSeries
+    description: Abstract features, such as quantitative descriptions of sensory stimuli.
+      The TimeSeries::data field is a 2D array, storing those features (e.g., for
+      visual grating stimulus this might be orientation, spatial frequency and contrast).
+      Null stimuli (eg, uniform gray) can be marked as being an independent feature
+      (eg, 1.0 for gray, 0.0 for actual stimulus) or by storing NaNs for feature values,
+      or through use of the TimeSeries::control fields. A set of features is considered
+      to persist until the next set of features is defined. The final set of features
+      stored should be the null set. This is useful when storing the raw stimulus
+      is impractical.
+    is_a: TimeSeries
+    attributes:
+      data:
+        name: data
+        description: Values of each feature at each time.
+        multivalued: false
+        range: AbstractFeatureSeries_data
+        required: true
+      feature_units:
+        name: feature_units
+        description: Units of each feature.
+        multivalued: false
+        range: AbstractFeatureSeries_feature_units
+        required: false
+      features:
+        name: features
+        description: Description of the features represented in TimeSeries::data.
+        multivalued: false
+        range: AbstractFeatureSeries_features
+        required: true
+  AbstractFeatureSeries_data:
+    name: AbstractFeatureSeries_data
+    description: Values of each feature at each time.
+    attributes:
+      unit:
+        name: unit
+        description: Since there can be different units for different features, store
+          the units in 'feature_units'. The default value for this attribute is "see
+          'feature_units'".
+        range: text
+      array:
+        name: array
+        range: AbstractFeatureSeries_data_Array
+  AbstractFeatureSeries_data_Array:
+    name: AbstractFeatureSeries_data_Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: true
+      num_features:
+        name: num_features
+        range: numeric
+        required: false
+  AbstractFeatureSeries_feature_units:
+    name: AbstractFeatureSeries_feature_units
+    description: Units of each feature.
+    attributes:
+      array:
+        name: array
+        range: AbstractFeatureSeries_feature_units_Array
+  AbstractFeatureSeries_feature_units_Array:
+    name: AbstractFeatureSeries_feature_units_Array
+    is_a: Arraylike
+    attributes:
+      num_features:
+        name: num_features
+        range: text
+        required: true
+  AbstractFeatureSeries_features:
+    name: AbstractFeatureSeries_features
+    description: Description of the features represented in TimeSeries::data.
+    attributes:
+      array:
+        name: array
+        range: AbstractFeatureSeries_features_Array
+  AbstractFeatureSeries_features_Array:
+    name: AbstractFeatureSeries_features_Array
+    is_a: Arraylike
+    attributes:
+      num_features:
+        name: num_features
+        range: text
+        required: true
+  AnnotationSeries:
+    name: AnnotationSeries
+    description: Stores user annotations made during an experiment. The data[] field
+      stores a text array, and timestamps are stored for each annotation (ie, interval=1).
+      This is largely an alias to a standard TimeSeries storing a text array but that
+      is identifiable as storing annotations in a machine-readable way.
+    is_a: TimeSeries
+    attributes:
+      data:
+        name: data
+        description: Annotations made during an experiment.
+        multivalued: false
+        range: AnnotationSeries_data
+        required: true
+  AnnotationSeries_data:
+    name: AnnotationSeries_data
+    description: Annotations made during an experiment.
+    attributes:
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data. Annotations
+          have no units, so the value is fixed to -1.0.
+        range: float32
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Annotations
+          have no units, so the value is fixed to 'n/a'.
+        range: text
+      array:
+        name: array
+        range: AnnotationSeries_data_Array
+  AnnotationSeries_data_Array:
+    name: AnnotationSeries_data_Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: text
+        required: true
+  IntervalSeries:
+    name: IntervalSeries
+    description: Stores intervals of data. The timestamps field stores the beginning
+      and end of intervals. The data field stores whether the interval just started
+      (>0 value) or ended (<0 value). Different interval types can be represented
+      in the same series by using multiple key values (eg, 1 for feature A, 2 for
+      feature B, 3 for feature C, etc). The field data stores an 8-bit integer. This
+      is largely an alias of a standard TimeSeries but that is identifiable as representing
+      time intervals in a machine-readable way.
+    is_a: TimeSeries
+    attributes:
+      data:
+        name: data
+        description: Use values >0 if interval started, <0 if interval ended.
+        multivalued: false
+        range: IntervalSeries_data
+        required: true
+  IntervalSeries_data:
+    name: IntervalSeries_data
+    description: Use values >0 if interval started, <0 if interval ended.
+    attributes:
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data. Annotations
+          have no units, so the value is fixed to -1.0.
+        range: float32
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Annotations
+          have no units, so the value is fixed to 'n/a'.
+        range: text
+      array:
+        name: array
+        range: IntervalSeries_data_Array
+  IntervalSeries_data_Array:
+    name: IntervalSeries_data_Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: int8
+        required: true
+  DecompositionSeries:
+    name: DecompositionSeries
+    description: Spectral analysis of a time series, e.g. of an LFP or a speech signal.
+    is_a: TimeSeries
+    attributes:
+      data:
+        name: data
+        description: Data decomposed into frequency bands.
+        multivalued: false
+        range: DecompositionSeries_data
+        required: true
+      metric:
+        name: metric
+        description: The metric used, e.g. phase, amplitude, power.
+        multivalued: false
+        range: DecompositionSeries_metric
+        required: true
+      source_channels:
+        name: source_channels
+        description: DynamicTableRegion pointer to the channels that this decomposition
+          series was generated from.
+        multivalued: false
+        range: DecompositionSeries_source_channels
+        required: false
+      bands:
+        name: bands
+        description: Table for describing the bands that this series was generated
+          from. There should be one row in this table for each band.
+        multivalued: false
+        range: DecompositionSeries_bands
+        required: true
+  DecompositionSeries_data:
+    name: DecompositionSeries_data
+    description: Data decomposed into frequency bands.
+    attributes:
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+      array:
+        name: array
+        range: DecompositionSeries_data_Array
+  DecompositionSeries_data_Array:
+    name: DecompositionSeries_data_Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: false
+      num_channels:
+        name: num_channels
+        range: numeric
+        required: false
+      num_bands:
+        name: num_bands
+        range: numeric
+        required: false
+  DecompositionSeries_metric:
+    name: DecompositionSeries_metric
+    description: The metric used, e.g. phase, amplitude, power.
+  DecompositionSeries_source_channels:
+    name: DecompositionSeries_source_channels
+    description: DynamicTableRegion pointer to the channels that this decomposition
+      series was generated from.
+    is_a: DynamicTableRegion
+  DecompositionSeries_bands:
+    name: DecompositionSeries_bands
+    description: Table for describing the bands that this series was generated from.
+      There should be one row in this table for each band.
+    is_a: DynamicTable
+    attributes:
+      band_name:
+        name: band_name
+        description: Name of the band, e.g. theta.
+        multivalued: false
+        range: DecompositionSeries_bands_band_name
+        required: true
+      band_limits:
+        name: band_limits
+        description: Low and high limit of each band in Hz. If it is a Gaussian filter,
+          use 2 SD on either side of the center.
+        multivalued: false
+        range: DecompositionSeries_bands_band_limits
+        required: true
+      band_mean:
+        name: band_mean
+        description: The mean Gaussian filters, in Hz.
+        multivalued: false
+        range: DecompositionSeries_bands_band_mean
+        required: true
+      band_stdev:
+        name: band_stdev
+        description: The standard deviation of Gaussian filters, in Hz.
+        multivalued: false
+        range: DecompositionSeries_bands_band_stdev
+        required: true
+  DecompositionSeries_bands_band_name:
+    name: DecompositionSeries_bands_band_name
+    description: Name of the band, e.g. theta.
+    is_a: VectorData
+  DecompositionSeries_bands_band_limits:
+    name: DecompositionSeries_bands_band_limits
+    description: Low and high limit of each band in Hz. If it is a Gaussian filter,
+      use 2 SD on either side of the center.
+    is_a: VectorData
+    attributes:
+      array:
+        name: array
+        range: DecompositionSeries_bands_band_limits_Array
+  DecompositionSeries_bands_band_limits_Array:
+    name: DecompositionSeries_bands_band_limits_Array
+    is_a: Arraylike
+    attributes:
+      num_bands:
+        name: num_bands
+        range: float32
+        required: false
+      low, high:
+        name: low, high
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+  DecompositionSeries_bands_band_mean:
+    name: DecompositionSeries_bands_band_mean
+    description: The mean Gaussian filters, in Hz.
+    is_a: VectorData
+    attributes:
+      array:
+        name: array
+        range: DecompositionSeries_bands_band_mean_Array
+  DecompositionSeries_bands_band_mean_Array:
+    name: DecompositionSeries_bands_band_mean_Array
+    is_a: Arraylike
+    attributes:
+      num_bands:
+        name: num_bands
+        range: float32
+        required: true
+  DecompositionSeries_bands_band_stdev:
+    name: DecompositionSeries_bands_band_stdev
+    description: The standard deviation of Gaussian filters, in Hz.
+    is_a: VectorData
+    attributes:
+      array:
+        name: array
+        range: DecompositionSeries_bands_band_stdev_Array
+  DecompositionSeries_bands_band_stdev_Array:
+    name: DecompositionSeries_bands_band_stdev_Array
+    is_a: Arraylike
+    attributes:
+      num_bands:
+        name: num_bands
+        range: float32
+        required: true
+  Units:
+    name: Units
+    description: Data about spiking units. Event times of observed units (e.g. cell,
+      synapse, etc.) should be concatenated and stored in spike_times.
+    is_a: DynamicTable
+    attributes:
+      spike_times_index:
+        name: spike_times_index
+        description: Index into the spike_times dataset.
+        multivalued: false
+        range: Units_spike_times_index
+        required: false
+      spike_times:
+        name: spike_times
+        description: Spike times for each unit in seconds.
+        multivalued: false
+        range: Units_spike_times
+        required: false
+      obs_intervals_index:
+        name: obs_intervals_index
+        description: Index into the obs_intervals dataset.
+        multivalued: false
+        range: Units_obs_intervals_index
+        required: false
+      obs_intervals:
+        name: obs_intervals
+        description: Observation intervals for each unit.
+        multivalued: false
+        range: Units_obs_intervals
+        required: false
+      electrodes_index:
+        name: electrodes_index
+        description: Index into electrodes.
+        multivalued: false
+        range: Units_electrodes_index
+        required: false
+      electrodes:
+        name: electrodes
+        description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
+        multivalued: false
+        range: Units_electrodes
+        required: false
+      electrode_group:
+        name: electrode_group
+        description: Electrode group that each spike unit came from.
+        multivalued: false
+        range: Units_electrode_group
+        required: false
+      waveform_mean:
+        name: waveform_mean
+        description: Spike waveform mean for each spike unit.
+        multivalued: false
+        range: Units_waveform_mean
+        required: false
+      waveform_sd:
+        name: waveform_sd
+        description: Spike waveform standard deviation for each spike unit.
+        multivalued: false
+        range: Units_waveform_sd
+        required: false
+      waveforms:
+        name: waveforms
+        description: Individual waveforms for each spike on each electrode. This is
+          a doubly indexed column. The 'waveforms_index' column indexes which waveforms
+          in this column belong to the same spike event for a given unit, where each
+          waveform was recorded from a different electrode. The 'waveforms_index_index'
+          column indexes the 'waveforms_index' column to indicate which spike events
+          belong to a given unit. For example, if the 'waveforms_index_index' column
+          has values [2, 5, 6], then the first 2 elements of the 'waveforms_index'
+          column correspond to the 2 spike events of the first unit, the next 3 elements
+          of the 'waveforms_index' column correspond to the 3 spike events of the
+          second unit, and the next 1 element of the 'waveforms_index' column corresponds
+          to the 1 spike event of the third unit. If the 'waveforms_index' column
+          has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms'
+          column contain the 3 spike waveforms that were recorded from 3 different
+          electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays
+          for a graphical representation of this example. When there is only one electrode
+          for each unit (i.e., each spike time is associated with a single waveform),
+          then the 'waveforms_index' column will have values 1, 2, ..., N, where N
+          is the number of spike events. The number of electrodes for each spike event
+          should be the same within a given unit. The 'electrodes' column should be
+          used to indicate which electrodes are associated with each unit, and the
+          order of the waveforms within a given unit x spike event should be in the
+          same order as the electrodes referenced in the 'electrodes' column of this
+          table. The number of samples for each waveform must be the same.
+        multivalued: false
+        range: Units_waveforms
+        required: false
+      waveforms_index:
+        name: waveforms_index
+        description: Index into the waveforms dataset. One value for every spike event.
+          See 'waveforms' for more detail.
+        multivalued: false
+        range: Units_waveforms_index
+        required: false
+      waveforms_index_index:
+        name: waveforms_index_index
+        description: Index into the waveforms_index dataset. One value for every unit
+          (row in the table). See 'waveforms' for more detail.
+        multivalued: false
+        range: Units_waveforms_index_index
+        required: false
+  Units_spike_times_index:
+    name: Units_spike_times_index
+    description: Index into the spike_times dataset.
+    is_a: VectorIndex
+  Units_spike_times:
+    name: Units_spike_times
+    description: Spike times for each unit in seconds.
+    is_a: VectorData
+    attributes:
+      resolution:
+        name: resolution
+        description: The smallest possible difference between two spike times. Usually
+          1 divided by the acquisition sampling rate from which spike times were extracted,
+          but could be larger if the acquisition time series was downsampled or smaller
+          if the acquisition time series was smoothed/interpolated and it is possible
+          for the spike time to be between samples.
+        range: float64
+  Units_obs_intervals_index:
+    name: Units_obs_intervals_index
+    description: Index into the obs_intervals dataset.
+    is_a: VectorIndex
+  Units_obs_intervals:
+    name: Units_obs_intervals
+    description: Observation intervals for each unit.
+    is_a: VectorData
+    attributes:
+      array:
+        name: array
+        range: Units_obs_intervals_Array
+  Units_obs_intervals_Array:
+    name: Units_obs_intervals_Array
+    is_a: Arraylike
+    attributes:
+      num_intervals:
+        name: num_intervals
+        range: float64
+        required: false
+      start|end:
+        name: start|end
+        range: float64
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+  Units_electrodes_index:
+    name: Units_electrodes_index
+    description: Index into electrodes.
+    is_a: VectorIndex
+  Units_electrodes:
+    name: Units_electrodes
+    description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
+    is_a: DynamicTableRegion
+  Units_electrode_group:
+    name: Units_electrode_group
+    description: Electrode group that each spike unit came from.
+    is_a: VectorData
+  Units_waveform_mean:
+    name: Units_waveform_mean
+    description: Spike waveform mean for each spike unit.
+    is_a: VectorData
+    attributes:
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        range: text
+      array:
+        name: array
+        range: Units_waveform_mean_Array
+  Units_waveform_mean_Array:
+    name: Units_waveform_mean_Array
+    is_a: Arraylike
+    attributes:
+      num_units:
+        name: num_units
+        range: float32
+        required: true
+      num_samples:
+        name: num_samples
+        range: float32
+        required: true
+      num_electrodes:
+        name: num_electrodes
+        range: float32
+        required: false
+  Units_waveform_sd:
+    name: Units_waveform_sd
+    description: Spike waveform standard deviation for each spike unit.
+    is_a: VectorData
+    attributes:
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        range: text
+      array:
+        name: array
+        range: Units_waveform_sd_Array
+  Units_waveform_sd_Array:
+    name: Units_waveform_sd_Array
+    is_a: Arraylike
+    attributes:
+      num_units:
+        name: num_units
+        range: float32
+        required: true
+      num_samples:
+        name: num_samples
+        range: float32
+        required: true
+      num_electrodes:
+        name: num_electrodes
+        range: float32
+        required: false
+  Units_waveforms:
+    name: Units_waveforms
+    description: Individual waveforms for each spike on each electrode. This is a
+      doubly indexed column. The 'waveforms_index' column indexes which waveforms
+      in this column belong to the same spike event for a given unit, where each waveform
+      was recorded from a different electrode. The 'waveforms_index_index' column
+      indexes the 'waveforms_index' column to indicate which spike events belong to
+      a given unit. For example, if the 'waveforms_index_index' column has values
+      [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond
+      to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index'
+      column correspond to the 3 spike events of the second unit, and the next 1 element
+      of the 'waveforms_index' column corresponds to the 1 spike event of the third
+      unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then
+      the first 3 elements of the 'waveforms' column contain the 3 spike waveforms
+      that were recorded from 3 different electrodes for the first spike time of the
+      first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays
+      for a graphical representation of this example. When there is only one electrode
+      for each unit (i.e., each spike time is associated with a single waveform),
+      then the 'waveforms_index' column will have values 1, 2, ..., N, where N is
+      the number of spike events. The number of electrodes for each spike event should
+      be the same within a given unit. The 'electrodes' column should be used to indicate
+      which electrodes are associated with each unit, and the order of the waveforms
+      within a given unit x spike event should be in the same order as the electrodes
+      referenced in the 'electrodes' column of this table. The number of samples for
+      each waveform must be the same.
+    is_a: VectorData
+    attributes:
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        range: text
+      array:
+        name: array
+        range: Units_waveforms_Array
+  Units_waveforms_Array:
+    name: Units_waveforms_Array
+    is_a: Arraylike
+    attributes:
+      num_waveforms:
+        name: num_waveforms
+        range: numeric
+        required: false
+      num_samples:
+        name: num_samples
+        range: numeric
+        required: false
+  Units_waveforms_index:
+    name: Units_waveforms_index
+    description: Index into the waveforms dataset. One value for every spike event.
+      See 'waveforms' for more detail.
+    is_a: VectorIndex
+  Units_waveforms_index_index:
+    name: Units_waveforms_index_index
+    description: Index into the waveforms_index dataset. One value for every unit
+      (row in the table). See 'waveforms' for more detail.
+    is_a: VectorIndex

@@ -19,10 +19,19 @@ pydantic = "<2"
 rich = "^13.5.2"
 linkml = "^1.5.7"
 
+[tool.poetry.group.tests]
+optional = true
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.tests.dependencies]
 pytest = "^7.4.0"
 pytest-depends = "^1.0.1"
+
+[tool.poetry.group.plot]
+optional = true
+
+[tool.poetry.group.plot.dependencies]
+dash = "^2.12.1"
+dash-cytoscape = "^0.3.0"
 
 [build-system]
 requires = ["poetry-core"]
