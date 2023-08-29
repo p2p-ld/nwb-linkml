@@ -1,0 +1,39 @@
+name: hdmf-common.sparse.include
+id: hdmf-common.sparse.include
+imports:
+- hdmf-common.base
+- nwb.language
+- hdmf-common.sparse.include
+- hdmf-common.sparse
+default_prefix: hdmf-common.sparse.include/
+classes:
+  CSRMatrix__indices:
+    name: CSRMatrix__indices
+    description: The column indices.
+    attributes:
+      indices:
+        name: indices
+        description: The column indices.
+        multivalued: true
+        range: uint
+        required: true
+  CSRMatrix__indptr:
+    name: CSRMatrix__indptr
+    description: The row index pointer.
+    attributes:
+      indptr:
+        name: indptr
+        description: The row index pointer.
+        multivalued: true
+        range: uint
+        required: true
+  CSRMatrix__data:
+    name: CSRMatrix__data
+    description: The non-zero values in the matrix.
+    attributes:
+      data:
+        name: data
+        description: The non-zero values in the matrix.
+        multivalued: true
+        range: AnyType
+        required: true

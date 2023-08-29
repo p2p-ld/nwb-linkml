@@ -80,9 +80,11 @@ class Adapter(BaseModel):
             # do nothing, is a string or whatever
             pass
 
-    def walk_fields(self, input: BaseModel | list | dict, field: str):
+    def walk_fields(self, input: BaseModel | list | dict, field: str | Tuple[str, ...]):
+        if isinstance(field, str):
+            field = (field,)
         for item in self.walk(input):
-            if isinstance(item, tuple) and item[0] == field and item[1] is not None:
+            if isinstance(item, tuple) and item[0] in field and item[1] is not None:
                 yield item[1]
 
 

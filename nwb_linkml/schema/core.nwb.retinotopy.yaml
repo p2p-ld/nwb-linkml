@@ -3,6 +3,8 @@ id: core.nwb.retinotopy
 imports:
 - core.nwb.base
 - nwb.language
+- core.nwb.retinotopy.include
+- core.nwb.retinotopy
 default_prefix: core.nwb.retinotopy/
 classes:
   ImagingRetinotopy:
@@ -22,27 +24,27 @@ classes:
         name: axis_1_phase_map
         description: Phase response to stimulus on the first measured axis.
         multivalued: false
-        range: ImagingRetinotopy_axis_1_phase_map
+        range: ImagingRetinotopy__axis_1_phase_map
         required: true
       axis_1_power_map:
         name: axis_1_power_map
         description: Power response on the first measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         multivalued: false
-        range: ImagingRetinotopy_axis_1_power_map
+        range: ImagingRetinotopy__axis_1_power_map
         required: false
       axis_2_phase_map:
         name: axis_2_phase_map
         description: Phase response to stimulus on the second measured axis.
         multivalued: false
-        range: ImagingRetinotopy_axis_2_phase_map
+        range: ImagingRetinotopy__axis_2_phase_map
         required: true
       axis_2_power_map:
         name: axis_2_power_map
         description: Power response on the second measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         multivalued: false
-        range: ImagingRetinotopy_axis_2_power_map
+        range: ImagingRetinotopy__axis_2_power_map
         required: false
       axis_descriptions:
         name: axis_descriptions
@@ -50,284 +52,26 @@ classes:
           axis fields. Description should be something like ['altitude', 'azimuth']
           or '['radius', 'theta'].
         multivalued: false
-        range: ImagingRetinotopy_axis_descriptions
+        range: ImagingRetinotopy__axis_descriptions
         required: true
       focal_depth_image:
         name: focal_depth_image
         description: 'Gray-scale image taken with same settings/parameters (e.g.,
           focal depth, wavelength) as data collection. Array format: [rows][columns].'
         multivalued: false
-        range: ImagingRetinotopy_focal_depth_image
+        range: ImagingRetinotopy__focal_depth_image
         required: false
       sign_map:
         name: sign_map
         description: Sine of the angle between the direction of the gradient in axis_1
           and axis_2.
         multivalued: false
-        range: ImagingRetinotopy_sign_map
+        range: ImagingRetinotopy__sign_map
         required: false
       vasculature_image:
         name: vasculature_image
         description: 'Gray-scale anatomical image of cortical surface. Array structure:
           [rows][columns]'
         multivalued: false
-        range: ImagingRetinotopy_vasculature_image
+        range: ImagingRetinotopy__vasculature_image
         required: true
-  ImagingRetinotopy_axis_1_phase_map:
-    name: ImagingRetinotopy_axis_1_phase_map
-    description: Phase response to stimulus on the first measured axis.
-    attributes:
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      unit:
-        name: unit
-        description: Unit that axis data is stored in (e.g., degrees).
-        range: text
-      array:
-        name: array
-        range: ImagingRetinotopy_axis_1_phase_map_Array
-  ImagingRetinotopy_axis_1_phase_map_Array:
-    name: ImagingRetinotopy_axis_1_phase_map_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: false
-      num_cols:
-        name: num_cols
-        range: float32
-        required: false
-  ImagingRetinotopy_axis_1_power_map:
-    name: ImagingRetinotopy_axis_1_power_map
-    description: Power response on the first measured axis. Response is scaled so
-      0.0 is no power in the response and 1.0 is maximum relative power.
-    attributes:
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      unit:
-        name: unit
-        description: Unit that axis data is stored in (e.g., degrees).
-        range: text
-      array:
-        name: array
-        range: ImagingRetinotopy_axis_1_power_map_Array
-  ImagingRetinotopy_axis_1_power_map_Array:
-    name: ImagingRetinotopy_axis_1_power_map_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: false
-      num_cols:
-        name: num_cols
-        range: float32
-        required: false
-  ImagingRetinotopy_axis_2_phase_map:
-    name: ImagingRetinotopy_axis_2_phase_map
-    description: Phase response to stimulus on the second measured axis.
-    attributes:
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      unit:
-        name: unit
-        description: Unit that axis data is stored in (e.g., degrees).
-        range: text
-      array:
-        name: array
-        range: ImagingRetinotopy_axis_2_phase_map_Array
-  ImagingRetinotopy_axis_2_phase_map_Array:
-    name: ImagingRetinotopy_axis_2_phase_map_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: false
-      num_cols:
-        name: num_cols
-        range: float32
-        required: false
-  ImagingRetinotopy_axis_2_power_map:
-    name: ImagingRetinotopy_axis_2_power_map
-    description: Power response on the second measured axis. Response is scaled so
-      0.0 is no power in the response and 1.0 is maximum relative power.
-    attributes:
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      unit:
-        name: unit
-        description: Unit that axis data is stored in (e.g., degrees).
-        range: text
-      array:
-        name: array
-        range: ImagingRetinotopy_axis_2_power_map_Array
-  ImagingRetinotopy_axis_2_power_map_Array:
-    name: ImagingRetinotopy_axis_2_power_map_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: false
-      num_cols:
-        name: num_cols
-        range: float32
-        required: false
-  ImagingRetinotopy_axis_descriptions:
-    name: ImagingRetinotopy_axis_descriptions
-    description: Two-element array describing the contents of the two response axis
-      fields. Description should be something like ['altitude', 'azimuth'] or '['radius',
-      'theta'].
-    attributes:
-      array:
-        name: array
-        range: ImagingRetinotopy_axis_descriptions_Array
-  ImagingRetinotopy_axis_descriptions_Array:
-    name: ImagingRetinotopy_axis_descriptions_Array
-    is_a: Arraylike
-    attributes:
-      axis_1, axis_2:
-        name: axis_1, axis_2
-        range: text
-        required: true
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-  ImagingRetinotopy_focal_depth_image:
-    name: ImagingRetinotopy_focal_depth_image
-    description: 'Gray-scale image taken with same settings/parameters (e.g., focal
-      depth, wavelength) as data collection. Array format: [rows][columns].'
-    attributes:
-      bits_per_pixel:
-        name: bits_per_pixel
-        description: Number of bits used to represent each value. This is necessary
-          to determine maximum (white) pixel value.
-        range: int32
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      focal_depth:
-        name: focal_depth
-        description: Focal depth offset, in meters.
-        range: float32
-      format:
-        name: format
-        description: Format of image. Right now only 'raw' is supported.
-        range: text
-      array:
-        name: array
-        range: ImagingRetinotopy_focal_depth_image_Array
-  ImagingRetinotopy_focal_depth_image_Array:
-    name: ImagingRetinotopy_focal_depth_image_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: uint16
-        required: false
-      num_cols:
-        name: num_cols
-        range: uint16
-        required: false
-  ImagingRetinotopy_sign_map:
-    name: ImagingRetinotopy_sign_map
-    description: Sine of the angle between the direction of the gradient in axis_1
-      and axis_2.
-    attributes:
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      array:
-        name: array
-        range: ImagingRetinotopy_sign_map_Array
-  ImagingRetinotopy_sign_map_Array:
-    name: ImagingRetinotopy_sign_map_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: false
-      num_cols:
-        name: num_cols
-        range: float32
-        required: false
-  ImagingRetinotopy_vasculature_image:
-    name: ImagingRetinotopy_vasculature_image
-    description: 'Gray-scale anatomical image of cortical surface. Array structure:
-      [rows][columns]'
-    attributes:
-      bits_per_pixel:
-        name: bits_per_pixel
-        description: Number of bits used to represent each value. This is necessary
-          to determine maximum (white) pixel value
-        range: int32
-      dimension:
-        name: dimension
-        description: 'Number of rows and columns in the image. NOTE: row, column representation
-          is equivalent to height, width.'
-        range: int32
-      field_of_view:
-        name: field_of_view
-        description: Size of viewing area, in meters.
-        range: float32
-      format:
-        name: format
-        description: Format of image. Right now only 'raw' is supported.
-        range: text
-      array:
-        name: array
-        range: ImagingRetinotopy_vasculature_image_Array
-  ImagingRetinotopy_vasculature_image_Array:
-    name: ImagingRetinotopy_vasculature_image_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: uint16
-        required: false
-      num_cols:
-        name: num_cols
-        range: uint16
-        required: false

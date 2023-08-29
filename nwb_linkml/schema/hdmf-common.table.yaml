@@ -3,6 +3,8 @@ id: hdmf-common.table
 imports:
 - hdmf-common.base
 - nwb.language
+- hdmf-common.table.include
+- hdmf-common.table
 default_prefix: hdmf-common.table/
 classes:
   VectorData:
@@ -23,27 +25,7 @@ classes:
         range: text
       array:
         name: array
-        range: VectorData_Array
-  VectorData_Array:
-    name: VectorData_Array
-    is_a: Arraylike
-    attributes:
-      dim0:
-        name: dim0
-        range: AnyType
-        required: true
-      dim1:
-        name: dim1
-        range: AnyType
-        required: false
-      dim2:
-        name: dim2
-        range: AnyType
-        required: false
-      dim3:
-        name: dim3
-        range: AnyType
-        required: false
+        range: VectorData__Array
   VectorIndex:
     name: VectorIndex
     description: Used with VectorData to encode a ragged array. An array of indices
@@ -57,17 +39,6 @@ classes:
         name: target
         description: Reference to the target dataset that this index applies to.
         range: VectorData
-      array:
-        name: array
-        range: VectorIndex_Array
-  VectorIndex_Array:
-    name: VectorIndex_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: uint8
-        required: true
   ElementIdentifiers:
     name: ElementIdentifiers
     description: A list of unique identifiers for values within a dataset, e.g. rows
@@ -76,15 +47,7 @@ classes:
     attributes:
       array:
         name: array
-        range: ElementIdentifiers_Array
-  ElementIdentifiers_Array:
-    name: ElementIdentifiers_Array
-    is_a: Arraylike
-    attributes:
-      num_elements:
-        name: num_elements
-        range: int
-        required: true
+        range: ElementIdentifiers__Array
   DynamicTableRegion:
     name: DynamicTableRegion
     description: DynamicTableRegion provides a link from one table to an index or
@@ -107,17 +70,6 @@ classes:
         name: description
         description: Description of what this table region points to.
         range: text
-      array:
-        name: array
-        range: DynamicTableRegion_Array
-  DynamicTableRegion_Array:
-    name: DynamicTableRegion_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: int
-        required: true
   DynamicTable:
     name: DynamicTable
     description: A group containing multiple datasets that are aligned on the first
@@ -153,7 +105,7 @@ classes:
         name: id
         description: Array of unique identifiers for the rows of this dynamic table.
         multivalued: false
-        range: DynamicTable_id
+        range: DynamicTable__id
         required: true
       VectorData:
         name: VectorData
@@ -161,22 +113,6 @@ classes:
         multivalued: true
         range: VectorData
         required: false
-  DynamicTable_id:
-    name: DynamicTable_id
-    description: Array of unique identifiers for the rows of this dynamic table.
-    is_a: ElementIdentifiers
-    attributes:
-      array:
-        name: array
-        range: DynamicTable_id_Array
-  DynamicTable_id_Array:
-    name: DynamicTable_id_Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: int
-        required: true
   AlignedDynamicTable:
     name: AlignedDynamicTable
     description: DynamicTable container that supports storing a collection of sub-tables.

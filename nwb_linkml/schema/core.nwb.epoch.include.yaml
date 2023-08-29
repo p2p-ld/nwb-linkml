@@ -1,0 +1,22 @@
+name: core.nwb.epoch.include
+id: core.nwb.epoch.include
+imports:
+- hdmf-common.table
+- core.nwb.base
+- nwb.language
+- core.nwb.epoch.include
+- core.nwb.epoch
+default_prefix: core.nwb.epoch.include/
+classes:
+  TimeIntervals__tags_index:
+    name: TimeIntervals__tags_index
+    description: Index for tags.
+    is_a: VectorIndex
+  TimeIntervals__timeseries:
+    name: TimeIntervals__timeseries
+    description: An index into a TimeSeries object.
+    is_a: TimeSeriesReferenceVectorData
+  TimeIntervals__timeseries_index:
+    name: TimeIntervals__timeseries_index
+    description: Index for timeseries.
+    is_a: VectorIndex

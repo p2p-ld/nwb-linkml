@@ -29,7 +29,7 @@ class ClassAdapter(Adapter):
                 name_parts.append(self.parent._get_full_name())
 
             name_parts.append(self.cls.name)
-            name = '_'.join(name_parts)
+            name = '__'.join(name_parts)
         elif self.cls.neurodata_type_inc is not None:
             # again, this is against the schema, but is common
             name = self.cls.neurodata_type_inc
@@ -62,7 +62,9 @@ class ClassAdapter(Adapter):
 
         return name
 
-    def handle_arraylike(self, dataset: Dataset, name:Optional[str]=None) -> Optional[ClassDefinition]:
+
+
+    def handle_arraylike(self, dataset: Dataset, name:Optional[str]=None) -> Optional[ClassDefinition | SlotDefinition]:
         """
         Handling the
 
@@ -96,6 +98,11 @@ class ClassAdapter(Adapter):
             # need to have both if one is present!
             raise ValueError(f"A dataset needs both dims and shape to define an arraylike object")
 
+        # Special cases
+        if dataset.neurodata_type_inc == 'VectorData':
+            # Handle this in `handle_vectorlike` instead
+            return None
+
         # The schema language doesn't have a way of specifying a dataset/group is "abstract"
         # and yet hdmf-common says you don't need a dtype if the dataset is "abstract"
         # so....
@@ -116,6 +123,18 @@ class ClassAdapter(Adapter):
                 dims_shape.append((inner_dim, inner_shape))
 
         dims_shape = tuple(dict.fromkeys(dims_shape).keys())
+
+        # if we only have one possible dimension, it's equivalent to a list, so we just return the slot
+        if len(dims_shape) == 1 and self.parent:
+            quantity = QUANTITY_MAP[dataset.quantity]
+            slot = SlotDefinition(
+                name=dataset.name,
+                range = dtype,
+                description=dataset.doc,
+                required=quantity['required'],
+                multivalued=True
+            )
+            return slot
 
         # now make slots for each of them
         slots = []
@@ -140,6 +159,8 @@ class ClassAdapter(Adapter):
                 range=dtype
             ))
 
+
+
         # and then the class is just a subclass of `Arraylike` (which is imported by default from `nwb.language.yaml`)
         if name:
             pass
@@ -150,7 +171,7 @@ class ClassAdapter(Adapter):
         else:
             raise ValueError(f"Dataset has no name or type definition, what do call it?")
 
-        name = '_'.join([name, 'Array'])
+        name = '__'.join([name, 'Array'])
 
         array_class = ClassDefinition(
             name=name,
@@ -203,13 +224,46 @@ class ClassAdapter(Adapter):
         nested_classes.extend([ClassAdapter(cls=grp, parent=self) for grp in cls.groups])
         nested_res = BuildResult()
         for subclass in nested_classes:
-            this_slot = SlotDefinition(
-                name=subclass._get_name(),
-                description=subclass.cls.doc,
-                range=subclass._get_full_name(),
-                **QUANTITY_MAP[subclass.cls.quantity]
-            )
-            nested_res.slots.append(this_slot)
+            # handle the special case where `VectorData` is subclasssed without any dims or attributes
+            # which just gets instantiated as a 1-d array in HDF5
+            if subclass.cls.neurodata_type_inc == 'VectorData' and \
+                    not subclass.cls.dims and \
+                    not subclass.cls.shape and \
+                    not subclass.cls.attributes \
+                    and subclass.cls.name:
+                this_slot = SlotDefinition(
+                    name=subclass.cls.name,
+                    description=subclass.cls.doc,
+                    range=self.handle_dtype(subclass.cls.dtype),
+                    multivalued=True
+                )
+                nested_res.slots.append(this_slot)
+                continue
+
+            # Simplify datasets that are just a single value
+            elif isinstance(subclass.cls, Dataset) and \
+                    not subclass.cls.neurodata_type_inc and \
+                    not subclass.cls.attributes and \
+                    not subclass.cls.dims and \
+                    not subclass.cls.shape and \
+                    subclass.cls.name:
+                this_slot = SlotDefinition(
+                    name=subclass.cls.name,
+                    description=subclass.cls.doc,
+                    range=self.handle_dtype(subclass.cls.dtype),
+                    **QUANTITY_MAP[subclass.cls.quantity]
+                )
+                nested_res.slots.append(this_slot)
+                continue
+
+            else:
+                this_slot = SlotDefinition(
+                    name=subclass._get_name(),
+                    description=subclass.cls.doc,
+                    range=subclass._get_full_name(),
+                    **QUANTITY_MAP[subclass.cls.quantity]
+                )
+                nested_res.slots.append(this_slot)
 
             if subclass.cls.name is None and subclass.cls.neurodata_type_def is None:
                 # anonymous group that's just an inc, we only need the slot since the class is defined elsewhere
@@ -246,14 +300,19 @@ class ClassAdapter(Adapter):
             nested_res = BuildResult()
             arraylike = self.handle_arraylike(self.cls, self._get_full_name())
             if arraylike:
-                # make a slot for the arraylike class
-                attrs.append(
-                    SlotDefinition(
-                        name='array',
-                        range=arraylike.name
+                # if the arraylike thing can only have one dimension, it's equivalent to a list, so
+                # we just add a multivalued slot
+                if isinstance(arraylike, SlotDefinition):
+                    attrs.append(arraylike)
+                else:
+                    # make a slot for the arraylike class
+                    attrs.append(
+                        SlotDefinition(
+                            name='array',
+                            range=arraylike.name
+                        )
                     )
-                )
-                nested_res.classes.append(arraylike)
+                    nested_res.classes.append(arraylike)
 
 
         cls = ClassDefinition(

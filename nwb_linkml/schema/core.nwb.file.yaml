@@ -11,6 +11,8 @@ imports:
 - core.nwb.epoch
 - core.nwb.misc
 - nwb.language
+- core.nwb.file.include
+- core.nwb.file
 default_prefix: core.nwb.file/
 classes:
   ScratchData:
@@ -43,7 +45,7 @@ classes:
           from the experiment start time. Each modification to the nwb file adds a
           new entry to the array.'
         multivalued: false
-        range: NWBFile_file_create_date
+        range: NWBFile__file_create_date
         required: true
       identifier:
         name: identifier
@@ -52,13 +54,13 @@ classes:
           and/or other values. The goal is that the string should be unique to all
           other files.
         multivalued: false
-        range: NWBFile_identifier
+        range: text
         required: true
       session_description:
         name: session_description
         description: A description of the experimental session and data in the file.
         multivalued: false
-        range: NWBFile_session_description
+        range: text
         required: true
       session_start_time:
         name: session_start_time
@@ -67,7 +69,7 @@ classes:
           2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in "Z" with no timezone
           offset. Date accuracy is up to milliseconds.'
         multivalued: false
-        range: NWBFile_session_start_time
+        range: isodatetime
         required: true
       timestamps_reference_time:
         name: timestamps_reference_time
@@ -77,7 +79,7 @@ classes:
           in "Z" with no timezone offset. Date accuracy is up to milliseconds. All
           times stored in the file use this time as reference (i.e., time zero).'
         multivalued: false
-        range: NWBFile_timestamps_reference_time
+        range: isodatetime
         required: true
       acquisition:
         name: acquisition
@@ -91,7 +93,7 @@ classes:
           the /acquisition group, the data can exist in a separate NWB file that is
           linked to by the file being used for processing and analysis.
         multivalued: false
-        range: NWBFile_acquisition
+        range: NWBFile__acquisition
         required: true
       analysis:
         name: analysis
@@ -105,7 +107,7 @@ classes:
           The analysis data should be documented so that it could be shared with other
           labs.
         multivalued: false
-        range: NWBFile_analysis
+        range: NWBFile__analysis
         required: true
       scratch:
         name: scratch
@@ -113,7 +115,7 @@ classes:
           not intended for sharing. By placing data here, users acknowledge that there
           is no guarantee that their data meets any standard.
         multivalued: false
-        range: NWBFile_scratch
+        range: NWBFile__scratch
         required: false
       processing:
         name: processing
@@ -128,7 +130,7 @@ classes:
           refers to intermediate analysis of the acquired data to make it more amenable
           to scientific analysis.
         multivalued: false
-        range: NWBFile_processing
+        range: NWBFile__processing
         required: true
       stimulus:
         name: stimulus
@@ -145,7 +147,7 @@ classes:
           stimuli can be stored and these be used multiple times. These templates
           can exist in the present file or can be linked to a remote library file.
         multivalued: false
-        range: NWBFile_stimulus
+        range: NWBFile__stimulus
         required: true
       general:
         name: general
@@ -165,7 +167,7 @@ classes:
           present. Unused groups (e.g., intracellular_ephys in an optophysiology experiment)
           should not be created unless there is data to store within them.
         multivalued: false
-        range: NWBFile_general
+        range: NWBFile__general
         required: true
       intervals:
         name: intervals
@@ -174,829 +176,14 @@ classes:
           an experiment, or epochs (see epochs subgroup) deriving from analysis of
           data.
         multivalued: false
-        range: NWBFile_intervals
+        range: NWBFile__intervals
         required: false
       units:
         name: units
         description: Data about sorted spike units.
         multivalued: false
-        range: NWBFile_units
+        range: NWBFile__units
         required: false
-  NWBFile_file_create_date:
-    name: NWBFile_file_create_date
-    description: 'A record of the date the file was created and of subsequent modifications.
-      The date is stored in UTC with local timezone offset as ISO 8601 extended formatted
-      strings: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in "Z" with
-      no timezone offset. Date accuracy is up to milliseconds. The file can be created
-      after the experiment was run, so this may differ from the experiment start time.
-      Each modification to the nwb file adds a new entry to the array.'
-    attributes:
-      array:
-        name: array
-        range: NWBFile_file_create_date_Array
-  NWBFile_file_create_date_Array:
-    name: NWBFile_file_create_date_Array
-    is_a: Arraylike
-    attributes:
-      num_modifications:
-        name: num_modifications
-        range: isodatetime
-        required: true
-  NWBFile_identifier:
-    name: NWBFile_identifier
-    description: A unique text identifier for the file. For example, concatenated
-      lab name, file creation date/time and experimentalist, or a hash of these and/or
-      other values. The goal is that the string should be unique to all other files.
-  NWBFile_session_description:
-    name: NWBFile_session_description
-    description: A description of the experimental session and data in the file.
-  NWBFile_session_start_time:
-    name: NWBFile_session_start_time
-    description: 'Date and time of the experiment/session start. The date is stored
-      in UTC with local timezone offset as ISO 8601 extended formatted string: 2018-09-28T14:43:54.123+02:00.
-      Dates stored in UTC end in "Z" with no timezone offset. Date accuracy is up
-      to milliseconds.'
-  NWBFile_timestamps_reference_time:
-    name: NWBFile_timestamps_reference_time
-    description: 'Date and time corresponding to time zero of all timestamps. The
-      date is stored in UTC with local timezone offset as ISO 8601 extended formatted
-      string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in "Z" with no
-      timezone offset. Date accuracy is up to milliseconds. All times stored in the
-      file use this time as reference (i.e., time zero).'
-  NWBFile_acquisition:
-    name: NWBFile_acquisition
-    description: Data streams recorded from the system, including ephys, ophys, tracking,
-      etc. This group should be read-only after the experiment is completed and timestamps
-      are corrected to a common timebase. The data stored here may be links to raw
-      data stored in external NWB files. This will allow keeping bulky raw data out
-      of the file while preserving the option of keeping some/all in the file. Acquired
-      data includes tracking and experimental data streams (i.e., everything measured
-      from the system). If bulky data is stored in the /acquisition group, the data
-      can exist in a separate NWB file that is linked to by the file being used for
-      processing and analysis.
-    attributes:
-      NWBDataInterface:
-        name: NWBDataInterface
-        description: Acquired, raw data.
-        multivalued: true
-        range: NWBDataInterface
-        required: false
-      DynamicTable:
-        name: DynamicTable
-        description: Tabular data that is relevant to acquisition
-        multivalued: true
-        range: DynamicTable
-        required: false
-  NWBFile_analysis:
-    name: NWBFile_analysis
-    description: Lab-specific and custom scientific analysis of data. There is no
-      defined format for the content of this group - the format is up to the individual
-      user/lab. To facilitate sharing analysis data between labs, the contents here
-      should be stored in standard types (e.g., neurodata_types) and appropriately
-      documented. The file can store lab-specific and custom data analysis without
-      restriction on its form or schema, reducing data formatting restrictions on
-      end users. Such data should be placed in the analysis group. The analysis data
-      should be documented so that it could be shared with other labs.
-    attributes:
-      NWBContainer:
-        name: NWBContainer
-        description: Custom analysis results.
-        multivalued: true
-        range: NWBContainer
-        required: false
-      DynamicTable:
-        name: DynamicTable
-        description: Tabular data that is relevant to data stored in analysis
-        multivalued: true
-        range: DynamicTable
-        required: false
-  NWBFile_scratch:
-    name: NWBFile_scratch
-    description: A place to store one-off analysis results. Data placed here is not
-      intended for sharing. By placing data here, users acknowledge that there is
-      no guarantee that their data meets any standard.
-    attributes:
-      ScratchData:
-        name: ScratchData
-        description: Any one-off datasets
-        multivalued: true
-        range: ScratchData
-        required: false
-      NWBContainer:
-        name: NWBContainer
-        description: Any one-off containers
-        multivalued: true
-        range: NWBContainer
-        required: false
-      DynamicTable:
-        name: DynamicTable
-        description: Any one-off tables
-        multivalued: true
-        range: DynamicTable
-        required: false
-  NWBFile_processing:
-    name: NWBFile_processing
-    description: The home for ProcessingModules. These modules perform intermediate
-      analysis of data that is necessary to perform before scientific analysis. Examples
-      include spike clustering, extracting position from tracking data, stitching
-      together image slices. ProcessingModules can be large and express many data
-      sets from relatively complex analysis (e.g., spike detection and clustering)
-      or small, representing extraction of position information from tracking video,
-      or even binary lick/no-lick decisions. Common software tools (e.g., klustakwik,
-      MClust) are expected to read/write data here.  'Processing' refers to intermediate
-      analysis of the acquired data to make it more amenable to scientific analysis.
-    attributes:
-      ProcessingModule:
-        name: ProcessingModule
-        description: Intermediate analysis of acquired data.
-        multivalued: true
-        range: ProcessingModule
-        required: false
-  NWBFile_stimulus:
-    name: NWBFile_stimulus
-    description: Data pushed into the system (eg, video stimulus, sound, voltage,
-      etc) and secondary representations of that data (eg, measurements of something
-      used as a stimulus). This group should be made read-only after experiment complete
-      and timestamps are corrected to common timebase. Stores both presented stimuli
-      and stimulus templates, the latter in case the same stimulus is presented multiple
-      times, or is pulled from an external stimulus library. Stimuli are here defined
-      as any signal that is pushed into the system as part of the experiment (eg,
-      sound, video, voltage, etc). Many different experiments can use the same stimuli,
-      and stimuli can be re-used during an experiment. The stimulus group is organized
-      so that one version of template stimuli can be stored and these be used multiple
-      times. These templates can exist in the present file or can be linked to a remote
-      library file.
-    attributes:
-      presentation:
-        name: presentation
-        description: Stimuli presented during the experiment.
-        multivalued: false
-        range: NWBFile_stimulus_presentation
-        required: true
-      templates:
-        name: templates
-        description: Template stimuli. Timestamps in templates are based on stimulus
-          design and are relative to the beginning of the stimulus. When templates
-          are used, the stimulus instances must convert presentation times to the
-          experiment`s time reference frame.
-        multivalued: false
-        range: NWBFile_stimulus_templates
-        required: true
-  NWBFile_stimulus_presentation:
-    name: NWBFile_stimulus_presentation
-    description: Stimuli presented during the experiment.
-    attributes:
-      TimeSeries:
-        name: TimeSeries
-        description: TimeSeries objects containing data of presented stimuli.
-        multivalued: true
-        range: TimeSeries
-        required: false
-  NWBFile_stimulus_templates:
-    name: NWBFile_stimulus_templates
-    description: Template stimuli. Timestamps in templates are based on stimulus design
-      and are relative to the beginning of the stimulus. When templates are used,
-      the stimulus instances must convert presentation times to the experiment`s time
-      reference frame.
-    attributes:
-      TimeSeries:
-        name: TimeSeries
-        description: TimeSeries objects containing template data of presented stimuli.
-        multivalued: true
-        range: TimeSeries
-        required: false
-      Images:
-        name: Images
-        description: Images objects containing images of presented stimuli.
-        multivalued: true
-        range: Images
-        required: false
-  NWBFile_general:
-    name: NWBFile_general
-    description: Experimental metadata, including protocol, notes and description
-      of hardware device(s).  The metadata stored in this section should be used to
-      describe the experiment. Metadata necessary for interpreting the data is stored
-      with the data. General experimental metadata, including animal strain, experimental
-      protocols, experimenter, devices, etc, are stored under 'general'. Core metadata
-      (e.g., that required to interpret data fields) is stored with the data itself,
-      and implicitly defined by the file specification (e.g., time is in seconds).
-      The strategy used here for storing non-core metadata is to use free-form text
-      fields, such as would appear in sentences or paragraphs from a Methods section.
-      Metadata fields are text to enable them to be more general, for example to represent
-      ranges instead of numerical values. Machine-readable metadata is stored as attributes
-      to these free-form datasets. All entries in the below table are to be included
-      when data is present. Unused groups (e.g., intracellular_ephys in an optophysiology
-      experiment) should not be created unless there is data to store within them.
-    attributes:
-      data_collection:
-        name: data_collection
-        description: Notes about data collection and analysis.
-        multivalued: false
-        range: NWBFile_general_data_collection
-        required: false
-      experiment_description:
-        name: experiment_description
-        description: General description of the experiment.
-        multivalued: false
-        range: NWBFile_general_experiment_description
-        required: false
-      experimenter:
-        name: experimenter
-        description: Name of person(s) who performed the experiment. Can also specify
-          roles of different people involved.
-        multivalued: false
-        range: NWBFile_general_experimenter
-        required: false
-      institution:
-        name: institution
-        description: Institution(s) where experiment was performed.
-        multivalued: false
-        range: NWBFile_general_institution
-        required: false
-      keywords:
-        name: keywords
-        description: Terms to search over.
-        multivalued: false
-        range: NWBFile_general_keywords
-        required: false
-      lab:
-        name: lab
-        description: Laboratory where experiment was performed.
-        multivalued: false
-        range: NWBFile_general_lab
-        required: false
-      notes:
-        name: notes
-        description: Notes about the experiment.
-        multivalued: false
-        range: NWBFile_general_notes
-        required: false
-      pharmacology:
-        name: pharmacology
-        description: Description of drugs used, including how and when they were administered.
-          Anesthesia(s), painkiller(s), etc., plus dosage, concentration, etc.
-        multivalued: false
-        range: NWBFile_general_pharmacology
-        required: false
-      protocol:
-        name: protocol
-        description: Experimental protocol, if applicable. e.g., include IACUC protocol
-          number.
-        multivalued: false
-        range: NWBFile_general_protocol
-        required: false
-      related_publications:
-        name: related_publications
-        description: Publication information. PMID, DOI, URL, etc.
-        multivalued: false
-        range: NWBFile_general_related_publications
-        required: false
-      session_id:
-        name: session_id
-        description: Lab-specific ID for the session.
-        multivalued: false
-        range: NWBFile_general_session_id
-        required: false
-      slices:
-        name: slices
-        description: Description of slices, including information about preparation
-          thickness, orientation, temperature, and bath solution.
-        multivalued: false
-        range: NWBFile_general_slices
-        required: false
-      source_script:
-        name: source_script
-        description: Script file or link to public source code used to create this
-          NWB file.
-        multivalued: false
-        range: NWBFile_general_source_script
-        required: false
-      stimulus:
-        name: stimulus
-        description: Notes about stimuli, such as how and where they were presented.
-        multivalued: false
-        range: NWBFile_general_stimulus
-        required: false
-      surgery:
-        name: surgery
-        description: Narrative description about surgery/surgeries, including date(s)
-          and who performed surgery.
-        multivalued: false
-        range: NWBFile_general_surgery
-        required: false
-      virus:
-        name: virus
-        description: Information about virus(es) used in experiments, including virus
-          ID, source, date made, injection location, volume, etc.
-        multivalued: false
-        range: NWBFile_general_virus
-        required: false
-      LabMetaData:
-        name: LabMetaData
-        description: Place-holder than can be extended so that lab-specific meta-data
-          can be placed in /general.
-        multivalued: true
-        range: LabMetaData
-        required: false
-      devices:
-        name: devices
-        description: Description of hardware devices used during experiment, e.g.,
-          monitors, ADC boards, microscopes, etc.
-        multivalued: false
-        range: NWBFile_general_devices
-        required: false
-      subject:
-        name: subject
-        description: Information about the animal or person from which the data was
-          measured.
-        multivalued: false
-        range: NWBFile_general_subject
-        required: false
-      extracellular_ephys:
-        name: extracellular_ephys
-        description: Metadata related to extracellular electrophysiology.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys
-        required: false
-      intracellular_ephys:
-        name: intracellular_ephys
-        description: Metadata related to intracellular electrophysiology.
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys
-        required: false
-      optogenetics:
-        name: optogenetics
-        description: Metadata describing optogenetic stimuluation.
-        multivalued: false
-        range: NWBFile_general_optogenetics
-        required: false
-      optophysiology:
-        name: optophysiology
-        description: Metadata related to optophysiology.
-        multivalued: false
-        range: NWBFile_general_optophysiology
-        required: false
-  NWBFile_general_data_collection:
-    name: NWBFile_general_data_collection
-    description: Notes about data collection and analysis.
-  NWBFile_general_experiment_description:
-    name: NWBFile_general_experiment_description
-    description: General description of the experiment.
-  NWBFile_general_experimenter:
-    name: NWBFile_general_experimenter
-    description: Name of person(s) who performed the experiment. Can also specify
-      roles of different people involved.
-    attributes:
-      array:
-        name: array
-        range: NWBFile_general_experimenter_Array
-  NWBFile_general_experimenter_Array:
-    name: NWBFile_general_experimenter_Array
-    is_a: Arraylike
-    attributes:
-      num_experimenters:
-        name: num_experimenters
-        range: text
-        required: true
-  NWBFile_general_institution:
-    name: NWBFile_general_institution
-    description: Institution(s) where experiment was performed.
-  NWBFile_general_keywords:
-    name: NWBFile_general_keywords
-    description: Terms to search over.
-    attributes:
-      array:
-        name: array
-        range: NWBFile_general_keywords_Array
-  NWBFile_general_keywords_Array:
-    name: NWBFile_general_keywords_Array
-    is_a: Arraylike
-    attributes:
-      num_keywords:
-        name: num_keywords
-        range: text
-        required: true
-  NWBFile_general_lab:
-    name: NWBFile_general_lab
-    description: Laboratory where experiment was performed.
-  NWBFile_general_notes:
-    name: NWBFile_general_notes
-    description: Notes about the experiment.
-  NWBFile_general_pharmacology:
-    name: NWBFile_general_pharmacology
-    description: Description of drugs used, including how and when they were administered.
-      Anesthesia(s), painkiller(s), etc., plus dosage, concentration, etc.
-  NWBFile_general_protocol:
-    name: NWBFile_general_protocol
-    description: Experimental protocol, if applicable. e.g., include IACUC protocol
-      number.
-  NWBFile_general_related_publications:
-    name: NWBFile_general_related_publications
-    description: Publication information. PMID, DOI, URL, etc.
-    attributes:
-      array:
-        name: array
-        range: NWBFile_general_related_publications_Array
-  NWBFile_general_related_publications_Array:
-    name: NWBFile_general_related_publications_Array
-    is_a: Arraylike
-    attributes:
-      num_publications:
-        name: num_publications
-        range: text
-        required: true
-  NWBFile_general_session_id:
-    name: NWBFile_general_session_id
-    description: Lab-specific ID for the session.
-  NWBFile_general_slices:
-    name: NWBFile_general_slices
-    description: Description of slices, including information about preparation thickness,
-      orientation, temperature, and bath solution.
-  NWBFile_general_source_script:
-    name: NWBFile_general_source_script
-    description: Script file or link to public source code used to create this NWB
-      file.
-    attributes:
-      file_name:
-        name: file_name
-        description: Name of script file.
-        range: text
-  NWBFile_general_stimulus:
-    name: NWBFile_general_stimulus
-    description: Notes about stimuli, such as how and where they were presented.
-  NWBFile_general_surgery:
-    name: NWBFile_general_surgery
-    description: Narrative description about surgery/surgeries, including date(s)
-      and who performed surgery.
-  NWBFile_general_virus:
-    name: NWBFile_general_virus
-    description: Information about virus(es) used in experiments, including virus
-      ID, source, date made, injection location, volume, etc.
-  NWBFile_general_devices:
-    name: NWBFile_general_devices
-    description: Description of hardware devices used during experiment, e.g., monitors,
-      ADC boards, microscopes, etc.
-    attributes:
-      Device:
-        name: Device
-        description: Data acquisition devices.
-        multivalued: true
-        range: Device
-        required: false
-  NWBFile_general_subject:
-    name: NWBFile_general_subject
-    description: Information about the animal or person from which the data was measured.
-    is_a: Subject
-  NWBFile_general_extracellular_ephys:
-    name: NWBFile_general_extracellular_ephys
-    description: Metadata related to extracellular electrophysiology.
-    attributes:
-      ElectrodeGroup:
-        name: ElectrodeGroup
-        description: Physical group of electrodes.
-        multivalued: true
-        range: ElectrodeGroup
-        required: false
-      electrodes:
-        name: electrodes
-        description: A table of all electrodes (i.e. channels) used for recording.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes
-        required: false
-  NWBFile_general_extracellular_ephys_electrodes:
-    name: NWBFile_general_extracellular_ephys_electrodes
-    description: A table of all electrodes (i.e. channels) used for recording.
-    is_a: DynamicTable
-    attributes:
-      x:
-        name: x
-        description: x coordinate of the channel location in the brain (+x is posterior).
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_x
-        required: false
-      y:
-        name: y
-        description: y coordinate of the channel location in the brain (+y is inferior).
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_y
-        required: false
-      z:
-        name: z
-        description: z coordinate of the channel location in the brain (+z is right).
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_z
-        required: false
-      imp:
-        name: imp
-        description: Impedance of the channel, in ohms.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_imp
-        required: false
-      location:
-        name: location
-        description: Location of the electrode (channel). Specify the area, layer,
-          comments on estimation of area/layer, stereotaxic coordinates if in vivo,
-          etc. Use standard atlas names for anatomical regions when possible.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_location
-        required: true
-      filtering:
-        name: filtering
-        description: Description of hardware filtering, including the filter name
-          and frequency cutoffs.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_filtering
-        required: false
-      group:
-        name: group
-        description: Reference to the ElectrodeGroup this electrode is a part of.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_group
-        required: true
-      group_name:
-        name: group_name
-        description: Name of the ElectrodeGroup this electrode is a part of.
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_group_name
-        required: true
-      rel_x:
-        name: rel_x
-        description: x coordinate in electrode group
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_rel_x
-        required: false
-      rel_y:
-        name: rel_y
-        description: y coordinate in electrode group
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_rel_y
-        required: false
-      rel_z:
-        name: rel_z
-        description: z coordinate in electrode group
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_rel_z
-        required: false
-      reference:
-        name: reference
-        description: Description of the reference electrode and/or reference scheme
-          used for this electrode, e.g., "stainless steel skull screw" or "online
-          common average referencing".
-        multivalued: false
-        range: NWBFile_general_extracellular_ephys_electrodes_reference
-        required: false
-  NWBFile_general_extracellular_ephys_electrodes_x:
-    name: NWBFile_general_extracellular_ephys_electrodes_x
-    description: x coordinate of the channel location in the brain (+x is posterior).
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_y:
-    name: NWBFile_general_extracellular_ephys_electrodes_y
-    description: y coordinate of the channel location in the brain (+y is inferior).
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_z:
-    name: NWBFile_general_extracellular_ephys_electrodes_z
-    description: z coordinate of the channel location in the brain (+z is right).
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_imp:
-    name: NWBFile_general_extracellular_ephys_electrodes_imp
-    description: Impedance of the channel, in ohms.
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_location:
-    name: NWBFile_general_extracellular_ephys_electrodes_location
-    description: Location of the electrode (channel). Specify the area, layer, comments
-      on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard
-      atlas names for anatomical regions when possible.
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_filtering:
-    name: NWBFile_general_extracellular_ephys_electrodes_filtering
-    description: Description of hardware filtering, including the filter name and
-      frequency cutoffs.
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_group:
-    name: NWBFile_general_extracellular_ephys_electrodes_group
-    description: Reference to the ElectrodeGroup this electrode is a part of.
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_group_name:
-    name: NWBFile_general_extracellular_ephys_electrodes_group_name
-    description: Name of the ElectrodeGroup this electrode is a part of.
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_rel_x:
-    name: NWBFile_general_extracellular_ephys_electrodes_rel_x
-    description: x coordinate in electrode group
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_rel_y:
-    name: NWBFile_general_extracellular_ephys_electrodes_rel_y
-    description: y coordinate in electrode group
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_rel_z:
-    name: NWBFile_general_extracellular_ephys_electrodes_rel_z
-    description: z coordinate in electrode group
-    is_a: VectorData
-  NWBFile_general_extracellular_ephys_electrodes_reference:
-    name: NWBFile_general_extracellular_ephys_electrodes_reference
-    description: Description of the reference electrode and/or reference scheme used
-      for this electrode, e.g., "stainless steel skull screw" or "online common average
-      referencing".
-    is_a: VectorData
-  NWBFile_general_intracellular_ephys:
-    name: NWBFile_general_intracellular_ephys
-    description: Metadata related to intracellular electrophysiology.
-    attributes:
-      filtering:
-        name: filtering
-        description: '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description
-          of filtering used. Includes filtering type and parameters, frequency fall-off,
-          etc. If this changes between TimeSeries, filter description should be stored
-          as a text attribute for each TimeSeries.'
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_filtering
-        required: false
-      IntracellularElectrode:
-        name: IntracellularElectrode
-        description: An intracellular electrode.
-        multivalued: true
-        range: IntracellularElectrode
-        required: false
-      sweep_table:
-        name: sweep_table
-        description: '[DEPRECATED] Table used to group different PatchClampSeries.
-          SweepTable is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
-          tables. Additional SequentialRecordingsTable, RepetitionsTable and ExperimentalConditions
-          tables provide enhanced support for experiment metadata.'
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_sweep_table
-        required: false
-      intracellular_recordings:
-        name: intracellular_recordings
-        description: A table to group together a stimulus and response from a single
-          electrode and a single simultaneous recording. Each row in the table represents
-          a single recording consisting typically of a stimulus and a corresponding
-          response. In some cases, however, only a stimulus or a response are recorded
-          as as part of an experiment. In this case both, the stimulus and response
-          will point to the same TimeSeries while the idx_start and count of the invalid
-          column will be set to -1, thus, indicating that no values have been recorded
-          for the stimulus or response, respectively. Note, a recording MUST contain
-          at least a stimulus or a response. Typically the stimulus and response are
-          PatchClampSeries. However, the use of AD/DA channels that are not associated
-          to an electrode is also common in intracellular electrophysiology, in which
-          case other TimeSeries may be used.
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_intracellular_recordings
-        required: false
-      simultaneous_recordings:
-        name: simultaneous_recordings
-        description: A table for grouping different intracellular recordings from
-          the IntracellularRecordingsTable table together that were recorded simultaneously
-          from different electrodes
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_simultaneous_recordings
-        required: false
-      sequential_recordings:
-        name: sequential_recordings
-        description: A table for grouping different sequential recordings from the
-          SimultaneousRecordingsTable table together. This is typically used to group
-          together sequential recordings where the a sequence of stimuli of the same
-          type with varying parameters have been presented in a sequence.
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_sequential_recordings
-        required: false
-      repetitions:
-        name: repetitions
-        description: A table for grouping different sequential intracellular recordings
-          together. With each SequentialRecording typically representing a particular
-          type of stimulus, the RepetitionsTable table is typically used to group
-          sets of stimuli applied in sequence.
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_repetitions
-        required: false
-      experimental_conditions:
-        name: experimental_conditions
-        description: A table for grouping different intracellular recording repetitions
-          together that belong to the same experimental experimental_conditions.
-        multivalued: false
-        range: NWBFile_general_intracellular_ephys_experimental_conditions
-        required: false
-  NWBFile_general_intracellular_ephys_filtering:
-    name: NWBFile_general_intracellular_ephys_filtering
-    description: '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description
-      of filtering used. Includes filtering type and parameters, frequency fall-off,
-      etc. If this changes between TimeSeries, filter description should be stored
-      as a text attribute for each TimeSeries.'
-  NWBFile_general_intracellular_ephys_sweep_table:
-    name: NWBFile_general_intracellular_ephys_sweep_table
-    description: '[DEPRECATED] Table used to group different PatchClampSeries. SweepTable
-      is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
-      tables. Additional SequentialRecordingsTable, RepetitionsTable and ExperimentalConditions
-      tables provide enhanced support for experiment metadata.'
-    is_a: SweepTable
-  NWBFile_general_intracellular_ephys_intracellular_recordings:
-    name: NWBFile_general_intracellular_ephys_intracellular_recordings
-    description: A table to group together a stimulus and response from a single electrode
-      and a single simultaneous recording. Each row in the table represents a single
-      recording consisting typically of a stimulus and a corresponding response. In
-      some cases, however, only a stimulus or a response are recorded as as part of
-      an experiment. In this case both, the stimulus and response will point to the
-      same TimeSeries while the idx_start and count of the invalid column will be
-      set to -1, thus, indicating that no values have been recorded for the stimulus
-      or response, respectively. Note, a recording MUST contain at least a stimulus
-      or a response. Typically the stimulus and response are PatchClampSeries. However,
-      the use of AD/DA channels that are not associated to an electrode is also common
-      in intracellular electrophysiology, in which case other TimeSeries may be used.
-    is_a: IntracellularRecordingsTable
-  NWBFile_general_intracellular_ephys_simultaneous_recordings:
-    name: NWBFile_general_intracellular_ephys_simultaneous_recordings
-    description: A table for grouping different intracellular recordings from the
-      IntracellularRecordingsTable table together that were recorded simultaneously
-      from different electrodes
-    is_a: SimultaneousRecordingsTable
-  NWBFile_general_intracellular_ephys_sequential_recordings:
-    name: NWBFile_general_intracellular_ephys_sequential_recordings
-    description: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
-      table together. This is typically used to group together sequential recordings
-      where the a sequence of stimuli of the same type with varying parameters have
-      been presented in a sequence.
-    is_a: SequentialRecordingsTable
-  NWBFile_general_intracellular_ephys_repetitions:
-    name: NWBFile_general_intracellular_ephys_repetitions
-    description: A table for grouping different sequential intracellular recordings
-      together. With each SequentialRecording typically representing a particular
-      type of stimulus, the RepetitionsTable table is typically used to group sets
-      of stimuli applied in sequence.
-    is_a: RepetitionsTable
-  NWBFile_general_intracellular_ephys_experimental_conditions:
-    name: NWBFile_general_intracellular_ephys_experimental_conditions
-    description: A table for grouping different intracellular recording repetitions
-      together that belong to the same experimental experimental_conditions.
-    is_a: ExperimentalConditionsTable
-  NWBFile_general_optogenetics:
-    name: NWBFile_general_optogenetics
-    description: Metadata describing optogenetic stimuluation.
-    attributes:
-      OptogeneticStimulusSite:
-        name: OptogeneticStimulusSite
-        description: An optogenetic stimulation site.
-        multivalued: true
-        range: OptogeneticStimulusSite
-        required: false
-  NWBFile_general_optophysiology:
-    name: NWBFile_general_optophysiology
-    description: Metadata related to optophysiology.
-    attributes:
-      ImagingPlane:
-        name: ImagingPlane
-        description: An imaging plane.
-        multivalued: true
-        range: ImagingPlane
-        required: false
-  NWBFile_intervals:
-    name: NWBFile_intervals
-    description: Experimental intervals, whether that be logically distinct sub-experiments
-      having a particular scientific goal, trials (see trials subgroup) during an
-      experiment, or epochs (see epochs subgroup) deriving from analysis of data.
-    attributes:
-      epochs:
-        name: epochs
-        description: Divisions in time marking experimental stages or sub-divisions
-          of a single recording session.
-        multivalued: false
-        range: NWBFile_intervals_epochs
-        required: false
-      trials:
-        name: trials
-        description: Repeated experimental events that have a logical grouping.
-        multivalued: false
-        range: NWBFile_intervals_trials
-        required: false
-      invalid_times:
-        name: invalid_times
-        description: Time intervals that should be removed from analysis.
-        multivalued: false
-        range: NWBFile_intervals_invalid_times
-        required: false
-      TimeIntervals:
-        name: TimeIntervals
-        description: Optional additional table(s) for describing other experimental
-          time intervals.
-        multivalued: true
-        range: TimeIntervals
-        required: false
-  NWBFile_intervals_epochs:
-    name: NWBFile_intervals_epochs
-    description: Divisions in time marking experimental stages or sub-divisions of
-      a single recording session.
-    is_a: TimeIntervals
-  NWBFile_intervals_trials:
-    name: NWBFile_intervals_trials
-    description: Repeated experimental events that have a logical grouping.
-    is_a: TimeIntervals
-  NWBFile_intervals_invalid_times:
-    name: NWBFile_intervals_invalid_times
-    description: Time intervals that should be removed from analysis.
-    is_a: TimeIntervals
-  NWBFile_units:
-    name: NWBFile_units
-    description: Data about sorted spike units.
-    is_a: Units
   LabMetaData:
     name: LabMetaData
     description: Lab-specific meta-data.
@@ -1010,90 +197,55 @@ classes:
         name: age
         description: Age of subject. Can be supplied instead of 'date_of_birth'.
         multivalued: false
-        range: Subject_age
+        range: Subject__age
         required: false
       date_of_birth:
         name: date_of_birth
         description: Date of birth of subject. Can be supplied instead of 'age'.
         multivalued: false
-        range: Subject_date_of_birth
+        range: isodatetime
         required: false
       description:
         name: description
         description: Description of subject and where subject came from (e.g., breeder,
           if animal).
         multivalued: false
-        range: Subject_description
+        range: text
         required: false
       genotype:
         name: genotype
         description: Genetic strain. If absent, assume Wild Type (WT).
         multivalued: false
-        range: Subject_genotype
+        range: text
         required: false
       sex:
         name: sex
         description: Gender of subject.
         multivalued: false
-        range: Subject_sex
+        range: text
         required: false
       species:
         name: species
         description: Species of subject.
         multivalued: false
-        range: Subject_species
+        range: text
         required: false
       strain:
         name: strain
         description: Strain of subject.
         multivalued: false
-        range: Subject_strain
+        range: text
         required: false
       subject_id:
         name: subject_id
         description: ID of animal/person used/participating in experiment (lab convention).
         multivalued: false
-        range: Subject_subject_id
+        range: text
         required: false
       weight:
         name: weight
         description: Weight at time of experiment, at time of surgery and at other
           important times.
         multivalued: false
-        range: Subject_weight
-        required: false
-  Subject_age:
-    name: Subject_age
-    description: Age of subject. Can be supplied instead of 'date_of_birth'.
-    attributes:
-      reference:
-        name: reference
-        description: Age is with reference to this event. Can be 'birth' or 'gestational'.
-          If reference is omitted, 'birth' is implied.
         range: text
-  Subject_date_of_birth:
-    name: Subject_date_of_birth
-    description: Date of birth of subject. Can be supplied instead of 'age'.
-  Subject_description:
-    name: Subject_description
-    description: Description of subject and where subject came from (e.g., breeder,
-      if animal).
-  Subject_genotype:
-    name: Subject_genotype
-    description: Genetic strain. If absent, assume Wild Type (WT).
-  Subject_sex:
-    name: Subject_sex
-    description: Gender of subject.
-  Subject_species:
-    name: Subject_species
-    description: Species of subject.
-  Subject_strain:
-    name: Subject_strain
-    description: Strain of subject.
-  Subject_subject_id:
-    name: Subject_subject_id
-    description: ID of animal/person used/participating in experiment (lab convention).
-  Subject_weight:
-    name: Subject_weight
-    description: Weight at time of experiment, at time of surgery and at other important
-      times.
+        required: false

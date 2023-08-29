@@ -2,8 +2,11 @@ name: core.nwb.icephys
 id: core.nwb.icephys
 imports:
 - core.nwb.base
+- core.nwb.device
 - hdmf-common.table
 - nwb.language
+- core.nwb.icephys.include
+- core.nwb.icephys
 default_prefix: core.nwb.icephys/
 classes:
   PatchClampSeries:
@@ -24,39 +27,15 @@ classes:
         name: data
         description: Recorded voltage or current.
         multivalued: false
-        range: PatchClampSeries_data
+        range: PatchClampSeries__data
         required: true
       gain:
         name: gain
         description: Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt
           (c-clamp).
         multivalued: false
-        range: PatchClampSeries_gain
+        range: float32
         required: false
-  PatchClampSeries_data:
-    name: PatchClampSeries_data
-    description: Recorded voltage or current.
-    attributes:
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. Actual stored
-          values are not necessarily stored in these units. To access the data in
-          these units, multiply 'data' by 'conversion' and add 'offset'.
-        range: text
-      array:
-        name: array
-        range: PatchClampSeries_data_Array
-  PatchClampSeries_data_Array:
-    name: PatchClampSeries_data_Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
-        range: numeric
-        required: true
-  PatchClampSeries_gain:
-    name: PatchClampSeries_gain
-    description: Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).
   CurrentClampSeries:
     name: CurrentClampSeries
     description: Voltage data from an intracellular current-clamp recording. A corresponding
@@ -68,46 +47,26 @@ classes:
         name: data
         description: Recorded voltage.
         multivalued: false
-        range: CurrentClampSeries_data
+        range: CurrentClampSeries__data
         required: true
       bias_current:
         name: bias_current
         description: Bias current, in amps.
         multivalued: false
-        range: CurrentClampSeries_bias_current
+        range: float32
         required: false
       bridge_balance:
         name: bridge_balance
         description: Bridge balance, in ohms.
         multivalued: false
-        range: CurrentClampSeries_bridge_balance
+        range: float32
         required: false
       capacitance_compensation:
         name: capacitance_compensation
         description: Capacitance compensation, in farads.
         multivalued: false
-        range: CurrentClampSeries_capacitance_compensation
+        range: float32
         required: false
-  CurrentClampSeries_data:
-    name: CurrentClampSeries_data
-    description: Recorded voltage.
-    attributes:
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. which is
-          fixed to 'volts'. Actual stored values are not necessarily stored in these
-          units. To access the data in these units, multiply 'data' by 'conversion'
-          and add 'offset'.
-        range: text
-  CurrentClampSeries_bias_current:
-    name: CurrentClampSeries_bias_current
-    description: Bias current, in amps.
-  CurrentClampSeries_bridge_balance:
-    name: CurrentClampSeries_bridge_balance
-    description: Bridge balance, in ohms.
-  CurrentClampSeries_capacitance_compensation:
-    name: CurrentClampSeries_capacitance_compensation
-    description: Capacitance compensation, in farads.
   IZeroClampSeries:
     name: IZeroClampSeries
     description: Voltage data from an intracellular recording when all current and
@@ -125,29 +84,20 @@ classes:
         name: bias_current
         description: Bias current, in amps, fixed to 0.0.
         multivalued: false
-        range: IZeroClampSeries_bias_current
+        range: float32
         required: true
       bridge_balance:
         name: bridge_balance
         description: Bridge balance, in ohms, fixed to 0.0.
         multivalued: false
-        range: IZeroClampSeries_bridge_balance
+        range: float32
         required: true
       capacitance_compensation:
         name: capacitance_compensation
         description: Capacitance compensation, in farads, fixed to 0.0.
         multivalued: false
-        range: IZeroClampSeries_capacitance_compensation
+        range: float32
         required: true
-  IZeroClampSeries_bias_current:
-    name: IZeroClampSeries_bias_current
-    description: Bias current, in amps, fixed to 0.0.
-  IZeroClampSeries_bridge_balance:
-    name: IZeroClampSeries_bridge_balance
-    description: Bridge balance, in ohms, fixed to 0.0.
-  IZeroClampSeries_capacitance_compensation:
-    name: IZeroClampSeries_capacitance_compensation
-    description: Capacitance compensation, in farads, fixed to 0.0.
   CurrentClampStimulusSeries:
     name: CurrentClampStimulusSeries
     description: Stimulus current applied during current clamp recording.
@@ -157,19 +107,8 @@ classes:
         name: data
         description: Stimulus current applied.
         multivalued: false
-        range: CurrentClampStimulusSeries_data
+        range: CurrentClampStimulusSeries__data
         required: true
-  CurrentClampStimulusSeries_data:
-    name: CurrentClampStimulusSeries_data
-    description: Stimulus current applied.
-    attributes:
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. which is
-          fixed to 'amperes'. Actual stored values are not necessarily stored in these
-          units. To access the data in these units, multiply 'data' by 'conversion'
-          and add 'offset'.
-        range: text
   VoltageClampSeries:
     name: VoltageClampSeries
     description: Current data from an intracellular voltage-clamp recording. A corresponding
@@ -181,122 +120,50 @@ classes:
         name: data
         description: Recorded current.
         multivalued: false
-        range: VoltageClampSeries_data
+        range: VoltageClampSeries__data
         required: true
       capacitance_fast:
         name: capacitance_fast
         description: Fast capacitance, in farads.
         multivalued: false
-        range: VoltageClampSeries_capacitance_fast
+        range: VoltageClampSeries__capacitance_fast
         required: false
       capacitance_slow:
         name: capacitance_slow
         description: Slow capacitance, in farads.
         multivalued: false
-        range: VoltageClampSeries_capacitance_slow
+        range: VoltageClampSeries__capacitance_slow
         required: false
       resistance_comp_bandwidth:
         name: resistance_comp_bandwidth
         description: Resistance compensation bandwidth, in hertz.
         multivalued: false
-        range: VoltageClampSeries_resistance_comp_bandwidth
+        range: VoltageClampSeries__resistance_comp_bandwidth
         required: false
       resistance_comp_correction:
         name: resistance_comp_correction
         description: Resistance compensation correction, in percent.
         multivalued: false
-        range: VoltageClampSeries_resistance_comp_correction
+        range: VoltageClampSeries__resistance_comp_correction
         required: false
       resistance_comp_prediction:
         name: resistance_comp_prediction
         description: Resistance compensation prediction, in percent.
         multivalued: false
-        range: VoltageClampSeries_resistance_comp_prediction
+        range: VoltageClampSeries__resistance_comp_prediction
         required: false
       whole_cell_capacitance_comp:
         name: whole_cell_capacitance_comp
         description: Whole cell capacitance compensation, in farads.
         multivalued: false
-        range: VoltageClampSeries_whole_cell_capacitance_comp
+        range: VoltageClampSeries__whole_cell_capacitance_comp
         required: false
       whole_cell_series_resistance_comp:
         name: whole_cell_series_resistance_comp
         description: Whole cell series resistance compensation, in ohms.
         multivalued: false
-        range: VoltageClampSeries_whole_cell_series_resistance_comp
+        range: VoltageClampSeries__whole_cell_series_resistance_comp
         required: false
-  VoltageClampSeries_data:
-    name: VoltageClampSeries_data
-    description: Recorded current.
-    attributes:
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. which is
-          fixed to 'amperes'. Actual stored values are not necessarily stored in these
-          units. To access the data in these units, multiply 'data' by 'conversion'
-          and add 'offset'.
-        range: text
-  VoltageClampSeries_capacitance_fast:
-    name: VoltageClampSeries_capacitance_fast
-    description: Fast capacitance, in farads.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for capacitance_fast, which is fixed to 'farads'.
-        range: text
-  VoltageClampSeries_capacitance_slow:
-    name: VoltageClampSeries_capacitance_slow
-    description: Slow capacitance, in farads.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for capacitance_fast, which is fixed to 'farads'.
-        range: text
-  VoltageClampSeries_resistance_comp_bandwidth:
-    name: VoltageClampSeries_resistance_comp_bandwidth
-    description: Resistance compensation bandwidth, in hertz.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for resistance_comp_bandwidth, which is fixed
-          to 'hertz'.
-        range: text
-  VoltageClampSeries_resistance_comp_correction:
-    name: VoltageClampSeries_resistance_comp_correction
-    description: Resistance compensation correction, in percent.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for resistance_comp_correction, which is
-          fixed to 'percent'.
-        range: text
-  VoltageClampSeries_resistance_comp_prediction:
-    name: VoltageClampSeries_resistance_comp_prediction
-    description: Resistance compensation prediction, in percent.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for resistance_comp_prediction, which is
-          fixed to 'percent'.
-        range: text
-  VoltageClampSeries_whole_cell_capacitance_comp:
-    name: VoltageClampSeries_whole_cell_capacitance_comp
-    description: Whole cell capacitance compensation, in farads.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for whole_cell_capacitance_comp, which is
-          fixed to 'farads'.
-        range: text
-  VoltageClampSeries_whole_cell_series_resistance_comp:
-    name: VoltageClampSeries_whole_cell_series_resistance_comp
-    description: Whole cell series resistance compensation, in ohms.
-    attributes:
-      unit:
-        name: unit
-        description: Unit of measurement for whole_cell_series_resistance_comp, which
-          is fixed to 'ohms'.
-        range: text
   VoltageClampStimulusSeries:
     name: VoltageClampStimulusSeries
     description: Stimulus voltage applied during a voltage clamp recording.
@@ -306,19 +173,8 @@ classes:
         name: data
         description: Stimulus voltage applied.
         multivalued: false
-        range: VoltageClampStimulusSeries_data
+        range: VoltageClampStimulusSeries__data
         required: true
-  VoltageClampStimulusSeries_data:
-    name: VoltageClampStimulusSeries_data
-    description: Stimulus voltage applied.
-    attributes:
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. which is
-          fixed to 'volts'. Actual stored values are not necessarily stored in these
-          units. To access the data in these units, multiply 'data' by 'conversion'
-          and add 'offset'.
-        range: text
   IntracellularElectrode:
     name: IntracellularElectrode
     description: An intracellular electrode and its metadata.
@@ -328,25 +184,25 @@ classes:
         name: cell_id
         description: unique ID of the cell
         multivalued: false
-        range: IntracellularElectrode_cell_id
+        range: text
         required: false
       description:
         name: description
         description: Description of electrode (e.g.,  whole-cell, sharp, etc.).
         multivalued: false
-        range: IntracellularElectrode_description
+        range: text
         required: true
       filtering:
         name: filtering
         description: Electrode specific filtering.
         multivalued: false
-        range: IntracellularElectrode_filtering
+        range: text
         required: false
       initial_access_resistance:
         name: initial_access_resistance
         description: Initial access resistance.
         multivalued: false
-        range: IntracellularElectrode_initial_access_resistance
+        range: text
         required: false
       location:
         name: location
@@ -354,52 +210,26 @@ classes:
           on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
           standard atlas names for anatomical regions when possible.
         multivalued: false
-        range: IntracellularElectrode_location
+        range: text
         required: false
       resistance:
         name: resistance
         description: Electrode resistance, in ohms.
         multivalued: false
-        range: IntracellularElectrode_resistance
+        range: text
         required: false
       seal:
         name: seal
         description: Information about seal used for recording.
         multivalued: false
-        range: IntracellularElectrode_seal
+        range: text
         required: false
       slice:
         name: slice
         description: Information about slice used for recording.
         multivalued: false
-        range: IntracellularElectrode_slice
+        range: text
         required: false
-  IntracellularElectrode_cell_id:
-    name: IntracellularElectrode_cell_id
-    description: unique ID of the cell
-  IntracellularElectrode_description:
-    name: IntracellularElectrode_description
-    description: Description of electrode (e.g.,  whole-cell, sharp, etc.).
-  IntracellularElectrode_filtering:
-    name: IntracellularElectrode_filtering
-    description: Electrode specific filtering.
-  IntracellularElectrode_initial_access_resistance:
-    name: IntracellularElectrode_initial_access_resistance
-    description: Initial access resistance.
-  IntracellularElectrode_location:
-    name: IntracellularElectrode_location
-    description: Location of the electrode. Specify the area, layer, comments on estimation
-      of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names
-      for anatomical regions when possible.
-  IntracellularElectrode_resistance:
-    name: IntracellularElectrode_resistance
-    description: Electrode resistance, in ohms.
-  IntracellularElectrode_seal:
-    name: IntracellularElectrode_seal
-    description: Information about seal used for recording.
-  IntracellularElectrode_slice:
-    name: IntracellularElectrode_slice
-    description: Information about slice used for recording.
   SweepTable:
     name: SweepTable
     description: '[DEPRECATED] Table used to group different PatchClampSeries. SweepTable
@@ -411,33 +241,19 @@ classes:
       sweep_number:
         name: sweep_number
         description: Sweep number of the PatchClampSeries in that row.
-        multivalued: false
-        range: SweepTable_sweep_number
-        required: true
+        multivalued: true
+        range: uint32
       series:
         name: series
         description: The PatchClampSeries with the sweep number in that row.
-        multivalued: false
-        range: SweepTable_series
-        required: true
+        multivalued: true
+        range: PatchClampSeries
       series_index:
         name: series_index
         description: Index for series.
         multivalued: false
-        range: SweepTable_series_index
+        range: SweepTable__series_index
         required: true
-  SweepTable_sweep_number:
-    name: SweepTable_sweep_number
-    description: Sweep number of the PatchClampSeries in that row.
-    is_a: VectorData
-  SweepTable_series:
-    name: SweepTable_series
-    description: The PatchClampSeries with the sweep number in that row.
-    is_a: VectorData
-  SweepTable_series_index:
-    name: SweepTable_series_index
-    description: Index for series.
-    is_a: VectorIndex
   IntracellularElectrodesTable:
     name: IntracellularElectrodesTable
     description: Table for storing intracellular electrode related metadata.
@@ -450,13 +266,8 @@ classes:
       electrode:
         name: electrode
         description: Column for storing the reference to the intracellular electrode.
-        multivalued: false
-        range: IntracellularElectrodesTable_electrode
-        required: true
-  IntracellularElectrodesTable_electrode:
-    name: IntracellularElectrodesTable_electrode
-    description: Column for storing the reference to the intracellular electrode.
-    is_a: VectorData
+        multivalued: true
+        range: IntracellularElectrode
   IntracellularStimuliTable:
     name: IntracellularStimuliTable
     description: Table for storing intracellular stimulus related metadata.
@@ -471,13 +282,8 @@ classes:
         description: Column storing the reference to the recorded stimulus for the
           recording (rows).
         multivalued: false
-        range: IntracellularStimuliTable_stimulus
+        range: IntracellularStimuliTable__stimulus
         required: true
-  IntracellularStimuliTable_stimulus:
-    name: IntracellularStimuliTable_stimulus
-    description: Column storing the reference to the recorded stimulus for the recording
-      (rows).
-    is_a: TimeSeriesReferenceVectorData
   IntracellularResponsesTable:
     name: IntracellularResponsesTable
     description: Table for storing intracellular response related metadata.
@@ -492,13 +298,8 @@ classes:
         description: Column storing the reference to the recorded response for the
           recording (rows)
         multivalued: false
-        range: IntracellularResponsesTable_response
+        range: IntracellularResponsesTable__response
         required: true
-  IntracellularResponsesTable_response:
-    name: IntracellularResponsesTable_response
-    description: Column storing the reference to the recorded response for the recording
-      (rows)
-    is_a: TimeSeriesReferenceVectorData
   IntracellularRecordingsTable:
     name: IntracellularRecordingsTable
     description: A table to group together a stimulus and response from a single electrode
@@ -523,32 +324,20 @@ classes:
         name: electrodes
         description: Table for storing intracellular electrode related metadata.
         multivalued: false
-        range: IntracellularRecordingsTable_electrodes
+        range: IntracellularRecordingsTable__electrodes
         required: true
       stimuli:
         name: stimuli
         description: Table for storing intracellular stimulus related metadata.
         multivalued: false
-        range: IntracellularRecordingsTable_stimuli
+        range: IntracellularRecordingsTable__stimuli
         required: true
       responses:
         name: responses
         description: Table for storing intracellular response related metadata.
         multivalued: false
-        range: IntracellularRecordingsTable_responses
+        range: IntracellularRecordingsTable__responses
         required: true
-  IntracellularRecordingsTable_electrodes:
-    name: IntracellularRecordingsTable_electrodes
-    description: Table for storing intracellular electrode related metadata.
-    is_a: IntracellularElectrodesTable
-  IntracellularRecordingsTable_stimuli:
-    name: IntracellularRecordingsTable_stimuli
-    description: Table for storing intracellular stimulus related metadata.
-    is_a: IntracellularStimuliTable
-  IntracellularRecordingsTable_responses:
-    name: IntracellularRecordingsTable_responses
-    description: Table for storing intracellular response related metadata.
-    is_a: IntracellularResponsesTable
   SimultaneousRecordingsTable:
     name: SimultaneousRecordingsTable
     description: A table for grouping different intracellular recordings from the
@@ -561,30 +350,14 @@ classes:
         description: A reference to one or more rows in the IntracellularRecordingsTable
           table.
         multivalued: false
-        range: SimultaneousRecordingsTable_recordings
+        range: SimultaneousRecordingsTable__recordings
         required: true
       recordings_index:
         name: recordings_index
         description: Index dataset for the recordings column.
         multivalued: false
-        range: SimultaneousRecordingsTable_recordings_index
+        range: SimultaneousRecordingsTable__recordings_index
         required: true
-  SimultaneousRecordingsTable_recordings:
-    name: SimultaneousRecordingsTable_recordings
-    description: A reference to one or more rows in the IntracellularRecordingsTable
-      table.
-    is_a: DynamicTableRegion
-    attributes:
-      table:
-        name: table
-        description: Reference to the IntracellularRecordingsTable table that this
-          table region applies to. This specializes the attribute inherited from DynamicTableRegion
-          to fix the type of table that can be referenced here.
-        range: IntracellularRecordingsTable
-  SimultaneousRecordingsTable_recordings_index:
-    name: SimultaneousRecordingsTable_recordings_index
-    description: Index dataset for the recordings column.
-    is_a: VectorIndex
   SequentialRecordingsTable:
     name: SequentialRecordingsTable
     description: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
@@ -598,40 +371,19 @@ classes:
         description: A reference to one or more rows in the SimultaneousRecordingsTable
           table.
         multivalued: false
-        range: SequentialRecordingsTable_simultaneous_recordings
+        range: SequentialRecordingsTable__simultaneous_recordings
         required: true
       simultaneous_recordings_index:
         name: simultaneous_recordings_index
         description: Index dataset for the simultaneous_recordings column.
         multivalued: false
-        range: SequentialRecordingsTable_simultaneous_recordings_index
+        range: SequentialRecordingsTable__simultaneous_recordings_index
         required: true
       stimulus_type:
         name: stimulus_type
         description: The type of stimulus used for the sequential recording.
-        multivalued: false
-        range: SequentialRecordingsTable_stimulus_type
-        required: true
-  SequentialRecordingsTable_simultaneous_recordings:
-    name: SequentialRecordingsTable_simultaneous_recordings
-    description: A reference to one or more rows in the SimultaneousRecordingsTable
-      table.
-    is_a: DynamicTableRegion
-    attributes:
-      table:
-        name: table
-        description: Reference to the SimultaneousRecordingsTable table that this
-          table region applies to. This specializes the attribute inherited from DynamicTableRegion
-          to fix the type of table that can be referenced here.
-        range: SimultaneousRecordingsTable
-  SequentialRecordingsTable_simultaneous_recordings_index:
-    name: SequentialRecordingsTable_simultaneous_recordings_index
-    description: Index dataset for the simultaneous_recordings column.
-    is_a: VectorIndex
-  SequentialRecordingsTable_stimulus_type:
-    name: SequentialRecordingsTable_stimulus_type
-    description: The type of stimulus used for the sequential recording.
-    is_a: VectorData
+        multivalued: true
+        range: text
   RepetitionsTable:
     name: RepetitionsTable
     description: A table for grouping different sequential intracellular recordings
@@ -645,30 +397,14 @@ classes:
         description: A reference to one or more rows in the SequentialRecordingsTable
           table.
         multivalued: false
-        range: RepetitionsTable_sequential_recordings
+        range: RepetitionsTable__sequential_recordings
         required: true
       sequential_recordings_index:
         name: sequential_recordings_index
         description: Index dataset for the sequential_recordings column.
         multivalued: false
-        range: RepetitionsTable_sequential_recordings_index
+        range: RepetitionsTable__sequential_recordings_index
         required: true
-  RepetitionsTable_sequential_recordings:
-    name: RepetitionsTable_sequential_recordings
-    description: A reference to one or more rows in the SequentialRecordingsTable
-      table.
-    is_a: DynamicTableRegion
-    attributes:
-      table:
-        name: table
-        description: Reference to the SequentialRecordingsTable table that this table
-          region applies to. This specializes the attribute inherited from DynamicTableRegion
-          to fix the type of table that can be referenced here.
-        range: SequentialRecordingsTable
-  RepetitionsTable_sequential_recordings_index:
-    name: RepetitionsTable_sequential_recordings_index
-    description: Index dataset for the sequential_recordings column.
-    is_a: VectorIndex
   ExperimentalConditionsTable:
     name: ExperimentalConditionsTable
     description: A table for grouping different intracellular recording repetitions
@@ -679,26 +415,11 @@ classes:
         name: repetitions
         description: A reference to one or more rows in the RepetitionsTable table.
         multivalued: false
-        range: ExperimentalConditionsTable_repetitions
+        range: ExperimentalConditionsTable__repetitions
         required: true
       repetitions_index:
         name: repetitions_index
         description: Index dataset for the repetitions column.
         multivalued: false
-        range: ExperimentalConditionsTable_repetitions_index
+        range: ExperimentalConditionsTable__repetitions_index
         required: true
-  ExperimentalConditionsTable_repetitions:
-    name: ExperimentalConditionsTable_repetitions
-    description: A reference to one or more rows in the RepetitionsTable table.
-    is_a: DynamicTableRegion
-    attributes:
-      table:
-        name: table
-        description: Reference to the RepetitionsTable table that this table region
-          applies to. This specializes the attribute inherited from DynamicTableRegion
-          to fix the type of table that can be referenced here.
-        range: RepetitionsTable
-  ExperimentalConditionsTable_repetitions_index:
-    name: ExperimentalConditionsTable_repetitions_index
-    description: Index dataset for the repetitions column.
-    is_a: VectorIndex

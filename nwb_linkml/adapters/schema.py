@@ -13,8 +13,14 @@ if TYPE_CHECKING:
     from nwb_linkml.adapters.namespaces import NamespacesAdapter
 
 from nwb_schema_language import Group, Dataset
+from typing import NamedTuple
 
 from linkml_runtime.linkml_model import SchemaDefinition
+
+
+class SplitSchema(NamedTuple):
+    main: BuildResult
+    split: BuildResult
 
 class SchemaAdapter(Adapter):
     """
@@ -24,8 +30,13 @@ class SchemaAdapter(Adapter):
     groups: List[Group] = Field(default_factory=list)
     datasets: List[Dataset] = Field(default_factory=list)
     imports: List['SchemaAdapter'] = Field(default_factory=list)
-    namespace: Optional[str] = None
-    """Populated by NamespacesAdapter"""
+    namespace: Optional[str] = Field(
+        None,
+        description="""String of containing namespace. Populated by NamespacesAdapter""")
+    split: bool = Field(
+        True,
+        description="Split anonymous subclasses into a separate schema file"
+   )
 
     @property
     def name(self) -> str:
@@ -66,18 +77,69 @@ class SchemaAdapter(Adapter):
             else:
                 built_results += cls.build()
 
+        if self.split:
+            sch_split = self.split_subclasses(built_results)
+            return sch_split
 
-        sch = SchemaDefinition(
-            name = self.name,
-            id = self.name,
-            imports = [i.name for i in self.imports],
-            classes=built_results.classes,
-            slots=built_results.slots,
-            types=built_results.types
+        else:
+            sch = SchemaDefinition(
+                name = self.name,
+                id = self.name,
+                imports = [i.name for i in self.imports],
+                classes=built_results.classes,
+                slots=built_results.slots,
+                types=built_results.types
+            )
+            # every schema needs the language elements
+            sch.imports.append('nwb.language')
+            return BuildResult(schemas=[sch])
+
+    def split_subclasses(self, classes: BuildResult) -> BuildResult:
+        """
+        Split the generated classes into top-level "main" classes and
+        nested/anonymous "split" classes.
+
+        Args:
+            classes (BuildResult): A Build result object containing the classes
+                for the schema
+
+        Returns:
+            :class:`.SplitSchema`
+        """
+        # just split by the presence or absence of __
+        main_classes = [c for c in classes.classes if '__' not in c.name]
+        split_classes = [c for c in classes.classes if '__' in c.name]
+        split_sch_name = '.'.join([self.name, 'include'])
+
+
+        imports = [i.name for i in self.imports]
+        imports.append('nwb.language')
+        # need to mutually import the two schemas because the subclasses
+        # could refer to the main classes
+        main_imports = imports
+        main_imports.append(split_sch_name)
+        imports.append(self.name)
+        main_sch = SchemaDefinition(
+            name=self.name,
+            id=self.name,
+            imports=main_imports,
+            classes=main_classes,
+            slots=classes.slots,
+            types=classes.types
         )
-        # every schema needs the language elements
-        sch.imports.append('nwb.language')
-        return BuildResult(schemas=[sch])
+        split_sch = SchemaDefinition(
+            name=split_sch_name,
+            id=split_sch_name,
+            imports=imports,
+            classes=split_classes,
+            slots=classes.slots,
+            types=classes.types
+        )
+        res = BuildResult(
+            schemas=[main_sch, split_sch]
+        )
+        return res
+
 
 
     @property
@@ -94,7 +156,8 @@ class SchemaAdapter(Adapter):
         - Need to also check classes used in links/references
 
         """
-        type_incs = self.walk_fields(self, 'neurodata_type_inc')
+        type_incs = self.walk_fields(self, ('neurodata_type_inc', 'target_type'))
+
         definitions = [c.neurodata_type_def for c in self.created_classes]
         need = [inc for inc in type_incs if inc not in definitions]
         return need

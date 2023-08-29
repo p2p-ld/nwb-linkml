@@ -2,6 +2,8 @@ name: hdmf-common.base
 id: hdmf-common.base
 imports:
 - nwb.language
+- hdmf-common.base.include
+- hdmf-common.base
 default_prefix: hdmf-common.base/
 classes:
   Data:

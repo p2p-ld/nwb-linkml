@@ -29,3 +29,31 @@ flat_to_linkml = {
 """
 Map between the flat data types and the simpler linkml base types
 """
+
+flat_to_npytyping = {
+    "float": "Float",
+    "float32": "Float32",
+    "double": "Double",
+    "float64": "Float64",
+    "long": "LongLong",
+    "int64": "Int64",
+    "int": "Int",
+    "int32": "Int32",
+    "int16": "Int16",
+    "short": "Short",
+    "int8": "Int8",
+    "uint": "UInt",
+    "uint32": "UInt32",
+    "uint16": "UInt16",
+    "uint8": "UInt8",
+    "uint64": "UInt64",
+    "numeric": "Number",
+    "text": "String",
+    "utf": "Unicode",
+    "utf8": "Unicode",
+    "utf_8": "Unicode",
+    "ascii": "String",
+    "bool": "Bool",
+    "isodatetime": "Datetime64",
+    'AnyType': 'Any'
+}

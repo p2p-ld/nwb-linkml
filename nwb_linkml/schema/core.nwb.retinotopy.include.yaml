@@ -1,0 +1,262 @@
+name: core.nwb.retinotopy.include
+id: core.nwb.retinotopy.include
+imports:
+- core.nwb.base
+- nwb.language
+- core.nwb.retinotopy.include
+- core.nwb.retinotopy
+default_prefix: core.nwb.retinotopy.include/
+classes:
+  ImagingRetinotopy__axis_1_phase_map:
+    name: ImagingRetinotopy__axis_1_phase_map
+    description: Phase response to stimulus on the first measured axis.
+    attributes:
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      unit:
+        name: unit
+        description: Unit that axis data is stored in (e.g., degrees).
+        range: text
+      array:
+        name: array
+        range: ImagingRetinotopy__axis_1_phase_map__Array
+  ImagingRetinotopy__axis_1_phase_map__Array:
+    name: ImagingRetinotopy__axis_1_phase_map__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: float32
+        required: false
+      num_cols:
+        name: num_cols
+        range: float32
+        required: false
+  ImagingRetinotopy__axis_1_power_map:
+    name: ImagingRetinotopy__axis_1_power_map
+    description: Power response on the first measured axis. Response is scaled so
+      0.0 is no power in the response and 1.0 is maximum relative power.
+    attributes:
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      unit:
+        name: unit
+        description: Unit that axis data is stored in (e.g., degrees).
+        range: text
+      array:
+        name: array
+        range: ImagingRetinotopy__axis_1_power_map__Array
+  ImagingRetinotopy__axis_1_power_map__Array:
+    name: ImagingRetinotopy__axis_1_power_map__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: float32
+        required: false
+      num_cols:
+        name: num_cols
+        range: float32
+        required: false
+  ImagingRetinotopy__axis_2_phase_map:
+    name: ImagingRetinotopy__axis_2_phase_map
+    description: Phase response to stimulus on the second measured axis.
+    attributes:
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      unit:
+        name: unit
+        description: Unit that axis data is stored in (e.g., degrees).
+        range: text
+      array:
+        name: array
+        range: ImagingRetinotopy__axis_2_phase_map__Array
+  ImagingRetinotopy__axis_2_phase_map__Array:
+    name: ImagingRetinotopy__axis_2_phase_map__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: float32
+        required: false
+      num_cols:
+        name: num_cols
+        range: float32
+        required: false
+  ImagingRetinotopy__axis_2_power_map:
+    name: ImagingRetinotopy__axis_2_power_map
+    description: Power response on the second measured axis. Response is scaled so
+      0.0 is no power in the response and 1.0 is maximum relative power.
+    attributes:
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      unit:
+        name: unit
+        description: Unit that axis data is stored in (e.g., degrees).
+        range: text
+      array:
+        name: array
+        range: ImagingRetinotopy__axis_2_power_map__Array
+  ImagingRetinotopy__axis_2_power_map__Array:
+    name: ImagingRetinotopy__axis_2_power_map__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: float32
+        required: false
+      num_cols:
+        name: num_cols
+        range: float32
+        required: false
+  ImagingRetinotopy__axis_descriptions:
+    name: ImagingRetinotopy__axis_descriptions
+    description: Two-element array describing the contents of the two response axis
+      fields. Description should be something like ['altitude', 'azimuth'] or '['radius',
+      'theta'].
+    attributes:
+      axis_descriptions:
+        name: axis_descriptions
+        description: Two-element array describing the contents of the two response
+          axis fields. Description should be something like ['altitude', 'azimuth']
+          or '['radius', 'theta'].
+        multivalued: true
+        range: text
+        required: true
+  ImagingRetinotopy__focal_depth_image:
+    name: ImagingRetinotopy__focal_depth_image
+    description: 'Gray-scale image taken with same settings/parameters (e.g., focal
+      depth, wavelength) as data collection. Array format: [rows][columns].'
+    attributes:
+      bits_per_pixel:
+        name: bits_per_pixel
+        description: Number of bits used to represent each value. This is necessary
+          to determine maximum (white) pixel value.
+        range: int32
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      focal_depth:
+        name: focal_depth
+        description: Focal depth offset, in meters.
+        range: float32
+      format:
+        name: format
+        description: Format of image. Right now only 'raw' is supported.
+        range: text
+      array:
+        name: array
+        range: ImagingRetinotopy__focal_depth_image__Array
+  ImagingRetinotopy__focal_depth_image__Array:
+    name: ImagingRetinotopy__focal_depth_image__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: uint16
+        required: false
+      num_cols:
+        name: num_cols
+        range: uint16
+        required: false
+  ImagingRetinotopy__sign_map:
+    name: ImagingRetinotopy__sign_map
+    description: Sine of the angle between the direction of the gradient in axis_1
+      and axis_2.
+    attributes:
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      array:
+        name: array
+        range: ImagingRetinotopy__sign_map__Array
+  ImagingRetinotopy__sign_map__Array:
+    name: ImagingRetinotopy__sign_map__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: float32
+        required: false
+      num_cols:
+        name: num_cols
+        range: float32
+        required: false
+  ImagingRetinotopy__vasculature_image:
+    name: ImagingRetinotopy__vasculature_image
+    description: 'Gray-scale anatomical image of cortical surface. Array structure:
+      [rows][columns]'
+    attributes:
+      bits_per_pixel:
+        name: bits_per_pixel
+        description: Number of bits used to represent each value. This is necessary
+          to determine maximum (white) pixel value
+        range: int32
+      dimension:
+        name: dimension
+        description: 'Number of rows and columns in the image. NOTE: row, column representation
+          is equivalent to height, width.'
+        range: int32
+      field_of_view:
+        name: field_of_view
+        description: Size of viewing area, in meters.
+        range: float32
+      format:
+        name: format
+        description: Format of image. Right now only 'raw' is supported.
+        range: text
+      array:
+        name: array
+        range: ImagingRetinotopy__vasculature_image__Array
+  ImagingRetinotopy__vasculature_image__Array:
+    name: ImagingRetinotopy__vasculature_image__Array
+    is_a: Arraylike
+    attributes:
+      num_rows:
+        name: num_rows
+        range: uint16
+        required: false
+      num_cols:
+        name: num_cols
+        range: uint16
+        required: false

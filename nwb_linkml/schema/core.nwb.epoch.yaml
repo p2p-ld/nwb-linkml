@@ -4,6 +4,8 @@ imports:
 - hdmf-common.table
 - core.nwb.base
 - nwb.language
+- core.nwb.epoch.include
+- core.nwb.epoch
 default_prefix: core.nwb.epoch/
 classes:
   TimeIntervals:
@@ -15,60 +17,33 @@ classes:
       start_time:
         name: start_time
         description: Start time of epoch, in seconds.
-        multivalued: false
-        range: TimeIntervals_start_time
-        required: true
+        multivalued: true
+        range: float32
       stop_time:
         name: stop_time
         description: Stop time of epoch, in seconds.
-        multivalued: false
-        range: TimeIntervals_stop_time
-        required: true
+        multivalued: true
+        range: float32
       tags:
         name: tags
         description: User-defined tags that identify or categorize events.
-        multivalued: false
-        range: TimeIntervals_tags
-        required: false
+        multivalued: true
+        range: text
       tags_index:
         name: tags_index
         description: Index for tags.
         multivalued: false
-        range: TimeIntervals_tags_index
+        range: TimeIntervals__tags_index
         required: false
       timeseries:
         name: timeseries
         description: An index into a TimeSeries object.
         multivalued: false
-        range: TimeIntervals_timeseries
+        range: TimeIntervals__timeseries
         required: false
       timeseries_index:
         name: timeseries_index
         description: Index for timeseries.
         multivalued: false
-        range: TimeIntervals_timeseries_index
+        range: TimeIntervals__timeseries_index
         required: false
-  TimeIntervals_start_time:
-    name: TimeIntervals_start_time
-    description: Start time of epoch, in seconds.
-    is_a: VectorData
-  TimeIntervals_stop_time:
-    name: TimeIntervals_stop_time
-    description: Stop time of epoch, in seconds.
-    is_a: VectorData
-  TimeIntervals_tags:
-    name: TimeIntervals_tags
-    description: User-defined tags that identify or categorize events.
-    is_a: VectorData
-  TimeIntervals_tags_index:
-    name: TimeIntervals_tags_index
-    description: Index for tags.
-    is_a: VectorIndex
-  TimeIntervals_timeseries:
-    name: TimeIntervals_timeseries
-    description: An index into a TimeSeries object.
-    is_a: TimeSeriesReferenceVectorData
-  TimeIntervals_timeseries_index:
-    name: TimeIntervals_timeseries_index
-    description: Index for timeseries.
-    is_a: VectorIndex

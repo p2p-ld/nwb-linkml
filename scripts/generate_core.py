@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 from linkml_runtime.dumpers import yaml_dumper
-from linkml.generators import PydanticGenerator
+from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
 from nwb_linkml import io
 
@@ -14,9 +14,10 @@ def generate_core_yaml(output_path:Path):
 
 def generate_core_pydantic(yaml_path:Path, output_path:Path):
     for schema in yaml_path.glob('*.yaml'):
-        pydantic_file = (output_path / schema.name).with_suffix('.py')
+        python_name = schema.stem.replace('.', '_').replace('-', '_')
+        pydantic_file = (output_path / python_name).with_suffix('.py')
 
-        generator = PydanticGenerator(
+        generator = NWBPydanticGenerator(
             str(schema),
             pydantic_version='1',
             emit_metadata=True,

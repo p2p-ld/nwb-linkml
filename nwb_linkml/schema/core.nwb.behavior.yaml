@@ -4,6 +4,8 @@ imports:
 - core.nwb.base
 - core.nwb.misc
 - nwb.language
+- core.nwb.behavior.include
+- core.nwb.behavior
 default_prefix: core.nwb.behavior/
 classes:
   SpatialSeries:
@@ -24,58 +26,14 @@ classes:
         description: 1-D or 2-D array storing position or direction relative to some
           reference frame.
         multivalued: false
-        range: SpatialSeries_data
+        range: SpatialSeries__data
         required: true
       reference_frame:
         name: reference_frame
         description: Description defining what exactly 'straight-ahead' means.
         multivalued: false
-        range: SpatialSeries_reference_frame
-        required: false
-  SpatialSeries_data:
-    name: SpatialSeries_data
-    description: 1-D or 2-D array storing position or direction relative to some reference
-      frame.
-    attributes:
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. The default
-          value is 'meters'. Actual stored values are not necessarily stored in these
-          units. To access the data in these units, multiply 'data' by 'conversion'
-          and add 'offset'.
         range: text
-      array:
-        name: array
-        range: SpatialSeries_data_Array
-  SpatialSeries_data_Array:
-    name: SpatialSeries_data_Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
-        range: numeric
-        required: true
-      x:
-        name: x
-        range: numeric
         required: false
-        minimum_cardinality: 1
-        maximum_cardinality: 1
-      x,y:
-        name: x,y
-        range: numeric
-        required: false
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-      x,y,z:
-        name: x,y,z
-        range: numeric
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
-  SpatialSeries_reference_frame:
-    name: SpatialSeries_reference_frame
-    description: Description defining what exactly 'straight-ahead' means.
   BehavioralEpochs:
     name: BehavioralEpochs
     description: TimeSeries for storing behavioral epochs.  The objective of this

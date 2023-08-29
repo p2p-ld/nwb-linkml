@@ -3,6 +3,8 @@ id: hdmf-common.sparse
 imports:
 - hdmf-common.base
 - nwb.language
+- hdmf-common.sparse.include
+- hdmf-common.sparse
 default_prefix: hdmf-common.sparse/
 classes:
   CSRMatrix:
@@ -21,62 +23,17 @@ classes:
         name: indices
         description: The column indices.
         multivalued: false
-        range: CSRMatrix_indices
+        range: CSRMatrix__indices
         required: true
       indptr:
         name: indptr
         description: The row index pointer.
         multivalued: false
-        range: CSRMatrix_indptr
+        range: CSRMatrix__indptr
         required: true
       data:
         name: data
         description: The non-zero values in the matrix.
         multivalued: false
-        range: CSRMatrix_data
-        required: true
-  CSRMatrix_indices:
-    name: CSRMatrix_indices
-    description: The column indices.
-    attributes:
-      array:
-        name: array
-        range: CSRMatrix_indices_Array
-  CSRMatrix_indices_Array:
-    name: CSRMatrix_indices_Array
-    is_a: Arraylike
-    attributes:
-      number of non-zero values:
-        name: number of non-zero values
-        range: uint
-        required: true
-  CSRMatrix_indptr:
-    name: CSRMatrix_indptr
-    description: The row index pointer.
-    attributes:
-      array:
-        name: array
-        range: CSRMatrix_indptr_Array
-  CSRMatrix_indptr_Array:
-    name: CSRMatrix_indptr_Array
-    is_a: Arraylike
-    attributes:
-      number of rows in the matrix + 1:
-        name: number of rows in the matrix + 1
-        range: uint
-        required: true
-  CSRMatrix_data:
-    name: CSRMatrix_data
-    description: The non-zero values in the matrix.
-    attributes:
-      array:
-        name: array
-        range: CSRMatrix_data_Array
-  CSRMatrix_data_Array:
-    name: CSRMatrix_data_Array
-    is_a: Arraylike
-    attributes:
-      number of non-zero values:
-        name: number of non-zero values
-        range: AnyType
+        range: CSRMatrix__data
         required: true

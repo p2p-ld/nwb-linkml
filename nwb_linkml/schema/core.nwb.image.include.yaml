@@ -1,0 +1,207 @@
+name: core.nwb.image.include
+id: core.nwb.image.include
+imports:
+- core.nwb.base
+- core.nwb.device
+- nwb.language
+- core.nwb.image.include
+- core.nwb.image
+default_prefix: core.nwb.image.include/
+classes:
+  GrayscaleImage__Array:
+    name: GrayscaleImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: false
+      y:
+        name: y
+        range: numeric
+        required: false
+  RGBImage__Array:
+    name: RGBImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: false
+      y:
+        name: y
+        range: numeric
+        required: false
+      r, g, b:
+        name: r, g, b
+        range: numeric
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  RGBAImage__Array:
+    name: RGBAImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: false
+      y:
+        name: y
+        range: numeric
+        required: false
+      r, g, b, a:
+        name: r, g, b, a
+        range: numeric
+        required: false
+        minimum_cardinality: 4
+        maximum_cardinality: 4
+  ImageSeries__data:
+    name: ImageSeries__data
+    description: Binary data representing images across frames. If data are stored
+      in an external file, this should be an empty 3D array.
+    attributes:
+      array:
+        name: array
+        range: ImageSeries__data__Array
+  ImageSeries__data__Array:
+    name: ImageSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      frame:
+        name: frame
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      z:
+        name: z
+        range: numeric
+        required: false
+  ImageSeries__dimension:
+    name: ImageSeries__dimension
+    description: Number of pixels on x, y, (and z) axes.
+    attributes:
+      dimension:
+        name: dimension
+        description: Number of pixels on x, y, (and z) axes.
+        multivalued: true
+        range: int32
+        required: false
+  ImageSeries__external_file:
+    name: ImageSeries__external_file
+    description: Paths to one or more external file(s). The field is only present
+      if format='external'. This is only relevant if the image series is stored in
+      the file system as one or more image file(s). This field should NOT be used
+      if the image is stored in another NWB file and that file is linked to this file.
+    attributes:
+      starting_frame:
+        name: starting_frame
+        description: Each external image may contain one or more consecutive frames
+          of the full ImageSeries. This attribute serves as an index to indicate which
+          frames each file contains, to facilitate random access. The 'starting_frame'
+          attribute, hence, contains a list of frame numbers within the full ImageSeries
+          of the first frame of each file listed in the parent 'external_file' dataset.
+          Zero-based indexing is used (hence, the first element will always be zero).
+          For example, if the 'external_file' dataset has three paths to files and
+          the first file has 5 frames, the second file has 10 frames, and the third
+          file has 20 frames, then this attribute will have values [0, 5, 15]. If
+          there is a single external file that holds all of the frames of the ImageSeries
+          (and so there is a single element in the 'external_file' dataset), then
+          this attribute should have value [0].
+        range: int32
+      external_file:
+        name: external_file
+        description: Paths to one or more external file(s). The field is only present
+          if format='external'. This is only relevant if the image series is stored
+          in the file system as one or more image file(s). This field should NOT be
+          used if the image is stored in another NWB file and that file is linked
+          to this file.
+        multivalued: true
+        range: text
+        required: false
+  OpticalSeries__field_of_view:
+    name: OpticalSeries__field_of_view
+    description: Width, height and depth of image, or imaged area, in meters.
+    attributes:
+      array:
+        name: array
+        range: OpticalSeries__field_of_view__Array
+  OpticalSeries__field_of_view__Array:
+    name: OpticalSeries__field_of_view__Array
+    is_a: Arraylike
+    attributes:
+      width, height:
+        name: width, height
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      width, height, depth:
+        name: width, height, depth
+        range: float32
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  OpticalSeries__data:
+    name: OpticalSeries__data
+    description: Images presented to subject, either grayscale or RGB
+    attributes:
+      array:
+        name: array
+        range: OpticalSeries__data__Array
+  OpticalSeries__data__Array:
+    name: OpticalSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      frame:
+        name: frame
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b:
+        name: r, g, b
+        range: numeric
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  IndexSeries__data:
+    name: IndexSeries__data
+    description: Index of the image (using zero-indexing) in the linked Images object.
+    attributes:
+      conversion:
+        name: conversion
+        description: This field is unused by IndexSeries.
+        range: float32
+      resolution:
+        name: resolution
+        description: This field is unused by IndexSeries.
+        range: float32
+      offset:
+        name: offset
+        description: This field is unused by IndexSeries.
+        range: float32
+      unit:
+        name: unit
+        description: This field is unused by IndexSeries and has the value N/A.
+        range: text
+      data:
+        name: data
+        description: Index of the image (using zero-indexing) in the linked Images
+          object.
+        multivalued: true
+        range: uint32
+        required: true
