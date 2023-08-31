@@ -66,8 +66,6 @@ classes:
         description: If source is present, namespace cannot be.
 
   Group:
-    mixins:
-      - NamingMixin
     slots:
       - neurodata_type_def
       - neurodata_type_inc
@@ -110,7 +108,6 @@ classes:
   Dataset:
     mixins:
       - DtypeMixin
-      - NamingMixin
     slots:
       - neurodata_type_def
       - neurodata_type_inc
@@ -124,7 +121,6 @@ classes:
       - quantity
       - linkable
       - attributes
-      - groups
 
   Datasets:
     slots:
@@ -163,17 +159,6 @@ classes:
           slot_conditions:
             dtype:
               multivalued: false
-
-  NamingMixin:
-    mixin: true
-    description: require either neurodata_type_def or name to be present
-    rules:
-      - preconditions: { slot_conditions: { neurodata_type_def: { value_presence: ABSENT } } }
-        postconditions: { slot_conditions: { name: { required: true } } }
-        description: If not defining a new type, a name is required
-      - preconditions: { slot_conditions: { name: { value_presence: ABSENT } } }
-        postconditions: { slot_conditions: { neurodata_type_def: { required: true } } }
-        description: If a name is not given, must be defining a new type
 
   AnyType:
     class_uri: linkml:Any

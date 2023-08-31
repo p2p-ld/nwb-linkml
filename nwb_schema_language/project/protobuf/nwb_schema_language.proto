@@ -7,13 +7,13 @@ message Attribute
   anyType defaultValue = 0
   string doc = 0
   boolean required = 0
-  string dtype = 0
+ repeated  string dtype = 0
  }
 message CompoundDtype
  {
   string name = 0
   string doc = 0
-  flatDtype dtype = 0
+ repeated  string dtype = 0
  }
 message Dataset
  {
@@ -29,7 +29,7 @@ message Dataset
   string quantity = 0
   boolean linkable = 0
  repeated  attribute attributes = 0
-  string dtype = 0
+ repeated  string dtype = 0
  }
 message Datasets
  {

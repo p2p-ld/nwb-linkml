@@ -16,6 +16,14 @@
                 },
                 "dims": {
                     "items": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/$defs/AnyType"
+                            }
+                        ],
                         "type": "string"
                     },
                     "type": "array"
@@ -25,18 +33,21 @@
                     "type": "string"
                 },
                 "dtype": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/FlatDtype"
-                        },
-                        {
-                            "$ref": "#/$defs/CompoundDtype"
-                        },
-                        {
-                            "$ref": "#/$defs/ReferenceDtype"
-                        }
-                    ],
-                    "type": "string"
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/FlatDtype"
+                            },
+                            {
+                                "$ref": "#/$defs/CompoundDtype"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceDtype"
+                            }
+                        ],
+                        "type": "string"
+                    },
+                    "type": "array"
                 },
                 "name": {
                     "type": "string"
@@ -47,13 +58,17 @@
                 },
                 "shape": {
                     "items": {
-                        "oneOf": [
+                        "anyOf": [
                             {
                                 "minimum": 1,
                                 "type": "integer"
                             },
                             {
-                                "const": "null"
+                                "const": "null",
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/$defs/AnyType"
                             }
                         ],
                         "type": "string"
@@ -81,7 +96,15 @@
                     "type": "string"
                 },
                 "dtype": {
-                    "$ref": "#/$defs/FlatDtype"
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ReferenceDtype"
+                        },
+                        {
+                            "$ref": "#/$defs/FlatDtype"
+                        }
+                    ],
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -114,6 +137,14 @@
                 },
                 "dims": {
                     "items": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/$defs/AnyType"
+                            }
+                        ],
                         "type": "string"
                     },
                     "type": "array"
@@ -123,18 +154,21 @@
                     "type": "string"
                 },
                 "dtype": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/FlatDtype"
-                        },
-                        {
-                            "$ref": "#/$defs/CompoundDtype"
-                        },
-                        {
-                            "$ref": "#/$defs/ReferenceDtype"
-                        }
-                    ],
-                    "type": "string"
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/FlatDtype"
+                            },
+                            {
+                                "$ref": "#/$defs/CompoundDtype"
+                            },
+                            {
+                                "$ref": "#/$defs/ReferenceDtype"
+                            }
+                        ],
+                        "type": "string"
+                    },
+                    "type": "array"
                 },
                 "linkable": {
                     "type": "boolean"
@@ -143,9 +177,11 @@
                     "type": "string"
                 },
                 "neurodata_type_def": {
+                    "description": "Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins",
                     "type": "string"
                 },
                 "neurodata_type_inc": {
+                    "description": "Used alongside neurodata_type_def to indicate inheritance, naming, and mixins",
                     "type": "string"
                 },
                 "quantity": {
@@ -162,13 +198,17 @@
                 },
                 "shape": {
                     "items": {
-                        "oneOf": [
+                        "anyOf": [
                             {
                                 "minimum": 1,
                                 "type": "integer"
                             },
                             {
-                                "const": "null"
+                                "const": "null",
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/$defs/AnyType"
                             }
                         ],
                         "type": "string"
@@ -273,9 +313,11 @@
                     "type": "string"
                 },
                 "neurodata_type_def": {
+                    "description": "Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins",
                     "type": "string"
                 },
                 "neurodata_type_inc": {
+                    "description": "Used alongside neurodata_type_def to indicate inheritance, naming, and mixins",
                     "type": "string"
                 },
                 "quantity": {
@@ -335,14 +377,6 @@
                     "type": "string"
                 },
                 "target_type": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Dataset"
-                        },
-                        {
-                            "$ref": "#/$defs/Group"
-                        }
-                    ],
                     "description": "Describes the neurodata_type of the target that the reference points to",
                     "type": "string"
                 }
@@ -388,7 +422,7 @@
                 "name": {
                     "type": "string"
                 },
-                "schema": {
+                "schema_": {
                     "description": "List of the schema to be included in this namespace.",
                     "items": {
                         "$ref": "#/$defs/Schema"
@@ -446,14 +480,6 @@
                     "description": "describes the kind of reference"
                 },
                 "target_type": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Dataset"
-                        },
-                        {
-                            "$ref": "#/$defs/Group"
-                        }
-                    ],
                     "description": "Describes the neurodata_type of the target that the reference points to",
                     "type": "string"
                 }

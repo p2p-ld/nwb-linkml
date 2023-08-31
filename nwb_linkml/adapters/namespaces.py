@@ -92,7 +92,6 @@ class NamespacesAdapter(Adapter):
         all_matches = [*internal_matches, *import_matches]
 
         if len(all_matches)>1:
-            pdb.set_trace()
             raise KeyError(f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}")
         elif len(all_matches) == 1:
             return all_matches[0]

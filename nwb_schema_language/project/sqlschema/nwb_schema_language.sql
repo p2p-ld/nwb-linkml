@@ -15,7 +15,7 @@ CREATE TABLE "Attribute" (
 CREATE TABLE "CompoundDtype" (
 	name TEXT NOT NULL, 
 	doc TEXT NOT NULL, 
-	dtype VARCHAR(11) NOT NULL, 
+	dtype TEXT NOT NULL, 
 	PRIMARY KEY (name, doc, dtype)
 );
 
@@ -77,8 +77,8 @@ CREATE TABLE "Namespace" (
 	date DATE, 
 	author TEXT NOT NULL, 
 	contact TEXT NOT NULL, 
-	schema TEXT, 
-	PRIMARY KEY (doc, name, full_name, version, date, author, contact, schema)
+	schema_ TEXT, 
+	PRIMARY KEY (doc, name, full_name, version, date, author, contact, schema_)
 );
 
 CREATE TABLE "Namespaces" (

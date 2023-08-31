@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nwb_schema_language"
-version = "0.1.0"
+version = "0.1.1"
 description = "Translation of the nwb-schema-language to LinkML"
 authors = ["Jonny Saunders <j@nny.fyi>"]
 license = "GNU GPL v3.0"

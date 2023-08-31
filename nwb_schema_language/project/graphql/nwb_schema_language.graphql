@@ -11,17 +11,17 @@ type Attribute implements DtypeMixin
     defaultValue: AnyType
     doc: String!
     required: Boolean
-    dtype: String
+    dtype: [String]
   }
 
 type CompoundDtype
   {
     name: String!
     doc: String!
-    dtype: FlatDtype!
+    dtype: [String]!
   }
 
-type Dataset implements DtypeMixin, NamingMixin
+type Dataset implements DtypeMixin
   {
     neurodataTypeDef: String
     neurodataTypeInc: String
@@ -35,7 +35,7 @@ type Dataset implements DtypeMixin, NamingMixin
     quantity: String
     linkable: Boolean
     attributes: [Attribute]
-    dtype: String
+    dtype: [String]
   }
 
 type Datasets
@@ -45,10 +45,10 @@ type Datasets
 
 interface DtypeMixin
   {
-    dtype: String
+    dtype: [String]
   }
 
-type Group implements NamingMixin
+type Group
   {
     neurodataTypeDef: String
     neurodataTypeInc: String
@@ -91,10 +91,6 @@ type Namespace
 type Namespaces
   {
     namespaces: [Namespace]
-  }
-
-interface NamingMixin
-  {
   }
 
 type ReferenceDtype

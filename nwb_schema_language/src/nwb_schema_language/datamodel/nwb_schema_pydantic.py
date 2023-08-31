@@ -135,6 +135,21 @@ class Schema(ConfiguredBaseModel):
     doc: Optional[str] = Field(None)
     
 
+class Group(ConfiguredBaseModel):
+    
+    neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
+    neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
+    name: Optional[str] = Field(None)
+    default_name: Optional[str] = Field(None)
+    doc: str = Field(..., description="""Description of corresponding object.""")
+    quantity: Optional[Union[QuantityEnum, int]] = Field(1)
+    linkable: Optional[bool] = Field(None)
+    attributes: Optional[List[Attribute]] = Field(default_factory=list)
+    datasets: Optional[List[Dataset]] = Field(default_factory=list)
+    groups: Optional[List[Group]] = Field(default_factory=list)
+    links: Optional[List[Link]] = Field(default_factory=list)
+    
+
 class Groups(ConfiguredBaseModel):
     
     groups: Optional[List[Group]] = Field(default_factory=list)
@@ -183,29 +198,7 @@ class Attribute(DtypeMixin):
     dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
     
 
-class NamingMixin(ConfiguredBaseModel):
-    """
-    require either neurodata_type_def or name to be present
-    """
-    None
-    
-
-class Group(NamingMixin):
-    
-    neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
-    neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
-    name: Optional[str] = Field(None)
-    default_name: Optional[str] = Field(None)
-    doc: str = Field(..., description="""Description of corresponding object.""")
-    quantity: Optional[Union[QuantityEnum, int]] = Field(1)
-    linkable: Optional[bool] = Field(None)
-    attributes: Optional[List[Attribute]] = Field(default_factory=list)
-    datasets: Optional[List[Dataset]] = Field(default_factory=list)
-    groups: Optional[List[Group]] = Field(default_factory=list)
-    links: Optional[List[Link]] = Field(default_factory=list)
-    
-
-class Dataset(NamingMixin, DtypeMixin):
+class Dataset(DtypeMixin):
     
     neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
     neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
@@ -219,7 +212,6 @@ class Dataset(NamingMixin, DtypeMixin):
     quantity: Optional[Union[QuantityEnum, int]] = Field(1)
     linkable: Optional[bool] = Field(None)
     attributes: Optional[List[Attribute]] = Field(default_factory=list)
-    datasets: Optional[List[Dataset]] = Field(default_factory=list)
     dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
     
 
@@ -229,6 +221,7 @@ class Dataset(NamingMixin, DtypeMixin):
 Namespace.update_forward_refs()
 Namespaces.update_forward_refs()
 Schema.update_forward_refs()
+Group.update_forward_refs()
 Groups.update_forward_refs()
 Link.update_forward_refs()
 Datasets.update_forward_refs()
@@ -236,7 +229,5 @@ ReferenceDtype.update_forward_refs()
 CompoundDtype.update_forward_refs()
 DtypeMixin.update_forward_refs()
 Attribute.update_forward_refs()
-NamingMixin.update_forward_refs()
-Group.update_forward_refs()
 Dataset.update_forward_refs()
 

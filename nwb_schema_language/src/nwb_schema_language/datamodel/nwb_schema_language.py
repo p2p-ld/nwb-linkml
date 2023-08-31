@@ -1,9 +1,9 @@
 # Auto generated from nwb_schema_language.yaml by pythongen.py version: 0.0.1
-# Generation date: 2023-08-18T00:36:55
-# Schema: nwb_schema_language
+# Generation date: 2023-08-30T20:54:02
+# Schema: nwb-schema-language
 #
 # id: https://w3id.org/p2p_ld/nwb-schema-language
-# description: Translation of the nwb_schema_language to LinkML
+# description: Translation of the nwb-schema-language to LinkML
 # license: GNU GPL v3.0
 
 import dataclasses
@@ -59,7 +59,7 @@ class Namespace(YAMLRoot):
     contact: Union[str, List[str]] = None
     full_name: Optional[str] = None
     date: Optional[Union[str, XSDDate]] = None
-    schema: Optional[Union[Union[dict, "Schema"], List[Union[dict, "Schema"]]]] = empty_list()
+    schema_: Optional[Union[Union[dict, "Schema"], List[Union[dict, "Schema"]]]] = empty_list()
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
         if self._is_empty(self.doc):
@@ -95,9 +95,9 @@ class Namespace(YAMLRoot):
         if self.date is not None and not isinstance(self.date, XSDDate):
             self.date = XSDDate(self.date)
 
-        if not isinstance(self.schema, list):
-            self.schema = [self.schema] if self.schema is not None else []
-        self.schema = [v if isinstance(v, Schema) else Schema(**as_dict(v)) for v in self.schema]
+        if not isinstance(self.schema_, list):
+            self.schema_ = [self.schema_] if self.schema_ is not None else []
+        self.schema_ = [v if isinstance(v, Schema) else Schema(**as_dict(v)) for v in self.schema_]
 
         super().__post_init__(**kwargs)
 
@@ -251,7 +251,7 @@ class Attribute(YAMLRoot):
     value: Optional[Union[dict, "AnyType"]] = None
     default_value: Optional[Union[dict, "AnyType"]] = None
     required: Optional[Union[bool, Bool]] = True
-    dtype: Optional[str] = None
+    dtype: Optional[Union[str, List[str]]] = empty_list()
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
         if self._is_empty(self.name):
@@ -275,8 +275,9 @@ class Attribute(YAMLRoot):
         if self.required is not None and not isinstance(self.required, Bool):
             self.required = Bool(self.required)
 
-        if self.dtype is not None and not isinstance(self.dtype, str):
-            self.dtype = str(self.dtype)
+        if not isinstance(self.dtype, list):
+            self.dtype = [self.dtype] if self.dtype is not None else []
+        self.dtype = [v if isinstance(v, str) else str(v) for v in self.dtype]
 
         super().__post_init__(**kwargs)
 
@@ -336,7 +337,7 @@ class Dataset(YAMLRoot):
     quantity: Optional[str] = 1
     linkable: Optional[Union[bool, Bool]] = None
     attributes: Optional[Union[Union[dict, Attribute], List[Union[dict, Attribute]]]] = empty_list()
-    dtype: Optional[str] = None
+    dtype: Optional[Union[str, List[str]]] = empty_list()
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
         if self._is_empty(self.doc):
@@ -372,8 +373,9 @@ class Dataset(YAMLRoot):
 
         self._normalize_inlined_as_dict(slot_name="attributes", slot_type=Attribute, key_name="name", keyed=False)
 
-        if self.dtype is not None and not isinstance(self.dtype, str):
-            self.dtype = str(self.dtype)
+        if not isinstance(self.dtype, list):
+            self.dtype = [self.dtype] if self.dtype is not None else []
+        self.dtype = [v if isinstance(v, str) else str(v) for v in self.dtype]
 
         super().__post_init__(**kwargs)
 
@@ -432,7 +434,7 @@ class CompoundDtype(YAMLRoot):
 
     name: str = None
     doc: str = None
-    dtype: Union[str, "FlatDtype"] = None
+    dtype: Union[str, List[str]] = None
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
         if self._is_empty(self.name):
@@ -447,8 +449,9 @@ class CompoundDtype(YAMLRoot):
 
         if self._is_empty(self.dtype):
             self.MissingRequiredField("dtype")
-        if not isinstance(self.dtype, FlatDtype):
-            self.dtype = FlatDtype(self.dtype)
+        if not isinstance(self.dtype, list):
+            self.dtype = [self.dtype] if self.dtype is not None else []
+        self.dtype = [v if isinstance(v, str) else str(v) for v in self.dtype]
 
         super().__post_init__(**kwargs)
 
@@ -462,25 +465,14 @@ class DtypeMixin(YAMLRoot):
     class_name: ClassVar[str] = "DtypeMixin"
     class_model_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.DtypeMixin
 
-    dtype: Optional[str] = None
+    dtype: Optional[Union[str, List[str]]] = empty_list()
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
-        if self.dtype is not None and not isinstance(self.dtype, str):
-            self.dtype = str(self.dtype)
+        if not isinstance(self.dtype, list):
+            self.dtype = [self.dtype] if self.dtype is not None else []
+        self.dtype = [v if isinstance(v, str) else str(v) for v in self.dtype]
 
         super().__post_init__(**kwargs)
-
-
-class NamingMixin(YAMLRoot):
-    """
-    require either neurodata_type_def or name to be present
-    """
-    _inherited_slots: ClassVar[List[str]] = []
-
-    class_class_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.NamingMixin
-    class_class_curie: ClassVar[str] = "nwb_schema_language:NamingMixin"
-    class_name: ClassVar[str] = "NamingMixin"
-    class_model_uri: ClassVar[URIRef] = NWB_SCHEMA_LANGUAGE.NamingMixin
 
 
 AnyType = Any
@@ -645,7 +637,7 @@ slots.author = Slot(uri=SCHEMA.author, name="author", curie=SCHEMA.curie('author
 slots.contact = Slot(uri=SCHEMA.email, name="contact", curie=SCHEMA.curie('email'),
                    model_uri=NWB_SCHEMA_LANGUAGE.contact, domain=None, range=Union[str, List[str]])
 
-slots.schema = Slot(uri=NWB_SCHEMA_LANGUAGE.schema, name="schema", curie=NWB_SCHEMA_LANGUAGE.curie('schema'),
+slots.schema = Slot(uri=NWB_SCHEMA_LANGUAGE.schema_, name="schema", curie=NWB_SCHEMA_LANGUAGE.curie('schema_'),
                    model_uri=NWB_SCHEMA_LANGUAGE.schema, domain=None, range=Optional[Union[Union[dict, Schema], List[Union[dict, Schema]]]])
 
 slots.source = Slot(uri=NWB_SCHEMA_LANGUAGE.source, name="source", curie=NWB_SCHEMA_LANGUAGE.curie('source'),
@@ -692,7 +684,7 @@ slots.links = Slot(uri=NWB_SCHEMA_LANGUAGE.links, name="links", curie=NWB_SCHEMA
                    model_uri=NWB_SCHEMA_LANGUAGE.links, domain=None, range=Optional[Union[Union[dict, Link], List[Union[dict, Link]]]])
 
 slots.dtype = Slot(uri=NWB_SCHEMA_LANGUAGE.dtype, name="dtype", curie=NWB_SCHEMA_LANGUAGE.curie('dtype'),
-                   model_uri=NWB_SCHEMA_LANGUAGE.dtype, domain=None, range=Optional[str])
+                   model_uri=NWB_SCHEMA_LANGUAGE.dtype, domain=None, range=Optional[Union[str, List[str]]])
 
 slots.dims = Slot(uri=NWB_SCHEMA_LANGUAGE.dims, name="dims", curie=NWB_SCHEMA_LANGUAGE.curie('dims'),
                    model_uri=NWB_SCHEMA_LANGUAGE.dims, domain=None, range=Optional[Union[str, List[str]]])
@@ -728,4 +720,4 @@ slots.CompoundDtype_name = Slot(uri=NWB_SCHEMA_LANGUAGE.name, name="CompoundDtyp
                    model_uri=NWB_SCHEMA_LANGUAGE.CompoundDtype_name, domain=CompoundDtype, range=str)
 
 slots.CompoundDtype_dtype = Slot(uri=NWB_SCHEMA_LANGUAGE.dtype, name="CompoundDtype_dtype", curie=NWB_SCHEMA_LANGUAGE.curie('dtype'),
-                   model_uri=NWB_SCHEMA_LANGUAGE.CompoundDtype_dtype, domain=CompoundDtype, range=Union[str, "FlatDtype"])
+                   model_uri=NWB_SCHEMA_LANGUAGE.CompoundDtype_dtype, domain=CompoundDtype, range=Union[str, List[str]])

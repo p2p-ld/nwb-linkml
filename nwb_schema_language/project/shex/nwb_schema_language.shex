@@ -59,7 +59,7 @@ linkml:Sparqlpath xsd:string
           <default_value> @<AnyType> ? ;
           <doc> @linkml:String ;
           <required> @linkml:Boolean ? ;
-          <dtype> @linkml:String ?
+          <dtype> @linkml:String *
        ) ;
        rdf:type [ <Attribute> ] ?
     )
@@ -68,7 +68,7 @@ linkml:Sparqlpath xsd:string
 <CompoundDtype> CLOSED {
     (  $<CompoundDtype_tes> (  <name> @linkml:String ;
           <doc> @linkml:String ;
-          <dtype> @<FlatDtype>
+          <dtype> @linkml:String +
        ) ;
        rdf:type [ <CompoundDtype> ] ?
     )
@@ -77,8 +77,6 @@ linkml:Sparqlpath xsd:string
 <Dataset> CLOSED {
     (  $<Dataset_tes> (  &<DtypeMixin_tes> ;
           rdf:type [ <DtypeMixin> ] ? ;
-          &<NamingMixin_tes> ;
-          rdf:type [ <NamingMixin> ] ? ;
           <neurodata_type_def> @linkml:String ? ;
           <neurodata_type_inc> @linkml:String ? ;
           <name> @linkml:String ? ;
@@ -91,7 +89,7 @@ linkml:Sparqlpath xsd:string
           <quantity> @linkml:String ? ;
           <linkable> @linkml:Boolean ? ;
           <attributes> @<Attribute> * ;
-          <dtype> @linkml:String ?
+          <dtype> @linkml:String *
        ) ;
        rdf:type [ <Dataset> ] ?
     )
@@ -104,15 +102,13 @@ linkml:Sparqlpath xsd:string
 }
 
 <DtypeMixin> {
-    (  $<DtypeMixin_tes> <dtype> @linkml:String ? ;
+    (  $<DtypeMixin_tes> <dtype> @linkml:String * ;
        rdf:type [ <DtypeMixin> ] ?
     )
 }
 
 <Group> CLOSED {
-    (  $<Group_tes> (  &<NamingMixin_tes> ;
-          rdf:type [ <NamingMixin> ] ? ;
-          <neurodata_type_def> @linkml:String ? ;
+    (  $<Group_tes> (  <neurodata_type_def> @linkml:String ? ;
           <neurodata_type_inc> @linkml:String ? ;
           <name> @linkml:String ? ;
           <default_name> @linkml:String ? ;
@@ -152,7 +148,7 @@ linkml:Sparqlpath xsd:string
           schema1:dateModified @linkml:Date ? ;
           schema1:author @linkml:String + ;
           schema1:email @linkml:String + ;
-          <schema> @<Schema> *
+          <schema_> @<Schema> *
        ) ;
        rdf:type [ <Namespace> ] ?
     )
@@ -161,12 +157,6 @@ linkml:Sparqlpath xsd:string
 <Namespaces> CLOSED {
     (  $<Namespaces_tes> <namespaces> @<Namespace> * ;
        rdf:type [ <Namespaces> ] ?
-    )
-}
-
-<NamingMixin> {
-    (  $<NamingMixin_tes> rdf:type . * ;
-       rdf:type [ <NamingMixin> ] ?
     )
 }
 
