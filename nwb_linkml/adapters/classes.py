@@ -2,6 +2,8 @@
 Adapters to linkML classes
 """
 import pdb
+import re
+from abc import abstractmethod
 from typing import List, Optional
 from nwb_schema_language import Dataset, Group, ReferenceDtype, CompoundDtype, DTypeType
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
@@ -9,17 +11,95 @@ from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.lang_elements import Arraylike
 
+CAMEL_TO_SNAKE = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
+"""
+Convert camel case to snake case
+
+courtesy of: https://stackoverflow.com/a/12867228
+"""
+
+def camel_to_snake(name:str) -> str:
+    """
+    Convert camel case to snake case
+
+    courtesy of: https://stackoverflow.com/a/12867228
+    """
+    return CAMEL_TO_SNAKE.sub(r'_\1', name).lower()
+
 class ClassAdapter(Adapter):
     """
-    Adapter to class-like things in linkml, including datasets and groups
+    Abstract adapter to class-like things in linkml, holds methods common to
+    both DatasetAdapter and GroupAdapter
     """
     cls: Dataset | Group
     parent: Optional['ClassAdapter'] = None
 
+    @abstractmethod
+    def build(self) -> BuildResult:
+        """
+        Make this abstract so it can't be instantiated directly.
+
+        Subclasses call :meth:`.build_base` to get the basics true of both groups and datasets
+        """
+
+
+    def build_base(self, extra_attrs: Optional[List[SlotDefinition]]=None) -> BuildResult:
+        """
+        Build the basic class and attributes before adding any specific
+        modifications for groups or datasets.
+        """
+
+        # Build this class
+        #name = self._get_full_name()
+        if self.parent is not None:
+            name = self._get_full_name()
+        else:
+            name = self._get_attr_name()
+
+        # Get vanilla top-level attributes
+        attrs = self.build_attrs(self.cls)
+        name_slot = self.build_name_slot()
+        attrs.append(name_slot)
+        if extra_attrs is not None:
+            if isinstance(extra_attrs, SlotDefinition):
+                extra_attrs = [extra_attrs]
+            attrs.extend(extra_attrs)
+
+        cls = ClassDefinition(
+            name = name,
+            is_a = self.cls.neurodata_type_inc,
+            description=self.cls.doc,
+            attributes=attrs,
+        )
+
+        slots = []
+        if self.parent is not None:
+            slots.append(self.build_self_slot())
+
+        res = BuildResult(
+            classes = [cls],
+            slots = slots
+        )
+
+        return res
+
+    def build_attrs(self, cls: Dataset | Group) -> List[SlotDefinition]:
+        attrs = [
+            SlotDefinition(
+                name=attr.name,
+                description=attr.doc,
+                range=self.handle_dtype(attr.dtype),
+            ) for attr in cls.attributes
+        ]
+
+        return attrs
+
     def _get_full_name(self) -> str:
         """The full name of the object in the generated linkml
 
-        Distinct from 'name' which is the thing that's often used in """
+        Distinct from 'name' which is the thing that's used to define position in
+        a hierarchical data setting
+        """
         if self.cls.neurodata_type_def:
             name = self.cls.neurodata_type_def
         elif self.cls.name is not None:
@@ -39,147 +119,27 @@ class ClassAdapter(Adapter):
 
         return name
 
-    def _get_name(self) -> str:
+    def _get_attr_name(self) -> str:
         """
-        Get the "regular" name, which is used as the name of the attr
-
-        Returns:
-
+        Get the name to use as the attribute name,
+        again distinct from the actual name of the instantiated object
         """
         # return self._get_full_name()
         name = None
         if self.cls.neurodata_type_def:
+            #name = camel_to_snake(self.cls.neurodata_type_def)
             name = self.cls.neurodata_type_def
         elif self.cls.name is not None:
             # we do have a unique name
             name = self.cls.name
         elif self.cls.neurodata_type_inc:
-            # group members can be anonymous? this violates the schema but is common
+            #name = camel_to_snake(self.cls.neurodata_type_inc)
             name = self.cls.neurodata_type_inc
 
         if name is None:
             raise ValueError(f'Class has no name!: {self.cls}')
 
         return name
-
-
-
-    def handle_arraylike(self, dataset: Dataset, name:Optional[str]=None) -> Optional[ClassDefinition | SlotDefinition]:
-        """
-        Handling the
-
-        - dims
-        - shape
-        - dtype
-
-        fields as they are used in datasets. We'll use the :class:`.Arraylike` class to imitate them.
-
-        Specifically:
-
-        - Each slot within a subclass indicates a possible dimension.
-        - Only dimensions that are present in all the dimension specifiers in the
-          original schema are required.
-        - Shape requirements are indicated using max/min cardinalities on the slot.
-        - The arraylike object should be stored in the `array` slot on the containing class
-          (since there are already properties named `data`)
-
-        If any of `dims`, `shape`, or `dtype` are undefined, return `None`
-
-        Args:
-            dataset (:class:`nwb_schema_language.Dataset`): The dataset defining the arraylike
-            name (str): If present, override the name of the class before appending _Array
-                (we don't use _get_full_name here because we want to eventually decouple these functions from this adapter
-                class, which is sort of a development crutch. Ideally all these methods would just work on base nwb schema language types)
-        """
-        if not any((dataset.dims, dataset.shape)):
-            # none of the required properties are defined, that's fine.
-            return
-        elif not all((dataset.dims, dataset.shape)):
-            # need to have both if one is present!
-            raise ValueError(f"A dataset needs both dims and shape to define an arraylike object")
-
-        # Special cases
-        if dataset.neurodata_type_inc == 'VectorData':
-            # Handle this in `handle_vectorlike` instead
-            return None
-
-        # The schema language doesn't have a way of specifying a dataset/group is "abstract"
-        # and yet hdmf-common says you don't need a dtype if the dataset is "abstract"
-        # so....
-        dtype = self.handle_dtype(dataset.dtype)
-
-        # dims and shape are lists of lists. First we couple them
-        # (so each dim has its corresponding shape)..
-        # and then we take unique
-        # (dicts are ordered by default in recent pythons,
-        # while set() doesn't preserve order)
-        dims_shape = []
-        for inner_dim, inner_shape in zip(dataset.dims, dataset.shape):
-            if isinstance(inner_dim, list):
-                # list of lists
-                dims_shape.extend([(dim, shape) for dim, shape in zip(inner_dim, inner_shape)])
-            else:
-                # single-layer list
-                dims_shape.append((inner_dim, inner_shape))
-
-        dims_shape = tuple(dict.fromkeys(dims_shape).keys())
-
-        # if we only have one possible dimension, it's equivalent to a list, so we just return the slot
-        if len(dims_shape) == 1 and self.parent:
-            quantity = QUANTITY_MAP[dataset.quantity]
-            slot = SlotDefinition(
-                name=dataset.name,
-                range = dtype,
-                description=dataset.doc,
-                required=quantity['required'],
-                multivalued=True
-            )
-            return slot
-
-        # now make slots for each of them
-        slots = []
-        for dims, shape in dims_shape:
-            # if a dim is present in all possible combinations of dims, make it required
-            if all([dims in inner_dim for inner_dim in dataset.dims]):
-                required = True
-            else:
-                required = False
-
-            # use cardinality to do shape
-            if shape == 'null':
-                cardinality = None
-            else:
-                cardinality = shape
-
-            slots.append(SlotDefinition(
-                name=dims,
-                required=required,
-                maximum_cardinality=cardinality,
-                minimum_cardinality=cardinality,
-                range=dtype
-            ))
-
-
-
-        # and then the class is just a subclass of `Arraylike` (which is imported by default from `nwb.language.yaml`)
-        if name:
-            pass
-        elif dataset.neurodata_type_def:
-            name = dataset.neurodata_type_def
-        elif dataset.name:
-            name = dataset.name
-        else:
-            raise ValueError(f"Dataset has no name or type definition, what do call it?")
-
-        name = '__'.join([name, 'Array'])
-
-        array_class = ClassDefinition(
-            name=name,
-            is_a="Arraylike",
-            attributes=slots
-        )
-        return array_class
-
 
     def handle_dtype(self, dtype: DTypeType | None) -> str:
         if isinstance(dtype, ReferenceDtype):
@@ -201,128 +161,49 @@ class ClassAdapter(Adapter):
             # flat dtype
             return dtype
 
-    def build_attrs(self, cls: Dataset | Group) -> List[SlotDefinition]:
-        attrs = [
-            SlotDefinition(
-                name=attr.name,
-                description=attr.doc,
-                range=self.handle_dtype(attr.dtype),
-            ) for attr in cls.attributes
-        ]
-
-        return attrs
-
-    def build_subclasses(self, cls: Dataset | Group) -> BuildResult:
+    def build_name_slot(self) -> SlotDefinition:
         """
-        Build nested groups and datasets
+        If a class has a name, then that name should be a slot with a
+        fixed value.
 
-        Create ClassDefinitions for each, but then also create SlotDefinitions that
-        will be used as attributes linking the main class to the subclasses
+        If a class does not have a name, then name should be a required attribute
+
+        References:
+            https://github.com/NeurodataWithoutBorders/nwb-schema/issues/552#issuecomment-1700319001
+
+        Returns:
+
         """
-        # build and flatten nested classes
-        nested_classes = [ClassAdapter(cls=dset, parent=self) for dset in cls.datasets]
-        nested_classes.extend([ClassAdapter(cls=grp, parent=self) for grp in cls.groups])
-        nested_res = BuildResult()
-        for subclass in nested_classes:
-            # handle the special case where `VectorData` is subclasssed without any dims or attributes
-            # which just gets instantiated as a 1-d array in HDF5
-            if subclass.cls.neurodata_type_inc == 'VectorData' and \
-                    not subclass.cls.dims and \
-                    not subclass.cls.shape and \
-                    not subclass.cls.attributes \
-                    and subclass.cls.name:
-                this_slot = SlotDefinition(
-                    name=subclass.cls.name,
-                    description=subclass.cls.doc,
-                    range=self.handle_dtype(subclass.cls.dtype),
-                    multivalued=True
-                )
-                nested_res.slots.append(this_slot)
-                continue
-
-            # Simplify datasets that are just a single value
-            elif isinstance(subclass.cls, Dataset) and \
-                    not subclass.cls.neurodata_type_inc and \
-                    not subclass.cls.attributes and \
-                    not subclass.cls.dims and \
-                    not subclass.cls.shape and \
-                    subclass.cls.name:
-                this_slot = SlotDefinition(
-                    name=subclass.cls.name,
-                    description=subclass.cls.doc,
-                    range=self.handle_dtype(subclass.cls.dtype),
-                    **QUANTITY_MAP[subclass.cls.quantity]
-                )
-                nested_res.slots.append(this_slot)
-                continue
-
-            else:
-                this_slot = SlotDefinition(
-                    name=subclass._get_name(),
-                    description=subclass.cls.doc,
-                    range=subclass._get_full_name(),
-                    **QUANTITY_MAP[subclass.cls.quantity]
-                )
-                nested_res.slots.append(this_slot)
-
-            if subclass.cls.name is None and subclass.cls.neurodata_type_def is None:
-                # anonymous group that's just an inc, we only need the slot since the class is defined elsewhere
-                continue
-
-            this_build = subclass.build()
-            nested_res += this_build
-        return nested_res
-
-
-    def build(self) -> BuildResult:
-
-        # Build this class
-        if self.parent is not None:
-            name = self._get_full_name()
+        if self.cls.name:
+            name_slot = SlotDefinition(
+                name='name',
+                required=True,
+                ifabsent=self.cls.name,
+                equals_string=self.cls.name,
+                range='string'
+            )
         else:
-            name = self._get_name()
+            name_slot = SlotDefinition(
+                name='name',
+                required=True,
+                range='string'
+            )
+        return name_slot
 
-        # Get vanilla top-level attributes
-        attrs = self.build_attrs(self.cls)
-
-        # unnest and build subclasses in datasets and groups
-        if isinstance(self.cls, Group):
-            # only groups have sub-datasets and sub-groups
-            # split out the recursion step rather than making purely recursive because
-            # top-level datasets and groups are handled differently - they have names,
-            # and so we need to split out which things we unnest and which things
-            # can just be slots because they are already defined without knowing about
-            # the global state of the schema build.
-            nested_res = self.build_subclasses(self.cls)
-            attrs.extend(nested_res.slots)
-        else:
-            # must be a dataset
-            nested_res = BuildResult()
-            arraylike = self.handle_arraylike(self.cls, self._get_full_name())
-            if arraylike:
-                # if the arraylike thing can only have one dimension, it's equivalent to a list, so
-                # we just add a multivalued slot
-                if isinstance(arraylike, SlotDefinition):
-                    attrs.append(arraylike)
-                else:
-                    # make a slot for the arraylike class
-                    attrs.append(
-                        SlotDefinition(
-                            name='array',
-                            range=arraylike.name
-                        )
-                    )
-                    nested_res.classes.append(arraylike)
-
-
-        cls = ClassDefinition(
-            name = name,
-            is_a = self.cls.neurodata_type_inc,
+    def build_self_slot(self) -> SlotDefinition:
+        """
+        If we are a child class, we make a slot so our parent can refer to us
+        """
+        return SlotDefinition(
+            name=self._get_attr_name(),
             description=self.cls.doc,
-            attributes=attrs,
-        )
-        res = BuildResult(
-            classes = [cls, *nested_res.classes]
+            range=self._get_full_name(),
+            **QUANTITY_MAP[self.cls.quantity]
         )
 
-        return res
+
+
+
+
+
+

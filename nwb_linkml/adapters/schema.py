@@ -8,7 +8,8 @@ from pathlib import Path
 from pydantic import Field
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
-from nwb_linkml.adapters.classes import ClassAdapter
+from nwb_linkml.adapters.dataset import DatasetAdapter
+from nwb_linkml.adapters.group import GroupAdapter
 if TYPE_CHECKING:
     from nwb_linkml.adapters.namespaces import NamespacesAdapter
 
@@ -68,17 +69,17 @@ class SchemaAdapter(Adapter):
 
 
         """
-        classes = [ClassAdapter(cls=dset) for dset in self.datasets]
-        classes.extend(ClassAdapter(cls=group) for group in self.groups)
-        built_results = None
-        for cls in classes:
-            if built_results is None:
-                built_results = cls.build()
-            else:
-                built_results += cls.build()
+        res = BuildResult()
+        for dset in self.datasets:
+            res += DatasetAdapter(cls=dset).build()
+        for group in self.groups:
+            res += GroupAdapter(cls=group).build()
+
+        if len(res.slots) > 0:
+            raise RuntimeError('Generated schema in this translation can only have classes, all slots should be attributes within a class')
 
         if self.split:
-            sch_split = self.split_subclasses(built_results)
+            sch_split = self.split_subclasses(res)
             return sch_split
 
         else:
@@ -86,9 +87,9 @@ class SchemaAdapter(Adapter):
                 name = self.name,
                 id = self.name,
                 imports = [i.name for i in self.imports],
-                classes=built_results.classes,
-                slots=built_results.slots,
-                types=built_results.types
+                classes=res.classes,
+                slots=res.slots,
+                types=res.types
             )
             # every schema needs the language elements
             sch.imports.append('nwb.language')
