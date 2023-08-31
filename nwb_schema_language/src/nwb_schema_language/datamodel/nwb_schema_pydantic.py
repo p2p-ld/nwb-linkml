@@ -13,13 +13,9 @@ else:
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -115,7 +111,7 @@ class Namespace(ConfiguredBaseModel):
     name: str = Field(...)
     full_name: Optional[str] = Field(None, description="""Optional string with extended full name for the namespace.""")
     version: str = Field(...)
-    date: Optional[date] = Field(None, description="""Date that a namespace was last modified or released""")
+    date: Optional[datetime ] = Field(None, description="""Date that a namespace was last modified or released""")
     author: List[str] = Field(default_factory=list, description="""List of strings with the names of the authors of the namespace.""")
     contact: List[str] = Field(default_factory=list, description="""List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.""")
     schema_: Optional[List[Schema]] = Field(alias="schema", default_factory=list, description="""List of the schema to be included in this namespace.""")
@@ -216,18 +212,18 @@ class Dataset(DtypeMixin):
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-Namespace.update_forward_refs()
-Namespaces.update_forward_refs()
-Schema.update_forward_refs()
-Group.update_forward_refs()
-Groups.update_forward_refs()
-Link.update_forward_refs()
-Datasets.update_forward_refs()
-ReferenceDtype.update_forward_refs()
-CompoundDtype.update_forward_refs()
-DtypeMixin.update_forward_refs()
-Attribute.update_forward_refs()
-Dataset.update_forward_refs()
-
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+Namespace.model_rebuild()
+Namespaces.model_rebuild()
+Schema.model_rebuild()
+Group.model_rebuild()
+Groups.model_rebuild()
+Link.model_rebuild()
+Datasets.model_rebuild()
+ReferenceDtype.model_rebuild()
+CompoundDtype.model_rebuild()
+DtypeMixin.model_rebuild()
+Attribute.model_rebuild()
+Dataset.model_rebuild()
+    

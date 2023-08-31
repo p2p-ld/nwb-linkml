@@ -178,7 +178,7 @@ class ClassAdapter(Adapter):
             name_slot = SlotDefinition(
                 name='name',
                 required=True,
-                ifabsent=self.cls.name,
+                ifabsent=f'string({self.cls.name})',
                 equals_string=self.cls.name,
                 range='string'
             )
