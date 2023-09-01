@@ -11,25 +11,21 @@ else:
     from typing_extensions import Literal
 
 
-from .core_nwb_base import (
-    TimeSeriesReferenceVectorData
-)
-
 from .hdmf_common_table import (
     VectorIndex
+)
+
+from .core_nwb_base import (
+    TimeSeriesReferenceVectorData
 )
 
 
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -40,31 +36,50 @@ class TimeIntervalsTagsIndex(VectorIndex):
     """
     Index for tags.
     """
+    name: str = Field("tags_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class TimeIntervalsTimeseries(TimeSeriesReferenceVectorData):
     """
     An index into a TimeSeries object.
     """
+    name: str = Field("timeseries", const=True)
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class TimeIntervalsTimeseriesIndex(VectorIndex):
     """
     Index for timeseries.
     """
+    name: str = Field("timeseries_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-TimeIntervalsTagsIndex.update_forward_refs()
-TimeIntervalsTimeseries.update_forward_refs()
-TimeIntervalsTimeseriesIndex.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+TimeIntervalsTagsIndex.model_rebuild()
+TimeIntervalsTimeseries.model_rebuild()
+TimeIntervalsTimeseriesIndex.model_rebuild()
+    

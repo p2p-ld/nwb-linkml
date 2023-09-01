@@ -2,10 +2,10 @@
 Since NWB doesn't necessarily have a term for a single nwb schema file, we're going
 to call them "schema" objects
 """
-
-from typing import Optional, List, TYPE_CHECKING
+import pdb
+from typing import Optional, List, TYPE_CHECKING, Type
 from pathlib import Path
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.dataset import DatasetAdapter
@@ -21,7 +21,7 @@ from linkml_runtime.linkml_model import SchemaDefinition
 
 class SplitSchema(NamedTuple):
     main: BuildResult
-    split: BuildResult
+    split: Optional[BuildResult]
 
 class SchemaAdapter(Adapter):
     """
@@ -38,6 +38,7 @@ class SchemaAdapter(Adapter):
         True,
         description="Split anonymous subclasses into a separate schema file"
    )
+    _created_classes: List[Type[Group | Dataset]] = PrivateAttr(default_factory=list)
 
     @property
     def name(self) -> str:
@@ -118,7 +119,8 @@ class SchemaAdapter(Adapter):
         # need to mutually import the two schemas because the subclasses
         # could refer to the main classes
         main_imports = imports
-        main_imports.append(split_sch_name)
+        if len(split_classes)>0:
+            main_imports.append(split_sch_name)
         imports.append(self.name)
         main_sch = SchemaDefinition(
             name=self.name,
@@ -128,6 +130,7 @@ class SchemaAdapter(Adapter):
             slots=classes.slots,
             types=classes.types
         )
+
         split_sch = SchemaDefinition(
             name=split_sch_name,
             id=split_sch_name,
@@ -136,17 +139,23 @@ class SchemaAdapter(Adapter):
             slots=classes.slots,
             types=classes.types
         )
-        res = BuildResult(
-            schemas=[main_sch, split_sch]
-        )
+        if len(split_classes) > 0:
+            res = BuildResult(
+                schemas=[main_sch, split_sch]
+            )
+        else:
+            res = BuildResult(
+                schemas=[main_sch]
+            )
         return res
 
 
 
     @property
-    def created_classes(self) -> List[Group|Dataset]:
-        classes = [t for t in self.walk_types([self.groups, self.datasets], (Group, Dataset)) if t.neurodata_type_def is not None]
-        return classes
+    def created_classes(self) -> List[Type[Group | Dataset]]:
+        if len(self._created_classes) == 0:
+            self._created_classes = [t for t in self.walk_types([self.groups, self.datasets], (Group, Dataset)) if t.neurodata_type_def is not None]
+        return self._created_classes
 
     @property
     def needed_imports(self) -> List[str]:
@@ -162,7 +171,5 @@ class SchemaAdapter(Adapter):
         definitions = [c.neurodata_type_def for c in self.created_classes]
         need = [inc for inc in type_incs if inc not in definitions]
         return need
-
-
 
 

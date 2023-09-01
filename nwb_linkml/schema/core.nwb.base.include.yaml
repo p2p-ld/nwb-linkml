@@ -46,6 +46,12 @@ classes:
       should always represent time. This can also be used to store binary data (e.g.,
       image frames). This can also be a link to data stored in an external file.
     attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
       conversion:
         name: conversion
         description: Scalar to multiply each element in data to convert it to the
@@ -120,6 +126,12 @@ classes:
       spaced, the timestamp of the first sample can be specified and all subsequent
       ones calculated from the sampling rate attribute.
     attributes:
+      name:
+        name: name
+        ifabsent: string(starting_time)
+        range: string
+        required: true
+        equals_string: starting_time
       rate:
         name: rate
         description: Sampling rate, in Hz.
@@ -128,54 +140,6 @@ classes:
         name: unit
         description: Unit of measurement for time, which is fixed to 'seconds'.
         range: text
-  TimeSeries__timestamps:
-    name: TimeSeries__timestamps
-    description: Timestamps for samples stored in data, in seconds, relative to the
-      common experiment master-clock stored in NWBFile.timestamps_reference_time.
-    attributes:
-      interval:
-        name: interval
-        description: Value is '1'
-        range: int32
-      unit:
-        name: unit
-        description: Unit of measurement for timestamps, which is fixed to 'seconds'.
-        range: text
-      timestamps:
-        name: timestamps
-        description: Timestamps for samples stored in data, in seconds, relative to
-          the common experiment master-clock stored in NWBFile.timestamps_reference_time.
-        multivalued: true
-        range: float64
-        required: false
-  TimeSeries__control:
-    name: TimeSeries__control
-    description: Numerical labels that apply to each time point in data for the purpose
-      of querying and slicing data by these values. If present, the length of this
-      array should be the same size as the first dimension of data.
-    attributes:
-      control:
-        name: control
-        description: Numerical labels that apply to each time point in data for the
-          purpose of querying and slicing data by these values. If present, the length
-          of this array should be the same size as the first dimension of data.
-        multivalued: true
-        range: uint8
-        required: false
-  TimeSeries__control_description:
-    name: TimeSeries__control_description
-    description: Description of each control value. Must be present if control is
-      present. If present, control_description[0] should describe time points where
-      control == 0.
-    attributes:
-      control_description:
-        name: control_description
-        description: Description of each control value. Must be present if control
-          is present. If present, control_description[0] should describe time points
-          where control == 0.
-        multivalued: true
-        range: text
-        required: false
   TimeSeries__sync:
     name: TimeSeries__sync
     description: Lab-specific time and sync information as provided directly from
@@ -184,9 +148,23 @@ classes:
       This group will usually only be populated in TimeSeries that are stored external
       to the NWB file, in files storing raw data. Once timestamp data is calculated,
       the contents of 'sync' are mostly for archival purposes.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(sync)
+        range: string
+        required: true
+        equals_string: sync
   Images__order_of_images:
     name: Images__order_of_images
     description: Ordered dataset of references to Image objects stored in the parent
       group. Each Image object in the Images group should be stored once and only
       once, so the dataset should have the same length as the number of images.
     is_a: ImageReferences
+    attributes:
+      name:
+        name: name
+        ifabsent: string(order_of_images)
+        range: string
+        required: true
+        equals_string: order_of_images

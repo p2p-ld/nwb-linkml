@@ -11,6 +11,12 @@ classes:
     name: ImagingRetinotopy__axis_1_phase_map
     description: Phase response to stimulus on the first measured axis.
     attributes:
+      name:
+        name: name
+        ifabsent: string(axis_1_phase_map)
+        range: string
+        required: true
+        equals_string: axis_1_phase_map
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
@@ -34,16 +40,22 @@ classes:
       num_rows:
         name: num_rows
         range: float32
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: float32
-        required: false
+        required: true
   ImagingRetinotopy__axis_1_power_map:
     name: ImagingRetinotopy__axis_1_power_map
     description: Power response on the first measured axis. Response is scaled so
       0.0 is no power in the response and 1.0 is maximum relative power.
     attributes:
+      name:
+        name: name
+        ifabsent: string(axis_1_power_map)
+        range: string
+        required: true
+        equals_string: axis_1_power_map
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
@@ -67,15 +79,21 @@ classes:
       num_rows:
         name: num_rows
         range: float32
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: float32
-        required: false
+        required: true
   ImagingRetinotopy__axis_2_phase_map:
     name: ImagingRetinotopy__axis_2_phase_map
     description: Phase response to stimulus on the second measured axis.
     attributes:
+      name:
+        name: name
+        ifabsent: string(axis_2_phase_map)
+        range: string
+        required: true
+        equals_string: axis_2_phase_map
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
@@ -99,16 +117,22 @@ classes:
       num_rows:
         name: num_rows
         range: float32
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: float32
-        required: false
+        required: true
   ImagingRetinotopy__axis_2_power_map:
     name: ImagingRetinotopy__axis_2_power_map
     description: Power response on the second measured axis. Response is scaled so
       0.0 is no power in the response and 1.0 is maximum relative power.
     attributes:
+      name:
+        name: name
+        ifabsent: string(axis_2_power_map)
+        range: string
+        required: true
+        equals_string: axis_2_power_map
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
@@ -132,30 +156,22 @@ classes:
       num_rows:
         name: num_rows
         range: float32
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: float32
-        required: false
-  ImagingRetinotopy__axis_descriptions:
-    name: ImagingRetinotopy__axis_descriptions
-    description: Two-element array describing the contents of the two response axis
-      fields. Description should be something like ['altitude', 'azimuth'] or '['radius',
-      'theta'].
-    attributes:
-      axis_descriptions:
-        name: axis_descriptions
-        description: Two-element array describing the contents of the two response
-          axis fields. Description should be something like ['altitude', 'azimuth']
-          or '['radius', 'theta'].
-        multivalued: true
-        range: text
         required: true
   ImagingRetinotopy__focal_depth_image:
     name: ImagingRetinotopy__focal_depth_image
     description: 'Gray-scale image taken with same settings/parameters (e.g., focal
       depth, wavelength) as data collection. Array format: [rows][columns].'
     attributes:
+      name:
+        name: name
+        ifabsent: string(focal_depth_image)
+        range: string
+        required: true
+        equals_string: focal_depth_image
       bits_per_pixel:
         name: bits_per_pixel
         description: Number of bits used to represent each value. This is necessary
@@ -188,16 +204,22 @@ classes:
       num_rows:
         name: num_rows
         range: uint16
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: uint16
-        required: false
+        required: true
   ImagingRetinotopy__sign_map:
     name: ImagingRetinotopy__sign_map
     description: Sine of the angle between the direction of the gradient in axis_1
       and axis_2.
     attributes:
+      name:
+        name: name
+        ifabsent: string(sign_map)
+        range: string
+        required: true
+        equals_string: sign_map
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
@@ -217,16 +239,22 @@ classes:
       num_rows:
         name: num_rows
         range: float32
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: float32
-        required: false
+        required: true
   ImagingRetinotopy__vasculature_image:
     name: ImagingRetinotopy__vasculature_image
     description: 'Gray-scale anatomical image of cortical surface. Array structure:
       [rows][columns]'
     attributes:
+      name:
+        name: name
+        ifabsent: string(vasculature_image)
+        range: string
+        required: true
+        equals_string: vasculature_image
       bits_per_pixel:
         name: bits_per_pixel
         description: Number of bits used to represent each value. This is necessary
@@ -255,8 +283,8 @@ classes:
       num_rows:
         name: num_rows
         range: uint16
-        required: false
+        required: true
       num_cols:
         name: num_cols
         range: uint16
-        required: false
+        required: true

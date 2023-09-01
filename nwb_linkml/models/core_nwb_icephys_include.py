@@ -16,49 +16,35 @@ from .hdmf_common_table import (
     VectorIndex
 )
 
-from .core_nwb_base import (
-    TimeSeriesReferenceVectorData
+from .core_nwb_icephys import (
+    SequentialRecordingsTable,
+    RepetitionsTable,
+    SimultaneousRecordingsTable,
+    IntracellularRecordingsTable
 )
 
-from .core_nwb_icephys import (
-    SimultaneousRecordingsTable,
-    IntracellularElectrodesTable,
-    IntracellularResponsesTable,
-    SequentialRecordingsTable,
-    IntracellularRecordingsTable,
-    IntracellularStimuliTable,
-    RepetitionsTable
+from .core_nwb_base import (
+    TimeSeriesReferenceVectorData
 )
 
 
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
     pass
 
 
-class PatchClampSeriesData(ConfiguredBaseModel):
-    """
-    Recorded voltage or current.
-    """
-    unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
-    data: List[float] = Field(default_factory=list, description="""Recorded voltage or current.""")
-    
-
 class CurrentClampSeriesData(ConfiguredBaseModel):
     """
     Recorded voltage.
     """
+    name: str = Field("data", const=True)
     unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
@@ -66,6 +52,7 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
     """
     Stimulus current applied.
     """
+    name: str = Field("data", const=True)
     unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
@@ -73,6 +60,7 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
     """
     Recorded current.
     """
+    name: str = Field("data", const=True)
     unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
@@ -80,6 +68,7 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
     """
     Fast capacitance, in farads.
     """
+    name: str = Field("capacitance_fast", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""")
     
 
@@ -87,6 +76,7 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
     """
     Slow capacitance, in farads.
     """
+    name: str = Field("capacitance_slow", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""")
     
 
@@ -94,6 +84,7 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
     """
     Resistance compensation bandwidth, in hertz.
     """
+    name: str = Field("resistance_comp_bandwidth", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""")
     
 
@@ -101,6 +92,7 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
     """
     Resistance compensation correction, in percent.
     """
+    name: str = Field("resistance_comp_correction", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""")
     
 
@@ -108,6 +100,7 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
     """
     Resistance compensation prediction, in percent.
     """
+    name: str = Field("resistance_comp_prediction", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""")
     
 
@@ -115,6 +108,7 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
     """
     Whole cell capacitance compensation, in farads.
     """
+    name: str = Field("whole_cell_capacitance_comp", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""")
     
 
@@ -122,6 +116,7 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
     """
     Whole cell series resistance compensation, in ohms.
     """
+    name: str = Field("whole_cell_series_resistance_comp", const=True)
     unit: Optional[str] = Field(None, description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""")
     
 
@@ -129,6 +124,7 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
     """
     Stimulus voltage applied.
     """
+    name: str = Field("data", const=True)
     unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
@@ -136,158 +132,188 @@ class SweepTableSeriesIndex(VectorIndex):
     """
     Index for series.
     """
+    name: str = Field("series_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class IntracellularStimuliTableStimulus(TimeSeriesReferenceVectorData):
     """
     Column storing the reference to the recorded stimulus for the recording (rows).
     """
+    name: str = Field("stimulus", const=True)
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class IntracellularResponsesTableResponse(TimeSeriesReferenceVectorData):
     """
     Column storing the reference to the recorded response for the recording (rows)
     """
+    name: str = Field("response", const=True)
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
-    
-
-class IntracellularRecordingsTableElectrodes(IntracellularElectrodesTable):
-    """
-    Table for storing intracellular electrode related metadata.
-    """
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
-    electrode: Optional[List[IntracellularElectrode]] = Field(default_factory=list, description="""Column for storing the reference to the intracellular electrode.""")
-    colnames: Optional[str] = Field(None, description="""The names of the columns in this table. This should be used to specify an order to the columns.""")
-    id: DynamicTableId = Field(..., description="""Array of unique identifiers for the rows of this dynamic table.""")
-    VectorData: Optional[List[VectorData]] = Field(default_factory=list, description="""Vector columns, including index columns, of this dynamic table.""")
-    
-
-class IntracellularRecordingsTableStimuli(IntracellularStimuliTable):
-    """
-    Table for storing intracellular stimulus related metadata.
-    """
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
-    stimulus: IntracellularStimuliTableStimulus = Field(..., description="""Column storing the reference to the recorded stimulus for the recording (rows).""")
-    colnames: Optional[str] = Field(None, description="""The names of the columns in this table. This should be used to specify an order to the columns.""")
-    id: DynamicTableId = Field(..., description="""Array of unique identifiers for the rows of this dynamic table.""")
-    VectorData: Optional[List[VectorData]] = Field(default_factory=list, description="""Vector columns, including index columns, of this dynamic table.""")
-    
-
-class IntracellularRecordingsTableResponses(IntracellularResponsesTable):
-    """
-    Table for storing intracellular response related metadata.
-    """
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
-    response: IntracellularResponsesTableResponse = Field(..., description="""Column storing the reference to the recorded response for the recording (rows)""")
-    colnames: Optional[str] = Field(None, description="""The names of the columns in this table. This should be used to specify an order to the columns.""")
-    id: DynamicTableId = Field(..., description="""Array of unique identifiers for the rows of this dynamic table.""")
-    VectorData: Optional[List[VectorData]] = Field(default_factory=list, description="""Vector columns, including index columns, of this dynamic table.""")
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class SimultaneousRecordingsTableRecordings(DynamicTableRegion):
     """
     A reference to one or more rows in the IntracellularRecordingsTable table.
     """
+    name: str = Field("recordings", const=True)
     table: Optional[IntracellularRecordingsTable] = Field(None, description="""Reference to the IntracellularRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
     description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class SimultaneousRecordingsTableRecordingsIndex(VectorIndex):
     """
     Index dataset for the recordings column.
     """
+    name: str = Field("recordings_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class SequentialRecordingsTableSimultaneousRecordings(DynamicTableRegion):
     """
     A reference to one or more rows in the SimultaneousRecordingsTable table.
     """
+    name: str = Field("simultaneous_recordings", const=True)
     table: Optional[SimultaneousRecordingsTable] = Field(None, description="""Reference to the SimultaneousRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
     description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class SequentialRecordingsTableSimultaneousRecordingsIndex(VectorIndex):
     """
     Index dataset for the simultaneous_recordings column.
     """
+    name: str = Field("simultaneous_recordings_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class RepetitionsTableSequentialRecordings(DynamicTableRegion):
     """
     A reference to one or more rows in the SequentialRecordingsTable table.
     """
+    name: str = Field("sequential_recordings", const=True)
     table: Optional[SequentialRecordingsTable] = Field(None, description="""Reference to the SequentialRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
     description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class RepetitionsTableSequentialRecordingsIndex(VectorIndex):
     """
     Index dataset for the sequential_recordings column.
     """
+    name: str = Field("sequential_recordings_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class ExperimentalConditionsTableRepetitions(DynamicTableRegion):
     """
     A reference to one or more rows in the RepetitionsTable table.
     """
+    name: str = Field("repetitions", const=True)
     table: Optional[RepetitionsTable] = Field(None, description="""Reference to the RepetitionsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
     description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 class ExperimentalConditionsTableRepetitionsIndex(VectorIndex):
     """
     Index dataset for the repetitions column.
     """
+    name: str = Field("repetitions_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-PatchClampSeriesData.update_forward_refs()
-CurrentClampSeriesData.update_forward_refs()
-CurrentClampStimulusSeriesData.update_forward_refs()
-VoltageClampSeriesData.update_forward_refs()
-VoltageClampSeriesCapacitanceFast.update_forward_refs()
-VoltageClampSeriesCapacitanceSlow.update_forward_refs()
-VoltageClampSeriesResistanceCompBandwidth.update_forward_refs()
-VoltageClampSeriesResistanceCompCorrection.update_forward_refs()
-VoltageClampSeriesResistanceCompPrediction.update_forward_refs()
-VoltageClampSeriesWholeCellCapacitanceComp.update_forward_refs()
-VoltageClampSeriesWholeCellSeriesResistanceComp.update_forward_refs()
-VoltageClampStimulusSeriesData.update_forward_refs()
-SweepTableSeriesIndex.update_forward_refs()
-IntracellularStimuliTableStimulus.update_forward_refs()
-IntracellularResponsesTableResponse.update_forward_refs()
-IntracellularRecordingsTableElectrodes.update_forward_refs()
-IntracellularRecordingsTableStimuli.update_forward_refs()
-IntracellularRecordingsTableResponses.update_forward_refs()
-SimultaneousRecordingsTableRecordings.update_forward_refs()
-SimultaneousRecordingsTableRecordingsIndex.update_forward_refs()
-SequentialRecordingsTableSimultaneousRecordings.update_forward_refs()
-SequentialRecordingsTableSimultaneousRecordingsIndex.update_forward_refs()
-RepetitionsTableSequentialRecordings.update_forward_refs()
-RepetitionsTableSequentialRecordingsIndex.update_forward_refs()
-ExperimentalConditionsTableRepetitions.update_forward_refs()
-ExperimentalConditionsTableRepetitionsIndex.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+CurrentClampSeriesData.model_rebuild()
+CurrentClampStimulusSeriesData.model_rebuild()
+VoltageClampSeriesData.model_rebuild()
+VoltageClampSeriesCapacitanceFast.model_rebuild()
+VoltageClampSeriesCapacitanceSlow.model_rebuild()
+VoltageClampSeriesResistanceCompBandwidth.model_rebuild()
+VoltageClampSeriesResistanceCompCorrection.model_rebuild()
+VoltageClampSeriesResistanceCompPrediction.model_rebuild()
+VoltageClampSeriesWholeCellCapacitanceComp.model_rebuild()
+VoltageClampSeriesWholeCellSeriesResistanceComp.model_rebuild()
+VoltageClampStimulusSeriesData.model_rebuild()
+SweepTableSeriesIndex.model_rebuild()
+IntracellularStimuliTableStimulus.model_rebuild()
+IntracellularResponsesTableResponse.model_rebuild()
+SimultaneousRecordingsTableRecordings.model_rebuild()
+SimultaneousRecordingsTableRecordingsIndex.model_rebuild()
+SequentialRecordingsTableSimultaneousRecordings.model_rebuild()
+SequentialRecordingsTableSimultaneousRecordingsIndex.model_rebuild()
+RepetitionsTableSequentialRecordings.model_rebuild()
+RepetitionsTableSequentialRecordingsIndex.model_rebuild()
+ExperimentalConditionsTableRepetitions.model_rebuild()
+ExperimentalConditionsTableRepetitionsIndex.model_rebuild()
+    

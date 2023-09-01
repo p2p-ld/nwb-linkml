@@ -20,6 +20,10 @@ classes:
       appear backward (i.e., y before x).'
     is_a: NWBDataInterface
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       axis_1_phase_map:
         name: axis_1_phase_map
         description: Phase response to stimulus on the first measured axis.
@@ -51,8 +55,8 @@ classes:
         description: Two-element array describing the contents of the two response
           axis fields. Description should be something like ['altitude', 'azimuth']
           or '['radius', 'theta'].
-        multivalued: false
-        range: ImagingRetinotopy__axis_descriptions
+        multivalued: true
+        range: text
         required: true
       focal_depth_image:
         name: focal_depth_image
@@ -75,3 +79,4 @@ classes:
         multivalued: false
         range: ImagingRetinotopy__vasculature_image
         required: true
+    tree_root: true

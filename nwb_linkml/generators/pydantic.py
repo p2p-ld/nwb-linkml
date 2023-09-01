@@ -131,6 +131,9 @@ class {{ c.name }}
     {{attr.name}}: {{ attr.annotations['python_range'].value }} = Field(
     {%- if predefined_slot_values[c.name][attr.name] -%}
         {{ predefined_slot_values[c.name][attr.name] }}
+        {%- if attr.equals_string -%}
+        , const=True
+        {%- endif -%} 
     {%- elif attr.required -%}
         ...
     {%- else -%}
@@ -182,6 +185,10 @@ class NWBPydanticGenerator(PydanticGenerator):
             for slot_name, slot in cls.attributes.items():
                 if slot.range in all_classes:
                     needed_classes.append(slot.range)
+                if slot.any_of:
+                    for any_slot_range in slot.any_of:
+                        if any_slot_range.range in all_classes:
+                            needed_classes.append(any_slot_range.range)
 
         needed_classes = [cls for cls in set(needed_classes) if cls is not None]
         imports = {}
@@ -245,16 +252,16 @@ class NWBPydanticGenerator(PydanticGenerator):
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
 
-    def _get_numpy_slot_range(self, cls:ClassDefinition) -> str:
+    def _make_npytyping_range(self, attrs: Dict[str, SlotDefinition]) -> str:
         # slot always starts with...
-        prefix='NDArray['
+        prefix = 'NDArray['
 
         # and then we specify the shape:
         shape_prefix = 'Shape["'
 
         # using the cardinality from the attributes
         dim_pieces = []
-        for attr in cls.attributes.values():
+        for attr in attrs.values():
 
             if attr.maximum_cardinality:
                 shape_part = str(attr.maximum_cardinality)
@@ -271,15 +278,40 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         # all dimensions should be the same dtype
         try:
-            dtype = flat_to_npytyping[list(cls.attributes.values())[0].range]
+            dtype = flat_to_npytyping[list(attrs.values())[0].range]
         except KeyError as e:
             warnings.warn(e)
-            range = list(cls.attributes.values())[0].range
+            range = list(attrs.values())[0].range
             return f'List[{range}] | {range}'
         suffix = "]"
 
         slot = ''.join([prefix, shape_prefix, dimension, shape_suffix, dtype, suffix])
         return slot
+
+    def _get_numpy_slot_range(self, cls:ClassDefinition) -> str:
+        # if none of the dimensions are optional, we just have one possible array shape
+        if all([s.required for s in cls.attributes.values()]):
+            return self._make_npytyping_range(cls.attributes)
+        # otherwise we need to make permutations
+        # but not all permutations, because we typically just want to be able to exlude the last possible dimensions
+        # the array classes should always be well-defined where the optional dimensions are at the end, so
+        requireds = {k:v for k,v in cls.attributes.items() if v.required}
+        optionals = [(k,v) for k, v in cls.attributes.items() if not v.required]
+
+        annotations = []
+        if len(requireds) > 0:
+            # first the base case
+            annotations.append(self._make_npytyping_range(requireds))
+        # then add back each optional dimension
+        for i in range(len(optionals)):
+            attrs = {**requireds, **{k:v for k, v in optionals[0:i+1]}}
+            annotations.append(self._make_npytyping_range(attrs))
+
+        # now combine with a union:
+        union = "Union[\n" + ' '*8
+        union += (',\n' + ' '*8).join(annotations)
+        union += '\n' + ' '*4 + ']'
+        return union
 
 
     def sort_classes(self, clist: List[ClassDefinition], imports:List[str]) -> List[ClassDefinition]:

@@ -12,11 +12,32 @@ classes:
     name: TimeIntervals__tags_index
     description: Index for tags.
     is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(tags_index)
+        range: string
+        required: true
+        equals_string: tags_index
   TimeIntervals__timeseries:
     name: TimeIntervals__timeseries
     description: An index into a TimeSeries object.
     is_a: TimeSeriesReferenceVectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(timeseries)
+        range: string
+        required: true
+        equals_string: timeseries
   TimeIntervals__timeseries_index:
     name: TimeIntervals__timeseries_index
     description: Index for timeseries.
     is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(timeseries_index)
+        range: string
+        required: true
+        equals_string: timeseries_index

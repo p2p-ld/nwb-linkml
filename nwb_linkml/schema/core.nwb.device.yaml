@@ -3,7 +3,6 @@ id: core.nwb.device
 imports:
 - core.nwb.base
 - nwb.language
-- core.nwb.device.include
 - core.nwb.device
 default_prefix: core.nwb.device/
 classes:
@@ -13,6 +12,10 @@ classes:
       electrode, microscope.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of the device (e.g., model, firmware version, processing
@@ -22,3 +25,4 @@ classes:
         name: manufacturer
         description: The name of the manufacturer of the device.
         range: text
+    tree_root: true

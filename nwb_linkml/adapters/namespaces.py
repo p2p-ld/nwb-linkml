@@ -74,6 +74,8 @@ class NamespacesAdapter(Adapter):
     def find_type_source(self, name:str) -> SchemaAdapter:
         """
         Given some neurodata_type_inc, find the schema that it's defined in.
+
+        Rather than returning as soon as a match is found, check all
         """
         # First check within the main schema
         internal_matches = []
@@ -82,6 +84,12 @@ class NamespacesAdapter(Adapter):
             if name in class_names:
                 internal_matches.append(schema)
 
+        if len(internal_matches) > 1:
+            raise KeyError(
+                f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}")
+        elif len(internal_matches) == 1:
+            return internal_matches[0]
+
         import_matches = []
         for imported_ns in self.imported:
             for schema in imported_ns.schemas:
@@ -89,12 +97,10 @@ class NamespacesAdapter(Adapter):
                 if name in class_names:
                     import_matches.append(schema)
 
-        all_matches = [*internal_matches, *import_matches]
-
-        if len(all_matches)>1:
+        if len(import_matches)>1:
             raise KeyError(f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}")
-        elif len(all_matches) == 1:
-            return all_matches[0]
+        elif len(import_matches) == 1:
+            return import_matches[0]
         else:
             raise KeyError(f"No schema found that define {name}")
 

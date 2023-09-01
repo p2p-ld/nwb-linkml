@@ -33,6 +33,8 @@ def test_generate_pydantic(tmp_output_dir):
     (tmp_output_dir / 'models').mkdir(exist_ok=True)
 
     for schema in (tmp_output_dir / 'schema').glob('*.yaml'):
+        if not schema.exists():
+            continue
         # python friendly name
         python_name = schema.stem.replace('.', '_').replace('-','_')
 

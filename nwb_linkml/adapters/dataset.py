@@ -23,7 +23,11 @@ class DatasetAdapter(ClassAdapter):
 
         res = self.handle_arraylike(res, self.cls, self._get_full_name())
         res = self.handle_1d_vector(res)
+        res = self.handle_listlike(res)
         res = self.handle_scalar(res)
+
+        if len(self._handlers) > 1:
+            raise RuntimeError(f"Only one handler should have been triggered, instead triggered {self._handlers}")
 
         return res
 
@@ -69,6 +73,47 @@ class DatasetAdapter(ClassAdapter):
             res = BuildResult(slots=[this_slot])
 
         return res
+
+    def handle_listlike(self, res:BuildResult) -> BuildResult:
+        """
+        Handle cases where the dataset is just a list of a specific type.
+
+        Examples:
+
+              datasets:
+              - name: file_create_date
+                dtype: isodatetime
+                dims:
+                - num_modifications
+                shape:
+                - null
+
+        """
+        if self.cls.name and ((
+                # single-layer list
+                not any([isinstance(dim, list) for dim in self.cls.dims]) and
+                len(self.cls.dims) == 1
+            ) or (
+                # nested list
+                all([isinstance(dim, list) for dim in self.cls.dims]) and
+                len(self.cls.dims) == 1 and
+                len(self.cls.dims[0]) == 1
+            )):
+            res = BuildResult(
+                slots = [
+                    SlotDefinition(
+                        name = self.cls.name,
+                        multivalued=True,
+                        range=self.handle_dtype(self.cls.dtype),
+                        description=self.cls.doc,
+                        required=False if self.cls.quantity in ('*', '?') else True
+                    )
+                ]
+            )
+            return res
+        else:
+            return res
+
 
     def handle_arraylike(self, res: BuildResult, dataset: Dataset, name: Optional[str] = None) -> BuildResult:
         """
@@ -149,6 +194,9 @@ class DatasetAdapter(ClassAdapter):
         for dims, shape in dims_shape:
             # if a dim is present in all possible combinations of dims, make it required
             if all([dims in inner_dim for inner_dim in dataset.dims]):
+                required = True
+            # or if there is just a single list of possible dimensions
+            elif not any([isinstance(inner_dim, list) for inner_dim in dataset.dims]):
                 required = True
             else:
                 required = False

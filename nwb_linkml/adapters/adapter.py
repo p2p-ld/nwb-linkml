@@ -46,6 +46,26 @@ class BuildResult:
         self.types.extend(other.types)
         return self
 
+    def __repr__(self):
+        out_str = "\nBuild Result:\n"
+        out_str += '-'*len(out_str)
+
+        for label, alist in (
+                ('Schemas', self.schemas),
+                ('Classes', self.classes),
+                ('Slots', self.slots),
+                ('Types', self.types)):
+            if len(alist) == 0:
+                continue
+
+            name_str = "\n\n" + label + ':'
+            name_str += "\n" + '-'*len(name_str) + '\n'
+            name_list = sorted([i.name for i in alist])
+            item_str = '\n '.join(name_list)
+            out_str += name_str + item_str
+
+        return out_str
+
 T = TypeVar
 Ts = TypeVarTuple('Ts')
 
@@ -59,7 +79,14 @@ class Adapter(BaseModel):
     def walk(self, input: BaseModel | list | dict):
         yield input
         if isinstance(input, BaseModel):
-            for key in input.__fields__.keys():
+
+            for key in input.model_fields.keys():
+                # Special case where SchemaAdapter Imports are themselves
+                # SchemaAdapters that should be located under the same
+                # NamespacesAdapter when it's important to query across SchemaAdapters,
+                # so skip to avoid combinatoric walking
+                if key == 'imports' and type(input).__name__ == "SchemaAdapter":
+                    continue
                 val = getattr(input, key)
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):

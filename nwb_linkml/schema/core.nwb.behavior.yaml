@@ -21,6 +21,10 @@ classes:
       SpatialSeries values.'
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: 1-D or 2-D array storing position or direction relative to some
@@ -34,6 +38,7 @@ classes:
         multivalued: false
         range: text
         required: false
+    tree_root: true
   BehavioralEpochs:
     name: BehavioralEpochs
     description: TimeSeries for storing behavioral epochs.  The objective of this
@@ -50,58 +55,83 @@ classes:
       events. BehavioralTimeSeries is for continuous data.
     is_a: NWBDataInterface
     attributes:
-      IntervalSeries:
-        name: IntervalSeries
+      name:
+        name: name
+        range: string
+        required: true
+      interval_series:
+        name: interval_series
         description: IntervalSeries object containing start and stop times of epochs.
         multivalued: true
         range: IntervalSeries
         required: false
+    tree_root: true
   BehavioralEvents:
     name: BehavioralEvents
     description: TimeSeries for storing behavioral events. See description of <a href="#BehavioralEpochs">BehavioralEpochs</a>
       for more details.
     is_a: NWBDataInterface
     attributes:
-      TimeSeries:
-        name: TimeSeries
+      name:
+        name: name
+        range: string
+        required: true
+      time_series:
+        name: time_series
         description: TimeSeries object containing behavioral events.
         multivalued: true
         range: TimeSeries
         required: false
+    tree_root: true
   BehavioralTimeSeries:
     name: BehavioralTimeSeries
     description: TimeSeries for storing Behavoioral time series data. See description
       of <a href="#BehavioralEpochs">BehavioralEpochs</a> for more details.
     is_a: NWBDataInterface
     attributes:
-      TimeSeries:
-        name: TimeSeries
+      name:
+        name: name
+        range: string
+        required: true
+      time_series:
+        name: time_series
         description: TimeSeries object containing continuous behavioral data.
         multivalued: true
         range: TimeSeries
         required: false
+    tree_root: true
   PupilTracking:
     name: PupilTracking
     description: Eye-tracking data, representing pupil size.
     is_a: NWBDataInterface
     attributes:
-      TimeSeries:
-        name: TimeSeries
+      name:
+        name: name
+        range: string
+        required: true
+      time_series:
+        name: time_series
         description: TimeSeries object containing time series data on pupil size.
         multivalued: true
         range: TimeSeries
         required: true
+    tree_root: true
   EyeTracking:
     name: EyeTracking
     description: Eye-tracking data, representing direction of gaze.
     is_a: NWBDataInterface
     attributes:
-      SpatialSeries:
-        name: SpatialSeries
+      name:
+        name: name
+        range: string
+        required: true
+      spatial_series:
+        name: spatial_series
         description: SpatialSeries object containing data measuring direction of gaze.
         multivalued: true
         range: SpatialSeries
         required: false
+    tree_root: true
   CompassDirection:
     name: CompassDirection
     description: With a CompassDirection interface, a module publishes a SpatialSeries
@@ -111,20 +141,30 @@ classes:
       be radians or degrees.
     is_a: NWBDataInterface
     attributes:
-      SpatialSeries:
-        name: SpatialSeries
+      name:
+        name: name
+        range: string
+        required: true
+      spatial_series:
+        name: spatial_series
         description: SpatialSeries object containing direction of gaze travel.
         multivalued: true
         range: SpatialSeries
         required: false
+    tree_root: true
   Position:
     name: Position
     description: Position data, whether along the x, x/y or x/y/z axis.
     is_a: NWBDataInterface
     attributes:
-      SpatialSeries:
-        name: SpatialSeries
+      name:
+        name: name
+        range: string
+        required: true
+      spatial_series:
+        name: spatial_series
         description: SpatialSeries object containing position data.
         multivalued: true
         range: SpatialSeries
         required: true
+    tree_root: true

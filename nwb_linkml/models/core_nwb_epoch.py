@@ -11,27 +11,23 @@ else:
     from typing_extensions import Literal
 
 
-from .core_nwb_epoch_include import (
-    TimeIntervalsTimeseriesIndex,
-    TimeIntervalsTagsIndex,
-    TimeIntervalsTimeseries
-)
-
 from .hdmf_common_table import (
     DynamicTable
+)
+
+from .core_nwb_epoch_include import (
+    TimeIntervalsTimeseriesIndex,
+    TimeIntervalsTimeseries,
+    TimeIntervalsTagsIndex
 )
 
 
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -42,6 +38,7 @@ class TimeIntervals(DynamicTable):
     """
     A container for aggregating epoch data and the TimeSeries that each epoch applies to.
     """
+    name: str = Field(...)
     start_time: Optional[List[float]] = Field(default_factory=list, description="""Start time of epoch, in seconds.""")
     stop_time: Optional[List[float]] = Field(default_factory=list, description="""Stop time of epoch, in seconds.""")
     tags: Optional[List[str]] = Field(default_factory=list, description="""User-defined tags that identify or categorize events.""")
@@ -50,11 +47,12 @@ class TimeIntervals(DynamicTable):
     timeseries_index: Optional[TimeIntervalsTimeseriesIndex] = Field(None, description="""Index for timeseries.""")
     colnames: Optional[str] = Field(None, description="""The names of the columns in this table. This should be used to specify an order to the columns.""")
     description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
-    id: DynamicTableId = Field(..., description="""Array of unique identifiers for the rows of this dynamic table.""")
+    id: List[int] = Field(default_factory=list, description="""Array of unique identifiers for the rows of this dynamic table.""")
     VectorData: Optional[List[VectorData]] = Field(default_factory=list, description="""Vector columns, including index columns, of this dynamic table.""")
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-TimeIntervals.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+TimeIntervals.model_rebuild()
+    

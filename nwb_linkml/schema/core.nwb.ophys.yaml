@@ -15,6 +15,10 @@ classes:
     description: Image stack recorded over time from 1-photon microscope.
     is_a: ImageSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       pmt_gain:
         name: pmt_gain
         description: Photomultiplier gain.
@@ -41,11 +45,16 @@ classes:
         name: intensity
         description: Intensity of the excitation in mW/mm^2, if known.
         range: float32
+    tree_root: true
   TwoPhotonSeries:
     name: TwoPhotonSeries
     description: Image stack recorded over time from 2-photon microscope.
     is_a: ImageSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       pmt_gain:
         name: pmt_gain
         description: Photomultiplier gain.
@@ -62,12 +71,17 @@ classes:
         multivalued: false
         range: TwoPhotonSeries__field_of_view
         required: false
+    tree_root: true
   RoiResponseSeries:
     name: RoiResponseSeries
     description: ROI responses over an imaging plane. The first dimension represents
       time. The second dimension, if present, represents ROIs.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Signals from ROIs.
@@ -81,6 +95,7 @@ classes:
         multivalued: false
         range: RoiResponseSeries__rois
         required: true
+    tree_root: true
   DfOverF:
     name: DfOverF
     description: dF/F information about a region of interest (ROI). Storage hierarchy
@@ -88,12 +103,17 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-      RoiResponseSeries:
-        name: RoiResponseSeries
+      name:
+        name: name
+        range: string
+        required: true
+      roi_response_series:
+        name: roi_response_series
         description: RoiResponseSeries object(s) containing dF/F for a ROI.
         multivalued: true
         range: RoiResponseSeries
         required: true
+    tree_root: true
   Fluorescence:
     name: Fluorescence
     description: Fluorescence information about a region of interest (ROI). Storage
@@ -101,13 +121,18 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-      RoiResponseSeries:
-        name: RoiResponseSeries
+      name:
+        name: name
+        range: string
+        required: true
+      roi_response_series:
+        name: roi_response_series
         description: RoiResponseSeries object(s) containing fluorescence data for
           a ROI.
         multivalued: true
         range: RoiResponseSeries
         required: true
+    tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
     description: Stores pixels in an image that represent different regions of interest
@@ -119,17 +144,26 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-      PlaneSegmentation:
-        name: PlaneSegmentation
+      name:
+        name: name
+        range: string
+        required: true
+      plane_segmentation:
+        name: plane_segmentation
         description: Results from image segmentation of a specific imaging plane.
         multivalued: true
         range: PlaneSegmentation
         required: true
+    tree_root: true
   PlaneSegmentation:
     name: PlaneSegmentation
     description: Results from image segmentation of a specific imaging plane.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       image_mask:
         name: image_mask
         description: ROI masks for each ROI. Each image mask is the size of the original
@@ -166,14 +200,19 @@ classes:
       reference_images:
         name: reference_images
         description: Image stacks that the segmentation masks apply to.
-        multivalued: false
-        range: PlaneSegmentation__reference_images
-        required: true
+        multivalued: true
+        any_of:
+        - range: ImageSeries
+    tree_root: true
   ImagingPlane:
     name: ImagingPlane
     description: An imaging plane and its metadata.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of the imaging plane.
@@ -253,17 +292,22 @@ classes:
         multivalued: false
         range: text
         required: false
-      OpticalChannel:
-        name: OpticalChannel
+      optical_channel:
+        name: optical_channel
         description: An optical channel used to record from an imaging plane.
         multivalued: true
         range: OpticalChannel
         required: true
+    tree_root: true
   OpticalChannel:
     name: OpticalChannel
     description: An optical channel used to record from an imaging plane.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description or other notes about the channel.
@@ -276,6 +320,7 @@ classes:
         multivalued: false
         range: float32
         required: true
+    tree_root: true
   MotionCorrection:
     name: MotionCorrection
     description: 'An image stack where all frames are shifted (registered) to a common
@@ -283,27 +328,37 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-      CorrectedImageStack:
-        name: CorrectedImageStack
+      name:
+        name: name
+        range: string
+        required: true
+      corrected_image_stack:
+        name: corrected_image_stack
         description: Reuslts from motion correction of an image stack.
         multivalued: true
         range: CorrectedImageStack
         required: true
+    tree_root: true
   CorrectedImageStack:
     name: CorrectedImageStack
     description: Reuslts from motion correction of an image stack.
     is_a: NWBDataInterface
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       corrected:
         name: corrected
         description: Image stack with frames shifted to the common coordinates.
         multivalued: false
-        range: CorrectedImageStack__corrected
+        range: ImageSeries
         required: true
       xy_translation:
         name: xy_translation
         description: Stores the x,y delta necessary to align each frame to the common
           coordinates, for example, to align each frame to a reference image.
         multivalued: false
-        range: CorrectedImageStack__xy_translation
+        range: TimeSeries
         required: true
+    tree_root: true

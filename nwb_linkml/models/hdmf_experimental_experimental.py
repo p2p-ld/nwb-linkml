@@ -19,13 +19,9 @@ from .hdmf_common_table import (
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -36,12 +32,19 @@ class EnumData(VectorData):
     """
     Data that come from a fixed set of values. A data value of i corresponds to the i-th value in the VectorData referenced by the 'elements' attribute.
     """
+    name: str = Field(...)
     elements: Optional[VectorData] = Field(None, description="""Reference to the VectorData object that contains the enumerable elements""")
     description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], ]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* dim0"], Any],
+        NDArray[Shape["* dim0, * dim1"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+        NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
+    ]] = Field(None)
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-EnumData.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+EnumData.model_rebuild()
+    

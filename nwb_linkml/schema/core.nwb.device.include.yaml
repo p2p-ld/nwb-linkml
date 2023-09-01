@@ -1,8 +1,0 @@
-name: core.nwb.device.include
-id: core.nwb.device.include
-imports:
-- core.nwb.base
-- nwb.language
-- core.nwb.device.include
-- core.nwb.device
-default_prefix: core.nwb.device.include/

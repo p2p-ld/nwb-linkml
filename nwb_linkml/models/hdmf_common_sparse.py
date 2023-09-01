@@ -11,12 +11,6 @@ else:
     from typing_extensions import Literal
 
 
-from .hdmf_common_sparse_include import (
-    CSRMatrixData,
-    CSRMatrixIndices,
-    CSRMatrixIndptr
-)
-
 from .hdmf_common_base import (
     Container
 )
@@ -25,13 +19,9 @@ from .hdmf_common_base import (
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -42,13 +32,15 @@ class CSRMatrix(Container):
     """
     A compressed sparse row matrix. Data are stored in the standard CSR format, where column indices for row i are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
     """
+    name: str = Field(...)
     shape: Optional[int] = Field(None, description="""The shape (number of rows, number of columns) of this sparse matrix.""")
-    indices: CSRMatrixIndices = Field(..., description="""The column indices.""")
-    indptr: CSRMatrixIndptr = Field(..., description="""The row index pointer.""")
-    data: CSRMatrixData = Field(..., description="""The non-zero values in the matrix.""")
+    indices: List[int] = Field(default_factory=list, description="""The column indices.""")
+    indptr: List[int] = Field(default_factory=list, description="""The row index pointer.""")
+    data: List[Any] = Field(default_factory=list, description="""The non-zero values in the matrix.""")
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-CSRMatrix.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+CSRMatrix.model_rebuild()
+    

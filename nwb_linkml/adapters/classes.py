@@ -51,25 +51,28 @@ class ClassAdapter(Adapter):
 
         # Build this class
         #name = self._get_full_name()
+        kwargs = {}
         if self.parent is not None:
-            name = self._get_full_name()
+            kwargs['name'] = self._get_full_name()
         else:
-            name = self._get_attr_name()
+            kwargs['name'] = self._get_attr_name()
+            kwargs['tree_root'] = True
 
-        # Get vanilla top-level attributes
-        attrs = self.build_attrs(self.cls)
+        # Attributes
         name_slot = self.build_name_slot()
-        attrs.append(name_slot)
+        kwargs['attributes'] = [name_slot]
+        # Get vanilla top-level attributes
+        kwargs['attributes'].extend(self.build_attrs(self.cls))
+
         if extra_attrs is not None:
             if isinstance(extra_attrs, SlotDefinition):
                 extra_attrs = [extra_attrs]
-            attrs.extend(extra_attrs)
+            kwargs['attributes'].extend(extra_attrs)
+        kwargs['description'] = self.cls.doc
+        kwargs['is_a'] = self.cls.neurodata_type_inc
 
         cls = ClassDefinition(
-            name = name,
-            is_a = self.cls.neurodata_type_inc,
-            description=self.cls.doc,
-            attributes=attrs,
+            **kwargs
         )
 
         slots = []

@@ -19,13 +19,9 @@ from .nwb_language import (
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -36,8 +32,14 @@ class SpatialSeriesData(ConfiguredBaseModel):
     """
     1-D or 2-D array storing position or direction relative to some reference frame.
     """
+    name: str = Field("data", const=True)
     unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
-    array: Optional[NDArray[Shape["* num_times, 1 x, 2 x_y, 3 x_y_z"], Number]] = Field(None)
+    array: Optional[Union[
+        NDArray[Shape["* num_times"], Number],
+        NDArray[Shape["* num_times, 1 x"], Number],
+        NDArray[Shape["* num_times, 1 x, 2 x_y"], Number],
+        NDArray[Shape["* num_times, 1 x, 2 x_y, 3 x_y_z"], Number]
+    ]] = Field(None)
     
 
 class SpatialSeriesDataArray(Arraylike):
@@ -49,7 +51,8 @@ class SpatialSeriesDataArray(Arraylike):
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-SpatialSeriesData.update_forward_refs()
-SpatialSeriesDataArray.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+SpatialSeriesData.model_rebuild()
+SpatialSeriesDataArray.model_rebuild()
+    

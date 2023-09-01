@@ -19,13 +19,9 @@ from .nwb_language import (
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -36,6 +32,7 @@ class ImagingRetinotopyAxis1PhaseMap(ConfiguredBaseModel):
     """
     Phase response to stimulus on the first measured axis.
     """
+    name: str = Field("axis_1_phase_map", const=True)
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
@@ -44,14 +41,15 @@ class ImagingRetinotopyAxis1PhaseMap(ConfiguredBaseModel):
 
 class ImagingRetinotopyAxis1PhaseMapArray(Arraylike):
     
-    num_rows: Optional[float] = Field(None)
-    num_cols: Optional[float] = Field(None)
+    num_rows: float = Field(...)
+    num_cols: float = Field(...)
     
 
 class ImagingRetinotopyAxis1PowerMap(ConfiguredBaseModel):
     """
     Power response on the first measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
+    name: str = Field("axis_1_power_map", const=True)
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
@@ -60,14 +58,15 @@ class ImagingRetinotopyAxis1PowerMap(ConfiguredBaseModel):
 
 class ImagingRetinotopyAxis1PowerMapArray(Arraylike):
     
-    num_rows: Optional[float] = Field(None)
-    num_cols: Optional[float] = Field(None)
+    num_rows: float = Field(...)
+    num_cols: float = Field(...)
     
 
 class ImagingRetinotopyAxis2PhaseMap(ConfiguredBaseModel):
     """
     Phase response to stimulus on the second measured axis.
     """
+    name: str = Field("axis_2_phase_map", const=True)
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
@@ -76,14 +75,15 @@ class ImagingRetinotopyAxis2PhaseMap(ConfiguredBaseModel):
 
 class ImagingRetinotopyAxis2PhaseMapArray(Arraylike):
     
-    num_rows: Optional[float] = Field(None)
-    num_cols: Optional[float] = Field(None)
+    num_rows: float = Field(...)
+    num_cols: float = Field(...)
     
 
 class ImagingRetinotopyAxis2PowerMap(ConfiguredBaseModel):
     """
     Power response on the second measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
+    name: str = Field("axis_2_power_map", const=True)
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
@@ -92,21 +92,15 @@ class ImagingRetinotopyAxis2PowerMap(ConfiguredBaseModel):
 
 class ImagingRetinotopyAxis2PowerMapArray(Arraylike):
     
-    num_rows: Optional[float] = Field(None)
-    num_cols: Optional[float] = Field(None)
-    
-
-class ImagingRetinotopyAxisDescriptions(ConfiguredBaseModel):
-    """
-    Two-element array describing the contents of the two response axis fields. Description should be something like ['altitude', 'azimuth'] or '['radius', 'theta'].
-    """
-    axis_descriptions: List[str] = Field(default_factory=list, description="""Two-element array describing the contents of the two response axis fields. Description should be something like ['altitude', 'azimuth'] or '['radius', 'theta'].""")
+    num_rows: float = Field(...)
+    num_cols: float = Field(...)
     
 
 class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
     """
     Gray-scale image taken with same settings/parameters (e.g., focal depth, wavelength) as data collection. Array format: [rows][columns].
     """
+    name: str = Field("focal_depth_image", const=True)
     bits_per_pixel: Optional[int] = Field(None, description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""")
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
@@ -117,14 +111,15 @@ class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
 
 class ImagingRetinotopyFocalDepthImageArray(Arraylike):
     
-    num_rows: Optional[int] = Field(None)
-    num_cols: Optional[int] = Field(None)
+    num_rows: int = Field(...)
+    num_cols: int = Field(...)
     
 
 class ImagingRetinotopySignMap(ConfiguredBaseModel):
     """
     Sine of the angle between the direction of the gradient in axis_1 and axis_2.
     """
+    name: str = Field("sign_map", const=True)
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
@@ -132,14 +127,15 @@ class ImagingRetinotopySignMap(ConfiguredBaseModel):
 
 class ImagingRetinotopySignMapArray(Arraylike):
     
-    num_rows: Optional[float] = Field(None)
-    num_cols: Optional[float] = Field(None)
+    num_rows: float = Field(...)
+    num_cols: float = Field(...)
     
 
 class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
     """
     Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]
     """
+    name: str = Field("vasculature_image", const=True)
     bits_per_pixel: Optional[int] = Field(None, description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value""")
     dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
@@ -149,25 +145,25 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
 
 class ImagingRetinotopyVasculatureImageArray(Arraylike):
     
-    num_rows: Optional[int] = Field(None)
-    num_cols: Optional[int] = Field(None)
+    num_rows: int = Field(...)
+    num_cols: int = Field(...)
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-ImagingRetinotopyAxis1PhaseMap.update_forward_refs()
-ImagingRetinotopyAxis1PhaseMapArray.update_forward_refs()
-ImagingRetinotopyAxis1PowerMap.update_forward_refs()
-ImagingRetinotopyAxis1PowerMapArray.update_forward_refs()
-ImagingRetinotopyAxis2PhaseMap.update_forward_refs()
-ImagingRetinotopyAxis2PhaseMapArray.update_forward_refs()
-ImagingRetinotopyAxis2PowerMap.update_forward_refs()
-ImagingRetinotopyAxis2PowerMapArray.update_forward_refs()
-ImagingRetinotopyAxisDescriptions.update_forward_refs()
-ImagingRetinotopyFocalDepthImage.update_forward_refs()
-ImagingRetinotopyFocalDepthImageArray.update_forward_refs()
-ImagingRetinotopySignMap.update_forward_refs()
-ImagingRetinotopySignMapArray.update_forward_refs()
-ImagingRetinotopyVasculatureImage.update_forward_refs()
-ImagingRetinotopyVasculatureImageArray.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+ImagingRetinotopyAxis1PhaseMap.model_rebuild()
+ImagingRetinotopyAxis1PhaseMapArray.model_rebuild()
+ImagingRetinotopyAxis1PowerMap.model_rebuild()
+ImagingRetinotopyAxis1PowerMapArray.model_rebuild()
+ImagingRetinotopyAxis2PhaseMap.model_rebuild()
+ImagingRetinotopyAxis2PhaseMapArray.model_rebuild()
+ImagingRetinotopyAxis2PowerMap.model_rebuild()
+ImagingRetinotopyAxis2PowerMapArray.model_rebuild()
+ImagingRetinotopyFocalDepthImage.model_rebuild()
+ImagingRetinotopyFocalDepthImageArray.model_rebuild()
+ImagingRetinotopySignMap.model_rebuild()
+ImagingRetinotopySignMapArray.model_rebuild()
+ImagingRetinotopyVasculatureImage.model_rebuild()
+ImagingRetinotopyVasculatureImageArray.model_rebuild()
+    

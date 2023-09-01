@@ -14,6 +14,12 @@ classes:
     name: TwoPhotonSeries__field_of_view
     description: Width, height and depth of image, or imaged area, in meters.
     attributes:
+      name:
+        name: name
+        ifabsent: string(field_of_view)
+        range: string
+        required: true
+        equals_string: field_of_view
       array:
         name: array
         range: TwoPhotonSeries__field_of_view__Array
@@ -37,6 +43,12 @@ classes:
     name: RoiResponseSeries__data
     description: Signals from ROIs.
     attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
       array:
         name: array
         range: RoiResponseSeries__data__Array
@@ -57,36 +69,59 @@ classes:
     description: DynamicTableRegion referencing into an ROITable containing information
       on the ROIs stored in this timeseries.
     is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(rois)
+        range: string
+        required: true
+        equals_string: rois
   PlaneSegmentation__image_mask:
     name: PlaneSegmentation__image_mask
     description: ROI masks for each ROI. Each image mask is the size of the original
       imaging plane (or volume) and members of the ROI are finite non-zero.
     is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(image_mask)
+        range: string
+        required: true
+        equals_string: image_mask
   PlaneSegmentation__pixel_mask_index:
     name: PlaneSegmentation__pixel_mask_index
     description: Index into pixel_mask.
     is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(pixel_mask_index)
+        range: string
+        required: true
+        equals_string: pixel_mask_index
   PlaneSegmentation__voxel_mask_index:
     name: PlaneSegmentation__voxel_mask_index
     description: Index into voxel_mask.
     is_a: VectorIndex
-  PlaneSegmentation__reference_images:
-    name: PlaneSegmentation__reference_images
-    description: Image stacks that the segmentation masks apply to.
     attributes:
-      ImageSeries:
-        name: ImageSeries
-        description: One or more image stacks that the masks apply to (can be one-element
-          stack).
-        multivalued: true
-        range: ImageSeries
-        required: false
+      name:
+        name: name
+        ifabsent: string(voxel_mask_index)
+        range: string
+        required: true
+        equals_string: voxel_mask_index
   ImagingPlane__manifold:
     name: ImagingPlane__manifold
     description: DEPRECATED Physical position of each pixel. 'xyz' represents the
       position of the pixel relative to the defined coordinate space. Deprecated in
       favor of origin_coords and grid_spacing.
     attributes:
+      name:
+        name: name
+        ifabsent: string(manifold)
+        range: string
+        required: true
+        equals_string: manifold
       conversion:
         name: conversion
         description: Scalar to multiply each element in data to convert it to the
@@ -134,6 +169,12 @@ classes:
       for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the
       physical location is relative to (e.g., bregma).
     attributes:
+      name:
+        name: name
+        ifabsent: string(origin_coords)
+        range: string
+        required: true
+        equals_string: origin_coords
       unit:
         name: unit
         description: Measurement units for origin_coords. The default value is 'meters'.
@@ -163,6 +204,12 @@ classes:
       in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame
       to interpret the grid.
     attributes:
+      name:
+        name: name
+        ifabsent: string(grid_spacing)
+        range: string
+        required: true
+        equals_string: grid_spacing
       unit:
         name: unit
         description: Measurement units for grid_spacing. The default value is 'meters'.
@@ -186,12 +233,3 @@ classes:
         required: false
         minimum_cardinality: 3
         maximum_cardinality: 3
-  CorrectedImageStack__corrected:
-    name: CorrectedImageStack__corrected
-    description: Image stack with frames shifted to the common coordinates.
-    is_a: ImageSeries
-  CorrectedImageStack__xy_translation:
-    name: CorrectedImageStack__xy_translation
-    description: Stores the x,y delta necessary to align each frame to the common
-      coordinates, for example, to align each frame to a reference image.
-    is_a: TimeSeries

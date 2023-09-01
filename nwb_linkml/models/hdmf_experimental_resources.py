@@ -15,26 +15,13 @@ from .hdmf_common_base import (
     Container
 )
 
-from .hdmf_experimental_resources_include import (
-    HERDObjectKeys,
-    HERDObjects,
-    HERDEntities,
-    HERDKeys,
-    HERDFiles,
-    HERDEntityKeys
-)
-
 
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -45,15 +32,17 @@ class HERD(Container):
     """
     HDMF External Resources Data Structure. A set of six tables for tracking external resource references in a file or across multiple files.
     """
-    keys: HERDKeys = Field(<built-in method keys of dict object at 0x10ab5b600>, description="""A table for storing user terms that are used to refer to external resources.""")
-    files: HERDFiles = Field(..., description="""A table for storing object ids of files used in external resources.""")
-    entities: HERDEntities = Field(..., description="""A table for mapping user terms (i.e., keys) to resource entities.""")
-    objects: HERDObjects = Field(..., description="""A table for identifying which objects in a file contain references to external resources.""")
-    object_keys: HERDObjectKeys = Field(..., description="""A table for identifying which objects use which keys.""")
-    entity_keys: HERDEntityKeys = Field(..., description="""A table for identifying which keys use which entity.""")
+    name: str = Field(...)
+    keys: List[Any] = Field(default_factory=list, description="""A table for storing user terms that are used to refer to external resources.""")
+    files: List[Any] = Field(default_factory=list, description="""A table for storing object ids of files used in external resources.""")
+    entities: List[Any] = Field(default_factory=list, description="""A table for mapping user terms (i.e., keys) to resource entities.""")
+    objects: List[Any] = Field(default_factory=list, description="""A table for identifying which objects in a file contain references to external resources.""")
+    object_keys: List[Any] = Field(default_factory=list, description="""A table for identifying which objects use which keys.""")
+    entity_keys: List[Any] = Field(default_factory=list, description="""A table for identifying which keys use which entity.""")
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-HERD.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+HERD.model_rebuild()
+    

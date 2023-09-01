@@ -22,6 +22,10 @@ classes:
       is impractical.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Values of each feature at each time.
@@ -31,15 +35,16 @@ classes:
       feature_units:
         name: feature_units
         description: Units of each feature.
-        multivalued: false
-        range: AbstractFeatureSeries__feature_units
+        multivalued: true
+        range: text
         required: false
       features:
         name: features
         description: Description of the features represented in TimeSeries::data.
-        multivalued: false
-        range: AbstractFeatureSeries__features
+        multivalued: true
+        range: text
         required: true
+    tree_root: true
   AnnotationSeries:
     name: AnnotationSeries
     description: Stores user annotations made during an experiment. The data[] field
@@ -48,12 +53,17 @@ classes:
       is identifiable as storing annotations in a machine-readable way.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Annotations made during an experiment.
-        multivalued: false
-        range: AnnotationSeries__data
+        multivalued: true
+        range: text
         required: true
+    tree_root: true
   IntervalSeries:
     name: IntervalSeries
     description: Stores intervals of data. The timestamps field stores the beginning
@@ -65,17 +75,26 @@ classes:
       time intervals in a machine-readable way.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Use values >0 if interval started, <0 if interval ended.
-        multivalued: false
-        range: IntervalSeries__data
+        multivalued: true
+        range: int8
         required: true
+    tree_root: true
   DecompositionSeries:
     name: DecompositionSeries
     description: Spectral analysis of a time series, e.g. of an LFP or a speech signal.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Data decomposed into frequency bands.
@@ -100,14 +119,19 @@ classes:
         description: Table for describing the bands that this series was generated
           from. There should be one row in this table for each band.
         multivalued: false
-        range: DecompositionSeries__bands
+        range: DynamicTable
         required: true
+    tree_root: true
   Units:
     name: Units
     description: Data about spiking units. Event times of observed units (e.g. cell,
       synapse, etc.) should be concatenated and stored in spike_times.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       spike_times_index:
         name: spike_times_index
         description: Index into the spike_times dataset.
@@ -203,3 +227,4 @@ classes:
         multivalued: false
         range: Units__waveforms_index_index
         required: false
+    tree_root: true

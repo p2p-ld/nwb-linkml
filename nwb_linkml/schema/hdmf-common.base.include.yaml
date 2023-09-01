@@ -1,7 +1,0 @@
-name: hdmf-common.base.include
-id: hdmf-common.base.include
-imports:
-- nwb.language
-- hdmf-common.base.include
-- hdmf-common.base
-default_prefix: hdmf-common.base.include/

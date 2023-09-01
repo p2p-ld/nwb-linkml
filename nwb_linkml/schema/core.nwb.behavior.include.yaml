@@ -13,6 +13,12 @@ classes:
     description: 1-D or 2-D array storing position or direction relative to some reference
       frame.
     attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
       unit:
         name: unit
         description: Base unit of measurement for working with the data. The default

@@ -20,16 +20,27 @@ classes:
     description: Any one-off datasets
     is_a: NWBData
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       notes:
         name: notes
         description: Any notes the user has about the dataset being stored
         range: text
+    tree_root: true
   NWBFile:
     name: NWBFile
     description: An NWB file storing cellular-based neurophysiology data from a single
       experimental session.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        ifabsent: string(root)
+        range: string
+        required: true
+        equals_string: root
       nwb_version:
         name: nwb_version
         description: File version string. Use semantic versioning, e.g. 1.2.1. This
@@ -44,8 +55,8 @@ classes:
           The file can be created after the experiment was run, so this may differ
           from the experiment start time. Each modification to the nwb file adds a
           new entry to the array.'
-        multivalued: false
-        range: NWBFile__file_create_date
+        multivalued: true
+        range: isodatetime
         required: true
       identifier:
         name: identifier
@@ -92,9 +103,10 @@ classes:
           (i.e., everything measured from the system). If bulky data is stored in
           the /acquisition group, the data can exist in a separate NWB file that is
           linked to by the file being used for processing and analysis.
-        multivalued: false
-        range: NWBFile__acquisition
-        required: true
+        multivalued: true
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
       analysis:
         name: analysis
         description: Lab-specific and custom scientific analysis of data. There is
@@ -106,17 +118,19 @@ classes:
           restrictions on end users. Such data should be placed in the analysis group.
           The analysis data should be documented so that it could be shared with other
           labs.
-        multivalued: false
-        range: NWBFile__analysis
-        required: true
+        multivalued: true
+        any_of:
+        - range: NWBContainer
+        - range: DynamicTable
       scratch:
         name: scratch
         description: A place to store one-off analysis results. Data placed here is
           not intended for sharing. By placing data here, users acknowledge that there
           is no guarantee that their data meets any standard.
-        multivalued: false
-        range: NWBFile__scratch
-        required: false
+        multivalued: true
+        any_of:
+        - range: NWBContainer
+        - range: DynamicTable
       processing:
         name: processing
         description: The home for ProcessingModules. These modules perform intermediate
@@ -129,9 +143,9 @@ classes:
           (e.g., klustakwik, MClust) are expected to read/write data here.  'Processing'
           refers to intermediate analysis of the acquired data to make it more amenable
           to scientific analysis.
-        multivalued: false
-        range: NWBFile__processing
-        required: true
+        multivalued: true
+        any_of:
+        - range: ProcessingModule
       stimulus:
         name: stimulus
         description: Data pushed into the system (eg, video stimulus, sound, voltage,
@@ -182,17 +196,28 @@ classes:
         name: units
         description: Data about sorted spike units.
         multivalued: false
-        range: NWBFile__units
+        range: Units
         required: false
+    tree_root: true
   LabMetaData:
     name: LabMetaData
     description: Lab-specific meta-data.
     is_a: NWBContainer
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
   Subject:
     name: Subject
     description: Information about the animal or person from which the data was measured.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       age:
         name: age
         description: Age of subject. Can be supplied instead of 'date_of_birth'.
@@ -249,3 +274,4 @@ classes:
         multivalued: false
         range: text
         required: false
+    tree_root: true

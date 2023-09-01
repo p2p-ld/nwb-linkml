@@ -19,13 +19,9 @@ from .core_nwb_base import (
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -36,11 +32,13 @@ class Device(NWBContainer):
     """
     Metadata about a data acquisition device, e.g., recording system, electrode, microscope.
     """
+    name: str = Field(...)
     description: Optional[str] = Field(None, description="""Description of the device (e.g., model, firmware version, processing software version, etc.) as free-form text.""")
     manufacturer: Optional[str] = Field(None, description="""The name of the manufacturer of the device.""")
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-Device.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+Device.model_rebuild()
+    

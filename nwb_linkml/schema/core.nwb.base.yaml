@@ -12,12 +12,24 @@ classes:
     name: NWBData
     description: An abstract data type for a dataset.
     is_a: Data
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
   TimeSeriesReferenceVectorData:
     name: TimeSeriesReferenceVectorData
     description: Column storing references to a TimeSeries (rows). For each TimeSeries
       this VectorData column stores the start_index and count to indicate the range
       in time to be selected as well as an object reference to the TimeSeries.
     is_a: VectorData
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
   Image:
     name: Image
     description: An abstract data type for an image. Shape can be 2-D (x, y), or 3-D
@@ -25,6 +37,10 @@ classes:
       b)) or (x, y, (r, g, b, a)).
     is_a: NWBData
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       resolution:
         name: resolution
         description: Pixel resolution of the image, in pixels per centimeter.
@@ -36,29 +52,51 @@ classes:
       array:
         name: array
         range: Image__Array
+    tree_root: true
   ImageReferences:
     name: ImageReferences
     description: Ordered dataset of references to Image objects.
     is_a: NWBData
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       array:
         name: array
         range: ImageReferences__Array
+    tree_root: true
   NWBContainer:
     name: NWBContainer
     description: An abstract data type for a generic container storing collections
       of data and metadata. Base type for all data and metadata containers.
     is_a: Container
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
   NWBDataInterface:
     name: NWBDataInterface
     description: An abstract data type for a generic container storing collections
       of data, as opposed to metadata.
     is_a: NWBContainer
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
   TimeSeries:
     name: TimeSeries
     description: General purpose time series.
     is_a: NWBDataInterface
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of the time series.
@@ -90,24 +128,24 @@ classes:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
           the common experiment master-clock stored in NWBFile.timestamps_reference_time.
-        multivalued: false
-        range: TimeSeries__timestamps
+        multivalued: true
+        range: float64
         required: false
       control:
         name: control
         description: Numerical labels that apply to each time point in data for the
           purpose of querying and slicing data by these values. If present, the length
           of this array should be the same size as the first dimension of data.
-        multivalued: false
-        range: TimeSeries__control
+        multivalued: true
+        range: uint8
         required: false
       control_description:
         name: control_description
         description: Description of each control value. Must be present if control
           is present. If present, control_description[0] should describe time points
           where control == 0.
-        multivalued: false
-        range: TimeSeries__control_description
+        multivalued: true
+        range: text
         required: false
       sync:
         name: sync
@@ -120,27 +158,33 @@ classes:
         multivalued: false
         range: TimeSeries__sync
         required: false
+    tree_root: true
   ProcessingModule:
     name: ProcessingModule
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of this collection of processed data.
         range: text
-      NWBDataInterface:
-        name: NWBDataInterface
+      nwb_data_interface:
+        name: nwb_data_interface
         description: Data objects stored in this collection.
         multivalued: true
         range: NWBDataInterface
         required: false
-      DynamicTable:
-        name: DynamicTable
+      dynamic_table:
+        name: dynamic_table
         description: Tables stored in this collection.
         multivalued: true
         range: DynamicTable
         required: false
+    tree_root: true
   Images:
     name: Images
     description: A collection of images with an optional way to specify the order
@@ -148,6 +192,10 @@ classes:
       if the images are referenced by index, e.g., from an IndexSeries.
     is_a: NWBDataInterface
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of this collection of images.
@@ -167,3 +215,4 @@ classes:
         multivalued: false
         range: Images__order_of_images
         required: false
+    tree_root: true

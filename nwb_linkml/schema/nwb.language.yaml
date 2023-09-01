@@ -85,7 +85,7 @@ types:
     typeof: boolean
   isodatetime:
     name: isodatetime
-    typeof: date
+    typeof: datetime
 enums:
   FlatDType:
     name: FlatDType

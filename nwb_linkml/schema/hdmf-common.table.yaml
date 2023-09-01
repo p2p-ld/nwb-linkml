@@ -19,6 +19,10 @@ classes:
       and so on.
     is_a: Data
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of what these vectors represent.
@@ -26,6 +30,7 @@ classes:
       array:
         name: array
         range: VectorData__Array
+    tree_root: true
   VectorIndex:
     name: VectorIndex
     description: Used with VectorData to encode a ragged array. An array of indices
@@ -35,19 +40,29 @@ classes:
       by "_index".
     is_a: VectorData
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       target:
         name: target
         description: Reference to the target dataset that this index applies to.
         range: VectorData
+    tree_root: true
   ElementIdentifiers:
     name: ElementIdentifiers
     description: A list of unique identifiers for values within a dataset, e.g. rows
       of a DynamicTable.
     is_a: Data
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       array:
         name: array
         range: ElementIdentifiers__Array
+    tree_root: true
   DynamicTableRegion:
     name: DynamicTableRegion
     description: DynamicTableRegion provides a link from one table to an index or
@@ -61,6 +76,10 @@ classes:
       of another `DynamicTable`.
     is_a: VectorData
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       table:
         name: table
         description: Reference to the DynamicTable object that this region applies
@@ -70,6 +89,7 @@ classes:
         name: description
         description: Description of what this table region points to.
         range: text
+    tree_root: true
   DynamicTable:
     name: DynamicTable
     description: A group containing multiple datasets that are aligned on the first
@@ -92,6 +112,10 @@ classes:
       may be an acceptable trade-off for the flexibility of a DynamicTable.
     is_a: Container
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       colnames:
         name: colnames
         description: The names of the columns in this table. This should be used to
@@ -104,8 +128,8 @@ classes:
       id:
         name: id
         description: Array of unique identifiers for the rows of this dynamic table.
-        multivalued: false
-        range: DynamicTable__id
+        multivalued: true
+        range: int
         required: true
       VectorData:
         name: VectorData
@@ -113,6 +137,7 @@ classes:
         multivalued: true
         range: VectorData
         required: false
+    tree_root: true
   AlignedDynamicTable:
     name: AlignedDynamicTable
     description: DynamicTable container that supports storing a collection of sub-tables.
@@ -124,6 +149,10 @@ classes:
       by a separate DynamicTable stored within the group.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       categories:
         name: categories
         description: The names of the categories in this AlignedDynamicTable. Each
@@ -132,8 +161,8 @@ classes:
           category names must match the names of the corresponding DynamicTable in
           the group.
         range: text
-      DynamicTable:
-        name: DynamicTable
+      dynamic_table:
+        name: dynamic_table
         description: A DynamicTable representing a particular category for columns
           in the AlignedDynamicTable parent container. The table MUST be aligned with
           (i.e., have the same number of rows) as all other DynamicTables stored in
@@ -143,3 +172,4 @@ classes:
         multivalued: true
         range: DynamicTable
         required: false
+    tree_root: true

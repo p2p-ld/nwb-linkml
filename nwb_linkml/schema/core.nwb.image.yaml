@@ -13,25 +13,40 @@ classes:
     description: A grayscale image.
     is_a: Image
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       array:
         name: array
         range: GrayscaleImage__Array
+    tree_root: true
   RGBImage:
     name: RGBImage
     description: A color image.
     is_a: Image
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       array:
         name: array
         range: RGBImage__Array
+    tree_root: true
   RGBAImage:
     name: RGBAImage
     description: A color image with transparency.
     is_a: Image
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       array:
         name: array
         range: RGBAImage__Array
+    tree_root: true
   ImageSeries:
     name: ImageSeries
     description: General image data that is common between acquisition and stimulus
@@ -42,6 +57,10 @@ classes:
       stack. [frame][x][y] or [frame][x][y][z].
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Binary data representing images across frames. If data are stored
@@ -52,8 +71,8 @@ classes:
       dimension:
         name: dimension
         description: Number of pixels on x, y, (and z) axes.
-        multivalued: false
-        range: ImageSeries__dimension
+        multivalued: true
+        range: int32
         required: false
       external_file:
         name: external_file
@@ -62,8 +81,8 @@ classes:
           in the file system as one or more image file(s). This field should NOT be
           used if the image is stored in another NWB file and that file is linked
           to this file.
-        multivalued: false
-        range: ImageSeries__external_file
+        multivalued: true
+        range: text
         required: false
       format:
         name: format
@@ -74,6 +93,7 @@ classes:
         multivalued: false
         range: text
         required: false
+    tree_root: true
   ImageMaskSeries:
     name: ImageMaskSeries
     description: An alpha mask that is applied to a presented visual stimulus. The
@@ -82,6 +102,12 @@ classes:
       array indicates the starting time of a mask, and that mask pattern continues
       until it's explicitly changed.
     is_a: ImageSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
   OpticalSeries:
     name: OpticalSeries
     description: Image data that is presented or recorded. A stimulus template movie
@@ -91,6 +117,10 @@ classes:
       OpticalSeries represents acquired imaging data, orientation is also important.
     is_a: ImageSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       distance:
         name: distance
         description: Distance from camera/monitor to target/eye.
@@ -116,6 +146,7 @@ classes:
         multivalued: false
         range: text
         required: false
+    tree_root: true
   IndexSeries:
     name: IndexSeries
     description: Stores indices to image frames stored in an ImageSeries. The purpose
@@ -127,10 +158,15 @@ classes:
       was displayed.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Index of the image (using zero-indexing) in the linked Images
           object.
-        multivalued: false
-        range: IndexSeries__data
+        multivalued: true
+        range: uint32
         required: true
+    tree_root: true

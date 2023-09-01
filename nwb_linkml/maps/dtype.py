@@ -24,7 +24,7 @@ flat_to_linkml = {
     "utf_8" : "string",
     "ascii" : "string",
     "bool" : "boolean",
-    "isodatetime" : "date"
+    "isodatetime" : "datetime"
 }
 """
 Map between the flat data types and the simpler linkml base types

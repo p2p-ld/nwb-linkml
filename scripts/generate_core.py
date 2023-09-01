@@ -19,7 +19,7 @@ def generate_core_pydantic(yaml_path:Path, output_path:Path):
 
         generator = NWBPydanticGenerator(
             str(schema),
-            pydantic_version='1',
+            pydantic_version='2',
             emit_metadata=True,
             gen_classvars=True,
             gen_slots=True

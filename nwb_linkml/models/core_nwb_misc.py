@@ -11,26 +11,25 @@ else:
     from typing_extensions import Literal
 
 
+from .hdmf_common_table import (
+    DynamicTable
+)
+
 from .core_nwb_misc_include import (
-    AbstractFeatureSeriesFeatures,
+    UnitsElectrodes,
     UnitsElectrodesIndex,
     UnitsObsIntervalsIndex,
-    DecompositionSeriesData,
     UnitsSpikeTimes,
-    UnitsWaveformMean,
-    UnitsWaveformsIndexIndex,
-    UnitsWaveforms,
-    UnitsWaveformsIndex,
-    AnnotationSeriesData,
-    UnitsObsIntervals,
-    AbstractFeatureSeriesFeatureUnits,
-    DecompositionSeriesBands,
+    UnitsSpikeTimesIndex,
     UnitsWaveformSd,
-    UnitsElectrodes,
-    IntervalSeriesData,
-    DecompositionSeriesSourceChannels,
+    UnitsWaveformMean,
+    UnitsWaveforms,
     AbstractFeatureSeriesData,
-    UnitsSpikeTimesIndex
+    UnitsWaveformsIndexIndex,
+    UnitsObsIntervals,
+    UnitsWaveformsIndex,
+    DecompositionSeriesData,
+    DecompositionSeriesSourceChannels
 )
 
 from .core_nwb_base import (
@@ -41,21 +40,13 @@ from .core_nwb_ecephys import (
     ElectrodeGroup
 )
 
-from .hdmf_common_table import (
-    DynamicTable
-)
-
 
 metamodel_version = "None"
 version = "None"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
+class ConfiguredBaseModel(BaseModel,
                 validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
+                validate_default = True,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
@@ -66,15 +57,16 @@ class AbstractFeatureSeries(TimeSeries):
     """
     Abstract features, such as quantitative descriptions of sensory stimuli. The TimeSeries::data field is a 2D array, storing those features (e.g., for visual grating stimulus this might be orientation, spatial frequency and contrast). Null stimuli (eg, uniform gray) can be marked as being an independent feature (eg, 1.0 for gray, 0.0 for actual stimulus) or by storing NaNs for feature values, or through use of the TimeSeries::control fields. A set of features is considered to persist until the next set of features is defined. The final set of features stored should be the null set. This is useful when storing the raw stimulus is impractical.
     """
+    name: str = Field(...)
     data: AbstractFeatureSeriesData = Field(..., description="""Values of each feature at each time.""")
-    feature_units: Optional[AbstractFeatureSeriesFeatureUnits] = Field(None, description="""Units of each feature.""")
-    features: AbstractFeatureSeriesFeatures = Field(..., description="""Description of the features represented in TimeSeries::data.""")
+    feature_units: Optional[List[str]] = Field(default_factory=list, description="""Units of each feature.""")
+    features: List[str] = Field(default_factory=list, description="""Description of the features represented in TimeSeries::data.""")
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(None, description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""")
     starting_time: Optional[TimeSeriesStartingTime] = Field(None, description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""")
-    timestamps: Optional[TimeSeriesTimestamps] = Field(None, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
-    control: Optional[TimeSeriesControl] = Field(None, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
-    control_description: Optional[TimeSeriesControlDescription] = Field(None, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
+    timestamps: Optional[List[float]] = Field(default_factory=list, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
+    control: Optional[List[int]] = Field(default_factory=list, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
+    control_description: Optional[List[str]] = Field(default_factory=list, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
     sync: Optional[TimeSeriesSync] = Field(None, description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""")
     
 
@@ -82,13 +74,14 @@ class AnnotationSeries(TimeSeries):
     """
     Stores user annotations made during an experiment. The data[] field stores a text array, and timestamps are stored for each annotation (ie, interval=1). This is largely an alias to a standard TimeSeries storing a text array but that is identifiable as storing annotations in a machine-readable way.
     """
-    data: AnnotationSeriesData = Field(..., description="""Annotations made during an experiment.""")
+    name: str = Field(...)
+    data: List[str] = Field(default_factory=list, description="""Annotations made during an experiment.""")
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(None, description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""")
     starting_time: Optional[TimeSeriesStartingTime] = Field(None, description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""")
-    timestamps: Optional[TimeSeriesTimestamps] = Field(None, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
-    control: Optional[TimeSeriesControl] = Field(None, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
-    control_description: Optional[TimeSeriesControlDescription] = Field(None, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
+    timestamps: Optional[List[float]] = Field(default_factory=list, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
+    control: Optional[List[int]] = Field(default_factory=list, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
+    control_description: Optional[List[str]] = Field(default_factory=list, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
     sync: Optional[TimeSeriesSync] = Field(None, description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""")
     
 
@@ -96,13 +89,14 @@ class IntervalSeries(TimeSeries):
     """
     Stores intervals of data. The timestamps field stores the beginning and end of intervals. The data field stores whether the interval just started (>0 value) or ended (<0 value). Different interval types can be represented in the same series by using multiple key values (eg, 1 for feature A, 2 for feature B, 3 for feature C, etc). The field data stores an 8-bit integer. This is largely an alias of a standard TimeSeries but that is identifiable as representing time intervals in a machine-readable way.
     """
-    data: IntervalSeriesData = Field(..., description="""Use values >0 if interval started, <0 if interval ended.""")
+    name: str = Field(...)
+    data: List[int] = Field(default_factory=list, description="""Use values >0 if interval started, <0 if interval ended.""")
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(None, description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""")
     starting_time: Optional[TimeSeriesStartingTime] = Field(None, description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""")
-    timestamps: Optional[TimeSeriesTimestamps] = Field(None, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
-    control: Optional[TimeSeriesControl] = Field(None, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
-    control_description: Optional[TimeSeriesControlDescription] = Field(None, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
+    timestamps: Optional[List[float]] = Field(default_factory=list, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
+    control: Optional[List[int]] = Field(default_factory=list, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
+    control_description: Optional[List[str]] = Field(default_factory=list, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
     sync: Optional[TimeSeriesSync] = Field(None, description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""")
     
 
@@ -110,16 +104,17 @@ class DecompositionSeries(TimeSeries):
     """
     Spectral analysis of a time series, e.g. of an LFP or a speech signal.
     """
+    name: str = Field(...)
     data: DecompositionSeriesData = Field(..., description="""Data decomposed into frequency bands.""")
     metric: str = Field(..., description="""The metric used, e.g. phase, amplitude, power.""")
     source_channels: Optional[DecompositionSeriesSourceChannels] = Field(None, description="""DynamicTableRegion pointer to the channels that this decomposition series was generated from.""")
-    bands: DecompositionSeriesBands = Field(..., description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""")
+    bands: DynamicTable = Field(..., description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""")
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(None, description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""")
     starting_time: Optional[TimeSeriesStartingTime] = Field(None, description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""")
-    timestamps: Optional[TimeSeriesTimestamps] = Field(None, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
-    control: Optional[TimeSeriesControl] = Field(None, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
-    control_description: Optional[TimeSeriesControlDescription] = Field(None, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
+    timestamps: Optional[List[float]] = Field(default_factory=list, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
+    control: Optional[List[int]] = Field(default_factory=list, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
+    control_description: Optional[List[str]] = Field(default_factory=list, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
     sync: Optional[TimeSeriesSync] = Field(None, description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""")
     
 
@@ -127,6 +122,7 @@ class Units(DynamicTable):
     """
     Data about spiking units. Event times of observed units (e.g. cell, synapse, etc.) should be concatenated and stored in spike_times.
     """
+    name: str = Field(...)
     spike_times_index: Optional[UnitsSpikeTimesIndex] = Field(None, description="""Index into the spike_times dataset.""")
     spike_times: Optional[UnitsSpikeTimes] = Field(None, description="""Spike times for each unit in seconds.""")
     obs_intervals_index: Optional[UnitsObsIntervalsIndex] = Field(None, description="""Index into the obs_intervals dataset.""")
@@ -141,15 +137,16 @@ class Units(DynamicTable):
     waveforms_index_index: Optional[UnitsWaveformsIndexIndex] = Field(None, description="""Index into the waveforms_index dataset. One value for every unit (row in the table). See 'waveforms' for more detail.""")
     colnames: Optional[str] = Field(None, description="""The names of the columns in this table. This should be used to specify an order to the columns.""")
     description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
-    id: DynamicTableId = Field(..., description="""Array of unique identifiers for the rows of this dynamic table.""")
+    id: List[int] = Field(default_factory=list, description="""Array of unique identifiers for the rows of this dynamic table.""")
     VectorData: Optional[List[VectorData]] = Field(default_factory=list, description="""Vector columns, including index columns, of this dynamic table.""")
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-AbstractFeatureSeries.update_forward_refs()
-AnnotationSeries.update_forward_refs()
-IntervalSeries.update_forward_refs()
-DecompositionSeries.update_forward_refs()
-Units.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+AbstractFeatureSeries.model_rebuild()
+AnnotationSeries.model_rebuild()
+IntervalSeries.model_rebuild()
+DecompositionSeries.model_rebuild()
+Units.model_rebuild()
+    

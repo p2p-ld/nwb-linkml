@@ -3,7 +3,6 @@ id: hdmf-experimental.resources
 imports:
 - hdmf-common.base
 - nwb.language
-- hdmf-experimental.resources.include
 - hdmf-experimental.resources
 default_prefix: hdmf-experimental.resources/
 classes:
@@ -13,41 +12,46 @@ classes:
       external resource references in a file or across multiple files.
     is_a: Container
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       keys:
         name: keys
         description: A table for storing user terms that are used to refer to external
           resources.
-        multivalued: false
-        range: HERD__keys
+        multivalued: true
+        range: AnyType
         required: true
       files:
         name: files
         description: A table for storing object ids of files used in external resources.
-        multivalued: false
-        range: HERD__files
+        multivalued: true
+        range: AnyType
         required: true
       entities:
         name: entities
         description: A table for mapping user terms (i.e., keys) to resource entities.
-        multivalued: false
-        range: HERD__entities
+        multivalued: true
+        range: AnyType
         required: true
       objects:
         name: objects
         description: A table for identifying which objects in a file contain references
           to external resources.
-        multivalued: false
-        range: HERD__objects
+        multivalued: true
+        range: AnyType
         required: true
       object_keys:
         name: object_keys
         description: A table for identifying which objects use which keys.
-        multivalued: false
-        range: HERD__object_keys
+        multivalued: true
+        range: AnyType
         required: true
       entity_keys:
         name: entity_keys
         description: A table for identifying which keys use which entity.
-        multivalued: false
-        range: HERD__entity_keys
+        multivalued: true
+        range: AnyType
         required: true
+    tree_root: true

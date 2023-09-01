@@ -15,6 +15,10 @@ classes:
       current or voltage.
     is_a: TimeSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       stimulus_description:
         name: stimulus_description
         description: Protocol/stimulus name for this patch-clamp dataset.
@@ -26,8 +30,8 @@ classes:
       data:
         name: data
         description: Recorded voltage or current.
-        multivalued: false
-        range: PatchClampSeries__data
+        multivalued: true
+        range: numeric
         required: true
       gain:
         name: gain
@@ -36,6 +40,7 @@ classes:
         multivalued: false
         range: float32
         required: false
+    tree_root: true
   CurrentClampSeries:
     name: CurrentClampSeries
     description: Voltage data from an intracellular current-clamp recording. A corresponding
@@ -43,6 +48,10 @@ classes:
       the current injected.
     is_a: PatchClampSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Recorded voltage.
@@ -67,6 +76,7 @@ classes:
         multivalued: false
         range: float32
         required: false
+    tree_root: true
   IZeroClampSeries:
     name: IZeroClampSeries
     description: Voltage data from an intracellular recording when all current and
@@ -75,6 +85,10 @@ classes:
       amplifier is disconnected and no stimulus can reach the cell.
     is_a: CurrentClampSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       stimulus_description:
         name: stimulus_description
         description: An IZeroClampSeries has no stimulus, so this attribute is automatically
@@ -98,17 +112,23 @@ classes:
         multivalued: false
         range: float32
         required: true
+    tree_root: true
   CurrentClampStimulusSeries:
     name: CurrentClampStimulusSeries
     description: Stimulus current applied during current clamp recording.
     is_a: PatchClampSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Stimulus current applied.
         multivalued: false
         range: CurrentClampStimulusSeries__data
         required: true
+    tree_root: true
   VoltageClampSeries:
     name: VoltageClampSeries
     description: Current data from an intracellular voltage-clamp recording. A corresponding
@@ -116,6 +136,10 @@ classes:
       the voltage injected.
     is_a: PatchClampSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Recorded current.
@@ -164,22 +188,32 @@ classes:
         multivalued: false
         range: VoltageClampSeries__whole_cell_series_resistance_comp
         required: false
+    tree_root: true
   VoltageClampStimulusSeries:
     name: VoltageClampStimulusSeries
     description: Stimulus voltage applied during a voltage clamp recording.
     is_a: PatchClampSeries
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       data:
         name: data
         description: Stimulus voltage applied.
         multivalued: false
         range: VoltageClampStimulusSeries__data
         required: true
+    tree_root: true
   IntracellularElectrode:
     name: IntracellularElectrode
     description: An intracellular electrode and its metadata.
     is_a: NWBContainer
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       cell_id:
         name: cell_id
         description: unique ID of the cell
@@ -230,6 +264,7 @@ classes:
         multivalued: false
         range: text
         required: false
+    tree_root: true
   SweepTable:
     name: SweepTable
     description: '[DEPRECATED] Table used to group different PatchClampSeries. SweepTable
@@ -238,6 +273,10 @@ classes:
       tables provide enhanced support for experiment metadata.'
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       sweep_number:
         name: sweep_number
         description: Sweep number of the PatchClampSeries in that row.
@@ -254,11 +293,16 @@ classes:
         multivalued: false
         range: SweepTable__series_index
         required: true
+    tree_root: true
   IntracellularElectrodesTable:
     name: IntracellularElectrodesTable
     description: Table for storing intracellular electrode related metadata.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of what is in this dynamic table.
@@ -268,11 +312,16 @@ classes:
         description: Column for storing the reference to the intracellular electrode.
         multivalued: true
         range: IntracellularElectrode
+    tree_root: true
   IntracellularStimuliTable:
     name: IntracellularStimuliTable
     description: Table for storing intracellular stimulus related metadata.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of what is in this dynamic table.
@@ -284,11 +333,16 @@ classes:
         multivalued: false
         range: IntracellularStimuliTable__stimulus
         required: true
+    tree_root: true
   IntracellularResponsesTable:
     name: IntracellularResponsesTable
     description: Table for storing intracellular response related metadata.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       description:
         name: description
         description: Description of what is in this dynamic table.
@@ -300,6 +354,7 @@ classes:
         multivalued: false
         range: IntracellularResponsesTable__response
         required: true
+    tree_root: true
   IntracellularRecordingsTable:
     name: IntracellularRecordingsTable
     description: A table to group together a stimulus and response from a single electrode
@@ -315,6 +370,12 @@ classes:
       electrophysiology, in which case other TimeSeries may be used.
     is_a: AlignedDynamicTable
     attributes:
+      name:
+        name: name
+        ifabsent: string(intracellular_recordings)
+        range: string
+        required: true
+        equals_string: intracellular_recordings
       description:
         name: description
         description: Description of the contents of this table. Inherited from AlignedDynamicTable
@@ -324,20 +385,21 @@ classes:
         name: electrodes
         description: Table for storing intracellular electrode related metadata.
         multivalued: false
-        range: IntracellularRecordingsTable__electrodes
+        range: IntracellularElectrodesTable
         required: true
       stimuli:
         name: stimuli
         description: Table for storing intracellular stimulus related metadata.
         multivalued: false
-        range: IntracellularRecordingsTable__stimuli
+        range: IntracellularStimuliTable
         required: true
       responses:
         name: responses
         description: Table for storing intracellular response related metadata.
         multivalued: false
-        range: IntracellularRecordingsTable__responses
+        range: IntracellularResponsesTable
         required: true
+    tree_root: true
   SimultaneousRecordingsTable:
     name: SimultaneousRecordingsTable
     description: A table for grouping different intracellular recordings from the
@@ -345,6 +407,12 @@ classes:
       from different electrodes.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        ifabsent: string(simultaneous_recordings)
+        range: string
+        required: true
+        equals_string: simultaneous_recordings
       recordings:
         name: recordings
         description: A reference to one or more rows in the IntracellularRecordingsTable
@@ -358,6 +426,7 @@ classes:
         multivalued: false
         range: SimultaneousRecordingsTable__recordings_index
         required: true
+    tree_root: true
   SequentialRecordingsTable:
     name: SequentialRecordingsTable
     description: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
@@ -366,6 +435,12 @@ classes:
       presented in a sequence.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        ifabsent: string(sequential_recordings)
+        range: string
+        required: true
+        equals_string: sequential_recordings
       simultaneous_recordings:
         name: simultaneous_recordings
         description: A reference to one or more rows in the SimultaneousRecordingsTable
@@ -384,6 +459,7 @@ classes:
         description: The type of stimulus used for the sequential recording.
         multivalued: true
         range: text
+    tree_root: true
   RepetitionsTable:
     name: RepetitionsTable
     description: A table for grouping different sequential intracellular recordings
@@ -392,6 +468,12 @@ classes:
       of stimuli applied in sequence.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        ifabsent: string(repetitions)
+        range: string
+        required: true
+        equals_string: repetitions
       sequential_recordings:
         name: sequential_recordings
         description: A reference to one or more rows in the SequentialRecordingsTable
@@ -405,12 +487,19 @@ classes:
         multivalued: false
         range: RepetitionsTable__sequential_recordings_index
         required: true
+    tree_root: true
   ExperimentalConditionsTable:
     name: ExperimentalConditionsTable
     description: A table for grouping different intracellular recording repetitions
       together that belong to the same experimental condition.
     is_a: DynamicTable
     attributes:
+      name:
+        name: name
+        ifabsent: string(experimental_conditions)
+        range: string
+        required: true
+        equals_string: experimental_conditions
       repetitions:
         name: repetitions
         description: A reference to one or more rows in the RepetitionsTable table.
@@ -423,3 +512,4 @@ classes:
         multivalued: false
         range: ExperimentalConditionsTable__repetitions_index
         required: true
+    tree_root: true

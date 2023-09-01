@@ -35,14 +35,3 @@ classes:
         name: num_elements
         range: int
         required: true
-  DynamicTable__id:
-    name: DynamicTable__id
-    description: Array of unique identifiers for the rows of this dynamic table.
-    is_a: ElementIdentifiers
-    attributes:
-      id:
-        name: id
-        description: Array of unique identifiers for the rows of this dynamic table.
-        multivalued: true
-        range: int
-        required: true

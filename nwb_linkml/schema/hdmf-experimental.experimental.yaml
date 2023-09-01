@@ -3,7 +3,6 @@ id: hdmf-experimental.experimental
 imports:
 - hdmf-common.table
 - nwb.language
-- hdmf-experimental.experimental.include
 - hdmf-experimental.experimental
 default_prefix: hdmf-experimental.experimental/
 classes:
@@ -13,8 +12,13 @@ classes:
       to the i-th value in the VectorData referenced by the 'elements' attribute.
     is_a: VectorData
     attributes:
+      name:
+        name: name
+        range: string
+        required: true
       elements:
         name: elements
         description: Reference to the VectorData object that contains the enumerable
           elements
         range: VectorData
+    tree_root: true
