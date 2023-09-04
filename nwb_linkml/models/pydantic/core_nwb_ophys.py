@@ -11,22 +11,16 @@ else:
     from typing_extensions import Literal
 
 
-from .core_nwb_base import (
-    TimeSeries,
-    NWBDataInterface,
-    NWBContainer
-)
-
 from .core_nwb_ophys_include import (
-    RoiResponseSeriesRois,
+    PlaneSegmentationImageMask,
     TwoPhotonSeriesFieldOfView,
     ImagingPlaneOriginCoords,
-    RoiResponseSeriesData,
-    PlaneSegmentationPixelMaskIndex,
-    PlaneSegmentationImageMask,
-    ImagingPlaneGridSpacing,
+    RoiResponseSeriesRois,
     PlaneSegmentationVoxelMaskIndex,
-    ImagingPlaneManifold
+    RoiResponseSeriesData,
+    ImagingPlaneManifold,
+    ImagingPlaneGridSpacing,
+    PlaneSegmentationPixelMaskIndex
 )
 
 from .hdmf_common_table import (
@@ -35,6 +29,12 @@ from .hdmf_common_table import (
 
 from .core_nwb_image import (
     ImageSeries
+)
+
+from .core_nwb_base import (
+    NWBDataInterface,
+    NWBContainer,
+    TimeSeries
 )
 
 

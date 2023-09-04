@@ -8,7 +8,11 @@ imports:
 - nwb.language
 - core.nwb.ophys.include
 - core.nwb.ophys
-default_prefix: core.nwb.ophys.include/
+prefixes:
+  core.nwb.ophys:
+    prefix_prefix: core.nwb.ophys
+    prefix_reference: https://example.com/core.nwb.ophys/
+default_prefix: core.nwb.ophys
 classes:
   TwoPhotonSeries__field_of_view:
     name: TwoPhotonSeries__field_of_view

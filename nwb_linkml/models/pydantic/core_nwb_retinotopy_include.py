@@ -33,9 +33,9 @@ class ImagingRetinotopyAxis1PhaseMap(ConfiguredBaseModel):
     Phase response to stimulus on the first measured axis.
     """
     name: str = Field("axis_1_phase_map", const=True)
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    unit: Optional[string] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
     
 
@@ -50,9 +50,9 @@ class ImagingRetinotopyAxis1PowerMap(ConfiguredBaseModel):
     Power response on the first measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
     name: str = Field("axis_1_power_map", const=True)
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    unit: Optional[string] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
     
 
@@ -67,9 +67,9 @@ class ImagingRetinotopyAxis2PhaseMap(ConfiguredBaseModel):
     Phase response to stimulus on the second measured axis.
     """
     name: str = Field("axis_2_phase_map", const=True)
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    unit: Optional[string] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
     
 
@@ -84,9 +84,9 @@ class ImagingRetinotopyAxis2PowerMap(ConfiguredBaseModel):
     Power response on the second measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
     name: str = Field("axis_2_power_map", const=True)
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    unit: Optional[string] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
     
 
@@ -101,18 +101,18 @@ class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
     Gray-scale image taken with same settings/parameters (e.g., focal depth, wavelength) as data collection. Array format: [rows][columns].
     """
     name: str = Field("focal_depth_image", const=True)
-    bits_per_pixel: Optional[int] = Field(None, description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""")
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    bits_per_pixel: Optional[integer] = Field(None, description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     focal_depth: Optional[float] = Field(None, description="""Focal depth offset, in meters.""")
-    format: Optional[str] = Field(None, description="""Format of image. Right now only 'raw' is supported.""")
+    format: Optional[string] = Field(None, description="""Format of image. Right now only 'raw' is supported.""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], UInt16]] = Field(None)
     
 
 class ImagingRetinotopyFocalDepthImageArray(Arraylike):
     
-    num_rows: int = Field(...)
-    num_cols: int = Field(...)
+    num_rows: integer = Field(...)
+    num_cols: integer = Field(...)
     
 
 class ImagingRetinotopySignMap(ConfiguredBaseModel):
@@ -120,7 +120,7 @@ class ImagingRetinotopySignMap(ConfiguredBaseModel):
     Sine of the angle between the direction of the gradient in axis_1 and axis_2.
     """
     name: str = Field("sign_map", const=True)
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
     
@@ -136,17 +136,17 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
     Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]
     """
     name: str = Field("vasculature_image", const=True)
-    bits_per_pixel: Optional[int] = Field(None, description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value""")
-    dimension: Optional[int] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
+    bits_per_pixel: Optional[integer] = Field(None, description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value""")
+    dimension: Optional[integer] = Field(None, description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""")
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    format: Optional[str] = Field(None, description="""Format of image. Right now only 'raw' is supported.""")
+    format: Optional[string] = Field(None, description="""Format of image. Right now only 'raw' is supported.""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], UInt16]] = Field(None)
     
 
 class ImagingRetinotopyVasculatureImageArray(Arraylike):
     
-    num_rows: int = Field(...)
-    num_cols: int = Field(...)
+    num_rows: integer = Field(...)
+    num_cols: integer = Field(...)
     
 
 

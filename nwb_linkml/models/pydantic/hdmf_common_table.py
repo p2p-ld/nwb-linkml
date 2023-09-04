@@ -17,8 +17,8 @@ from .hdmf_common_base import (
 )
 
 from .hdmf_common_table_include import (
-    VectorDataArray,
-    ElementIdentifiersArray
+    ElementIdentifiersArray,
+    VectorDataArray
 )
 
 

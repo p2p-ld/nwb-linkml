@@ -33,9 +33,9 @@ class CSRMatrix(Container):
     A compressed sparse row matrix. Data are stored in the standard CSR format, where column indices for row i are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
     """
     name: str = Field(...)
-    shape: Optional[int] = Field(None, description="""The shape (number of rows, number of columns) of this sparse matrix.""")
-    indices: List[int] = Field(default_factory=list, description="""The column indices.""")
-    indptr: List[int] = Field(default_factory=list, description="""The row index pointer.""")
+    shape: Optional[integer] = Field(None, description="""The shape (number of rows, number of columns) of this sparse matrix.""")
+    indices: List[integer] = Field(default_factory=list, description="""The column indices.""")
+    indptr: List[integer] = Field(default_factory=list, description="""The row index pointer.""")
     data: List[Any] = Field(default_factory=list, description="""The non-zero values in the matrix.""")
     
 

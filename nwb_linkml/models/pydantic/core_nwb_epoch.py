@@ -16,9 +16,9 @@ from .hdmf_common_table import (
 )
 
 from .core_nwb_epoch_include import (
-    TimeIntervalsTimeseriesIndex,
+    TimeIntervalsTagsIndex,
     TimeIntervalsTimeseries,
-    TimeIntervalsTagsIndex
+    TimeIntervalsTimeseriesIndex
 )
 
 

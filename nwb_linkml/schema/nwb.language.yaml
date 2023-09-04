@@ -7,85 +7,112 @@ prefixes:
   linkml:
     prefix_prefix: linkml
     prefix_reference: https://w3id.org/linkml
-default_prefix: nwb.language/
+  nwb.language:
+    prefix_prefix: nwb.language
+    prefix_reference: https://example.com/nwb.language/
+default_prefix: nwb.language
 types:
   float:
     name: float
     typeof: float
+    base: float
   float32:
     name: float32
     typeof: float
+    base: float
   double:
     name: double
     typeof: double
+    base: double
   float64:
     name: float64
     typeof: double
+    base: double
   long:
     name: long
     typeof: integer
+    base: int
   int64:
     name: int64
     typeof: integer
+    base: int
   int:
     name: int
     typeof: integer
+    base: int
   int32:
     name: int32
     typeof: integer
+    base: int
   int16:
     name: int16
     typeof: integer
+    base: int
   short:
     name: short
     typeof: integer
+    base: int
   int8:
     name: int8
     typeof: integer
+    base: int
   uint:
     name: uint
     typeof: integer
+    base: int
     minimum_value: 0
   uint32:
     name: uint32
     typeof: integer
+    base: int
     minimum_value: 0
   uint16:
     name: uint16
     typeof: integer
+    base: int
     minimum_value: 0
   uint8:
     name: uint8
     typeof: integer
+    base: int
     minimum_value: 0
   uint64:
     name: uint64
     typeof: integer
+    base: int
     minimum_value: 0
   numeric:
     name: numeric
     typeof: float
+    base: float
   text:
     name: text
     typeof: string
+    base: string
   utf:
     name: utf
     typeof: string
+    base: string
   utf8:
     name: utf8
     typeof: string
+    base: string
   utf_8:
     name: utf_8
     typeof: string
+    base: string
   ascii:
     name: ascii
     typeof: string
+    base: string
   bool:
     name: bool
     typeof: boolean
+    base: boolean
   isodatetime:
     name: isodatetime
     typeof: datetime
+    base: datetime
 enums:
   FlatDType:
     name: FlatDType

@@ -120,7 +120,7 @@ class GitRepo:
             return False
 
         # Check that the remote matches
-        if self.remote.strip('.git') != self.namespace.repository:
+        if self.remote.strip('.git') != str(self.namespace.repository):
             warnings.warn(f'Repository exists, but has the wrong remote URL.\nExpected: {self.namespace.repository}\nGot:{self.remote.strip(".git")}')
             return False
 

@@ -6,7 +6,11 @@ imports:
 - nwb.language
 - core.nwb.epoch.include
 - core.nwb.epoch
-default_prefix: core.nwb.epoch.include/
+prefixes:
+  core.nwb.epoch:
+    prefix_prefix: core.nwb.epoch
+    prefix_reference: https://example.com/core.nwb.epoch/
+default_prefix: core.nwb.epoch
 classes:
   TimeIntervals__tags_index:
     name: TimeIntervals__tags_index

@@ -5,7 +5,11 @@ imports:
 - nwb.language
 - core.nwb.retinotopy.include
 - core.nwb.retinotopy
-default_prefix: core.nwb.retinotopy/
+prefixes:
+  core.nwb.retinotopy:
+    prefix_prefix: core.nwb.retinotopy
+    prefix_reference: https://example.com/core.nwb.retinotopy/
+default_prefix: core.nwb.retinotopy
 classes:
   ImagingRetinotopy:
     name: ImagingRetinotopy

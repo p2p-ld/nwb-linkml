@@ -11,36 +11,40 @@ else:
     from typing_extensions import Literal
 
 
-from .core_nwb_base import (
-    TimeSeries,
-    Images
-)
-
 from .core_nwb_icephys import (
-    ExperimentalConditionsTable,
-    SweepTable,
-    IntracellularElectrode,
-    SequentialRecordingsTable,
-    RepetitionsTable,
     SimultaneousRecordingsTable,
-    IntracellularRecordingsTable
+    SequentialRecordingsTable,
+    SweepTable,
+    RepetitionsTable,
+    IntracellularElectrode,
+    IntracellularRecordingsTable,
+    ExperimentalConditionsTable
 )
 
-from .core_nwb_ogen import (
-    OptogeneticStimulusSite
+from .core_nwb_file import (
+    Subject,
+    LabMetaData
+)
+
+from .hdmf_common_table import (
+    DynamicTable
 )
 
 from .core_nwb_epoch import (
     TimeIntervals
 )
 
-from .core_nwb_file import (
-    LabMetaData,
-    Subject
+from .core_nwb_ogen import (
+    OptogeneticStimulusSite
 )
 
-from .hdmf_common_table import (
-    DynamicTable
+from .core_nwb_ophys import (
+    ImagingPlane
+)
+
+from .core_nwb_base import (
+    Images,
+    TimeSeries
 )
 
 from .core_nwb_device import (
@@ -49,10 +53,6 @@ from .core_nwb_device import (
 
 from .core_nwb_ecephys import (
     ElectrodeGroup
-)
-
-from .core_nwb_ophys import (
-    ImagingPlane
 )
 
 

@@ -13,7 +13,11 @@ imports:
 - nwb.language
 - core.nwb.file.include
 - core.nwb.file
-default_prefix: core.nwb.file.include/
+prefixes:
+  core.nwb.file:
+    prefix_prefix: core.nwb.file
+    prefix_reference: https://example.com/core.nwb.file/
+default_prefix: core.nwb.file
 classes:
   NWBFile__stimulus:
     name: NWBFile__stimulus

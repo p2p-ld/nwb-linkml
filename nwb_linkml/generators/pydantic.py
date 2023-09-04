@@ -17,7 +17,7 @@ The `serialize` method
 
 """
 import pdb
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Optional
 from copy import deepcopy
 import warnings
 
@@ -384,7 +384,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                 parents[camelcase(class_def.name)] = class_parents
         return parents
 
-    def serialize(self) -> str:
+    def serialize(self, schemaview:Optional[SchemaView]=None) -> str:
         if self.template_file is not None:
             with open(self.template_file) as template_file:
                 template_obj = Template(template_file.read())
@@ -392,7 +392,10 @@ class NWBPydanticGenerator(PydanticGenerator):
             template_obj = Template(default_template(self.pydantic_version))
 
         sv: SchemaView
-        sv = self.schemaview
+        if schemaview:
+            sv = schemaview
+        else:
+            sv = self.schemaview
         schema = sv.schema
         pyschema = SchemaDefinition(
             id=schema.id,

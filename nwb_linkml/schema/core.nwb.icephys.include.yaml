@@ -7,7 +7,11 @@ imports:
 - nwb.language
 - core.nwb.icephys.include
 - core.nwb.icephys
-default_prefix: core.nwb.icephys.include/
+prefixes:
+  core.nwb.icephys:
+    prefix_prefix: core.nwb.icephys
+    prefix_reference: https://example.com/core.nwb.icephys/
+default_prefix: core.nwb.icephys
 classes:
   CurrentClampSeries__data:
     name: CurrentClampSeries__data

@@ -51,7 +51,10 @@ class NamespacesAdapter(Adapter):
                 id = ns.name,
                 description = ns.doc,
                 version = ns.version,
-                imports=[sch.name for sch in ns_schemas]
+                imports=[sch.name for sch in ns_schemas],
+                default_prefix=ns.name,
+                prefixes={ns.name: f'https://example.com/{ns.name}/'},
+
             )
             sch_result.schemas.append(ns_schema)
 

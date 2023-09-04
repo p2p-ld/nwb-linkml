@@ -4,7 +4,11 @@ imports:
 - hdmf-common.base
 - nwb.language
 - hdmf-common.sparse
-default_prefix: hdmf-common.sparse/
+prefixes:
+  hdmf-common.sparse:
+    prefix_prefix: hdmf-common.sparse
+    prefix_reference: https://example.com/hdmf-common.sparse/
+default_prefix: hdmf-common.sparse
 classes:
   CSRMatrix:
     name: CSRMatrix

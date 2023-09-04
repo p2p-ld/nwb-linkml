@@ -11,20 +11,20 @@ else:
     from typing_extensions import Literal
 
 
-from .core_nwb_base import (
-    TimeSeries,
-    NWBContainer,
-    NWBDataInterface
+from .core_nwb_ecephys_include import (
+    FeatureExtractionFeatures,
+    SpikeEventSeriesData,
+    FeatureExtractionElectrodes,
+    ClusterWaveformsWaveformMean,
+    ClusterWaveformsWaveformSd,
+    ElectricalSeriesElectrodes,
+    ElectricalSeriesData
 )
 
-from .core_nwb_ecephys_include import (
-    FeatureExtractionElectrodes,
-    ClusterWaveformsWaveformSd,
-    ClusterWaveformsWaveformMean,
-    SpikeEventSeriesData,
-    ElectricalSeriesElectrodes,
-    ElectricalSeriesData,
-    FeatureExtractionFeatures
+from .core_nwb_base import (
+    NWBDataInterface,
+    NWBContainer,
+    TimeSeries
 )
 
 

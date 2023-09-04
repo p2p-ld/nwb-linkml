@@ -11,12 +11,12 @@ else:
     from typing_extensions import Literal
 
 
-from .hdmf_common_table import (
-    DynamicTableRegion
-)
-
 from .nwb_language import (
     Arraylike
+)
+
+from .hdmf_common_table import (
+    DynamicTableRegion
 )
 
 

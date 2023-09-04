@@ -4,7 +4,11 @@ imports:
 - core.nwb.base
 - nwb.language
 - core.nwb.device
-default_prefix: core.nwb.device/
+prefixes:
+  core.nwb.device:
+    prefix_prefix: core.nwb.device
+    prefix_reference: https://example.com/core.nwb.device/
+default_prefix: core.nwb.device
 classes:
   Device:
     name: Device

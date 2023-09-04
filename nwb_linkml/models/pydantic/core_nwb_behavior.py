@@ -11,6 +11,10 @@ else:
     from typing_extensions import Literal
 
 
+from .core_nwb_misc import (
+    IntervalSeries
+)
+
 from .core_nwb_base import (
     TimeSeries,
     NWBDataInterface
@@ -18,10 +22,6 @@ from .core_nwb_base import (
 
 from .core_nwb_behavior_include import (
     SpatialSeriesData
-)
-
-from .core_nwb_misc import (
-    IntervalSeries
 )
 
 
@@ -43,13 +43,13 @@ class SpatialSeries(TimeSeries):
     """
     name: str = Field(...)
     data: SpatialSeriesData = Field(..., description="""1-D or 2-D array storing position or direction relative to some reference frame.""")
-    reference_frame: Optional[str] = Field(None, description="""Description defining what exactly 'straight-ahead' means.""")
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
-    comments: Optional[str] = Field(None, description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""")
+    reference_frame: Optional[string] = Field(None, description="""Description defining what exactly 'straight-ahead' means.""")
+    description: Optional[string] = Field(None, description="""Description of the time series.""")
+    comments: Optional[string] = Field(None, description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""")
     starting_time: Optional[TimeSeriesStartingTime] = Field(None, description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""")
-    timestamps: Optional[List[float]] = Field(default_factory=list, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
-    control: Optional[List[int]] = Field(default_factory=list, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
-    control_description: Optional[List[str]] = Field(default_factory=list, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
+    timestamps: Optional[List[double]] = Field(default_factory=list, description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""")
+    control: Optional[List[integer]] = Field(default_factory=list, description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""")
+    control_description: Optional[List[string]] = Field(default_factory=list, description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""")
     sync: Optional[TimeSeriesSync] = Field(None, description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""")
     
 

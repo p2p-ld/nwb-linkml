@@ -11,26 +11,26 @@ else:
     from typing_extensions import Literal
 
 
-from .hdmf_common_table import (
-    DynamicTable
-)
-
-from .core_nwb_base import (
-    NWBData,
-    ProcessingModule,
-    NWBDataInterface,
-    NWBContainer
-)
-
 from .core_nwb_file_include import (
     NWBFileGeneral,
-    SubjectAge,
     NWBFileIntervals,
+    SubjectAge,
     NWBFileStimulus
 )
 
 from .core_nwb_misc import (
     Units
+)
+
+from .core_nwb_base import (
+    NWBDataInterface,
+    ProcessingModule,
+    NWBContainer,
+    NWBData
+)
+
+from .hdmf_common_table import (
+    DynamicTable
 )
 
 

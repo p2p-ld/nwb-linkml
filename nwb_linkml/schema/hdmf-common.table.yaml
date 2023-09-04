@@ -5,7 +5,11 @@ imports:
 - nwb.language
 - hdmf-common.table.include
 - hdmf-common.table
-default_prefix: hdmf-common.table/
+prefixes:
+  hdmf-common.table:
+    prefix_prefix: hdmf-common.table
+    prefix_reference: https://example.com/hdmf-common.table/
+default_prefix: hdmf-common.table
 classes:
   VectorData:
     name: VectorData

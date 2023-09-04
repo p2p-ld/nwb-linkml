@@ -6,7 +6,11 @@ imports:
 - nwb.language
 - core.nwb.image.include
 - core.nwb.image
-default_prefix: core.nwb.image.include/
+prefixes:
+  core.nwb.image:
+    prefix_prefix: core.nwb.image
+    prefix_reference: https://example.com/core.nwb.image/
+default_prefix: core.nwb.image
 classes:
   GrayscaleImage__Array:
     name: GrayscaleImage__Array

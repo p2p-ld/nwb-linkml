@@ -3,7 +3,11 @@ id: hdmf-common.base
 imports:
 - nwb.language
 - hdmf-common.base
-default_prefix: hdmf-common.base/
+prefixes:
+  hdmf-common.base:
+    prefix_prefix: hdmf-common.base
+    prefix_reference: https://example.com/hdmf-common.base/
+default_prefix: hdmf-common.base
 classes:
   Data:
     name: Data

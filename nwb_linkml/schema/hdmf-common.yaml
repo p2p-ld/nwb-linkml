@@ -6,4 +6,8 @@ imports:
 - hdmf-common.base
 - hdmf-common.table
 - hdmf-common.sparse
-default_prefix: hdmf-common/
+prefixes:
+  hdmf-common:
+    prefix_prefix: hdmf-common
+    prefix_reference: https://example.com/hdmf-common/
+default_prefix: hdmf-common

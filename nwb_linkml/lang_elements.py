@@ -12,7 +12,7 @@ from linkml_runtime.linkml_model import \
     TypeDefinition,\
     Prefix,\
     PermissibleValue
-from nwb_linkml.maps.dtype import flat_to_linkml
+from nwb_linkml.maps.dtype import flat_to_linkml, flat_to_python
 
 
 FlatDType = EnumDefinition(
@@ -57,7 +57,8 @@ for nwbtype, linkmltype in flat_to_linkml.items():
     atype = TypeDefinition(
         name=nwbtype,
         minimum_value=amin,
-        typeof=linkmltype
+        typeof=linkmltype,
+        base=flat_to_python[nwbtype]
     )
     DTypeTypes.append(atype)
 
@@ -89,6 +90,10 @@ NwbLangSchema = SchemaDefinition(
     classes=[Arraylike, AnyType],
     types=DTypeTypes,
     imports=['linkml:types'],
-    prefixes={'linkml': Prefix('linkml','https://w3id.org/linkml')}
+    prefixes={
+        'linkml': Prefix('linkml','https://w3id.org/linkml'),
+        'nwb.language': f'https://example.com/nwb.language/'},
+    default_prefix='nwb.language',
+
 )
 

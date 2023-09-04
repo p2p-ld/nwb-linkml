@@ -87,6 +87,8 @@ class SchemaAdapter(Adapter):
             sch = SchemaDefinition(
                 name = self.name,
                 id = self.name,
+                default_prefix=self.name,
+                prefixes={self.name:f'https://example.com/{self.name}/'},
                 imports = [i.name for i in self.imports],
                 classes=res.classes,
                 slots=res.slots,
@@ -128,7 +130,10 @@ class SchemaAdapter(Adapter):
             imports=main_imports,
             classes=main_classes,
             slots=classes.slots,
-            types=classes.types
+            types=classes.types,
+            default_prefix=self.name,
+            prefixes={self.name: f'https://example.com/{self.name}/'},
+
         )
 
         split_sch = SchemaDefinition(
@@ -137,7 +142,10 @@ class SchemaAdapter(Adapter):
             imports=imports,
             classes=split_classes,
             slots=classes.slots,
-            types=classes.types
+            types=classes.types,
+            default_prefix=self.name,
+            prefixes={self.name: f'https://example.com/{self.name}/'},
+
         )
         if len(split_classes) > 0:
             res = BuildResult(

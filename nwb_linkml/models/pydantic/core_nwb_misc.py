@@ -11,33 +11,33 @@ else:
     from typing_extensions import Literal
 
 
+from .core_nwb_misc_include import (
+    DecompositionSeriesSourceChannels,
+    UnitsWaveformSd,
+    AbstractFeatureSeriesData,
+    UnitsObsIntervalsIndex,
+    DecompositionSeriesData,
+    UnitsWaveformsIndexIndex,
+    UnitsElectrodes,
+    UnitsSpikeTimesIndex,
+    UnitsSpikeTimes,
+    UnitsObsIntervals,
+    UnitsElectrodesIndex,
+    UnitsWaveformMean,
+    UnitsWaveformsIndex,
+    UnitsWaveforms
+)
+
 from .hdmf_common_table import (
     DynamicTable
 )
 
-from .core_nwb_misc_include import (
-    UnitsElectrodes,
-    UnitsElectrodesIndex,
-    UnitsObsIntervalsIndex,
-    UnitsSpikeTimes,
-    UnitsSpikeTimesIndex,
-    UnitsWaveformSd,
-    UnitsWaveformMean,
-    UnitsWaveforms,
-    AbstractFeatureSeriesData,
-    UnitsWaveformsIndexIndex,
-    UnitsObsIntervals,
-    UnitsWaveformsIndex,
-    DecompositionSeriesData,
-    DecompositionSeriesSourceChannels
+from .core_nwb_ecephys import (
+    ElectrodeGroup
 )
 
 from .core_nwb_base import (
     TimeSeries
-)
-
-from .core_nwb_ecephys import (
-    ElectrodeGroup
 )
 
 

@@ -6,4 +6,8 @@ version: 0.5.0
 imports:
 - hdmf-experimental.experimental
 - hdmf-experimental.resources
-default_prefix: hdmf-experimental/
+prefixes:
+  hdmf-experimental:
+    prefix_prefix: hdmf-experimental
+    prefix_reference: https://example.com/hdmf-experimental/
+default_prefix: hdmf-experimental

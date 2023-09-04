@@ -5,7 +5,11 @@ imports:
 - core.nwb.device
 - nwb.language
 - core.nwb.ogen
-default_prefix: core.nwb.ogen/
+prefixes:
+  core.nwb.ogen:
+    prefix_prefix: core.nwb.ogen
+    prefix_reference: https://example.com/core.nwb.ogen/
+default_prefix: core.nwb.ogen
 classes:
   OptogeneticSeries:
     name: OptogeneticSeries

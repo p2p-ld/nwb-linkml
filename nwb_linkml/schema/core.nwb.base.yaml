@@ -6,7 +6,11 @@ imports:
 - nwb.language
 - core.nwb.base.include
 - core.nwb.base
-default_prefix: core.nwb.base/
+prefixes:
+  core.nwb.base:
+    prefix_prefix: core.nwb.base
+    prefix_reference: https://example.com/core.nwb.base/
+default_prefix: core.nwb.base
 classes:
   NWBData:
     name: NWBData

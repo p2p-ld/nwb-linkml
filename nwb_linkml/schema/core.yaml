@@ -15,4 +15,8 @@ imports:
 - core.nwb.ogen
 - core.nwb.ophys
 - core.nwb.retinotopy
-default_prefix: core/
+prefixes:
+  core:
+    prefix_prefix: core
+    prefix_reference: https://example.com/core/
+default_prefix: core

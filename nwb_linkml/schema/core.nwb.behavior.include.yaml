@@ -6,7 +6,11 @@ imports:
 - nwb.language
 - core.nwb.behavior.include
 - core.nwb.behavior
-default_prefix: core.nwb.behavior.include/
+prefixes:
+  core.nwb.behavior:
+    prefix_prefix: core.nwb.behavior
+    prefix_reference: https://example.com/core.nwb.behavior/
+default_prefix: core.nwb.behavior
 classes:
   SpatialSeries__data:
     name: SpatialSeries__data

@@ -57,3 +57,30 @@ flat_to_npytyping = {
     "isodatetime": "Datetime64",
     'AnyType': 'Any'
 }
+
+flat_to_python = {
+    "float" : "float",
+    "float32" : "float",
+    "double" : "double",
+    "float64" : "double",
+    "long" : "int",
+    "int64" : "int",
+    "int" : "int",
+    "int32" : "int",
+    "int16" : "int",
+    "short" : "int",
+    "int8" : "int",
+    "uint" : "int",
+    "uint32" : "int",
+    "uint16" : "int",
+    "uint8" : "int",
+    "uint64" : "int",
+    "numeric" : "float",
+    "text" : "string",
+    "utf" : "string",
+    "utf8" : "string",
+    "utf_8" : "string",
+    "ascii" : "string",
+    "bool" : "boolean",
+    "isodatetime" : "datetime"
+}

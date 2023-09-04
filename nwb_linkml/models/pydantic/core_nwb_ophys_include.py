@@ -12,9 +12,9 @@ else:
 
 
 from .hdmf_common_table import (
-    DynamicTableRegion,
     VectorData,
-    VectorIndex
+    VectorIndex,
+    DynamicTableRegion
 )
 
 from .nwb_language import (

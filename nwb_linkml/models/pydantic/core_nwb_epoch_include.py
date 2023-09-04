@@ -11,12 +11,12 @@ else:
     from typing_extensions import Literal
 
 
-from .hdmf_common_table import (
-    VectorIndex
-)
-
 from .core_nwb_base import (
     TimeSeriesReferenceVectorData
+)
+
+from .hdmf_common_table import (
+    VectorIndex
 )
 
 

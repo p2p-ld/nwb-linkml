@@ -4,7 +4,11 @@ imports:
 - hdmf-common.table
 - nwb.language
 - hdmf-experimental.experimental
-default_prefix: hdmf-experimental.experimental/
+prefixes:
+  hdmf-experimental.experimental:
+    prefix_prefix: hdmf-experimental.experimental
+    prefix_reference: https://example.com/hdmf-experimental.experimental/
+default_prefix: hdmf-experimental.experimental
 classes:
   EnumData:
     name: EnumData

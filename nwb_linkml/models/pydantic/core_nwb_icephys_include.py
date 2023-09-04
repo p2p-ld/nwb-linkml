@@ -11,16 +11,16 @@ else:
     from typing_extensions import Literal
 
 
-from .hdmf_common_table import (
-    DynamicTableRegion,
-    VectorIndex
-)
-
 from .core_nwb_icephys import (
+    IntracellularRecordingsTable,
     SequentialRecordingsTable,
     RepetitionsTable,
-    SimultaneousRecordingsTable,
-    IntracellularRecordingsTable
+    SimultaneousRecordingsTable
+)
+
+from .hdmf_common_table import (
+    VectorIndex,
+    DynamicTableRegion
 )
 
 from .core_nwb_base import (
@@ -45,7 +45,7 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
     Recorded voltage.
     """
     name: str = Field("data", const=True)
-    unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
+    unit: Optional[string] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
 class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
@@ -53,7 +53,7 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
     Stimulus current applied.
     """
     name: str = Field("data", const=True)
-    unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
+    unit: Optional[string] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
 class VoltageClampSeriesData(ConfiguredBaseModel):
@@ -61,7 +61,7 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
     Recorded current.
     """
     name: str = Field("data", const=True)
-    unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
+    unit: Optional[string] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
 class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
@@ -69,7 +69,7 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
     Fast capacitance, in farads.
     """
     name: str = Field("capacitance_fast", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""")
     
 
 class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
@@ -77,7 +77,7 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
     Slow capacitance, in farads.
     """
     name: str = Field("capacitance_slow", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""")
     
 
 class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
@@ -85,7 +85,7 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
     Resistance compensation bandwidth, in hertz.
     """
     name: str = Field("resistance_comp_bandwidth", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""")
     
 
 class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
@@ -93,7 +93,7 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
     Resistance compensation correction, in percent.
     """
     name: str = Field("resistance_comp_correction", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""")
     
 
 class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
@@ -101,7 +101,7 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
     Resistance compensation prediction, in percent.
     """
     name: str = Field("resistance_comp_prediction", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""")
     
 
 class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
@@ -109,7 +109,7 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
     Whole cell capacitance compensation, in farads.
     """
     name: str = Field("whole_cell_capacitance_comp", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""")
     
 
 class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
@@ -117,7 +117,7 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
     Whole cell series resistance compensation, in ohms.
     """
     name: str = Field("whole_cell_series_resistance_comp", const=True)
-    unit: Optional[str] = Field(None, description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""")
+    unit: Optional[string] = Field(None, description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""")
     
 
 class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
@@ -125,7 +125,7 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
     Stimulus voltage applied.
     """
     name: str = Field("data", const=True)
-    unit: Optional[str] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
+    unit: Optional[string] = Field(None, description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""")
     
 
 class SweepTableSeriesIndex(VectorIndex):
@@ -134,7 +134,7 @@ class SweepTableSeriesIndex(VectorIndex):
     """
     name: str = Field("series_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -148,7 +148,7 @@ class IntracellularStimuliTableStimulus(TimeSeriesReferenceVectorData):
     Column storing the reference to the recorded stimulus for the recording (rows).
     """
     name: str = Field("stimulus", const=True)
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -162,7 +162,7 @@ class IntracellularResponsesTableResponse(TimeSeriesReferenceVectorData):
     Column storing the reference to the recorded response for the recording (rows)
     """
     name: str = Field("response", const=True)
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -177,7 +177,7 @@ class SimultaneousRecordingsTableRecordings(DynamicTableRegion):
     """
     name: str = Field("recordings", const=True)
     table: Optional[IntracellularRecordingsTable] = Field(None, description="""Reference to the IntracellularRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
-    description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
+    description: Optional[string] = Field(None, description="""Description of what this table region points to.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -192,7 +192,7 @@ class SimultaneousRecordingsTableRecordingsIndex(VectorIndex):
     """
     name: str = Field("recordings_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -207,7 +207,7 @@ class SequentialRecordingsTableSimultaneousRecordings(DynamicTableRegion):
     """
     name: str = Field("simultaneous_recordings", const=True)
     table: Optional[SimultaneousRecordingsTable] = Field(None, description="""Reference to the SimultaneousRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
-    description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
+    description: Optional[string] = Field(None, description="""Description of what this table region points to.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -222,7 +222,7 @@ class SequentialRecordingsTableSimultaneousRecordingsIndex(VectorIndex):
     """
     name: str = Field("simultaneous_recordings_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -237,7 +237,7 @@ class RepetitionsTableSequentialRecordings(DynamicTableRegion):
     """
     name: str = Field("sequential_recordings", const=True)
     table: Optional[SequentialRecordingsTable] = Field(None, description="""Reference to the SequentialRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
-    description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
+    description: Optional[string] = Field(None, description="""Description of what this table region points to.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -252,7 +252,7 @@ class RepetitionsTableSequentialRecordingsIndex(VectorIndex):
     """
     name: str = Field("sequential_recordings_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -267,7 +267,7 @@ class ExperimentalConditionsTableRepetitions(DynamicTableRegion):
     """
     name: str = Field("repetitions", const=True)
     table: Optional[RepetitionsTable] = Field(None, description="""Reference to the RepetitionsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""")
-    description: Optional[str] = Field(None, description="""Description of what this table region points to.""")
+    description: Optional[string] = Field(None, description="""Description of what this table region points to.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
@@ -282,7 +282,7 @@ class ExperimentalConditionsTableRepetitionsIndex(VectorIndex):
     """
     name: str = Field("repetitions_index", const=True)
     target: Optional[VectorData] = Field(None, description="""Reference to the target dataset that this index applies to.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[string] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],

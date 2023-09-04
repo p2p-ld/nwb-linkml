@@ -12,13 +12,13 @@ else:
 
 
 from .core_nwb_retinotopy_include import (
-    ImagingRetinotopyAxis1PowerMap,
-    ImagingRetinotopyAxis1PhaseMap,
-    ImagingRetinotopyVasculatureImage,
     ImagingRetinotopySignMap,
+    ImagingRetinotopyFocalDepthImage,
     ImagingRetinotopyAxis2PowerMap,
+    ImagingRetinotopyVasculatureImage,
     ImagingRetinotopyAxis2PhaseMap,
-    ImagingRetinotopyFocalDepthImage
+    ImagingRetinotopyAxis1PowerMap,
+    ImagingRetinotopyAxis1PhaseMap
 )
 
 from .core_nwb_base import (

@@ -11,9 +11,13 @@ else:
     from typing_extensions import Literal
 
 
-from .hdmf_common_table import (
-    DynamicTable,
-    VectorData
+from .core_nwb_base_include import (
+    ImageArray,
+    TimeSeriesStartingTime,
+    ImageReferencesArray,
+    ImagesOrderOfImages,
+    TimeSeriesData,
+    TimeSeriesSync
 )
 
 from .hdmf_common_base import (
@@ -21,13 +25,9 @@ from .hdmf_common_base import (
     Container
 )
 
-from .core_nwb_base_include import (
-    TimeSeriesStartingTime,
-    ImageArray,
-    ImageReferencesArray,
-    TimeSeriesSync,
-    ImagesOrderOfImages,
-    TimeSeriesData
+from .hdmf_common_table import (
+    VectorData,
+    DynamicTable
 )
 
 
