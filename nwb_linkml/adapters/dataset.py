@@ -51,6 +51,30 @@ class DatasetAdapter(ClassAdapter):
             )
             res = BuildResult(slots = [this_slot])
 
+        # if the scalar-valued class has attributes, append a
+        # 'value' slot that holds the (scalar) value of the dataset
+        elif self.cls.neurodata_type_inc != 'VectorData' and \
+             not self.cls.neurodata_type_inc and \
+             self.cls.attributes and \
+             not self.cls.dims and \
+             not self.cls.shape and \
+             self.cls.name:
+            self._handlers.append('scalar_class')
+
+            # quantity (including requirement) is handled by the
+            # parent slot - the value is required if the value class is
+            # supplied.
+            # ie.
+            # Optional[ScalarClass] = None
+            # class ScalarClass:
+            #     value: dtype
+            value_slot = SlotDefinition(
+                name='value',
+                range=self.handle_dtype(self.cls.dtype),
+                required=True
+            )
+            res.classes[0].attributes['value'] = value_slot
+
         return res
 
 

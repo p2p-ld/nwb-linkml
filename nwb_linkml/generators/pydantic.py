@@ -25,7 +25,7 @@ from nwb_linkml.maps.dtype import flat_to_npytyping
 from linkml.generators import PydanticGenerator
 from linkml_runtime.linkml_model.meta import (
     Annotation,
-    ClassDefinition,
+    ClassDefinition, ClassDefinitionName,
     SchemaDefinition,
     SlotDefinition,
 SlotDefinitionName,
@@ -219,6 +219,26 @@ class NWBPydanticGenerator(PydanticGenerator):
         return imports
 
 
+    def _get_class_imports(
+            self,
+            cls:ClassDefinition,
+            sv:SchemaView,
+            all_classes:dict[ClassDefinitionName, ClassDefinition]) -> List[str]:
+        """Get the imports needed for a single class"""
+        needed_classes = []
+        needed_classes.append(cls.is_a)
+        # get needed classes used as ranges in class attributes
+        for slot_name in sv.class_slots(cls.name):
+            slot = deepcopy(sv.induced_slot(slot_name, cls.name))
+            if slot.range in all_classes:
+                needed_classes.append(slot.range)
+            # handle when a range is a union of classes
+            if slot.any_of:
+                for any_slot_range in slot.any_of:
+                    if any_slot_range.range in all_classes:
+                        needed_classes.append(any_slot_range.range)
+
+        return needed_classes
 
     def _get_imports(self, sv:SchemaView) -> Dict[str, List[str]]:
         all_classes = sv.all_classes(imports=True)
@@ -227,15 +247,10 @@ class NWBPydanticGenerator(PydanticGenerator):
         # find needed classes - is_a and slot ranges
 
         for clsname, cls in local_classes.items():
-            needed_classes.append(cls.is_a)
-            for slot_name, slot in cls.attributes.items():
-                if slot.range in all_classes:
-                    needed_classes.append(slot.range)
-                if slot.any_of:
-                    for any_slot_range in slot.any_of:
-                        if any_slot_range.range in all_classes:
-                            needed_classes.append(any_slot_range.range)
+            # get imports for this class
+            needed_classes.extend(self._get_class_imports(cls, sv, all_classes))
 
+        # remove duplicates and arraylikes
         needed_classes = [cls for cls in set(needed_classes) if cls is not None and cls != 'Arraylike']
         needed_classes = [cls for cls in needed_classes if sv.get_class(cls).is_a != 'Arraylike']
 
@@ -251,7 +266,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             imported_classes.extend(classes)
 
         module_classes = [c for c in list(module_classes) if c.is_a != 'Arraylike']
-        imported_classes = [c for c in imported_classes if sv.get_class(c).is_a != 'Arraylike']
+        imported_classes = [c for c in imported_classes if sv.get_class(c) and sv.get_class(c).is_a != 'Arraylike']
 
         sorted_classes = self.sort_classes(module_classes, imported_classes)
         self.sorted_class_names = [camelcase(cname) for cname in imported_classes]
