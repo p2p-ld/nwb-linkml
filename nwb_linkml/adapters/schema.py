@@ -35,7 +35,7 @@ class SchemaAdapter(Adapter):
         None,
         description="""String of containing namespace. Populated by NamespacesAdapter""")
     split: bool = Field(
-        True,
+        False,
         description="Split anonymous subclasses into a separate schema file"
    )
     _created_classes: List[Type[Group | Dataset]] = PrivateAttr(default_factory=list)
