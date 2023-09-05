@@ -1,13 +1,15 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
+import pdb
 from typing import Optional, List
+import warnings
 
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
 from pydantic import PrivateAttr
 
 from nwb_schema_language import Dataset, ReferenceDtype, CompoundDtype, DTypeType
-from nwb_linkml.adapters.classes import ClassAdapter
+from nwb_linkml.adapters.classes import ClassAdapter, camel_to_snake
 from nwb_linkml.adapters.adapter import BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 
@@ -21,10 +23,12 @@ class DatasetAdapter(ClassAdapter):
     def build(self) -> BuildResult:
         res = self.build_base()
 
+        res = self.drop_dynamic_table(res)
         res = self.handle_arraylike(res, self.cls, self._get_full_name())
         res = self.handle_1d_vector(res)
         res = self.handle_listlike(res)
         res = self.handle_scalar(res)
+
 
         if len(self._handlers) > 1:
             raise RuntimeError(f"Only one handler should have been triggered, instead triggered {self._handlers}")
@@ -171,7 +175,8 @@ class DatasetAdapter(ClassAdapter):
             return res
         elif not all((dataset.dims, dataset.shape)):
             # need to have both if one is present!
-            raise ValueError(f"A dataset needs both dims and shape to define an arraylike object")
+            warnings.warn(f"A dataset needs both dims and shape to define an arraylike object. This is allowed for compatibility with some badly formatted NWB files, but should in general be avoided. Treating like we dont have an array")
+            return res
 
         # Special cases
         if dataset.neurodata_type_inc == 'VectorData':
@@ -193,6 +198,9 @@ class DatasetAdapter(ClassAdapter):
             if isinstance(inner_dim, list):
                 # list of lists
                 dims_shape.extend([(dim, shape) for dim, shape in zip(inner_dim, inner_shape)])
+            elif isinstance(inner_shape, list):
+                # Some badly formatted schema will have the shape be a LoL but the dims won't be...
+                dims_shape.extend([(inner_dim, shape) for shape in inner_shape])
             else:
                 # single-layer list
                 dims_shape.append((inner_dim, inner_shape))
@@ -239,7 +247,7 @@ class DatasetAdapter(ClassAdapter):
                 range=dtype
             ))
 
-        # and then the class is just a subclass of `Arraylike` (which is imported by default from `nwb.language.yaml`)
+        # and then the class is just a subclass of `Arraylist` (which is imported by default from `nwb.language.yaml`)
         if name:
             pass
         elif dataset.neurodata_type_def:
@@ -268,3 +276,46 @@ class DatasetAdapter(ClassAdapter):
         self._handlers.append('arraylike')
 
         return res
+
+    def drop_dynamic_table(self, res:BuildResult) -> BuildResult:
+        """
+        DynamicTables in hdmf are so special-cased that we have to just special-case them ourselves.
+
+        Typically they include a '*' quantitied, unnamed VectorData object to contain arbitrary columns,
+        this would normally get converted to its own container class, but since they're unnamed they conflict with
+        names in the containing scope.
+
+        We just convert them into multivalued slots and don't use them
+        """
+        if self.cls.name is None and \
+            self.cls.neurodata_type_def is None and \
+            self.cls.neurodata_type_inc in ('VectorIndex', 'VectorData') and \
+            self.cls.quantity == '*':
+            self._handlers.append('dynamic_table')
+            this_slot = SlotDefinition(
+                name=camel_to_snake(self.cls.neurodata_type_inc),
+                description=self.cls.doc,
+                range=self.cls.neurodata_type_inc,
+                required=False,
+                multivalued=True
+            )
+            # No need to make a class for us, so we replace the existing build results
+            res = BuildResult(slots=[this_slot])
+            return res
+        elif self.cls.name is None and \
+            self.cls.neurodata_type_def is None and \
+            self.cls.neurodata_type_inc and \
+            self.cls.quantity in ('*', '+'):
+            self._handlers.append('generic_container')
+            this_slot = SlotDefinition(
+                name=camel_to_snake(self.cls.neurodata_type_inc),
+                description=self.cls.doc,
+                range=self.cls.neurodata_type_inc,
+                **QUANTITY_MAP[self.cls.quantity]
+            )
+            # No need to make a class for us, so we replace the existing build results
+            res = BuildResult(slots=[this_slot])
+            return res
+        else:
+            return res
+

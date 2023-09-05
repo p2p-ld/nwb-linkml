@@ -32,9 +32,9 @@ class Device(NWBContainer):
     """
     Metadata about a data acquisition device, e.g., recording system, electrode, microscope.
     """
-    name: str = Field(...)
-    description: Optional[str] = Field(None, description="""Description of the device (e.g., model, firmware version, processing software version, etc.) as free-form text.""")
-    manufacturer: Optional[str] = Field(None, description="""The name of the manufacturer of the device.""")
+    name:str= Field(...)
+    description:Optional[str]= Field(None, description="""Description of the device (e.g., model, firmware version, processing software version, etc.) as free-form text.""")
+    manufacturer:Optional[str]= Field(None, description="""The name of the manufacturer of the device.""")
     
 
 

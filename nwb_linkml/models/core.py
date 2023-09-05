@@ -11,6 +11,132 @@ else:
     from typing_extensions import Literal
 
 
+from .core_nwb_retinotopy import (
+    ImagingRetinotopy
+)
+
+from .core_nwb_base import (
+    NWBData,
+    TimeSeriesReferenceVectorData,
+    Image,
+    ImageReferences,
+    NWBContainer,
+    NWBDataInterface,
+    TimeSeries,
+    ProcessingModule,
+    Images
+)
+
+from .hdmf_common_table import (
+    VectorData,
+    VectorIndex,
+    ElementIdentifiers,
+    DynamicTableRegion,
+    DynamicTable,
+    AlignedDynamicTable
+)
+
+from .hdmf_common_base import (
+    Data,
+    Container,
+    SimpleMultiContainer
+)
+
+from .core_nwb_ophys import (
+    OnePhotonSeries,
+    TwoPhotonSeries,
+    RoiResponseSeries,
+    DfOverF,
+    Fluorescence,
+    ImageSegmentation,
+    PlaneSegmentation,
+    ImagingPlane,
+    OpticalChannel,
+    MotionCorrection,
+    CorrectedImageStack
+)
+
+from .core_nwb_device import (
+    Device
+)
+
+from .core_nwb_image import (
+    GrayscaleImage,
+    RGBImage,
+    RGBAImage,
+    ImageSeries,
+    ImageMaskSeries,
+    OpticalSeries,
+    IndexSeries
+)
+
+from .core_nwb_ogen import (
+    OptogeneticSeries,
+    OptogeneticStimulusSite
+)
+
+from .core_nwb_icephys import (
+    PatchClampSeries,
+    CurrentClampSeries,
+    IZeroClampSeries,
+    CurrentClampStimulusSeries,
+    VoltageClampSeries,
+    VoltageClampStimulusSeries,
+    IntracellularElectrode,
+    SweepTable,
+    IntracellularElectrodesTable,
+    IntracellularStimuliTable,
+    IntracellularResponsesTable,
+    IntracellularRecordingsTable,
+    SimultaneousRecordingsTable,
+    SequentialRecordingsTable,
+    RepetitionsTable,
+    ExperimentalConditionsTable
+)
+
+from .core_nwb_ecephys import (
+    ElectricalSeries,
+    SpikeEventSeries,
+    FeatureExtraction,
+    EventDetection,
+    EventWaveform,
+    FilteredEphys,
+    LFP,
+    ElectrodeGroup,
+    ClusterWaveforms,
+    Clustering
+)
+
+from .core_nwb_behavior import (
+    SpatialSeries,
+    BehavioralEpochs,
+    BehavioralEvents,
+    BehavioralTimeSeries,
+    PupilTracking,
+    EyeTracking,
+    CompassDirection,
+    Position
+)
+
+from .core_nwb_misc import (
+    AbstractFeatureSeries,
+    AnnotationSeries,
+    IntervalSeries,
+    DecompositionSeries,
+    Units
+)
+
+from .core_nwb_file import (
+    ScratchData,
+    NWBFile,
+    LabMetaData,
+    Subject
+)
+
+from .core_nwb_epoch import (
+    TimeIntervals
+)
+
 
 metamodel_version = "None"
 version = "2.6.0-alpha"

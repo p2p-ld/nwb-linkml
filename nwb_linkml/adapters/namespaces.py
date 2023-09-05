@@ -6,9 +6,12 @@ for extracting information and generating translated schema
 """
 import pdb
 from typing import List, Optional
+from pathlib import Path
 from pydantic import BaseModel, Field, validator, PrivateAttr
 from pprint import pformat
 from linkml_runtime.linkml_model import SchemaDefinition
+from linkml_runtime.dumpers import yaml_dumper
+
 
 from nwb_schema_language import Namespaces
 
@@ -47,13 +50,15 @@ class NamespacesAdapter(Adapter):
 
         # now generate the top-level namespaces that import everything
         for ns in self.namespaces.namespaces:
-            ns_schemas = [sch for sch in self.schemas if sch.namespace == ns.name]
+            ns_schemas = [sch.name for sch in self.schemas if sch.namespace == ns.name]
+            # also add imports bc, well, we need them
+            ns_schemas.extend([ns.name for imported in self.imported for ns in imported.namespaces.namespaces])
             ns_schema = SchemaDefinition(
                 name = ns.name,
                 id = ns.name,
                 description = ns.doc,
                 version = ns.version,
-                imports=[sch.name for sch in ns_schemas],
+                imports=ns_schemas,
                 annotations=[{'tag': 'namespace', 'value': True}]
             )
             sch_result.schemas.append(ns_schema)
@@ -91,7 +96,7 @@ class NamespacesAdapter(Adapter):
             # find which namespace imports this schema file
             for ns in self.namespaces.namespaces:
                 sources = [sch.source for sch in ns.schema_]
-                if sch_name in sources:
+                if sch_name in sources or sch.path.stem in sources:
                     sch.namespace = ns.name
                     break
 
@@ -147,5 +152,15 @@ class NamespacesAdapter(Adapter):
             imported.populate_imports()
 
         self._imports_populated = True
+
+    def to_yaml(self, base_dir:Path):
+        schemas = self.build().schemas
+        base_dir = Path(base_dir)
+
+        base_dir.mkdir(exist_ok=True)
+
+        for schema in schemas:
+            output_file = base_dir / (schema.name + '.yaml')
+            yaml_dumper.dump(schema, output_file)
 
 

@@ -3,7 +3,6 @@ id: core.nwb.device
 imports:
 - core.nwb.base
 - nwb.language
-- core.nwb.device
 default_prefix: core.nwb.device/
 classes:
   Device:

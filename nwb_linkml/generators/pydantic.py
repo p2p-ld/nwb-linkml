@@ -17,7 +17,11 @@ The `serialize` method
 
 """
 import pdb
+from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Dict, Set, Tuple, Optional
+import os, sys
+from types import ModuleType
 from copy import deepcopy
 import warnings
 
@@ -34,6 +38,7 @@ ElementName
 )
 from linkml_runtime.utils.formatutils import camelcase, underscore
 from linkml_runtime.utils.schemaview import SchemaView
+from linkml_runtime.utils.compile_python import file_text
 from jinja2 import Template
 
 
@@ -128,12 +133,13 @@ class {{ c.name }}
     \"\"\"
     {%- endif %}
     {% for attr in c.attributes.values() if c.attributes -%}
-    {{attr.name}}: {{ attr.annotations['python_range'].value }} = Field(
+    {{attr.name}}: {%- if attr.equals_string -%}
+        Literal[{{ predefined_slot_values[c.name][attr.name] }}]
+        {%- else -%}
+        {{ attr.annotations['python_range'].value }}
+        {%- endif -%} = Field(
     {%- if predefined_slot_values[c.name][attr.name] -%}
         {{ predefined_slot_values[c.name][attr.name] }}
-        {%- if attr.equals_string -%}
-        , const=True
-        {%- endif -%} 
     {%- elif attr.required -%}
         ...
     {%- else -%}
@@ -169,10 +175,15 @@ class {{ c.name }}
     return template
 
 
-
+@dataclass
 class NWBPydanticGenerator(PydanticGenerator):
 
     SKIP_ENUM=('FlatDType',)
+    # SKIP_SLOTS=('VectorData',)
+    SKIP_SLOTS=('',)
+    SKIP_CLASSES=('',)
+    # SKIP_CLASSES=('VectorData','VectorIndex')
+    split:bool=True
 
     def _locate_imports(
             self,
@@ -229,6 +240,8 @@ class NWBPydanticGenerator(PydanticGenerator):
         needed_classes.append(cls.is_a)
         # get needed classes used as ranges in class attributes
         for slot_name in sv.class_slots(cls.name):
+            if slot_name in self.SKIP_SLOTS:
+                continue
             slot = deepcopy(sv.induced_slot(slot_name, cls.name))
             if slot.range in all_classes:
                 needed_classes.append(slot.range)
@@ -316,7 +329,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             else:
                 shape_part = "*"
             # do this cheaply instead of using regex because i want to see if this works at all first...
-            name_part = attr.name.replace(',', '_').replace(' ', '_').replace('__', '_')
+            name_part = attr.name.replace(',', '_').replace(' ', '_').replace('__', '_').replace('|','_')
 
             dim_pieces.append(' '.join([shape_part, name_part]))
 
@@ -371,6 +384,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         Modified from original to allow for imported classes
         """
         clist = list(clist)
+        clist = [c for c in clist if c.name not in self.SKIP_CLASSES]
         slist = []  # sorted
         while len(clist) > 0:
             can_add = False
@@ -454,13 +468,24 @@ class NWBPydanticGenerator(PydanticGenerator):
         # filter skipped enums
         enums = {k:v for k,v in enums.items() if k not in self.SKIP_ENUM}
 
-        # import from local references, rather than serializing every class in every file
-        if 'namespace' in schema.annotations.keys() and schema.annotations['namespace']['value'] == 'True':
-            imports = self._get_namespace_imports(sv)
-        else:
-            imports = self._get_imports(sv)
+        if self.split:
+            # import from local references, rather than serializing every class in every file
+            if 'namespace' in schema.annotations.keys() and schema.annotations['namespace']['value'] == 'True':
+                imports = self._get_namespace_imports(sv)
+            else:
+                imports = self._get_imports(sv)
 
-        sorted_classes = self._get_classes(sv, imports)
+            sorted_classes = self._get_classes(sv, imports)
+        else:
+            sorted_classes = self.sort_classes(list(sv.all_classes().values()), [])
+            imports = {}
+
+            # Don't want to generate classes when class_uri is linkml:Any, will
+            # just swap in typing.Any instead down below
+            sorted_classes = [c for c in sorted_classes if c.class_uri != "linkml:Any"]
+            self.sorted_class_names = [camelcase(c.name) for c in sorted_classes]
+
+
 
         for class_original in sorted_classes:
             # Generate class definition
@@ -479,6 +504,8 @@ class NWBPydanticGenerator(PydanticGenerator):
 
             class_name = class_original.name
             for sn in sv.class_slots(class_name):
+                if sn in self.SKIP_SLOTS:
+                    continue
                 # TODO: fix runtime, copy should not be necessary
                 s = deepcopy(sv.induced_slot(sn, class_name))
                 # logging.error(f'Induced slot {class_name}.{sn} == {s.name} {s.range}')
@@ -537,3 +564,53 @@ class NWBPydanticGenerator(PydanticGenerator):
             class_isa_plus_mixins=self.get_class_isa_plus_mixins(sorted_classes),
         )
         return code
+
+    def compile_module(self, module_path:Path=None, **kwargs) -> ModuleType:
+        """
+        Compiles generated python code to a module
+        :return:
+        """
+        pycode = self.serialize(**kwargs)
+        if module_path is not None:
+            module_path = Path(module_path)
+            init_file = module_path / '__init__.py'
+            with open(init_file, 'w') as ifile:
+                ifile.write(' ')
+
+        try:
+            return compile_python(pycode, module_path)
+        except NameError as e:
+            raise e
+
+def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:
+    """
+    Compile the text or file and return the resulting module
+    @param text_or_fn: Python text or file name that references python file
+    @param package_path: Root package path.  If omitted and we've got a python file, the package is the containing
+    directory
+    @return: Compiled module
+    """
+    python_txt = file_text(text_or_fn)
+    if package_path is None and python_txt != text_or_fn:
+        package_path = Path(text_or_fn)
+    spec = compile(python_txt, '<string>', 'exec')
+    module = ModuleType('test')
+    # if package_path:
+    #     if package_path.is_absolute():
+    #         module.__package__ = str(package_path)
+    #     else:
+    #         package_path_abs = os.path.join(os.getcwd(), package_path)
+    #         # We have to calculate the path to expected path relative to the current working directory
+    #         for path in sys.path:
+    #             if package_path.startswith(path):
+    #                 path_from_tests_parent = os.path.relpath(package_path, path)
+    #                 break
+    #             if package_path_abs.startswith(path):
+    #                 path_from_tests_parent = os.path.relpath(package_path_abs, path)
+    #                 break
+    #         else:
+    #             path_from_tests_parent = os.path.relpath(package_path, os.path.join(os.getcwd(), '..'))
+    #         module.__package__ = os.path.dirname(os.path.relpath(path_from_tests_parent, os.getcwd())).replace(os.path.sep, '.')
+    # sys.modules[module.__name__] = module
+    exec(spec, module.__dict__)
+    return module

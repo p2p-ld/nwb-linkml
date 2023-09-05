@@ -11,6 +11,29 @@ else:
     from typing_extensions import Literal
 
 
+from .hdmf_experimental_resources import (
+    HERD
+)
+
+from .hdmf_common_base import (
+    Data,
+    Container,
+    SimpleMultiContainer
+)
+
+from .hdmf_experimental_experimental import (
+    EnumData
+)
+
+from .hdmf_common_table import (
+    VectorData,
+    VectorIndex,
+    ElementIdentifiers,
+    DynamicTableRegion,
+    DynamicTable,
+    AlignedDynamicTable
+)
+
 
 metamodel_version = "None"
 version = "0.5.0"

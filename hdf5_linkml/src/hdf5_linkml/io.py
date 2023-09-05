@@ -19,7 +19,7 @@ class H5File:
         """
         pass
 
-    def translate_schema(self, dict) -> SchemaDefinition:
+    def translate_schema(self, schema: List[dict]) -> List[SchemaDefinition]:
         """
         Optionally translate schema from source language into LinkML
 

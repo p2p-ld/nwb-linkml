@@ -3,7 +3,6 @@ id: hdmf-experimental.experimental
 imports:
 - hdmf-common.table
 - nwb.language
-- hdmf-experimental.experimental
 default_prefix: hdmf-experimental.experimental/
 classes:
   EnumData:

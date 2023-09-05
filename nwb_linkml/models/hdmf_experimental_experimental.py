@@ -32,15 +32,15 @@ class EnumData(VectorData):
     """
     Data that come from a fixed set of values. A data value of i corresponds to the i-th value in the VectorData referenced by the 'elements' attribute.
     """
-    name: str = Field(...)
-    elements: Optional[VectorData] = Field(None, description="""Reference to the VectorData object that contains the enumerable elements""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
-    array: Optional[Union[
+    name:str= Field(...)
+    elements:Optional[VectorData]= Field(None, description="""Reference to the VectorData object that contains the enumerable elements""")
+    description:Optional[str]= Field(None, description="""Description of what these vectors represent.""")
+    array:Optional[Union[
         NDArray[Shape["* dim0"], Any],
         NDArray[Shape["* dim0, * dim1"], Any],
         NDArray[Shape["* dim0, * dim1, * dim2"], Any],
         NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any]
-    ]] = Field(None)
+    ]]= Field(None)
     
 
 

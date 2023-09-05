@@ -32,13 +32,13 @@ class HERD(Container):
     """
     HDMF External Resources Data Structure. A set of six tables for tracking external resource references in a file or across multiple files.
     """
-    name: str = Field(...)
-    keys: List[Any] = Field(default_factory=list, description="""A table for storing user terms that are used to refer to external resources.""")
-    files: List[Any] = Field(default_factory=list, description="""A table for storing object ids of files used in external resources.""")
-    entities: List[Any] = Field(default_factory=list, description="""A table for mapping user terms (i.e., keys) to resource entities.""")
-    objects: List[Any] = Field(default_factory=list, description="""A table for identifying which objects in a file contain references to external resources.""")
-    object_keys: List[Any] = Field(default_factory=list, description="""A table for identifying which objects use which keys.""")
-    entity_keys: List[Any] = Field(default_factory=list, description="""A table for identifying which keys use which entity.""")
+    name:str= Field(...)
+    keys:List[Any]= Field(default_factory=list, description="""A table for storing user terms that are used to refer to external resources.""")
+    files:List[Any]= Field(default_factory=list, description="""A table for storing object ids of files used in external resources.""")
+    entities:List[Any]= Field(default_factory=list, description="""A table for mapping user terms (i.e., keys) to resource entities.""")
+    objects:List[Any]= Field(default_factory=list, description="""A table for identifying which objects in a file contain references to external resources.""")
+    object_keys:List[Any]= Field(default_factory=list, description="""A table for identifying which objects use which keys.""")
+    entity_keys:List[Any]= Field(default_factory=list, description="""A table for identifying which keys use which entity.""")
     
 
 

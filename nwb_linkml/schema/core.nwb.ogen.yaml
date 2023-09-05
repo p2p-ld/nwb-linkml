@@ -4,7 +4,6 @@ imports:
 - core.nwb.base
 - core.nwb.device
 - nwb.language
-- core.nwb.ogen
 default_prefix: core.nwb.ogen/
 classes:
   OptogeneticSeries:

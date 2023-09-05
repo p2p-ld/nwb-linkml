@@ -130,14 +130,37 @@ class ClassAdapter(Adapter):
         # return self._get_full_name()
         name = None
         if self.cls.neurodata_type_def:
-            #name = camel_to_snake(self.cls.neurodata_type_def)
+            # name = camel_to_snake(self.cls.neurodata_type_def)
             name = self.cls.neurodata_type_def
         elif self.cls.name is not None:
             # we do have a unique name
             name = self.cls.name
         elif self.cls.neurodata_type_inc:
-            #name = camel_to_snake(self.cls.neurodata_type_inc)
+            # name = camel_to_snake(self.cls.neurodata_type_inc)
             name = self.cls.neurodata_type_inc
+
+        if name is None:
+            raise ValueError(f'Class has no name!: {self.cls}')
+
+        return name
+
+    def _get_slot_name(self) -> str:
+        """
+        Get the name to use as the name when this is a subclass used as a slot,
+        used to dodge name overlaps by snake-casing!
+        again distinct from the actual name of the instantiated object
+        """
+        # return self._get_full_name()
+        name = None
+        if self.cls.neurodata_type_def:
+            name = camel_to_snake(self.cls.neurodata_type_def)
+            # name = self.cls.neurodata_type_def
+        elif self.cls.name is not None:
+            # we do have a unique name
+            name = self.cls.name
+        elif self.cls.neurodata_type_inc:
+            name = camel_to_snake(self.cls.neurodata_type_inc)
+            # name = self.cls.neurodata_type_inc
 
         if name is None:
             raise ValueError(f'Class has no name!: {self.cls}')
@@ -198,7 +221,7 @@ class ClassAdapter(Adapter):
         If we are a child class, we make a slot so our parent can refer to us
         """
         return SlotDefinition(
-            name=self._get_attr_name(),
+            name=self._get_slot_name(),
             description=self.cls.doc,
             range=self._get_full_name(),
             **QUANTITY_MAP[self.cls.quantity]

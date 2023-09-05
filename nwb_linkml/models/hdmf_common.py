@@ -11,6 +11,25 @@ else:
     from typing_extensions import Literal
 
 
+from .hdmf_common_sparse import (
+    CSRMatrix
+)
+
+from .hdmf_common_base import (
+    Data,
+    Container,
+    SimpleMultiContainer
+)
+
+from .hdmf_common_table import (
+    VectorData,
+    VectorIndex,
+    ElementIdentifiers,
+    DynamicTableRegion,
+    DynamicTable,
+    AlignedDynamicTable
+)
+
 
 metamodel_version = "None"
 version = "1.8.0"

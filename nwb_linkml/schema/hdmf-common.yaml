@@ -1,4 +1,8 @@
 name: hdmf-common
+annotations:
+  namespace:
+    tag: namespace
+    value: 'True'
 description: Common data structures provided by HDMF
 id: hdmf-common
 version: 1.8.0

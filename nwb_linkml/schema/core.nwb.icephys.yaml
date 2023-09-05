@@ -5,8 +5,6 @@ imports:
 - core.nwb.device
 - hdmf-common.table
 - nwb.language
-- core.nwb.icephys.include
-- core.nwb.icephys
 default_prefix: core.nwb.icephys/
 classes:
   PatchClampSeries:
@@ -77,6 +75,27 @@ classes:
         range: float32
         required: false
     tree_root: true
+  CurrentClampSeries__data:
+    name: CurrentClampSeries__data
+    description: Recorded voltage.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. which is
+          fixed to 'volts'. Actual stored values are not necessarily stored in these
+          units. To access the data in these units, multiply 'data' by 'conversion'
+          and add 'offset'.
+        range: text
+      value:
+        name: value
+        range: AnyType
+        required: true
   IZeroClampSeries:
     name: IZeroClampSeries
     description: Voltage data from an intracellular recording when all current and
@@ -129,6 +148,27 @@ classes:
         range: CurrentClampStimulusSeries__data
         required: true
     tree_root: true
+  CurrentClampStimulusSeries__data:
+    name: CurrentClampStimulusSeries__data
+    description: Stimulus current applied.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. which is
+          fixed to 'amperes'. Actual stored values are not necessarily stored in these
+          units. To access the data in these units, multiply 'data' by 'conversion'
+          and add 'offset'.
+        range: text
+      value:
+        name: value
+        range: AnyType
+        required: true
   VoltageClampSeries:
     name: VoltageClampSeries
     description: Current data from an intracellular voltage-clamp recording. A corresponding
@@ -189,6 +229,158 @@ classes:
         range: VoltageClampSeries__whole_cell_series_resistance_comp
         required: false
     tree_root: true
+  VoltageClampSeries__data:
+    name: VoltageClampSeries__data
+    description: Recorded current.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. which is
+          fixed to 'amperes'. Actual stored values are not necessarily stored in these
+          units. To access the data in these units, multiply 'data' by 'conversion'
+          and add 'offset'.
+        range: text
+      value:
+        name: value
+        range: AnyType
+        required: true
+  VoltageClampSeries__capacitance_fast:
+    name: VoltageClampSeries__capacitance_fast
+    description: Fast capacitance, in farads.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(capacitance_fast)
+        range: string
+        required: true
+        equals_string: capacitance_fast
+      unit:
+        name: unit
+        description: Unit of measurement for capacitance_fast, which is fixed to 'farads'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
+  VoltageClampSeries__capacitance_slow:
+    name: VoltageClampSeries__capacitance_slow
+    description: Slow capacitance, in farads.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(capacitance_slow)
+        range: string
+        required: true
+        equals_string: capacitance_slow
+      unit:
+        name: unit
+        description: Unit of measurement for capacitance_fast, which is fixed to 'farads'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
+  VoltageClampSeries__resistance_comp_bandwidth:
+    name: VoltageClampSeries__resistance_comp_bandwidth
+    description: Resistance compensation bandwidth, in hertz.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(resistance_comp_bandwidth)
+        range: string
+        required: true
+        equals_string: resistance_comp_bandwidth
+      unit:
+        name: unit
+        description: Unit of measurement for resistance_comp_bandwidth, which is fixed
+          to 'hertz'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
+  VoltageClampSeries__resistance_comp_correction:
+    name: VoltageClampSeries__resistance_comp_correction
+    description: Resistance compensation correction, in percent.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(resistance_comp_correction)
+        range: string
+        required: true
+        equals_string: resistance_comp_correction
+      unit:
+        name: unit
+        description: Unit of measurement for resistance_comp_correction, which is
+          fixed to 'percent'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
+  VoltageClampSeries__resistance_comp_prediction:
+    name: VoltageClampSeries__resistance_comp_prediction
+    description: Resistance compensation prediction, in percent.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(resistance_comp_prediction)
+        range: string
+        required: true
+        equals_string: resistance_comp_prediction
+      unit:
+        name: unit
+        description: Unit of measurement for resistance_comp_prediction, which is
+          fixed to 'percent'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
+  VoltageClampSeries__whole_cell_capacitance_comp:
+    name: VoltageClampSeries__whole_cell_capacitance_comp
+    description: Whole cell capacitance compensation, in farads.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(whole_cell_capacitance_comp)
+        range: string
+        required: true
+        equals_string: whole_cell_capacitance_comp
+      unit:
+        name: unit
+        description: Unit of measurement for whole_cell_capacitance_comp, which is
+          fixed to 'farads'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
+  VoltageClampSeries__whole_cell_series_resistance_comp:
+    name: VoltageClampSeries__whole_cell_series_resistance_comp
+    description: Whole cell series resistance compensation, in ohms.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(whole_cell_series_resistance_comp)
+        range: string
+        required: true
+        equals_string: whole_cell_series_resistance_comp
+      unit:
+        name: unit
+        description: Unit of measurement for whole_cell_series_resistance_comp, which
+          is fixed to 'ohms'.
+        range: text
+      value:
+        name: value
+        range: float32
+        required: true
   VoltageClampStimulusSeries:
     name: VoltageClampStimulusSeries
     description: Stimulus voltage applied during a voltage clamp recording.
@@ -205,6 +397,27 @@ classes:
         range: VoltageClampStimulusSeries__data
         required: true
     tree_root: true
+  VoltageClampStimulusSeries__data:
+    name: VoltageClampStimulusSeries__data
+    description: Stimulus voltage applied.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. which is
+          fixed to 'volts'. Actual stored values are not necessarily stored in these
+          units. To access the data in these units, multiply 'data' by 'conversion'
+          and add 'offset'.
+        range: text
+      value:
+        name: value
+        range: AnyType
+        required: true
   IntracellularElectrode:
     name: IntracellularElectrode
     description: An intracellular electrode and its metadata.
@@ -294,6 +507,17 @@ classes:
         range: SweepTable__series_index
         required: true
     tree_root: true
+  SweepTable__series_index:
+    name: SweepTable__series_index
+    description: Index for series.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(series_index)
+        range: string
+        required: true
+        equals_string: series_index
   IntracellularElectrodesTable:
     name: IntracellularElectrodesTable
     description: Table for storing intracellular electrode related metadata.
@@ -334,6 +558,18 @@ classes:
         range: IntracellularStimuliTable__stimulus
         required: true
     tree_root: true
+  IntracellularStimuliTable__stimulus:
+    name: IntracellularStimuliTable__stimulus
+    description: Column storing the reference to the recorded stimulus for the recording
+      (rows).
+    is_a: TimeSeriesReferenceVectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(stimulus)
+        range: string
+        required: true
+        equals_string: stimulus
   IntracellularResponsesTable:
     name: IntracellularResponsesTable
     description: Table for storing intracellular response related metadata.
@@ -355,6 +591,18 @@ classes:
         range: IntracellularResponsesTable__response
         required: true
     tree_root: true
+  IntracellularResponsesTable__response:
+    name: IntracellularResponsesTable__response
+    description: Column storing the reference to the recorded response for the recording
+      (rows)
+    is_a: TimeSeriesReferenceVectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(response)
+        range: string
+        required: true
+        equals_string: response
   IntracellularRecordingsTable:
     name: IntracellularRecordingsTable
     description: A table to group together a stimulus and response from a single electrode
@@ -427,6 +675,35 @@ classes:
         range: SimultaneousRecordingsTable__recordings_index
         required: true
     tree_root: true
+  SimultaneousRecordingsTable__recordings:
+    name: SimultaneousRecordingsTable__recordings
+    description: A reference to one or more rows in the IntracellularRecordingsTable
+      table.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(recordings)
+        range: string
+        required: true
+        equals_string: recordings
+      table:
+        name: table
+        description: Reference to the IntracellularRecordingsTable table that this
+          table region applies to. This specializes the attribute inherited from DynamicTableRegion
+          to fix the type of table that can be referenced here.
+        range: IntracellularRecordingsTable
+  SimultaneousRecordingsTable__recordings_index:
+    name: SimultaneousRecordingsTable__recordings_index
+    description: Index dataset for the recordings column.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(recordings_index)
+        range: string
+        required: true
+        equals_string: recordings_index
   SequentialRecordingsTable:
     name: SequentialRecordingsTable
     description: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
@@ -460,6 +737,35 @@ classes:
         multivalued: true
         range: text
     tree_root: true
+  SequentialRecordingsTable__simultaneous_recordings:
+    name: SequentialRecordingsTable__simultaneous_recordings
+    description: A reference to one or more rows in the SimultaneousRecordingsTable
+      table.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(simultaneous_recordings)
+        range: string
+        required: true
+        equals_string: simultaneous_recordings
+      table:
+        name: table
+        description: Reference to the SimultaneousRecordingsTable table that this
+          table region applies to. This specializes the attribute inherited from DynamicTableRegion
+          to fix the type of table that can be referenced here.
+        range: SimultaneousRecordingsTable
+  SequentialRecordingsTable__simultaneous_recordings_index:
+    name: SequentialRecordingsTable__simultaneous_recordings_index
+    description: Index dataset for the simultaneous_recordings column.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(simultaneous_recordings_index)
+        range: string
+        required: true
+        equals_string: simultaneous_recordings_index
   RepetitionsTable:
     name: RepetitionsTable
     description: A table for grouping different sequential intracellular recordings
@@ -488,6 +794,35 @@ classes:
         range: RepetitionsTable__sequential_recordings_index
         required: true
     tree_root: true
+  RepetitionsTable__sequential_recordings:
+    name: RepetitionsTable__sequential_recordings
+    description: A reference to one or more rows in the SequentialRecordingsTable
+      table.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(sequential_recordings)
+        range: string
+        required: true
+        equals_string: sequential_recordings
+      table:
+        name: table
+        description: Reference to the SequentialRecordingsTable table that this table
+          region applies to. This specializes the attribute inherited from DynamicTableRegion
+          to fix the type of table that can be referenced here.
+        range: SequentialRecordingsTable
+  RepetitionsTable__sequential_recordings_index:
+    name: RepetitionsTable__sequential_recordings_index
+    description: Index dataset for the sequential_recordings column.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(sequential_recordings_index)
+        range: string
+        required: true
+        equals_string: sequential_recordings_index
   ExperimentalConditionsTable:
     name: ExperimentalConditionsTable
     description: A table for grouping different intracellular recording repetitions
@@ -513,3 +848,31 @@ classes:
         range: ExperimentalConditionsTable__repetitions_index
         required: true
     tree_root: true
+  ExperimentalConditionsTable__repetitions:
+    name: ExperimentalConditionsTable__repetitions
+    description: A reference to one or more rows in the RepetitionsTable table.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(repetitions)
+        range: string
+        required: true
+        equals_string: repetitions
+      table:
+        name: table
+        description: Reference to the RepetitionsTable table that this table region
+          applies to. This specializes the attribute inherited from DynamicTableRegion
+          to fix the type of table that can be referenced here.
+        range: RepetitionsTable
+  ExperimentalConditionsTable__repetitions_index:
+    name: ExperimentalConditionsTable__repetitions_index
+    description: Index dataset for the repetitions column.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(repetitions_index)
+        range: string
+        required: true
+        equals_string: repetitions_index

@@ -4,8 +4,6 @@ imports:
 - core.nwb.base
 - core.nwb.device
 - nwb.language
-- core.nwb.image.include
-- core.nwb.image
 default_prefix: core.nwb.image/
 classes:
   GrayscaleImage:
@@ -21,6 +19,18 @@ classes:
         name: array
         range: GrayscaleImage__Array
     tree_root: true
+  GrayscaleImage__Array:
+    name: GrayscaleImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
   RGBImage:
     name: RGBImage
     description: A color image.
@@ -34,6 +44,24 @@ classes:
         name: array
         range: RGBImage__Array
     tree_root: true
+  RGBImage__Array:
+    name: RGBImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b:
+        name: r, g, b
+        range: numeric
+        required: true
+        minimum_cardinality: 3
+        maximum_cardinality: 3
   RGBAImage:
     name: RGBAImage
     description: A color image with transparency.
@@ -47,6 +75,24 @@ classes:
         name: array
         range: RGBAImage__Array
     tree_root: true
+  RGBAImage__Array:
+    name: RGBAImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b, a:
+        name: r, g, b, a
+        range: numeric
+        required: true
+        minimum_cardinality: 4
+        maximum_cardinality: 4
   ImageSeries:
     name: ImageSeries
     description: General image data that is common between acquisition and stimulus
@@ -94,6 +140,40 @@ classes:
         range: text
         required: false
     tree_root: true
+  ImageSeries__data:
+    name: ImageSeries__data
+    description: Binary data representing images across frames. If data are stored
+      in an external file, this should be an empty 3D array.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      array:
+        name: array
+        range: ImageSeries__data__Array
+  ImageSeries__data__Array:
+    name: ImageSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      frame:
+        name: frame
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      z:
+        name: z
+        range: numeric
+        required: false
   ImageMaskSeries:
     name: ImageMaskSeries
     description: An alpha mask that is applied to a presented visual stimulus. The
@@ -147,6 +227,70 @@ classes:
         range: text
         required: false
     tree_root: true
+  OpticalSeries__field_of_view:
+    name: OpticalSeries__field_of_view
+    description: Width, height and depth of image, or imaged area, in meters.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(field_of_view)
+        range: string
+        required: true
+        equals_string: field_of_view
+      array:
+        name: array
+        range: OpticalSeries__field_of_view__Array
+  OpticalSeries__field_of_view__Array:
+    name: OpticalSeries__field_of_view__Array
+    is_a: Arraylike
+    attributes:
+      width, height:
+        name: width, height
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      width, height, depth:
+        name: width, height, depth
+        range: float32
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  OpticalSeries__data:
+    name: OpticalSeries__data
+    description: Images presented to subject, either grayscale or RGB
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      array:
+        name: array
+        range: OpticalSeries__data__Array
+  OpticalSeries__data__Array:
+    name: OpticalSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      frame:
+        name: frame
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b:
+        name: r, g, b
+        range: numeric
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
   IndexSeries:
     name: IndexSeries
     description: Stores indices to image frames stored in an ImageSeries. The purpose

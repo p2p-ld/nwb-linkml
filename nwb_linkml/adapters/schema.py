@@ -37,7 +37,7 @@ class SchemaAdapter(Adapter):
     split: bool = Field(
         False,
         description="Split anonymous subclasses into a separate schema file"
-   )
+    )
     _created_classes: List[Type[Group | Dataset]] = PrivateAttr(default_factory=list)
 
     @property

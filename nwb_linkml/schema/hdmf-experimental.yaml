@@ -1,4 +1,8 @@
 name: hdmf-experimental
+annotations:
+  namespace:
+    tag: namespace
+    value: 'True'
 description: Experimental data structures provided by HDMF. These are not guaranteed
   to be available in the future.
 id: hdmf-experimental

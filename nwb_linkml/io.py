@@ -1,8 +1,9 @@
 """
 Loading/saving NWB Schema yaml files
 """
+import pdb
 from pathlib import Path
-from typing import TypedDict, List, Dict
+from typing import TypedDict, List, Dict, Optional
 from pprint import pprint
 import warnings
 
@@ -39,8 +40,11 @@ def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
 
 
 
-def load_schema_file(path:Path) -> SchemaAdapter:
-    source = load_yaml(path)
+def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
+    if yaml is not None:
+        source = yaml
+    else:
+        source = load_yaml(path)
 
     datasets = []
 
@@ -112,6 +116,7 @@ def load_nwb_core() -> NamespacesAdapter:
     schema.imported.append(hdmf_schema)
 
     return schema
+
 
 
 

@@ -5,8 +5,6 @@ imports:
 - hdmf-common.table
 - core.nwb.device
 - nwb.language
-- core.nwb.ecephys.include
-- core.nwb.ecephys
 default_prefix: core.nwb.ecephys/
 classes:
   ElectricalSeries:
@@ -59,6 +57,54 @@ classes:
         range: float32
         required: false
     tree_root: true
+  ElectricalSeries__data:
+    name: ElectricalSeries__data
+    description: Recorded voltage data.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. This value
+          is fixed to 'volts'. Actual stored values are not necessarily stored in
+          these units. To access the data in these units, multiply 'data' by 'conversion',
+          followed by 'channel_conversion' (if present), and then add 'offset'.
+        range: text
+      array:
+        name: array
+        range: ElectricalSeries__data__Array
+  ElectricalSeries__data__Array:
+    name: ElectricalSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: true
+      num_channels:
+        name: num_channels
+        range: numeric
+        required: false
+      num_samples:
+        name: num_samples
+        range: numeric
+        required: false
+  ElectricalSeries__electrodes:
+    name: ElectricalSeries__electrodes
+    description: DynamicTableRegion pointer to the electrodes that this time series
+      was generated from.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(electrodes)
+        range: string
+        required: true
+        equals_string: electrodes
   SpikeEventSeries:
     name: SpikeEventSeries
     description: 'Stores snapshots/snippets of recorded spike events (i.e., threshold
@@ -91,6 +137,39 @@ classes:
         range: float64
         required: true
     tree_root: true
+  SpikeEventSeries__data:
+    name: SpikeEventSeries__data
+    description: Spike waveforms.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Unit of measurement for waveforms, which is fixed to 'volts'.
+        range: text
+      array:
+        name: array
+        range: SpikeEventSeries__data__Array
+  SpikeEventSeries__data__Array:
+    name: SpikeEventSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      num_events:
+        name: num_events
+        range: numeric
+        required: true
+      num_samples:
+        name: num_samples
+        range: numeric
+        required: true
+      num_channels:
+        name: num_channels
+        range: numeric
+        required: false
   FeatureExtraction:
     name: FeatureExtraction
     description: Features, such as PC1 and PC2, that are extracted from signals stored
@@ -128,6 +207,47 @@ classes:
         range: FeatureExtraction__electrodes
         required: true
     tree_root: true
+  FeatureExtraction__features:
+    name: FeatureExtraction__features
+    description: Multi-dimensional array of features extracted from each event.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(features)
+        range: string
+        required: true
+        equals_string: features
+      array:
+        name: array
+        range: FeatureExtraction__features__Array
+  FeatureExtraction__features__Array:
+    name: FeatureExtraction__features__Array
+    is_a: Arraylike
+    attributes:
+      num_events:
+        name: num_events
+        range: float32
+        required: true
+      num_channels:
+        name: num_channels
+        range: float32
+        required: true
+      num_features:
+        name: num_features
+        range: float32
+        required: true
+  FeatureExtraction__electrodes:
+    name: FeatureExtraction__electrodes
+    description: DynamicTableRegion pointer to the electrodes that this time series
+      was generated from.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(electrodes)
+        range: string
+        required: true
+        equals_string: electrodes
   EventDetection:
     name: EventDetection
     description: Detected spike events from voltage trace(s).
@@ -287,6 +407,60 @@ classes:
         range: ClusterWaveforms__waveform_sd
         required: true
     tree_root: true
+  ClusterWaveforms__waveform_mean:
+    name: ClusterWaveforms__waveform_mean
+    description: The mean waveform for each cluster, using the same indices for each
+      wave as cluster numbers in the associated Clustering module (i.e, cluster 3
+      is in array slot [3]). Waveforms corresponding to gaps in cluster sequence should
+      be empty (e.g., zero- filled)
+    attributes:
+      name:
+        name: name
+        ifabsent: string(waveform_mean)
+        range: string
+        required: true
+        equals_string: waveform_mean
+      array:
+        name: array
+        range: ClusterWaveforms__waveform_mean__Array
+  ClusterWaveforms__waveform_mean__Array:
+    name: ClusterWaveforms__waveform_mean__Array
+    is_a: Arraylike
+    attributes:
+      num_clusters:
+        name: num_clusters
+        range: float32
+        required: true
+      num_samples:
+        name: num_samples
+        range: float32
+        required: true
+  ClusterWaveforms__waveform_sd:
+    name: ClusterWaveforms__waveform_sd
+    description: Stdev of waveforms for each cluster, using the same indices as in
+      mean
+    attributes:
+      name:
+        name: name
+        ifabsent: string(waveform_sd)
+        range: string
+        required: true
+        equals_string: waveform_sd
+      array:
+        name: array
+        range: ClusterWaveforms__waveform_sd__Array
+  ClusterWaveforms__waveform_sd__Array:
+    name: ClusterWaveforms__waveform_sd__Array
+    is_a: Arraylike
+    attributes:
+      num_clusters:
+        name: num_clusters
+        range: float32
+        required: true
+      num_samples:
+        name: num_samples
+        range: float32
+        required: true
   Clustering:
     name: Clustering
     description: DEPRECATED Clustered spike data, whether from automatic clustering

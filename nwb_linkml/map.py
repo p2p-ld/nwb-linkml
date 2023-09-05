@@ -65,3 +65,9 @@ class KeyMap(Map):
         return out
 
 
+def apply_preload(ns_dict) -> dict:
+    from nwb_linkml.maps import preload
+    maps = [m for m in Map.instances if m.phase == PHASES.postload]
+    for amap in maps:
+        ns_dict = amap.apply(ns_dict)
+    return ns_dict

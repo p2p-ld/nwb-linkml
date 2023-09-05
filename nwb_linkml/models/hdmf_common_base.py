@@ -28,23 +28,23 @@ class Data(ConfiguredBaseModel):
     """
     An abstract data type for a dataset.
     """
-    name: str = Field(...)
+    name:str= Field(...)
     
 
 class Container(ConfiguredBaseModel):
     """
     An abstract data type for a group storing collections of data and metadata. Base type for all data and metadata containers.
     """
-    name: str = Field(...)
+    name:str= Field(...)
     
 
 class SimpleMultiContainer(Container):
     """
     A simple Container for holding onto multiple containers.
     """
-    name: str = Field(...)
-    Data: Optional[List[Data]] = Field(default_factory=list, description="""Data objects held within this SimpleMultiContainer.""")
-    container: Optional[List[Container]] = Field(default_factory=list, description="""Container objects held within this SimpleMultiContainer.""")
+    name:str= Field(...)
+    data:Optional[List[Data]]= Field(default_factory=list, description="""Data objects held within this SimpleMultiContainer.""")
+    container:Optional[List[Container]]= Field(default_factory=list, description="""Container objects held within this SimpleMultiContainer.""")
     
 
 

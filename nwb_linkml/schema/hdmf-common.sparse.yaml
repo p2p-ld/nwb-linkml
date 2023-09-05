@@ -3,7 +3,6 @@ id: hdmf-common.sparse
 imports:
 - hdmf-common.base
 - nwb.language
-- hdmf-common.sparse
 default_prefix: hdmf-common.sparse/
 classes:
   CSRMatrix:

@@ -15,7 +15,8 @@ class GroupAdapter(ClassAdapter):
     cls: Group
 
     def build(self) -> BuildResult:
-
+        if self.cls.neurodata_type_def == "Subject":
+            pdb.set_trace()
         # Handle container groups with only * quantity unnamed groups
         if len(self.cls.groups) > 0 and \
                 all([self._check_if_container(g) for g in self.cls.groups]) and \
@@ -24,6 +25,7 @@ class GroupAdapter(ClassAdapter):
 
         # handle if we are a terminal container group without making a new class
         if len(self.cls.groups) == 0 and \
+            len(self.cls.datasets) == 0 and \
             self.cls.neurodata_type_inc is not None and \
             self.parent is not None:
             return self.handle_container_slot(self.cls)
@@ -160,7 +162,7 @@ class GroupAdapter(ClassAdapter):
             quantity: '*'
         """
         if not group.name and \
-            group.quantity == '*' and \
+            group.quantity in ('*','+') and \
             group.neurodata_type_inc:
             return True
         else:

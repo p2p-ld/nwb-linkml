@@ -1,4 +1,8 @@
 name: core
+annotations:
+  namespace:
+    tag: namespace
+    value: 'True'
 description: NWB namespace
 id: core
 version: 2.6.0-alpha

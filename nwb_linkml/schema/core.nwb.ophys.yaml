@@ -6,8 +6,6 @@ imports:
 - hdmf-common.table
 - core.nwb.device
 - nwb.language
-- core.nwb.ophys.include
-- core.nwb.ophys
 default_prefix: core.nwb.ophys/
 classes:
   OnePhotonSeries:
@@ -72,6 +70,35 @@ classes:
         range: TwoPhotonSeries__field_of_view
         required: false
     tree_root: true
+  TwoPhotonSeries__field_of_view:
+    name: TwoPhotonSeries__field_of_view
+    description: Width, height and depth of image, or imaged area, in meters.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(field_of_view)
+        range: string
+        required: true
+        equals_string: field_of_view
+      array:
+        name: array
+        range: TwoPhotonSeries__field_of_view__Array
+  TwoPhotonSeries__field_of_view__Array:
+    name: TwoPhotonSeries__field_of_view__Array
+    is_a: Arraylike
+    attributes:
+      width|height:
+        name: width|height
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      width|height|depth:
+        name: width|height|depth
+        range: float32
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
   RoiResponseSeries:
     name: RoiResponseSeries
     description: ROI responses over an imaging plane. The first dimension represents
@@ -96,6 +123,43 @@ classes:
         range: RoiResponseSeries__rois
         required: true
     tree_root: true
+  RoiResponseSeries__data:
+    name: RoiResponseSeries__data
+    description: Signals from ROIs.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      array:
+        name: array
+        range: RoiResponseSeries__data__Array
+  RoiResponseSeries__data__Array:
+    name: RoiResponseSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: true
+      num_ROIs:
+        name: num_ROIs
+        range: numeric
+        required: false
+  RoiResponseSeries__rois:
+    name: RoiResponseSeries__rois
+    description: DynamicTableRegion referencing into an ROITable containing information
+      on the ROIs stored in this timeseries.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(rois)
+        range: string
+        required: true
+        equals_string: rois
   DfOverF:
     name: DfOverF
     description: dF/F information about a region of interest (ROI). Storage hierarchy
@@ -204,6 +268,40 @@ classes:
         any_of:
         - range: ImageSeries
     tree_root: true
+  PlaneSegmentation__image_mask:
+    name: PlaneSegmentation__image_mask
+    description: ROI masks for each ROI. Each image mask is the size of the original
+      imaging plane (or volume) and members of the ROI are finite non-zero.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(image_mask)
+        range: string
+        required: true
+        equals_string: image_mask
+  PlaneSegmentation__pixel_mask_index:
+    name: PlaneSegmentation__pixel_mask_index
+    description: Index into pixel_mask.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(pixel_mask_index)
+        range: string
+        required: true
+        equals_string: pixel_mask_index
+  PlaneSegmentation__voxel_mask_index:
+    name: PlaneSegmentation__voxel_mask_index
+    description: Index into voxel_mask.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(voxel_mask_index)
+        range: string
+        required: true
+        equals_string: voxel_mask_index
   ImagingPlane:
     name: ImagingPlane
     description: An imaging plane and its metadata.
@@ -299,6 +397,129 @@ classes:
         range: OpticalChannel
         required: true
     tree_root: true
+  ImagingPlane__manifold:
+    name: ImagingPlane__manifold
+    description: DEPRECATED Physical position of each pixel. 'xyz' represents the
+      position of the pixel relative to the defined coordinate space. Deprecated in
+      favor of origin_coords and grid_spacing.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(manifold)
+        range: string
+        required: true
+        equals_string: manifold
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as pixels from
+          x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then
+          the 'conversion' multiplier to get from raw data acquisition pixel units
+          to meters is 2/1000.
+        range: float32
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. The default
+          value is 'meters'.
+        range: text
+      array:
+        name: array
+        range: ImagingPlane__manifold__Array
+  ImagingPlane__manifold__Array:
+    name: ImagingPlane__manifold__Array
+    is_a: Arraylike
+    attributes:
+      height:
+        name: height
+        range: float32
+        required: true
+      width:
+        name: width
+        range: float32
+        required: true
+      x, y, z:
+        name: x, y, z
+        range: float32
+        required: true
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+      depth:
+        name: depth
+        range: float32
+        required: false
+  ImagingPlane__origin_coords:
+    name: ImagingPlane__origin_coords
+    description: Physical location of the first element of the imaging plane (0, 0)
+      for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the
+      physical location is relative to (e.g., bregma).
+    attributes:
+      name:
+        name: name
+        ifabsent: string(origin_coords)
+        range: string
+        required: true
+        equals_string: origin_coords
+      unit:
+        name: unit
+        description: Measurement units for origin_coords. The default value is 'meters'.
+        range: text
+      array:
+        name: array
+        range: ImagingPlane__origin_coords__Array
+  ImagingPlane__origin_coords__Array:
+    name: ImagingPlane__origin_coords__Array
+    is_a: Arraylike
+    attributes:
+      x, y:
+        name: x, y
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      x, y, z:
+        name: x, y, z
+        range: float32
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  ImagingPlane__grid_spacing:
+    name: ImagingPlane__grid_spacing
+    description: Space between pixels in (x, y) or voxels in (x, y, z) directions,
+      in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame
+      to interpret the grid.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(grid_spacing)
+        range: string
+        required: true
+        equals_string: grid_spacing
+      unit:
+        name: unit
+        description: Measurement units for grid_spacing. The default value is 'meters'.
+        range: text
+      array:
+        name: array
+        range: ImagingPlane__grid_spacing__Array
+  ImagingPlane__grid_spacing__Array:
+    name: ImagingPlane__grid_spacing__Array
+    is_a: Arraylike
+    attributes:
+      x, y:
+        name: x, y
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      x, y, z:
+        name: x, y, z
+        range: float32
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
   OpticalChannel:
     name: OpticalChannel
     description: An optical channel used to record from an imaging plane.

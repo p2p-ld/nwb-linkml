@@ -3,8 +3,6 @@ id: hdmf-common.table
 imports:
 - hdmf-common.base
 - nwb.language
-- hdmf-common.table.include
-- hdmf-common.table
 default_prefix: hdmf-common.table/
 classes:
   VectorData:
@@ -31,6 +29,26 @@ classes:
         name: array
         range: VectorData__Array
     tree_root: true
+  VectorData__Array:
+    name: VectorData__Array
+    is_a: Arraylike
+    attributes:
+      dim0:
+        name: dim0
+        range: AnyType
+        required: true
+      dim1:
+        name: dim1
+        range: AnyType
+        required: false
+      dim2:
+        name: dim2
+        range: AnyType
+        required: false
+      dim3:
+        name: dim3
+        range: AnyType
+        required: false
   VectorIndex:
     name: VectorIndex
     description: Used with VectorData to encode a ragged array. An array of indices
@@ -63,6 +81,14 @@ classes:
         name: array
         range: ElementIdentifiers__Array
     tree_root: true
+  ElementIdentifiers__Array:
+    name: ElementIdentifiers__Array
+    is_a: Arraylike
+    attributes:
+      num_elements:
+        name: num_elements
+        range: int
+        required: true
   DynamicTableRegion:
     name: DynamicTableRegion
     description: DynamicTableRegion provides a link from one table to an index or

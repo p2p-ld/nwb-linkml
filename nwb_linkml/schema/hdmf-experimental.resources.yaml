@@ -3,7 +3,6 @@ id: hdmf-experimental.resources
 imports:
 - hdmf-common.base
 - nwb.language
-- hdmf-experimental.resources
 default_prefix: hdmf-experimental.resources/
 classes:
   HERD:
