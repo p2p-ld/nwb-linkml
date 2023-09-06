@@ -1,6 +1,5 @@
 import pytest
-import shutil
-
+import os
 import tempfile
 import yaml
 from yaml import CDumper as Dumper
@@ -36,7 +35,7 @@ def test_preload_maps():
     assert 'neurodata_type_inc' in loaded['groups'][0]['datasets'][0].keys()
     assert 'data_type_inc' not in loaded['groups'][0]['datasets'][0].keys()
 
-    shutil.rmtree(temp_name)
+    os.remove(temp_name)
 
 
 

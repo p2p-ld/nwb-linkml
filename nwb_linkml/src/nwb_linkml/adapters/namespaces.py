@@ -5,6 +5,7 @@ Wraps the :class:`nwb_schema_language.Namespaces` and other objects with conveni
 for extracting information and generating translated schema
 """
 import pdb
+
 from typing import List, Optional
 from pathlib import Path
 from pydantic import BaseModel, Field, validator, PrivateAttr

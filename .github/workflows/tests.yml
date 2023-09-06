@@ -24,13 +24,12 @@ jobs:
         working-directory: nwb_linkml
 
       - uses: pavelzw/pytest-action@v2
-        working-directory: nwb_linkml
         with:
           emoji: true
           verbose: true
           job-summary: true
+          custom_arguments: 'nwb_linkml'
 
-      - working-directory: nwb_linkml
-        run: "coveralls --service=github"
+      - run: "coveralls --service=github"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
