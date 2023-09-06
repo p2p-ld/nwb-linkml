@@ -23,13 +23,12 @@ jobs:
         run: pip install .[tests]
         working-directory: nwb_linkml
 
-      - uses: pavelzw/pytest-action@v2
-        with:
-          emoji: true
-          verbose: true
-          job-summary: true
-          custom-arguments: 'nwb_linkml/tests'
+      - name: Run Tests
+        run: pytest
+        working-directory: nwb_linkml
 
-      - run: "coveralls --service=github"
+      - name: Report coverage
+        working-directory: nwb_linkml
+        run: "coveralls --service=github"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
