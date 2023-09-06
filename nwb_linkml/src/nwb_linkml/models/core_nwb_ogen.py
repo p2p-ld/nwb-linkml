@@ -59,6 +59,6 @@ class OptogeneticStimulusSite(NWBContainer):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-OptogeneticSeries.model_rebuild()
-OptogeneticStimulusSite.model_rebuild()
+# OptogeneticSeries.model_rebuild()
+# OptogeneticStimulusSite.model_rebuild()
     

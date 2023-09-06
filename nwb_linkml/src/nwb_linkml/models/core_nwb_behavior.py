@@ -124,13 +124,13 @@ class Position(NWBDataInterface):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-SpatialSeries.model_rebuild()
-SpatialSeriesData.model_rebuild()
-BehavioralEpochs.model_rebuild()
-BehavioralEvents.model_rebuild()
-BehavioralTimeSeries.model_rebuild()
-PupilTracking.model_rebuild()
-EyeTracking.model_rebuild()
-CompassDirection.model_rebuild()
-Position.model_rebuild()
+# SpatialSeries.model_rebuild()
+# SpatialSeriesData.model_rebuild()
+# BehavioralEpochs.model_rebuild()
+# BehavioralEvents.model_rebuild()
+# BehavioralTimeSeries.model_rebuild()
+# PupilTracking.model_rebuild()
+# EyeTracking.model_rebuild()
+# CompassDirection.model_rebuild()
+# Position.model_rebuild()
     

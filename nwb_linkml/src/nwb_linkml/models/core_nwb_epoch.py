@@ -98,8 +98,8 @@ class TimeIntervalsTimeseriesIndex(VectorIndex):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-TimeIntervals.model_rebuild()
-TimeIntervalsTagsIndex.model_rebuild()
-TimeIntervalsTimeseries.model_rebuild()
-TimeIntervalsTimeseriesIndex.model_rebuild()
+# TimeIntervals.model_rebuild()
+# TimeIntervalsTagsIndex.model_rebuild()
+# TimeIntervalsTimeseries.model_rebuild()
+# TimeIntervalsTimeseriesIndex.model_rebuild()
     

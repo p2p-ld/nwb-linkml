@@ -16,6 +16,7 @@ from nwb_linkml.io.schema import load_schema_file
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.map import apply_preload
 from nwb_linkml.adapters import SchemaAdapter, NamespacesAdapter
+#from nwb_linkml.models import core, hdmf_common
 
 def make_namespace_adapter(schema: dict) -> NamespacesAdapter:
     """
@@ -118,6 +119,8 @@ def generate_from_nwbfile(path:Path) -> Dict[str, ModuleType]:
     namespaces = []
     h5f = h5py.File(path, 'r')
     for ns_name, ns in h5f['specifications'].items():
+        #if ns_name in ('core', 'hdmf-common'):
+        #    continue
         ns_schema = {}
         for version in ns.values():
             for schema_name, schema in version.items():
@@ -133,6 +136,7 @@ def generate_from_nwbfile(path:Path) -> Dict[str, ModuleType]:
         adapter.namespaces.namespaces[0].name: generate_pydantic(adapter)
         for adapter in adapters
     }
+    #pydantic_modules.update({'core': core, 'hdmf-common': hdmf_common})
     return pydantic_modules
 
 

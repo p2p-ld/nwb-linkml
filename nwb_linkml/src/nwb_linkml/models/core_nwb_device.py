@@ -40,5 +40,5 @@ class Device(NWBContainer):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-Device.model_rebuild()
+# Device.model_rebuild()
     

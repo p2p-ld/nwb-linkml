@@ -218,15 +218,15 @@ class SubjectAge(ConfiguredBaseModel):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-ScratchData.model_rebuild()
-NWBFile.model_rebuild()
-NWBFileStimulus.model_rebuild()
-NWBFileGeneral.model_rebuild()
-NWBFileGeneralSourceScript.model_rebuild()
-NWBFileGeneralExtracellularEphys.model_rebuild()
-NWBFileGeneralIntracellularEphys.model_rebuild()
-NWBFileIntervals.model_rebuild()
-LabMetaData.model_rebuild()
-Subject.model_rebuild()
-SubjectAge.model_rebuild()
+# ScratchData.model_rebuild()
+# NWBFile.model_rebuild()
+# NWBFileStimulus.model_rebuild()
+# NWBFileGeneral.model_rebuild()
+# NWBFileGeneralSourceScript.model_rebuild()
+# NWBFileGeneralExtracellularEphys.model_rebuild()
+# NWBFileGeneralIntracellularEphys.model_rebuild()
+# NWBFileIntervals.model_rebuild()
+# LabMetaData.model_rebuild()
+# Subject.model_rebuild()
+# SubjectAge.model_rebuild()
     

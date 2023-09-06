@@ -169,14 +169,14 @@ class IndexSeries(TimeSeries):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-GrayscaleImage.model_rebuild()
-RGBImage.model_rebuild()
-RGBAImage.model_rebuild()
-ImageSeries.model_rebuild()
-ImageSeriesData.model_rebuild()
-ImageMaskSeries.model_rebuild()
-OpticalSeries.model_rebuild()
-OpticalSeriesFieldOfView.model_rebuild()
-OpticalSeriesData.model_rebuild()
-IndexSeries.model_rebuild()
+# GrayscaleImage.model_rebuild()
+# RGBImage.model_rebuild()
+# RGBAImage.model_rebuild()
+# ImageSeries.model_rebuild()
+# ImageSeriesData.model_rebuild()
+# ImageMaskSeries.model_rebuild()
+# OpticalSeries.model_rebuild()
+# OpticalSeriesFieldOfView.model_rebuild()
+# OpticalSeriesData.model_rebuild()
+# IndexSeries.model_rebuild()
     

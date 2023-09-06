@@ -125,12 +125,12 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-ImagingRetinotopy.model_rebuild()
-ImagingRetinotopyAxis1PhaseMap.model_rebuild()
-ImagingRetinotopyAxis1PowerMap.model_rebuild()
-ImagingRetinotopyAxis2PhaseMap.model_rebuild()
-ImagingRetinotopyAxis2PowerMap.model_rebuild()
-ImagingRetinotopyFocalDepthImage.model_rebuild()
-ImagingRetinotopySignMap.model_rebuild()
-ImagingRetinotopyVasculatureImage.model_rebuild()
+# ImagingRetinotopy.model_rebuild()
+# ImagingRetinotopyAxis1PhaseMap.model_rebuild()
+# ImagingRetinotopyAxis1PowerMap.model_rebuild()
+# ImagingRetinotopyAxis2PhaseMap.model_rebuild()
+# ImagingRetinotopyAxis2PowerMap.model_rebuild()
+# ImagingRetinotopyFocalDepthImage.model_rebuild()
+# ImagingRetinotopySignMap.model_rebuild()
+# ImagingRetinotopyVasculatureImage.model_rebuild()
     
