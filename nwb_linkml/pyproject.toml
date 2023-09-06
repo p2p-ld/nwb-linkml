@@ -68,7 +68,8 @@ addopts = [
     "--cov-append"
 ]
 testpaths = [
-    "tests"
+    "tests",
+    'nwb_linkml/tests'
 ]
 
 [tool.coverage.run]

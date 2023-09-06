@@ -28,7 +28,7 @@ jobs:
           emoji: true
           verbose: true
           job-summary: true
-          custom-arguments: '-c nwb_linkml/pyproject.toml'
+          custom-arguments: 'nwb_linkml/tests'
 
       - run: "coveralls --service=github"
         env:
