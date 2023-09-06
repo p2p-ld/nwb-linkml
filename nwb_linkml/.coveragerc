@@ -1,6 +1,6 @@
 [run]
 branch = true
-source = nwb_linkml
+source = ./nwb_linkml/src/nwb_linkml
 omit =
     */nwb_schema_language/*
     */nwb_linkml/models/*
