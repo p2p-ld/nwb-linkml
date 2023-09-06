@@ -12,9 +12,9 @@ import h5py
 from linkml_runtime.dumpers import yaml_dumper
 
 from nwb_schema_language import Namespaces
-from nwb_linkml.src.nwb_linkml.io import load_schema_file
+from nwb_linkml.io.schema import load_schema_file
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
-from nwb_linkml.src.nwb_linkml.map import apply_preload
+from nwb_linkml.map import apply_preload
 from nwb_linkml.adapters import SchemaAdapter, NamespacesAdapter
 
 def make_namespace_adapter(schema: dict) -> NamespacesAdapter:

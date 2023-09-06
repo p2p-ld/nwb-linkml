@@ -5,7 +5,6 @@ import warnings
 
 from .fixtures import nwb_core_fixture, tmp_output_dir
 from linkml_runtime.dumpers import yaml_dumper
-from linkml.generators import PydanticGenerator
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
 from nwb_linkml.lang_elements import NwbLangSchema

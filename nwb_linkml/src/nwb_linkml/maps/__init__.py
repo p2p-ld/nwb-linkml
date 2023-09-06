@@ -1,3 +1,4 @@
 # Import everything so it's defined, but shoudlnt' necessarily be used from here
-from nwb_linkml.src.nwb_linkml.maps import MAP_HDMF_DATATYPE_DEF, MAP_HDMF_DATATYPE_INC
-from nwb_linkml.src.nwb_linkml.maps import QUANTITY_MAP
+from nwb_linkml.maps.preload import MAP_HDMF_DATATYPE_DEF, MAP_HDMF_DATATYPE_INC
+from nwb_linkml.maps.quantity import QUANTITY_MAP
+from nwb_linkml.maps.dtype import flat_to_linkml, flat_to_npytyping

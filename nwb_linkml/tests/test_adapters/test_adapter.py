@@ -1,5 +1,5 @@
 import pytest
-from .fixtures import nwb_core_fixture
+from ..fixtures import nwb_core_fixture
 
 from nwb_schema_language import Dataset, Group, Schema
 
@@ -20,3 +20,9 @@ def test_walk_types(nwb_core_fixture, walk_class, known_number):
     # pdb.set_trace()
 
 
+def test_build_result_add():
+    """
+    Build results can
+    Returns:
+
+    """

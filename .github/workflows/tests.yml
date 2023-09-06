@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  build:
+  test:
     strategy:
       matrix:
         python-version: [3.11]
@@ -20,7 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: pip install .[tests] pytest-md pytest-emoji
+        run: pip install .[tests]
         working-directory: nwb_linkml
 
       - uses: pavelzw/pytest-action@v2
@@ -29,3 +29,8 @@ jobs:
           emoji: true
           verbose: true
           job-summary: true
+
+      - working-directory: nwb_linkml
+        run: "coveralls --service=github"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

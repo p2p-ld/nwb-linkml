@@ -1,1 +1,1 @@
-from nwb_linkml.src.nwb_linkml.maps import preload
+from nwb_linkml.maps import preload

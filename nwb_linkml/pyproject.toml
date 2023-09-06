@@ -17,17 +17,25 @@ linkml-runtime = "^1.5.6"
 #nwb_schema_language = { path = './nwb_schema_language', develop = true, optional = true }
 rich = "^13.5.2"
 linkml = "^1.5.7"
-pytest = { version="^7.4.0", optional=true}
-pytest-depends = {version="^1.0.1", optional=true}
-dash = {version="^2.12.1", optional=true}
-dash-cytoscape = {version="^0.3.0", optional=true}
 nptyping = "^2.5.0"
 pydantic = "^2.3.0"
 h5py = "^3.9.0"
+dash = {version="^2.12.1", optional=true}
+dash-cytoscape = {version="^0.3.0", optional=true}
+pytest = { version="^7.4.0", optional=true}
+pytest-depends = {version="^1.0.1", optional=true}
+coverage = {version = "^6.1.1", optional = true}
+pytest-md = {version = "^0.2.0", optional = true}
+pytest-emoji = {version="^0.2.0", optional = true}
+pytest-cov = {version = "^4.1.0", optional = true}
+coveralls = {version = "^3.3.1", optional = true}
 
 [tool.poetry.extras]
 dev = ["nwb_schema_language"]
-tests = ["pytest", "pytest-depends"]
+tests = [
+    "pytest",       "pytest-depends", "coverage", "pytest-md",
+    "pytest-emoji", "pytest-cov"
+]
 plot = ["dash", "dash-cytoscape"]
 
 
@@ -37,6 +45,10 @@ optional = true
 [tool.poetry.group.tests.dependencies]
 pytest = "^7.4.0"
 pytest-depends = "^1.0.1"
+coverage = "^6.1.1"
+pytest-md = "^0.2.0"
+pytest-emoji = "^0.2.0"
+pytest-cov = "^4.1.0"
 
 [tool.poetry.group.plot]
 optional = true
@@ -51,3 +63,21 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.pytest.ini_options]
+addopts = [
+    "--cov",
+    "--cov-append"
+]
+testpaths = [
+    "tests"
+]
+
+[tool.coverage.run]
+branch = true
+source = [
+"src/nwb_linkml"
+]
+omit = [
+    "*/nwb_schema_language/*",
+    "*/nwb_linkml/models/*"
+]
+

@@ -1,6 +1,8 @@
 """
 Define and manage NWB namespaces in external repositories
 """
+import pdb
+from typing import Optional
 import warnings
 from pathlib import Path
 import tempfile
@@ -50,7 +52,7 @@ class GitRepo:
     def __init__(self, namespace:NamespaceRepo, commit:str|None=None):
         self._temp_directory = None
         self.namespace = namespace
-        self.commit = commit
+        self._commit = commit
 
     def _git_call(self, *args) -> subprocess.CompletedProcess:
         res = subprocess.run(
@@ -68,9 +70,7 @@ class GitRepo:
         """
         if self._temp_directory is None:
             self._temp_directory = Path(tempfile.gettempdir()) / f'nwb_linkml__{self.namespace.name}'
-            if self._temp_directory.exists():
-                warnings.warn(f'Temporary directory already exists! {self._temp_directory}')
-            else:
+            if not self._temp_directory.exists():
                 self._temp_directory.mkdir(parents=True)
 
         return self._temp_directory
@@ -99,6 +99,23 @@ class GitRepo:
         """
         return self.temp_directory / self.namespace.path
 
+    @property
+    def commit(self) -> Optional[str]:
+        """
+        The intended commit to check out.
+
+        If ``None``, should be the latest commit when the repo was checked out
+
+        Should match :prop:`.active_commit`, differs semantically in that it is used to
+        set the active_commit, while :prop:`.active_commit` reads what commit is actually checked out
+        """
+        return self._commit
+
+    @commit.setter
+    def commit(self, commit:str):
+        self._git_call('checkout', commit)
+        self._commit = commit
+
     def check(self) -> bool:
         """
         Check if the repository is already cloned and checked out
@@ -120,7 +137,7 @@ class GitRepo:
             return False
 
         # Check that the remote matches
-        if self.remote.strip('.git') != self.namespace.repository:
+        if self.remote != str(self.namespace.repository):
             warnings.warn(f'Repository exists, but has the wrong remote URL.\nExpected: {self.namespace.repository}\nGot:{self.remote.strip(".git")}')
             return False
 
@@ -164,6 +181,8 @@ class GitRepo:
             self.cleanup()
 
         res = subprocess.run(['git', 'clone', str(self.namespace.repository), str(self.temp_directory)])
+        if self.commit:
+            self.commit = self.commit
         if res.returncode != 0:
             raise GitError(f'Could not clone repository:\n{res.stderr}')
 

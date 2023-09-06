@@ -12,41 +12,13 @@ from linkml_runtime.linkml_model import \
     TypeDefinition,\
     Prefix,\
     PermissibleValue
-from nwb_linkml.src.nwb_linkml.maps import flat_to_linkml
+from nwb_linkml.maps import flat_to_linkml
 
 
 FlatDType = EnumDefinition(
     name="FlatDType",
     permissible_values=[PermissibleValue(p) for p in FlatDtype_source.__members__.keys()],
 )
-
-# DimNameSlot = SlotDefinition(
-#     name="dim_name",
-#     range="string",
-#     description="The name of a dimension"
-# )
-# DimShapeSlot = SlotDefinition(
-#     name="dim_shape",
-#     range="integer",
-#     required=False
-# )
-# DimClass = ClassDefinition(
-#     name="Dimension",
-#     slots=[DimNameSlot.name, DimShapeSlot.name],
-#     description="A single dimension within a shape"
-# )
-# DimSlot = SlotDefinition(
-#     name="dim",
-#     range=DimClass.name,
-#     multivalued=True,
-#     description="Slot representing the dimensions that a Shape can have"
-# )
-
-# ShapeClass = ClassDefinition(
-#     name="Shape",
-#     description="A possible shape for an array-like dataset",
-#     slots=[DimSlot.name]
-# )
 
 DTypeTypes = []
 for nwbtype, linkmltype in flat_to_linkml.items():
@@ -85,7 +57,6 @@ NwbLangSchema = SchemaDefinition(
     id='nwb.language',
     description="Adapter objects to mimic the behavior of elements in the nwb-schema-language",
     enums=[FlatDType],
-    # slots=[DimNameSlot, DimShapeSlot, DimSlot],
     classes=[Arraylike, AnyType],
     types=DTypeTypes,
     imports=['linkml:types'],

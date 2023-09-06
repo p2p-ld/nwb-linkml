@@ -4,15 +4,14 @@ Loading/saving NWB Schema yaml files
 from pathlib import Path
 from typing import Optional
 from pprint import pprint
-import warnings
 
 from linkml_runtime.loaders import yaml_loader
 import yaml
 
 from nwb_schema_language import Namespaces,  Group, Dataset
-from nwb_linkml.namespaces import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
-from nwb_linkml.src.nwb_linkml.map import PHASES, Map
-from nwb_linkml.src.nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_linkml.io.git import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
+from nwb_linkml.map import PHASES, Map
+from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
 
 
@@ -32,11 +31,8 @@ def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
 
     ns_dict = load_yaml(path)
 
-
     namespaces = yaml_loader.load(ns_dict, target_class=Namespaces)
     return namespaces
-
-
 
 def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
     if yaml is not None:
@@ -89,7 +85,7 @@ def load_namespace_schema(namespace: Namespaces, path:Path=Path('..')) -> Namesp
     for ns in namespace.namespaces:
         for schema in ns.schema_:
             if schema.source is None:
-                warnings.warn(f"No source specified for {schema}")
+                # this is normal, we'll resolve later
                 continue
             yml_file = (path / schema.source).resolve()
             sch.append(load_schema_file(yml_file))

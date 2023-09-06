@@ -2,7 +2,7 @@
 Maps to change the loaded .yaml from nwb schema before it's given to the nwb_schema_language models
 """
 
-from nwb_linkml.src.nwb_linkml.map import KeyMap, SCOPE_TYPES, PHASES
+from nwb_linkml.map import KeyMap, SCOPE_TYPES, PHASES
 
 MAP_HDMF_DATATYPE_DEF = KeyMap(
     source="\'data_type_def\'",
