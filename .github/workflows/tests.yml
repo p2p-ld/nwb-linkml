@@ -28,7 +28,7 @@ jobs:
           emoji: true
           verbose: true
           job-summary: true
-          custom_arguments: 'nwb_linkml'
+          custom-arguments: 'nwb_linkml'
 
       - run: "coveralls --service=github"
         env:
