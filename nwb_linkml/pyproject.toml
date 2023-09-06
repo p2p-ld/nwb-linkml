@@ -74,7 +74,7 @@ testpaths = [
 [tool.coverage.run]
 branch = true
 source = [
-"src/nwb_linkml"
+"nwb_linkml"
 ]
 omit = [
     "*/nwb_schema_language/*",
