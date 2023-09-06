@@ -1,0 +1,10 @@
+[run]
+branch = true
+source = [
+"nwb_linkml"
+]
+omit = [
+    "*/nwb_schema_language/*",
+    "*/nwb_linkml/models/*",
+    "*/tests/*"
+]

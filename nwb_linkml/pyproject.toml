@@ -64,21 +64,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = [
-    "--cov",
-    "--cov-append"
+    "--cov=nwb_linkml",
+    "--cov-append",
+    "--cov-config=.coveragerc"
 ]
 testpaths = [
     "tests",
     'nwb_linkml/tests'
 ]
-
-[tool.coverage.run]
-branch = true
-source = [
-"nwb_linkml"
-]
-omit = [
-    "*/nwb_schema_language/*",
-    "*/nwb_linkml/models/*"
-]
-
