@@ -11,7 +11,7 @@ from pydantic import PrivateAttr
 from nwb_schema_language import Dataset, ReferenceDtype, CompoundDtype, DTypeType
 from nwb_linkml.adapters.classes import ClassAdapter, camel_to_snake
 from nwb_linkml.adapters.adapter import BuildResult
-from nwb_linkml.maps import QUANTITY_MAP
+from nwb_linkml.src.nwb_linkml.maps import QUANTITY_MAP
 
 class DatasetAdapter(ClassAdapter):
     cls: Dataset

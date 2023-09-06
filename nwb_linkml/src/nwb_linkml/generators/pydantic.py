@@ -25,7 +25,7 @@ from types import ModuleType
 from copy import deepcopy
 import warnings
 
-from nwb_linkml.maps.dtype import flat_to_npytyping
+from nwb_linkml.src.nwb_linkml.maps import flat_to_npytyping
 from linkml.generators import PydanticGenerator
 from linkml_runtime.linkml_model.meta import (
     Annotation,

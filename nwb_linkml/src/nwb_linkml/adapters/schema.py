@@ -2,7 +2,6 @@
 Since NWB doesn't necessarily have a term for a single nwb schema file, we're going
 to call them "schema" objects
 """
-import pdb
 from typing import Optional, List, TYPE_CHECKING, Type
 from pathlib import Path
 from pydantic import Field, PrivateAttr
@@ -11,7 +10,7 @@ from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.adapters.group import GroupAdapter
 if TYPE_CHECKING:
-    from nwb_linkml.adapters.namespaces import NamespacesAdapter
+    pass
 
 from nwb_schema_language import Group, Dataset
 from typing import NamedTuple

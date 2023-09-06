@@ -21,8 +21,10 @@ jobs:
 
       - name: Install dependencies
         run: pip install .[tests] pytest-md pytest-emoji
+        working-directory: nwb_linkml
 
       - uses: pavelzw/pytest-action@v2
+        working-directory: nwb_linkml
         with:
           emoji: true
           verbose: true

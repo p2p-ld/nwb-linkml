@@ -1,7 +1,7 @@
 """
 Various visualization routines, mostly to help development for now
 """
-from typing import TYPE_CHECKING, Optional, List, TypedDict, Union
+from typing import TYPE_CHECKING, Optional, List, TypedDict
 from rich import print
 import random
 
@@ -10,7 +10,7 @@ import dash_cytoscape as cyto
 cyto.load_extra_layouts()
 
 from nwb_schema_language import Namespace, Group, Dataset
-from nwb_linkml.io import load_nwb_core
+from nwb_linkml.src.nwb_linkml.io import load_nwb_core
 
 if TYPE_CHECKING:
     from nwb_linkml.adapters import NamespacesAdapter

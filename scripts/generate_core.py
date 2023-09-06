@@ -3,7 +3,8 @@ from pathlib import Path
 from linkml_runtime.dumpers import yaml_dumper
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
-from nwb_linkml import io
+from nwb_linkml.src.nwb_linkml import io
+
 
 def generate_core_yaml(output_path:Path):
     core = io.load_nwb_core()
@@ -34,13 +35,13 @@ def parser() -> ArgumentParser:
         '--yaml',
         help="directory to export linkML schema to",
         type=Path,
-        default=Path(__file__).parent.parent / 'nwb_linkml' / 'schema'
+        default=Path(__file__).parent.parent / 'nwb_linkml' / 'src' / 'nwb_linkml' / 'schema'
     )
     parser.add_argument(
         '--pydantic',
         help="directory to export pydantic models",
         type=Path,
-        default=Path(__file__).parent.parent / 'nwb_linkml' / 'models'
+        default=Path(__file__).parent.parent / 'nwb_linkml' / 'src' / 'nwb_linkml' / 'models'
     )
     return parser
 

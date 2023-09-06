@@ -1,15 +1,13 @@
 """
 Adapters to linkML classes
 """
-import pdb
 import re
 from abc import abstractmethod
 from typing import List, Optional
 from nwb_schema_language import Dataset, Group, ReferenceDtype, CompoundDtype, DTypeType
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
-from nwb_linkml.maps import QUANTITY_MAP
-from nwb_linkml.lang_elements import Arraylike
+from nwb_linkml.src.nwb_linkml.maps import QUANTITY_MAP
 
 CAMEL_TO_SNAKE = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
 """

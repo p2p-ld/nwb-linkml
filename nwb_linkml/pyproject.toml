@@ -6,8 +6,8 @@ authors = ["sneakers-the-rat <JLSaunders987@gmail.com>"]
 license = "GPL-3.0"
 readme = "README.md"
 packages = [
-    {include = "nwb_linkml"},
-    {include = "nwb_schema_language", from="nwb_schema_language/src"}
+    {include = "nwb_linkml", from="src"},
+    {include = "nwb_schema_language", from="../nwb_schema_language/src"}
 ]
 
 [tool.poetry.dependencies]

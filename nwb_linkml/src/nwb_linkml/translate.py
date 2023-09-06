@@ -1,7 +1,6 @@
 """
 Convenience functions for translating NWB schema
 """
-import pdb
 import tempfile
 from typing import List, Optional, Dict
 from types import ModuleType
@@ -10,17 +9,12 @@ import json
 
 
 import h5py
-from linkml_runtime import SchemaView
-from linkml_runtime.linkml_model import SchemaDefinition
 from linkml_runtime.dumpers import yaml_dumper
-from linkml_runtime.utils.compile_python import compile_python
-
-
 
 from nwb_schema_language import Namespaces
-from nwb_linkml.io import load_schema_file
+from nwb_linkml.src.nwb_linkml.io import load_schema_file
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
-from nwb_linkml.map import apply_preload
+from nwb_linkml.src.nwb_linkml.map import apply_preload
 from nwb_linkml.adapters import SchemaAdapter, NamespacesAdapter
 
 def make_namespace_adapter(schema: dict) -> NamespacesAdapter:

@@ -1,9 +1,7 @@
 import pytest
-from typing import Dict
 
-
-from nwb_linkml import io
-from nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_linkml.src.nwb_linkml import io
+from nwb_linkml.src.nwb_linkml.adapters.namespaces import NamespacesAdapter
 import shutil
 from pathlib import Path
 

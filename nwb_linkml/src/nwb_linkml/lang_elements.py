@@ -12,7 +12,7 @@ from linkml_runtime.linkml_model import \
     TypeDefinition,\
     Prefix,\
     PermissibleValue
-from nwb_linkml.maps.dtype import flat_to_linkml
+from nwb_linkml.src.nwb_linkml.maps import flat_to_linkml
 
 
 FlatDType = EnumDefinition(

@@ -1,9 +1,8 @@
 """
 Loading/saving NWB Schema yaml files
 """
-import pdb
 from pathlib import Path
-from typing import TypedDict, List, Dict, Optional
+from typing import Optional
 from pprint import pprint
 import warnings
 
@@ -12,9 +11,8 @@ import yaml
 
 from nwb_schema_language import Namespaces,  Group, Dataset
 from nwb_linkml.namespaces import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
-from nwb_linkml.maps import preload
-from nwb_linkml.map import PHASES, Map
-from nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_linkml.src.nwb_linkml.map import PHASES, Map
+from nwb_linkml.src.nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
 
 
@@ -70,7 +68,7 @@ def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
     )
     return schema
 
-def load_namespace_schema(namespace: Namespaces, path:Path=Path('.')) -> NamespacesAdapter:
+def load_namespace_schema(namespace: Namespaces, path:Path=Path('..')) -> NamespacesAdapter:
     """
     Load all schema referenced by a namespace file
 
