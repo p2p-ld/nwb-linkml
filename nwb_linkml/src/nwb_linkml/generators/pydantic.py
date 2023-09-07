@@ -19,10 +19,10 @@ The `serialize` method
 import pdb
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Set, Tuple, Optional
+from typing import List, Dict, Set, Tuple, Optional, TypedDict
 import os, sys
 from types import ModuleType
-from copy import deepcopy
+from copy import deepcopy, copy
 import warnings
 
 from nwb_linkml.maps import flat_to_npytyping
@@ -36,9 +36,16 @@ SlotDefinitionName,
     TypeDefinition,
 ElementName
 )
+from linkml.generators.common.type_designators import (
+    get_accepted_type_designator_values,
+    get_type_designator_value,
+)
 from linkml_runtime.utils.formatutils import camelcase, underscore
 from linkml_runtime.utils.schemaview import SchemaView
 from linkml_runtime.utils.compile_python import file_text
+from linkml.utils.ifabsent_functions import ifabsent_value_declaration
+
+
 from jinja2 import Template
 
 
@@ -175,6 +182,7 @@ class {{ c.name }}
     return template
 
 
+
 @dataclass
 class NWBPydanticGenerator(PydanticGenerator):
 
@@ -184,6 +192,8 @@ class NWBPydanticGenerator(PydanticGenerator):
     SKIP_CLASSES=('',)
     # SKIP_CLASSES=('VectorData','VectorIndex')
     split:bool=True
+    schema_map:Dict[str, SchemaDefinition]=None
+
 
     def _locate_imports(
             self,
@@ -234,15 +244,16 @@ class NWBPydanticGenerator(PydanticGenerator):
             self,
             cls:ClassDefinition,
             sv:SchemaView,
-            all_classes:dict[ClassDefinitionName, ClassDefinition]) -> List[str]:
+            all_classes:dict[ClassDefinitionName, ClassDefinition],
+            class_slots:dict[str, List[SlotDefinition]]
+    ) -> List[str]:
         """Get the imports needed for a single class"""
         needed_classes = []
         needed_classes.append(cls.is_a)
         # get needed classes used as ranges in class attributes
-        for slot_name in sv.class_slots(cls.name):
-            if slot_name in self.SKIP_SLOTS:
+        for slot in class_slots[cls.name]:
+            if slot.name in self.SKIP_SLOTS:
                 continue
-            slot = deepcopy(sv.induced_slot(slot_name, cls.name))
             if slot.range in all_classes:
                 needed_classes.append(slot.range)
             # handle when a range is a union of classes
@@ -253,15 +264,25 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         return needed_classes
 
-    def _get_imports(self, sv:SchemaView) -> Dict[str, List[str]]:
+    def _get_imports(self,
+                     sv:SchemaView,
+                     local_classes: List[ClassDefinition],
+                     class_slots: Dict[str, List[SlotDefinition]]) -> Dict[str, List[str]]:
+        # import from local references, rather than serializing every class in every file
+        if not self.split:
+            # we are compiling this whole thing in one big file so we don't import anything
+            return {}
+        if 'namespace' in sv.schema.annotations.keys() and sv.schema.annotations['namespace']['value'] == 'True':
+            return self._get_namespace_imports(sv)
+
         all_classes = sv.all_classes(imports=True)
-        local_classes = sv.all_classes(imports=False)
+        # local_classes = sv.all_classes(imports=False)
         needed_classes = []
         # find needed classes - is_a and slot ranges
 
-        for clsname, cls in local_classes.items():
+        for cls in local_classes:
             # get imports for this class
-            needed_classes.extend(self._get_class_imports(cls, sv, all_classes))
+            needed_classes.extend(self._get_class_imports(cls, sv, all_classes, class_slots))
 
         # remove duplicates and arraylikes
         needed_classes = [cls for cls in set(needed_classes) if cls is not None and cls != 'Arraylike']
@@ -272,27 +293,29 @@ class NWBPydanticGenerator(PydanticGenerator):
         return imports
 
 
-    def _get_classes(self, sv:SchemaView, imports: Dict[str, List[str]]) -> List[ClassDefinition]:
-        module_classes = sv.all_classes(imports=False).values()
-        imported_classes = []
-        for classes in imports.values():
-            imported_classes.extend(classes)
-
-        module_classes = [c for c in list(module_classes) if c.is_a != 'Arraylike']
-        imported_classes = [c for c in imported_classes if sv.get_class(c) and sv.get_class(c).is_a != 'Arraylike']
-
-        sorted_classes = self.sort_classes(module_classes, imported_classes)
-        self.sorted_class_names = [camelcase(cname) for cname in imported_classes]
-        self.sorted_class_names += [camelcase(c.name) for c in sorted_classes]
+    def _get_classes(self, sv:SchemaView) -> List[ClassDefinition]:
+        if self.split:
+            classes = sv.all_classes(imports=False).values()
+        else:
+            classes = sv.all_classes(imports=True).values()
 
         # Don't want to generate classes when class_uri is linkml:Any, will
         # just swap in typing.Any instead down below
-        sorted_classes = [c for c in sorted_classes if c.class_uri != "linkml:Any"]
-        return sorted_classes
+        classes = [c for c in list(classes) if c.is_a != 'Arraylike' and c.class_uri != "linkml:Any"]
+
+        return classes
+
+    def _get_class_slots(self, sv:SchemaView, cls:ClassDefinition) -> List[SlotDefinition]:
+        slots = []
+        for slot_name in sv.class_slots(cls.name):
+            if slot_name in self.SKIP_SLOTS:
+                continue
+            slots.append(sv.induced_slot(slot_name, cls.name))
+        return slots
 
     def _build_class(self, class_original:ClassDefinition) -> ClassDefinition:
         class_def: ClassDefinition
-        class_def = deepcopy(class_original)
+        class_def = copy(class_original)
         class_def.name = camelcase(class_original.name)
         if class_def.is_a:
             class_def.is_a = camelcase(class_def.is_a)
@@ -375,7 +398,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         return union
 
 
-    def sort_classes(self, clist: List[ClassDefinition], imports:List[str]) -> List[ClassDefinition]:
+    def sort_classes(self, clist: List[ClassDefinition], imports:Dict[str, List[str]]) -> List[ClassDefinition]:
         """
         sort classes such that if C is a child of P then C appears after P in the list
 
@@ -383,9 +406,14 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         Modified from original to allow for imported classes
         """
+        # unnest imports
+        imported_classes = []
+        for i in imports.values():
+            imported_classes.extend(i)
+
         clist = list(clist)
         clist = [c for c in clist if c.name not in self.SKIP_CLASSES]
-        slist = []  # sorted
+        slist = []  # type: List[ClassDefinition]
         while len(clist) > 0:
             can_add = False
             for i in range(len(clist)):
@@ -399,7 +427,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                     can_add = True
 
                 else:
-                    if set(candidates) <= set([p.name for p in slist] + imports):
+                    if set(candidates) <= set([p.name for p in slist] + imported_classes):
                         can_add = True
 
                 if can_add:
@@ -410,6 +438,9 @@ class NWBPydanticGenerator(PydanticGenerator):
                 raise ValueError(
                     f"could not find suitable element in {clist} that does not ref {slist}"
                 )
+
+        self.sorted_class_names = [camelcase(cname) for cname in imported_classes]
+        self.sorted_class_names += [camelcase(c.name) for c in slist]
         return slist
 
     def get_class_slot_range(self, slot_range: str, inlined: bool, inlined_as_list: bool) -> str:
@@ -449,7 +480,47 @@ class NWBPydanticGenerator(PydanticGenerator):
                 parents[camelcase(class_def.name)] = class_parents
         return parents
 
+    def get_predefined_slot_value(self, slot: SlotDefinition, class_def: ClassDefinition) -> Optional[str]:
+        """
+        Modified from base pydantic generator to use already grabbed induced_slot from
+        already-grabbed and modified classes rather than doing a fresh iteration to
+        save time and respect changes already made elsewhere in the serialization routine
+
+        :return: Dictionary of dictionaries with predefined slot values for each class
+        """
+        sv = self.schemaview
+        slot_value: Optional[str] = None
+        # for class_def in sv.all_classes().values():
+        #     for slot_name in sv.class_slots(class_def.name):
+        #        slot = sv.induced_slot(slot_name, class_def.name)
+        if slot.designates_type:
+            target_value = get_type_designator_value(sv, slot, class_def)
+            slot_value = f'"{target_value}"'
+            if slot.multivalued:
+                slot_value = (
+                    "[" + slot_value + "]"
+                )
+        elif slot.ifabsent is not None:
+            value = ifabsent_value_declaration(slot.ifabsent, sv, class_def, slot)
+            slot_value = value
+        # Multivalued slots that are either not inlined (just an identifier) or are
+        # inlined as lists should get default_factory list, if they're inlined but
+        # not as a list, that means a dictionary
+        elif slot.multivalued:
+            # this is slow, needs to do additional induced slot calls
+            #has_identifier_slot = self.range_class_has_identifier_slot(slot)
+
+            if slot.inlined and not slot.inlined_as_list: # and has_identifier_slot:
+                slot_value = "default_factory=dict"
+            else:
+                slot_value = "default_factory=list"
+
+        return slot_value
+
     def serialize(self) -> str:
+        predefined_slot_values = {}
+        """splitting up parent class :meth:`.get_predefined_slot_values`"""
+
         if self.template_file is not None:
             with open(self.template_file) as template_file:
                 template_obj = Template(template_file.read())
@@ -458,34 +529,28 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         sv: SchemaView
         sv = self.schemaview
+        sv.schema_map = self.schema_map
         schema = sv.schema
         pyschema = SchemaDefinition(
             id=schema.id,
             name=schema.name,
             description=schema.description.replace('"', '\\"') if schema.description else None,
         )
+        # test caching if import closure
         enums = self.generate_enums(sv.all_enums())
         # filter skipped enums
         enums = {k:v for k,v in enums.items() if k not in self.SKIP_ENUM}
 
-        if self.split:
-            # import from local references, rather than serializing every class in every file
-            if 'namespace' in schema.annotations.keys() and schema.annotations['namespace']['value'] == 'True':
-                imports = self._get_namespace_imports(sv)
-            else:
-                imports = self._get_imports(sv)
+        classes = self._get_classes(sv)
+        # just induce slots once because that turns out to be expensive
+        class_slots = {} # type: Dict[str, List[SlotDefinition]]
+        for aclass in classes:
+            class_slots[aclass.name] = self._get_class_slots(sv, aclass)
 
-            sorted_classes = self._get_classes(sv, imports)
-        else:
-            sorted_classes = self.sort_classes(list(sv.all_classes().values()), [])
-            imports = {}
+        # figure out what classes we need to imports
+        imports = self._get_imports(sv, classes, class_slots)
 
-            # Don't want to generate classes when class_uri is linkml:Any, will
-            # just swap in typing.Any instead down below
-            sorted_classes = [c for c in sorted_classes if c.class_uri != "linkml:Any"]
-            self.sorted_class_names = [camelcase(c.name) for c in sorted_classes]
-
-
+        sorted_classes = self.sort_classes(classes, imports)
 
         for class_original in sorted_classes:
             # Generate class definition
@@ -503,11 +568,12 @@ class NWBPydanticGenerator(PydanticGenerator):
                 del class_def.attributes[attribute]
 
             class_name = class_original.name
-            for sn in sv.class_slots(class_name):
-                if sn in self.SKIP_SLOTS:
-                    continue
-                # TODO: fix runtime, copy should not be necessary
-                s = deepcopy(sv.induced_slot(sn, class_name))
+            predefined_slot_values[camelcase(class_name)] = {}
+            for s in class_slots[class_name]:
+                sn = SlotDefinitionName(s.name)
+                predefined_slot_value = self.get_predefined_slot_value(s, class_def)
+                if predefined_slot_value is not None:
+                    predefined_slot_values[camelcase(class_name)][s.name] = predefined_slot_value
                 # logging.error(f'Induced slot {class_name}.{sn} == {s.name} {s.range}')
                 s.name = underscore(s.name)
                 if s.description:
@@ -557,7 +623,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             schema=pyschema,
             underscore=underscore,
             enums=enums,
-            predefined_slot_values=self.get_predefined_slot_values(),
+            predefined_slot_values=predefined_slot_values,
             allow_extra=self.allow_extra,
             metamodel_version=self.schema.metamodel_version,
             version=self.schema.version,
