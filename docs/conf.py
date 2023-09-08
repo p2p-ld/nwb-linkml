@@ -61,3 +61,5 @@ napoleon_attr_annotations = True
 
 # graphviz
 graphviz_output_format = "svg"
+
+autodoc_pydantic_model_show_json_error_strategy = 'coerce'
