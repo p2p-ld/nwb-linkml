@@ -29,7 +29,7 @@ class SchemaAdapter(Adapter):
     path: Path
     groups: List[Group] = Field(default_factory=list)
     datasets: List[Dataset] = Field(default_factory=list)
-    imports: List['SchemaAdapter' | str] = Field(default_factory=list)
+    imports: List['SchemaAdapter | str'] = Field(default_factory=list)
     namespace: Optional[str] = Field(
         None,
         description="""String of containing namespace. Populated by NamespacesAdapter""")
