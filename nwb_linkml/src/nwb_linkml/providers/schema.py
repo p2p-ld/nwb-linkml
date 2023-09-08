@@ -12,12 +12,15 @@ Relationship to other modules:
 - :mod:`.providers` then use ``adapters`` and ``generators`` to provide models
   from generated schema!
 """
+import pdb
 from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict
 from pathlib import Path
 import os
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+import warnings
+import importlib
 
-from linkml_runtime.linkml_model import SchemaDefinition
+from linkml_runtime.linkml_model import SchemaDefinition, SchemaDefinitionName
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime import SchemaView
 
@@ -28,6 +31,8 @@ from nwb_linkml.adapters.adapter import BuildResult
 from nwb_linkml.maps.naming import module_case, version_module_case, relative_path
 from nwb_schema_language import Namespaces
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
+from nwb_linkml.providers.git import DEFAULT_REPOS
+from nwb_linkml.ui import AdapterProgress
 
 class NamespaceVersion(TypedDict):
     namespace: str
@@ -35,7 +40,7 @@ class NamespaceVersion(TypedDict):
 
 P = TypeVar('P')
 
-class Provider:
+class Provider(ABC):
     """
     Metaclass for different kind of providers!
     """
@@ -51,9 +56,10 @@ class Provider:
             config = Config()
         self.config = config
         self.cache_dir = config.cache_dir
+        self.verbose = verbose
 
-    @abstractmethod
     @property
+    @abstractmethod
     def path(self) -> Path:
         """
         Base path for this kind of provider
@@ -69,7 +75,9 @@ class Provider:
     def namespace_path(
             self,
             namespace: str,
-            version: Optional[str] = None) -> Path:
+            version: Optional[str] = None,
+            allow_repo: bool = True
+    ) -> Path:
         """
         Get the location for a given namespace of this type.
 
@@ -85,20 +93,26 @@ class Provider:
                 recent *version*, but the most recently *generated* version
                 because it's assumed that's the one you want if you're just
                 gesturally reaching for one.
+            allow_repo (bool): Allow the pathfinder to return the installed repository/package,
+                useful to enforce building into temporary directories, decoupling finding a path
+                during loading vs. building. Building into the repo is still possible if both
+                namespace and version are provided (ie. the path is fully qualified) and
+                :attr:`.config`'s path is the repository path.
         """
         namespace_module = module_case(namespace)
         namespace_path = self.path / namespace_module
-        if not namespace_path.exists() and namespace in ('core', 'hdmf-common'):
+        if not namespace_path.exists() and namespace in ('core', 'hdmf-common') and allow_repo:
             # return builtins
+            module_path = Path(importlib.util.find_spec('nwb_linkml').origin).parent
+
             if self.PROVIDES == 'linkml':
-                from nwb_linkml import schema
-                namespace_path =  Path(schema.__file__)
+                namespace_path = module_path / 'schema'
             elif self.PROVIDES == 'pydantic':
-                from nwb_linkml import models
-                namespace_path = Path(models.__file__)
+                namespace_path = module_path / 'models'
 
         if version is not None:
             version_path = namespace_path / version_module_case(version)
+            version_path.mkdir(exist_ok=True, parents=True)
         else:
             # or find the most recently built one
             versions = sorted(namespace_path.iterdir(), key=os.path.getmtime)
@@ -109,6 +123,10 @@ class Provider:
         return version_path
 
 
+class LinkMLSchemaBuild(TypedDict):
+    result: BuildResult
+    version: str
+    namespace: Path
 
 
 class LinkMLProvider(Provider):
@@ -127,75 +145,114 @@ class LinkMLProvider(Provider):
             path (:class:`pathlib.Path`): Path to the namespace .yaml
             kwargs: passed to :meth:`.build`
         """
-        sch = {}
-        ns_dict = io.schema.load_yaml(path)
-        sch['namespace'] = ns_dict
-        namespace = Namespaces(**ns_dict)
+        ns_adapter = adapters.NamespacesAdapter.from_yaml(path)
+        return self.build(ns_adapter, **kwargs)
 
-        for ns in namespace.namespaces:
-            for schema in ns.schema_:
-                if schema.source is None:
-                    # this is normal, we'll resolve later
-                    continue
-                yml_file = path.parent / schema.source
-                sch[yml_file.stem] = (io.schema.load_yaml(yml_file))
-
-        return self.build(schemas=sch, **kwargs)
-
-    def build(
+    def build_from_dicts(
         self,
         schemas:Dict[str, dict],
-        versions: Optional[List[NamespaceVersion]] = None,
-        dump: bool = True,
-    ) -> BuildResult:
+        **kwargs
+    ) -> Dict[str | SchemaDefinitionName, LinkMLSchemaBuild]:
         """
+        Build from schema dictionaries, eg. as come from nwb files
+
         Arguments:
             schemas (dict): A dictionary of ``{'schema_name': {:schema_definition}}``.
                 The "namespace" schema should have the key ``namespace``, which is used
                 to infer version and schema name. Post-load maps should have already
                 been applied
-            versions (List[NamespaceVersion]): List of specific versions to use
-                for cross-namespace imports. If none is provided, use the most recent version
-                available.
-            dump (bool): If ``True`` (default), dump generated schema to YAML. otherwise just return
         """
         ns = Namespaces(**schemas['namespace'])
         typed_schemas = [
             io.schema.load_schema_file(
                 path=Path(key + ".yaml"),
                 yaml=val)
-            for key,val in schemas.items()
+            for key, val in schemas.items()
             if key != 'namespace'
         ]
         ns_adapter = adapters.NamespacesAdapter(
             namespaces=ns,
             schemas=typed_schemas
         )
+        return self.build(ns_adapter, **kwargs)
+
+
+    def build(
+        self,
+        ns_adapter: adapters.NamespacesAdapter,
+        versions: Optional[List[NamespaceVersion]] = None,
+        dump: bool = True,
+    ) -> Dict[str | SchemaDefinitionName, LinkMLSchemaBuild]:
+        """
+        Arguments:
+            namespaces (:class:`.NamespacesAdapter`): Adapter (populated with any necessary imported namespaces)
+                to build
+            versions (List[NamespaceVersion]): List of specific versions to use
+                for cross-namespace imports. If none is provided, use the most recent version
+                available.
+            dump (bool): If ``True`` (default), dump generated schema to YAML. otherwise just return
+        """
+
         self._find_imports(ns_adapter, versions, populate=True)
-        built = ns_adapter.build()
+        if self.verbose:
+            progress = AdapterProgress(ns_adapter)
+            #progress.start()
+            with progress:
+                built = ns_adapter.build(progress=progress)
+        else:
+            progress = None
+
+            built = ns_adapter.build()
+
+
+        # if progress is not None:
+        #     progress.stop()
 
         # write schemas to yaml files
+        build_result = {}
+
         namespace_sch = [sch for sch in built.schemas if 'namespace' in sch.annotations.keys()]
         for ns_linkml in namespace_sch:
             version = ns_adapter.versions[ns_linkml.name]
-            version_path = self.namespace_path(ns_linkml.name, version)
-            with open(version_path / 'namespace.yaml', 'w') as ns_f:
-                yaml_dumper.dump(ns_linkml, version_path)
+            version_path = self.namespace_path(ns_linkml.name, version, allow_repo=False)
+            ns_file = version_path / 'namespace.yaml'
+            yaml_dumper.dump(ns_linkml, ns_file)
             # write the schemas for this namespace
-            ns_schema_names = ns_adapter.namespace_schemas(ns_linkml.name)
+            ns_schema_names = [name.strip('.yaml') for name in ns_adapter.namespace_schemas(ns_linkml.name)]
             other_schema = [sch for sch in built.schemas if sch.name in ns_schema_names]
             for sch in other_schema:
                 output_file = version_path / (sch.name + '.yaml')
                 yaml_dumper.dump(sch, output_file)
 
-        return built
+            # make return result for just this namespace
+            build_result[ns_linkml.name] = LinkMLSchemaBuild(
+                namespace=ns_file,
+                result= BuildResult(schemas=[ns_linkml, *other_schema]),
+                version=version
+            )
+
+        return build_result
 
     def get(self, namespace: str, version: Optional[str] = None) -> SchemaView:
         """
         Get a schema view over the namespace
         """
         path = self.namespace_path(namespace, version) / 'namespace.yaml'
+        if not path.exists():
+            path = self._find_source(namespace, version)
         return SchemaView(path)
+
+    def _find_source(self, namespace:str, version: Optional[str] = None) -> Path:
+        """Try and find the namespace if it exists in our default repository and build it!"""
+        ns_repo = DEFAULT_REPOS.get(namespace, None)
+        if ns_repo is None:
+            raise KeyError(f"Namespace {namespace} could not be found, and no git repository source has been configured!")
+        ns_file = ns_repo.provide_from_git(commit=version)
+        res = self.build_from_yaml(ns_file)
+        return res[namespace]['namespace']
+
+
+
 
 
     def _find_imports(self,

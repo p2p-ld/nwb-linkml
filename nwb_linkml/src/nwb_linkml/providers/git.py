@@ -2,7 +2,7 @@
 Define and manage NWB namespaces in external repositories
 """
 import pdb
-from typing import Optional
+from typing import Optional, Dict
 import warnings
 from pathlib import Path
 import tempfile
@@ -39,7 +39,7 @@ HDMF_COMMON_REPO = NamespaceRepo(
 
 DEFAULT_REPOS = {
     repo.name: repo for repo in [NWB_CORE_REPO, HDMF_COMMON_REPO]
-}
+}  # type: Dict[str, NamespaceRepo]
 
 
 class GitError(OSError):
@@ -104,7 +104,7 @@ class GitRepo:
         """
         The intended commit to check out.
 
-        If ``None``, should be the latest commit when the repo was checked out
+        If ``None``, use ``HEAD``
 
         Should match :prop:`.active_commit`, differs semantically in that it is used to
         set the active_commit, while :prop:`.active_commit` reads what commit is actually checked out
@@ -112,8 +112,11 @@ class GitRepo:
         return self._commit
 
     @commit.setter
-    def commit(self, commit:str):
-        self._git_call('checkout', commit)
+    def commit(self, commit:str|None):
+        if commit is None:
+            self._git_call('checkout', "HEAD")
+        else:
+            self._git_call('checkout', commit)
         self._commit = commit
 
     def check(self) -> bool:

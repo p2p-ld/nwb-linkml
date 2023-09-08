@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, validator, PrivateAttr
 from pprint import pformat
 from linkml_runtime.linkml_model import SchemaDefinition
 from linkml_runtime.dumpers import yaml_dumper
+from time import sleep
 
 
 from nwb_schema_language import Namespaces
@@ -19,6 +20,9 @@ from nwb_schema_language import Namespaces
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
+from nwb_linkml.providers.git import DEFAULT_REPOS
+
+from nwb_linkml.ui import AdapterProgress
 
 class NamespacesAdapter(Adapter):
     namespaces: Namespaces
@@ -33,18 +37,51 @@ class NamespacesAdapter(Adapter):
         self._populate_schema_namespaces()
         self.split = self._split
 
-    def build(self, skip_imports:bool=False) -> BuildResult:
+    @classmethod
+    def from_yaml(cls, path:Path) -> 'NamespacesAdapter':
+        """
+        Create a NamespacesAdapter from a nwb schema language namespaces yaml file.
+
+        Also attempts to provide imported implicitly imported schema (using the namespace key, rather than source, eg.
+        with hdmf-common)
+        """
+        from nwb_linkml.io import schema as schema_io
+        ns_adapter = schema_io.load_namespaces(path)
+        ns_adapter = schema_io.load_namespace_schema(ns_adapter, path)
+
+        # try and find imported schema
+
+        need_imports = []
+        for needed in ns_adapter.needed_imports.values():
+            need_imports.extend([n for n in needed if n not in ns_adapter.needed_imports.keys()])
+
+        for needed in need_imports:
+            if needed in DEFAULT_REPOS.keys():
+                needed_source_ns = DEFAULT_REPOS[needed].provide_from_git()
+                needed_adapter = NamespacesAdapter.from_yaml(needed_source_ns)
+                ns_adapter.imported.append(needed_adapter)
+
+        return ns_adapter
+
+
+
+    def build(self, skip_imports:bool=False, progress:Optional[AdapterProgress] = None) -> BuildResult:
         if not self._imports_populated and not skip_imports:
             self.populate_imports()
 
-
         sch_result = BuildResult()
         for sch in self.schemas:
+            if progress is not None:
+                progress.update(sch.namespace, action=sch.name)
             sch_result += sch.build()
+            if progress is not None:
+                progress.update(sch.namespace, advance=1)
+            sleep(1)
+
         # recursive step
         if not skip_imports:
             for imported in self.imported:
-                imported_build = imported.build()
+                imported_build = imported.build(progress=progress)
                 sch_result += imported_build
 
         # add in monkeypatch nwb types
@@ -189,18 +226,43 @@ class NamespacesAdapter(Adapter):
         """
         versions for each namespace
         """
-        return {ns['name']:ns['version'] for ns in self.namespaces.namespaces}
+        versions = {ns.name:ns.version for ns in self.namespaces.namespaces}
+        for imported in self.imported:
+            versions.update(imported.versions)
+        return versions
+
 
     def namespace_schemas(self, name:str) -> List[str]:
         """
         Get the schemas that are defined in a given namespace
         """
-        ns = [ns for ns in self.namespaces.namespaces if ns.name == name][0]
+        ns = [ns for ns in self.namespaces.namespaces if ns.name == name]
+        if len(ns) == 0:
+            for imported in self.imported:
+                ns = [ns for ns in imported.namespaces.namespaces if ns.name == name]
+                if len(ns) > 0:
+                    ns = ns[0]
+                    break
+            else:
+                raise NameError(f"Couldnt find namespace {name}")
+        else:
+            ns = ns[0]
+
         schema_names = []
         for sch in ns.schema_:
             if sch.source is not None:
                 schema_names.append(sch.source)
         return schema_names
+
+    def schema_namespace(self, name:str) -> Optional[str]:
+        """
+        Inverse of :meth:`.namespace_schemas` - given a schema name, get the namespace it's in
+        """
+        for ns in self.namespaces.namespaces:
+            sources = [sch.source for sch in ns.schema_ if sch.source is not None]
+            if name in sources:
+                return ns.name
+        return None
 
 
 

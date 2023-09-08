@@ -71,7 +71,6 @@ addopts = [
     "--cov-append",
     "--cov-config=.coveragerc",
     "--emoji",
-    "--profile"
 ]
 testpaths = [
     "tests",

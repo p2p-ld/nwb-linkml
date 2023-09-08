@@ -1,9 +1,8 @@
 import pytest
-import tempfile
 import shutil
 
 import yaml
-from nwb_linkml.io.git import GitRepo, GitError, NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
+from nwb_linkml.providers.git import GitRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
 from nwb_schema_language import Namespaces
 
 @pytest.mark.parametrize(

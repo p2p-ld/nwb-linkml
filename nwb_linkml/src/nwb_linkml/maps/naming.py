@@ -33,7 +33,7 @@ def version_module_case(name:str) -> str:
     """
     name = module_case(name)
     if not name.startswith('v'):
-        name = v + name
+        name = 'v' + name
     return name
 
 def relative_path(target: Path, origin: Path):

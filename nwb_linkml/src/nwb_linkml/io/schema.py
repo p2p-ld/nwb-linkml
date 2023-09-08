@@ -9,7 +9,7 @@ from linkml_runtime.loaders import yaml_loader
 import yaml
 
 from nwb_schema_language import Namespaces,  Group, Dataset
-from nwb_linkml.io.git import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
+from nwb_linkml.providers.git import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
 from nwb_linkml.map import PHASES, Map
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
