@@ -1,0 +1,5 @@
+# Generators
+
+```{toctree}
+pydantic
+```

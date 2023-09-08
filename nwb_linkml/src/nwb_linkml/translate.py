@@ -1,5 +1,7 @@
 """
 Convenience functions for translating NWB schema
+
+This module will be deprecated and removed in favor of :mod:`.providers`
 """
 import tempfile
 from typing import List, Optional, Dict

@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "nwb-linkml-docs"
+version = "0.1.0"
+description = "Dependency management to build nwb-linkml docs, see individual packages for actual package deps"
+authors = ["sneakers-the-rat <JLSaunders987@gmail.com>"]
+license = "AGPL-3.0"
+readme = "README.md"
+packages = [{include = "nwb_linkml_docs"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sphinx = "^7.2.5"
+furo = "^2023.8.19"
+myst-parser = "^2.0.0"
+autodoc-pydantic = "^2.0.1"
+nptyping = "^2.5.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
