@@ -45,6 +45,7 @@ from linkml_runtime.utils.schemaview import SchemaView
 from linkml_runtime.utils.compile_python import file_text
 from linkml.utils.ifabsent_functions import ifabsent_value_declaration
 
+from nwb_linkml.maps.naming import module_case, version_module_case
 
 from jinja2 import Template
 
@@ -193,6 +194,8 @@ class NWBPydanticGenerator(PydanticGenerator):
     # SKIP_CLASSES=('VectorData','VectorIndex')
     split:bool=True
     schema_map:Dict[str, SchemaDefinition]=None
+    versions:List[dict] = None
+    """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
 
 
     def _locate_imports(
@@ -217,7 +220,12 @@ class NWBPydanticGenerator(PydanticGenerator):
             if module_name == self.schema.name:
                 continue
 
-            local_mod_name = '.' + module_name.replace('.', '_').replace('-', '_')
+            if self.versions and module_name in [v['name'] for v in self.versions]:
+                version = version_module_case([v['version'] for v in self.versions if v['name'] == module_name][0])
+                local_mod_name = '....' + module_case(module_name) + '.' + version + '.' + 'namespace'
+            else:
+
+                local_mod_name = '.' + module_case(module_name)
             if local_mod_name not in imports:
                 imports[local_mod_name] = [camelcase(cls)]
             else:

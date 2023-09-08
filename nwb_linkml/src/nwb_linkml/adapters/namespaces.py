@@ -6,7 +6,7 @@ for extracting information and generating translated schema
 """
 import pdb
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pathlib import Path
 from pydantic import BaseModel, Field, validator, PrivateAttr
 from pprint import pformat
@@ -33,8 +33,8 @@ class NamespacesAdapter(Adapter):
         self._populate_schema_namespaces()
         self.split = self._split
 
-    def build(self) -> BuildResult:
-        if not self._imports_populated:
+    def build(self, skip_imports:bool=False) -> BuildResult:
+        if not self._imports_populated and not skip_imports:
             self.populate_imports()
 
 
@@ -42,9 +42,10 @@ class NamespacesAdapter(Adapter):
         for sch in self.schemas:
             sch_result += sch.build()
         # recursive step
-        for imported in self.imported:
-            imported_build = imported.build()
-            sch_result += imported_build
+        if not skip_imports:
+            for imported in self.imported:
+                imported_build = imported.build()
+                sch_result += imported_build
 
         # add in monkeypatch nwb types
         sch_result.schemas.append(NwbLangSchema)
@@ -53,7 +54,8 @@ class NamespacesAdapter(Adapter):
         for ns in self.namespaces.namespaces:
             ns_schemas = [sch.name for sch in self.schemas if sch.namespace == ns.name]
             # also add imports bc, well, we need them
-            ns_schemas.extend([ns.name for imported in self.imported for ns in imported.namespaces.namespaces])
+            if not skip_imports:
+                ns_schemas.extend([ns.name for imported in self.imported for ns in imported.namespaces.namespaces])
             ns_schema = SchemaDefinition(
                 name = ns.name,
                 id = ns.name,
@@ -163,5 +165,42 @@ class NamespacesAdapter(Adapter):
         for schema in schemas:
             output_file = base_dir / (schema.name + '.yaml')
             yaml_dumper.dump(schema, output_file)
+
+    @property
+    def needed_imports(self) -> Dict[str, List[str]]:
+        """
+        List of other, external namespaces that we need to import.
+        Usually provided as schema with a namespace but not a source
+
+        Returns:
+            {'namespace_name': ['needed_import_0', ...]}
+        """
+        needed_imports = {}
+        for a_ns in self.namespaces.namespaces:
+            needed_imports[a_ns.name] = []
+            for potential_import in a_ns.schema_:
+                if potential_import.namespace and not potential_import.source:
+                    needed_imports[a_ns.name].append(potential_import.namespace)
+
+        return needed_imports
+
+    @property
+    def versions(self) -> Dict[str, str]:
+        """
+        versions for each namespace
+        """
+        return {ns['name']:ns['version'] for ns in self.namespaces.namespaces}
+
+    def namespace_schemas(self, name:str) -> List[str]:
+        """
+        Get the schemas that are defined in a given namespace
+        """
+        ns = [ns for ns in self.namespaces.namespaces if ns.name == name][0]
+        schema_names = []
+        for sch in ns.schema_:
+            if sch.source is not None:
+                schema_names.append(sch.source)
+        return schema_names
+
 
 

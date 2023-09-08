@@ -29,7 +29,7 @@ class SchemaAdapter(Adapter):
     path: Path
     groups: List[Group] = Field(default_factory=list)
     datasets: List[Dataset] = Field(default_factory=list)
-    imports: List['SchemaAdapter'] = Field(default_factory=list)
+    imports: List['SchemaAdapter' | str] = Field(default_factory=list)
     namespace: Optional[str] = Field(
         None,
         description="""String of containing namespace. Populated by NamespacesAdapter""")
@@ -48,7 +48,7 @@ class SchemaAdapter(Adapter):
         out_str += '-'*len(self.name) + '\n'
         if len(self.imports) > 0:
             out_str += "Imports:\n"
-            out_str += "  " + ', '.join([i.name for i in self.imports]) + '\n'
+            out_str += "  " + ', '.join([i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ]) + '\n'
 
         out_str += 'Groups:\n'
         out_str += '  ' + ', '.join([g.neurodata_type_def for g in self.groups])
@@ -83,10 +83,11 @@ class SchemaAdapter(Adapter):
             return sch_split
 
         else:
+
             sch = SchemaDefinition(
                 name = self.name,
                 id = self.name,
-                imports = [i.name for i in self.imports],
+                imports = [i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ],
                 classes=res.classes,
                 slots=res.slots,
                 types=res.types
@@ -113,7 +114,7 @@ class SchemaAdapter(Adapter):
         split_sch_name = '.'.join([self.name, 'include'])
 
 
-        imports = [i.name for i in self.imports]
+        imports = [i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ]
         imports.append('nwb.language')
         # need to mutually import the two schemas because the subclasses
         # could refer to the main classes

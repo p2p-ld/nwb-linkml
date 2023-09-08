@@ -1,28 +1,16 @@
 """
 Adapters to linkML classes
 """
-import re
 from abc import abstractmethod
 from typing import List, Optional
 from nwb_schema_language import Dataset, Group, ReferenceDtype, CompoundDtype, DTypeType
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
 from nwb_linkml.maps import QUANTITY_MAP
+from nwb_linkml.maps.naming import camel_to_snake
 
-CAMEL_TO_SNAKE = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
-"""
-Convert camel case to snake case
 
-courtesy of: https://stackoverflow.com/a/12867228
-"""
 
-def camel_to_snake(name:str) -> str:
-    """
-    Convert camel case to snake case
-
-    courtesy of: https://stackoverflow.com/a/12867228
-    """
-    return CAMEL_TO_SNAKE.sub(r'_\1', name).lower()
 
 class ClassAdapter(Adapter):
     """

@@ -30,6 +30,7 @@ pytest-emoji = {version="^0.2.0", optional = true}
 pytest-cov = {version = "^4.1.0", optional = true}
 coveralls = {version = "^3.3.1", optional = true}
 pytest-profiling = {version = "^1.7.0", optional = true}
+pydantic-settings = "^2.0.3"
 
 [tool.poetry.extras]
 tests = [
