@@ -17,7 +17,7 @@ The `serialize` method
 
 """
 import pdb
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Dict, Set, Tuple, Optional, TypedDict
 import os, sys
@@ -193,8 +193,8 @@ class NWBPydanticGenerator(PydanticGenerator):
     SKIP_CLASSES=('',)
     # SKIP_CLASSES=('VectorData','VectorIndex')
     split:bool=True
-    schema_map:Dict[str, SchemaDefinition]=None
-    versions:List[dict] = None
+    schema_map:Optional[Dict[str, SchemaDefinition]]=None
+    versions:dict = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
 
 
@@ -220,8 +220,8 @@ class NWBPydanticGenerator(PydanticGenerator):
             if module_name == self.schema.name:
                 continue
 
-            if self.versions and module_name in [v['name'] for v in self.versions]:
-                version = version_module_case([v['version'] for v in self.versions if v['name'] == module_name][0])
+            if self.versions and module_name in self.versions:
+                version = version_module_case(self.versions[module_name])
                 local_mod_name = '....' + module_case(module_name) + '.' + version + '.' + 'namespace'
             else:
 
@@ -537,7 +537,8 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         sv: SchemaView
         sv = self.schemaview
-        sv.schema_map = self.schema_map
+        if self.schema_map is not None:
+            sv.schema_map = self.schema_map
         schema = sv.schema
         pyschema = SchemaDefinition(
             id=schema.id,

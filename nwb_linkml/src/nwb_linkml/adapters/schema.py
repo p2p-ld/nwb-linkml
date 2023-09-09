@@ -93,7 +93,7 @@ class SchemaAdapter(Adapter):
                 types=res.types
             )
             # every schema needs the language elements
-            sch.imports.append('nwb.language')
+            sch.imports.append('.'.join([self.namespace, 'nwb.language']))
             return BuildResult(schemas=[sch])
 
     def split_subclasses(self, classes: BuildResult) -> BuildResult:

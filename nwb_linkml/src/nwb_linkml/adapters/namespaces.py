@@ -13,6 +13,7 @@ from pprint import pformat
 from linkml_runtime.linkml_model import SchemaDefinition
 from linkml_runtime.dumpers import yaml_dumper
 from time import sleep
+from copy import copy
 
 
 from nwb_schema_language import Namespaces
@@ -76,7 +77,6 @@ class NamespacesAdapter(Adapter):
             sch_result += sch.build()
             if progress is not None:
                 progress.update(sch.namespace, advance=1)
-            sleep(1)
 
         # recursive step
         if not skip_imports:
@@ -84,12 +84,19 @@ class NamespacesAdapter(Adapter):
                 imported_build = imported.build(progress=progress)
                 sch_result += imported_build
 
-        # add in monkeypatch nwb types
-        sch_result.schemas.append(NwbLangSchema)
 
         # now generate the top-level namespaces that import everything
         for ns in self.namespaces.namespaces:
+
+            # add in monkeypatch nwb types
+            nwb_lang = copy(NwbLangSchema)
+            lang_schema_name = '.'.join([ns.name, 'nwb.language'])
+            nwb_lang.name = lang_schema_name
+            sch_result.schemas.append(nwb_lang)
+
             ns_schemas = [sch.name for sch in self.schemas if sch.namespace == ns.name]
+            ns_schemas.append(lang_schema_name)
+
             # also add imports bc, well, we need them
             if not skip_imports:
                 ns_schemas.extend([ns.name for imported in self.imported for ns in imported.namespaces.namespaces])
@@ -179,6 +186,11 @@ class NamespacesAdapter(Adapter):
         """
         Populate the imports that are needed for each schema file
 
+        This function adds a string version of imported schema assuming the
+        generated schema will live in the same directory. If the path to
+        the imported schema needs to be adjusted, that should happen elsewhere
+        (eg in :class:`.LinkMLProvider`) because we shouldn't know about
+        directory structure or anything like that here.
         """
         for sch in self.schemas:
             for needs in sch.needed_imports:

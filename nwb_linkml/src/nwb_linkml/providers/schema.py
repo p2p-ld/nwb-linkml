@@ -14,11 +14,13 @@ Relationship to other modules:
 """
 import pdb
 from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict
+from types import ModuleType
 from pathlib import Path
 import os
 from abc import abstractmethod, ABC
 import warnings
 import importlib
+import sys
 
 from linkml_runtime.linkml_model import SchemaDefinition, SchemaDefinitionName
 from linkml_runtime.dumpers import yaml_dumper
@@ -34,9 +36,6 @@ from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.providers.git import DEFAULT_REPOS
 from nwb_linkml.ui import AdapterProgress
 
-class NamespaceVersion(TypedDict):
-    namespace: str
-    version: str
 
 P = TypeVar('P')
 
@@ -112,13 +111,15 @@ class Provider(ABC):
 
         if version is not None:
             version_path = namespace_path / version_module_case(version)
-            version_path.mkdir(exist_ok=True, parents=True)
+            #version_path.mkdir(exist_ok=True, parents=True)
         else:
             # or find the most recently built one
             versions = sorted(namespace_path.iterdir(), key=os.path.getmtime)
+            versions = [v for v in versions if v.is_dir() and v.name not in ('__pycache__')]
             if len(versions) == 0:
                 raise FileNotFoundError('No version provided, and no existing schema found')
             version_path = versions[-1]
+
 
         return version_path
 
@@ -180,20 +181,21 @@ class LinkMLProvider(Provider):
     def build(
         self,
         ns_adapter: adapters.NamespacesAdapter,
-        versions: Optional[List[NamespaceVersion]] = None,
+        versions: Optional[dict] = None,
         dump: bool = True,
     ) -> Dict[str | SchemaDefinitionName, LinkMLSchemaBuild]:
         """
         Arguments:
             namespaces (:class:`.NamespacesAdapter`): Adapter (populated with any necessary imported namespaces)
                 to build
-            versions (List[NamespaceVersion]): List of specific versions to use
-                for cross-namespace imports. If none is provided, use the most recent version
+            versions (dict): Dict of specific versions to use
+                for cross-namespace imports. as ``{'namespace': 'version'}``
+                 If none is provided, use the most recent version
                 available.
             dump (bool): If ``True`` (default), dump generated schema to YAML. otherwise just return
         """
 
-        self._find_imports(ns_adapter, versions, populate=True)
+        #self._find_imports(ns_adapter, versions, populate=True)
         if self.verbose:
             progress = AdapterProgress(ns_adapter)
             #progress.start()
@@ -212,16 +214,22 @@ class LinkMLProvider(Provider):
         build_result = {}
 
         namespace_sch = [sch for sch in built.schemas if 'namespace' in sch.annotations.keys()]
+        namespace_names = [sch.name for sch in namespace_sch]
         for ns_linkml in namespace_sch:
             version = ns_adapter.versions[ns_linkml.name]
             version_path = self.namespace_path(ns_linkml.name, version, allow_repo=False)
+            version_path.mkdir(exist_ok=True, parents=True)
             ns_file = version_path / 'namespace.yaml'
+            ns_linkml = self._fix_schema_imports(ns_linkml, ns_adapter, ns_file)
             yaml_dumper.dump(ns_linkml, ns_file)
+
             # write the schemas for this namespace
-            ns_schema_names = [name.strip('.yaml') for name in ns_adapter.namespace_schemas(ns_linkml.name)]
-            other_schema = [sch for sch in built.schemas if sch.name in ns_schema_names]
+            other_schema = [sch for sch in built.schemas if sch.name.split('.')[0] == ns_linkml.name and sch not in namespace_sch]
             for sch in other_schema:
                 output_file = version_path / (sch.name + '.yaml')
+                # fix the paths for intra-schema imports
+                sch = self._fix_schema_imports(sch, ns_adapter, output_file)
+
                 yaml_dumper.dump(sch, output_file)
 
             # make return result for just this namespace
@@ -233,6 +241,20 @@ class LinkMLProvider(Provider):
 
         return build_result
 
+    def _fix_schema_imports(self, sch: SchemaDefinition,
+                            ns_adapter: adapters.NamespacesAdapter,
+                            output_file: Path) -> SchemaDefinition:
+        for animport in sch.imports:
+            if animport.split('.')[0] in ns_adapter.versions.keys():
+                imported_path = self.namespace_path(animport.split('.')[0], ns_adapter.versions[animport.split('.')[0]]) / 'namespace'
+                rel_path = relative_path(imported_path, output_file)
+                if str(rel_path) == '.' or str(rel_path) == 'namespace':
+                    # same directory, just keep the existing import
+                    continue
+                idx = sch.imports.index(animport)
+                del sch.imports[idx]
+                sch.imports.insert(idx, str(rel_path))
+        return sch
     def get(self, namespace: str, version: Optional[str] = None) -> SchemaView:
         """
         Get a schema view over the namespace
@@ -240,7 +262,9 @@ class LinkMLProvider(Provider):
         path = self.namespace_path(namespace, version) / 'namespace.yaml'
         if not path.exists():
             path = self._find_source(namespace, version)
-        return SchemaView(path)
+        sv = SchemaView(path)
+        sv.path = path
+        return sv
 
     def _find_source(self, namespace:str, version: Optional[str] = None) -> Path:
         """Try and find the namespace if it exists in our default repository and build it!"""
@@ -254,43 +278,42 @@ class LinkMLProvider(Provider):
 
 
 
-
-    def _find_imports(self,
-                      ns: adapters.NamespacesAdapter,
-                      versions: Optional[List[NamespaceVersion]] = None,
-                      populate: bool=True) -> Dict[str, List[str]]:
-        """
-        Find relative paths to other linkml schema that need to be
-        imported, but lack an explicit source
-
-        Arguments:
-            ns (:class:`.NamespacesAdapter`): Namespaces to find imports to
-            versions (List[:class:`.NamespaceVersion`]): Specific versions to import
-            populate (bool): If ``True`` (default), modify the namespace adapter to include the imports,
-                otherwise just return
-
-        Returns:
-            dict of lists for relative paths to other schema namespaces
-        """
-        import_paths = {}
-        for ns_name, needed_imports in ns.needed_imports.items():
-            our_path = self.namespace_path(ns_name, ns.versions[ns_name]) / 'namespace.yaml'
-            import_paths[ns_name] = []
-            for needed_import in needed_imports:
-                needed_version = None
-                if versions:
-                    needed_versions = [v['version'] for v in versions if v['namespace'] == needed_import]
-                    if len(needed_versions) > 0:
-                        needed_version = needed_versions[0]
-
-                version_path = self.namespace_path(needed_import, needed_version) / 'namespace.yaml'
-                import_paths[ns_name].append(str(relative_path(version_path, our_path)))
-
-            if populate:
-                for sch in ns.schemas:
-                    sch.imports.extend(import_paths)
-
-        return import_paths
+    #
+    # def _find_imports(self,
+    #                   ns: adapters.NamespacesAdapter,
+    #                   versions: Optional[dict] = None,
+    #                   populate: bool=True) -> Dict[str, List[str]]:
+    #     """
+    #     Find relative paths to other linkml schema that need to be
+    #     imported, but lack an explicit source
+    #
+    #     Arguments:
+    #         ns (:class:`.NamespacesAdapter`): Namespaces to find imports to
+    #         versions (dict): Specific versions to import
+    #         populate (bool): If ``True`` (default), modify the namespace adapter to include the imports,
+    #             otherwise just return
+    #
+    #     Returns:
+    #         dict of lists for relative paths to other schema namespaces
+    #     """
+    #     import_paths = {}
+    #     for ns_name, needed_imports in ns.needed_imports.items():
+    #         our_path = self.namespace_path(ns_name, ns.versions[ns_name], allow_repo=False) / 'namespace.yaml'
+    #         import_paths[ns_name] = []
+    #         for needed_import in needed_imports:
+    #             needed_version = None
+    #             if versions:
+    #                 needed_version = versions.get(needed_import, None)
+    #
+    #             version_path = self.namespace_path(needed_import, needed_version, allow_repo=False) / 'namespace.yaml'
+    #             import_paths[ns_name].append(str(relative_path(version_path, our_path)))
+    #
+    #         if populate:
+    #             pdb.set_trace()
+    #             for sch in ns.schemas:
+    #                 sch.imports.extend(import_paths[ns_name])
+    #
+    #     return import_paths
 
 
 class PydanticProvider(Provider):
@@ -304,9 +327,24 @@ class PydanticProvider(Provider):
             self,
             namespace: str | Path,
             version: Optional[str] = None,
-            versions: Optional[List[NamespaceVersion]] = None,
-            dump: bool = True
+            versions: Optional[dict] = None,
+            dump: bool = True,
+            **kwargs
     ) -> str:
+        """
+
+
+        Args:
+            namespace:
+            version:
+            versions:
+            dump:
+            **kwargs: Passed to :class:`.NWBPydanticGenerator`
+
+        Returns:
+
+        """
+
         if isinstance(namespace, str) and not (namespace.endswith('.yaml') or namespace.endswith('.yml')):
             # we're given a name of a namespace to build
             path = LinkMLProvider(path=self.config.cache_dir).namespace_path(namespace, version) / 'namespace.yaml'
@@ -314,21 +352,66 @@ class PydanticProvider(Provider):
             # given a path to a namespace linkml yaml file
             path = Path(namespace)
 
+        default_kwargs = {
+            'split': False,
+            'emit_metadata': True,
+            'gen_slots': True,
+            'pydantic_version': '2'
+        }
+        default_kwargs.update(kwargs)
+
         generator = NWBPydanticGenerator(
             str(path),
-            split=False,
             versions=versions,
-            emit_metadata=True,
-            gen_slots=True,
-            pydantic_version='2'
+            **default_kwargs
         )
         serialized = generator.serialize()
         if dump:
             out_file = self.path / path.parts[-3] / path.parts[-2] / 'namespace.py'
+            out_file.parent.mkdir(parents=True,exist_ok=True)
             with open(out_file, 'w') as ofile:
                 ofile.write(serialized)
 
         return serialized
+
+    @classmethod
+    def module_name(self, namespace:str, version:Optional[str]=None) -> str:
+        name_pieces = ['nwb_linkml', 'models', namespace]
+        if version is not None:
+            name_pieces.append(version_module_case(version))
+        module_name = '.'.join(name_pieces)
+        return module_name
+    def import_module(
+        self,
+        namespace: str,
+        version: Optional[str] = None
+    ) -> ModuleType:
+        path = self.namespace_path(namespace, version) / 'namespace.py'
+        if not path.exists():
+            raise ImportError(f'Module has not been built yet {path}')
+        module_name = self.module_name(namespace, version)
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return module
+
+    def get(self, namespace: str, version: Optional[str] = None) -> ModuleType:
+        module_name = self.module_name(namespace, version)
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        try:
+            path = self.namespace_path(namespace, version)
+        except FileNotFoundError:
+            path = None
+
+        if path is None or not path.exists():
+            _ = self.build(namespace, version)
+        module = self.import_module(namespace, version)
+        return module
+
+
 
 
 class SchemaProvider:
@@ -342,30 +425,29 @@ class SchemaProvider:
     consistency.
 
     Store each generated schema in a directory structure indexed by
-    schema namespace name and a truncated hash of the loaded schema dictionaries
-    (not the hash of the .yaml file, since we are also provided schema in nwbfiles)
+    schema namespace name and version
 
     eg:
 
         cache_dir
           - linkml
             - nwb_core
-              - hash_532gn90f
+              - v0_2_0
                 - nwb.core.namespace.yaml
                 - nwb.fore.file.yaml
                 - ...
-              - hash_fuia082f
+              - v0_2_1
                 - nwb.core.namespace.yaml
                 - ...
             - my_schema
-              - hash_t3tn908h
+              - v0_1_0
                 - ...
           - pydantic
             - nwb_core
-              - hash_532gn90f
+              - v0_2_0
                 - core.py
                 - ...
-              - hash_fuia082f
+              - v0_2_1
                 - core.py
                 - ...
 
@@ -392,25 +474,6 @@ class SchemaProvider:
         self.verbose = verbose
 
 
-
-    def generate_linkml(
-            self,
-            schemas:Dict[str, dict],
-            versions: Optional[List[NamespaceVersion]] = None
-    ):
-        """
-        Generate linkml from loaded nwb schemas, either from yaml or from an
-        nwb file's ``/specifications`` group.
-
-        Arguments:
-            schemas (dict): A dictionary of ``{'schema_name': {:schema_definition}}``.
-                The "namespace" schema should have the key ``namespace``, which is used
-                to infer version and schema name. Post-load maps should have already
-                been applied
-            versions (List[NamespaceVersion]): List of specific versions to use
-                for cross-namespace imports. If none is provided, use the most recent version
-                available.
-        """
 
 
 
