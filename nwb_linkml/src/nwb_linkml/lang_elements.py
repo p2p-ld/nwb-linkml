@@ -22,6 +22,11 @@ FlatDType = EnumDefinition(
 
 DTypeTypes = []
 for nwbtype, linkmltype in flat_to_linkml.items():
+    # skip the dtypes that are the same as the builtin linkml types (which should alredy exist)
+    # to avoid a recursion error
+    if linkmltype == nwbtype:
+        continue
+
     amin = None
     if nwbtype.startswith('uint'):
         amin = 0

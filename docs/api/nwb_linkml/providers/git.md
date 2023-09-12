@@ -1,7 +1,7 @@
 # Git
 
 ```{eval-rst}
-.. automodule:: nwb_linkml.io.git
+.. automodule:: nwb_linkml.providers.git
     :members:
     :undoc-members:
 ```

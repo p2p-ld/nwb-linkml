@@ -2,7 +2,7 @@
 Define and manage NWB namespaces in external repositories
 """
 import pdb
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 import warnings
 from pathlib import Path
 import tempfile
@@ -18,6 +18,10 @@ class NamespaceRepo(BaseModel):
     name: str = Field(description="Short name used to refer to this namespace (usually equivalent to the name field within a namespaces NWB list)")
     repository: HttpUrl | DirectoryPath = Field(description="URL or local absolute path to the root repository")
     path: Path = Field(description="Relative path from the repository root to the namespace file")
+    versions: List[str] = Field(
+        description="Known versions for this namespace repository, correspond to commit hashes or git tags that can be checked out by :class:`.GitRepo`",
+        default_factory=list
+    )
 
     def provide_from_git(self, commit:str|None=None) -> Path:
         git = GitRepo(self, commit)
@@ -28,13 +32,15 @@ class NamespaceRepo(BaseModel):
 NWB_CORE_REPO = NamespaceRepo(
     name="core",
     repository="https://github.com/NeurodataWithoutBorders/nwb-schema",
-    path=Path("core/nwb.namespace.yaml")
+    path=Path("core/nwb.namespace.yaml"),
+    versions=["2.0.1", "2.1.0", "2.2.0", "2.2.1", "2.2.2", "2.2.3", "2.2.4", "2.2.5", "2.3.0", "2.4.0", "2.5.0", "2.6.0"]
 )
 
 HDMF_COMMON_REPO = NamespaceRepo(
     name="hdmf-common",
     repository="https://github.com/hdmf-dev/hdmf-common-schema",
-    path=Path("common/namespace.yaml")
+    path=Path("common/namespace.yaml"),
+    versions=["1.1.0", "1.1.1", "1.1.2", "1.1.3", "1.2.0", "1.2.1", "1.3.0", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.7.0", "1.8.0"]
 )
 
 DEFAULT_REPOS = {
@@ -104,7 +110,7 @@ class GitRepo:
         """
         The intended commit to check out.
 
-        If ``None``, use ``HEAD``
+        If ``None``: if :attr:`NamespaceRepo.versions`, use the last version. Otherwise use ``HEAD``
 
         Should match :prop:`.active_commit`, differs semantically in that it is used to
         set the active_commit, while :prop:`.active_commit` reads what commit is actually checked out
@@ -113,11 +119,79 @@ class GitRepo:
 
     @commit.setter
     def commit(self, commit:str|None):
+        # first get out of a potential detached head state
+        # that would cause a call to "HEAD" to fail in unexpected ways
+        if self.detached_head:
+            self._git_call('checkout', self.default_branch)
+
         if commit is None:
-            self._git_call('checkout', "HEAD")
+            if len(self.namespace.versions) > 0:
+                self._git_call('checkout', self.namespace.versions[-1])
+            else:
+                self._git_call('checkout', "HEAD")
         else:
             self._git_call('checkout', commit)
         self._commit = commit
+
+    @property
+    def tag(self) -> str:
+        """
+        Get/set the currently checked out repo tag.
+
+        Returns:
+            str: the result of ``git describe --tags``, which is
+            equal to the tag if it is checked out, otherwise it is the tag
+            plus some number of revisions and the short hash.
+
+        Examples:
+
+            >>> repo = GitRepo(NWB_CORE_REPO)
+            >>> repo.clone()
+            >>> # Check out a tag specifically
+            >>> repo.tag = "2.6.0"
+            >>> repo.tag
+            "2.6.0"
+            >>> # Now check out a commit some number after the tag.
+            >>> repo.commit = "gec0a879"
+            >>> repo.tag
+            "2.6.0-5-gec0a879"
+
+        """
+        res =  self._git_call('describe', '--tags')
+        return res.stdout.decode('utf-8').strip()
+
+    @tag.setter
+    def tag(self, tag:str):
+        # first check that we have the most recent tags
+        self._git_call('fetch', '--all', '--tags')
+        self._git_call('checkout', f'tags/{tag}')
+        # error will be raised by _git_call if tag not found
+
+    @property
+    def default_branch(self) -> str:
+        """
+        Default branch as configured for this repository
+
+        Gotten from ``git symbolic-ref``
+        """
+        res = self._git_call('symbolic-ref', 'refs/remotes/origin/HEAD')
+        return res.stdout.decode('utf-8').strip().split('/')[-1]
+
+    @property
+    def detached_head(self) -> bool:
+        """
+        Detect if repo is in detached HEAD state that might need to be undone before
+        checking out eg. a HEAD commit.
+
+        Returns:
+            bool: ``True`` if in detached head mode, ``False`` otherwise
+        """
+        res = self._git_call('branch', '--show-current')
+        branch = res.stdout.decode('utf-8').strip()
+        if not branch:
+            return True
+        else:
+            return False
 
     def check(self) -> bool:
         """
@@ -177,15 +251,16 @@ class GitRepo:
                     warnings.warn('Destination directory is not empty and does not pass checks for correctness! cleaning up')
                     self.cleanup()
                 else:
-                    # already have it
+                    # already have it, just ensure commit and return
+
+                    self.commit = self.commit
                     return
         elif self.temp_directory.exists():
             # exists but empty
             self.cleanup()
 
         res = subprocess.run(['git', 'clone', str(self.namespace.repository), str(self.temp_directory)])
-        if self.commit:
-            self.commit = self.commit
+        self.commit = self.commit
         if res.returncode != 0:
             raise GitError(f'Could not clone repository:\n{res.stderr}')
 
