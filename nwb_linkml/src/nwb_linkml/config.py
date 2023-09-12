@@ -37,6 +37,7 @@ class Config(BaseSettings):
     @field_validator('cache_dir', mode='before')
     @classmethod
     def folder_exists(cls, v: Path, info: FieldValidationInfo) -> Path:
+        v = Path(v)
         v.mkdir(exist_ok=True)
         assert v.exists()
         return v

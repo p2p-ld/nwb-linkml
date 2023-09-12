@@ -1,8 +1,9 @@
 import pdb
 import shutil
+import os
 
 from typing import Optional, Union, List
-from ..fixtures import tmp_output_dir
+from ..fixtures import tmp_output_dir, set_config_vars
 
 import pytest
 
@@ -63,6 +64,10 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
 )
 def test_pydantic_provider(tmp_output_dir, class_name, test_fields):
     provider = PydanticProvider(path=tmp_output_dir)
+    # clear any prior output
+    assert provider.path.parent == tmp_output_dir
+    shutil.rmtree(provider.path, ignore_errors=True)
+    assert not provider.path.exists()
 
     core = provider.get('core')
 
@@ -75,6 +80,4 @@ def test_pydantic_provider(tmp_output_dir, class_name, test_fields):
         else:
             assert test_class.model_fields[k].annotation == v
 
-
-    pdb.set_trace()
 

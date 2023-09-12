@@ -8,7 +8,7 @@ from nwb_schema_language import Namespaces
 @pytest.mark.parametrize(
     ['source', 'commit'],
     [
-        (NWB_CORE_REPO, 'b4f8838cbfbb7f8a117bd7e0aad19133d26868b4'),
+        (NWB_CORE_REPO, '761a0d7838304864643f8bc3ab88c93bfd437f2a'),
         (HDMF_COMMON_REPO, '660b6ac0780dd9d2cb1e56fea8b62c671ca5e2c8')
     ]
 )
