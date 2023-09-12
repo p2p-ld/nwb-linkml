@@ -7,10 +7,9 @@ an NWB file, we need a bit of infrastructure for generating and caching
 pydantic models on the fly.
 
 Relationship to other modules:
-- :mod:`.adapters` manage the conversion from NWB schema language to linkML.
-- :mod:`.generators` create models like pydantic models from the linkML schema
-- :mod:`.providers` then use ``adapters`` and ``generators`` to provide models
-  from generated schema!
+* :mod:`.adapters` manage the conversion from NWB schema language to linkML.
+* :mod:`.generators` create models like pydantic models from the linkML schema
+* :mod:`.providers` then use ``adapters`` and ``generators`` to provide models from generated schema!
 """
 import pdb
 from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict
@@ -155,7 +154,7 @@ class LinkMLProvider(Provider):
     Like other :class:`.Provider` classes, this model is not a singleton but
     behaves a bit like one in that when instantiated without arguments
     it is stateless (except for configuration by environment-level variables).
-    So we don't use ``@classmethod``s here, but instantiating the class should remain
+    So we don't use ``@classmethod`` s here, but instantiating the class should remain
     cheap.
 
     Namespaces can be built from:
@@ -164,6 +163,7 @@ class LinkMLProvider(Provider):
     * dictionaries, as are usually packaged in nwb files: :meth:`.build_from_dicts`
 
     All of which feed into...
+
     * :class:`~.adapters.NamespacesAdapter` used throughout the rest of ``nwb_linkml`` - :meth:`.build`
 
     After a namespace is built, it can be accessed using :meth:`.LinkMLProvider.get`, which

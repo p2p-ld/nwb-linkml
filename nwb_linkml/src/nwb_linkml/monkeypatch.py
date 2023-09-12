@@ -38,6 +38,63 @@ def patch_npytyping():
     dataframe.DataFrameMeta.__module__ = property(new_module_dataframe)
     base_meta_classes.SubscriptableMeta._get_module = new_get_module
 
+def patch_schemaview():
+    """
+    Patch schemaview to correctly resolve multiple layers of relative imports.
+
+    References:
+
+    Returns:
+
+    """
+    from typing import List
+    from functools import lru_cache
+    from linkml_runtime.utils.schemaview import SchemaView
+
+    from linkml_runtime.linkml_model import SchemaDefinitionName
+    @lru_cache()
+    def imports_closure(self, imports: bool = True, traverse=True, inject_metadata=True) -> List[SchemaDefinitionName]:
+        """
+        Return all imports
+
+        :param traverse: if true, traverse recursively
+        :return: all schema names in the transitive reflexive imports closure
+        """
+        if not imports:
+            return [self.schema.name]
+        if self.schema_map is None:
+            self.schema_map = {self.schema.name: self.schema}
+        closure = []
+        visited = set()
+        todo = [self.schema.name]
+        if not traverse:
+            return todo
+        while len(todo) > 0:
+            sn = todo.pop()
+            visited.add(sn)
+            if sn not in self.schema_map:
+                imported_schema = self.load_import(sn)
+                self.schema_map[sn] = imported_schema
+            s = self.schema_map[sn]
+            if sn not in closure:
+                closure.append(sn)
+            for i in s.imports:
+                if sn.startswith('.') and ':' not in i:
+                    # prepend the relative part
+                    i = '/'.join(sn.split('/')[:-1]) + '/' + i
+                if i not in visited:
+                    todo.append(i)
+        if inject_metadata:
+            for s in self.schema_map.values():
+                for x in {**s.classes, **s.enums, **s.slots, **s.subsets, **s.types}.values():
+                    x.from_schema = s.id
+                for c in s.classes.values():
+                    for a in c.attributes.values():
+                        a.from_schema = s.id
+        return closure
+
+    SchemaView.imports_closure = imports_closure
 
 def apply_patches():
     patch_npytyping()
+    patch_schemaview()
