@@ -48,7 +48,7 @@ class NamespacesAdapter(Adapter):
         """
         from nwb_linkml.io import schema as schema_io
         ns_adapter = schema_io.load_namespaces(path)
-        ns_adapter = schema_io.load_namespace_schema(ns_adapter, path)
+        ns_adapter = schema_io.load_namespace_adapter(ns_adapter, path)
 
         # try and find imported schema
 
@@ -73,10 +73,19 @@ class NamespacesAdapter(Adapter):
         sch_result = BuildResult()
         for sch in self.schemas:
             if progress is not None:
-                progress.update(sch.namespace, action=sch.name)
+                try:
+                    progress.update(sch.namespace, action=sch.name)
+                except KeyError:
+                    # happens when we skip builds due to cachine
+                    pass
             sch_result += sch.build()
             if progress is not None:
-                progress.update(sch.namespace, advance=1)
+                try:
+                    progress.update(sch.namespace, advance=1)
+                except KeyError:
+                    # happens when we skip builds due to caching
+                    pass
+
 
         # recursive step
         if not skip_imports:
@@ -145,9 +154,8 @@ class NamespacesAdapter(Adapter):
                 sources = [sch.source for sch in ns.schema_]
                 if sch_name in sources or sch.path.stem in sources:
                     sch.namespace = ns.name
+                    sch.version = ns.version
                     break
-
-
 
     def find_type_source(self, name:str) -> SchemaAdapter:
         """

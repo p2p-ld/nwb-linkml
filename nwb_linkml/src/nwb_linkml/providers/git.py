@@ -131,6 +131,7 @@ class GitRepo:
                 self._git_call('checkout', "HEAD")
         else:
             self._git_call('checkout', commit)
+        self._git_call('submodule', 'update', '--init', '--recursive')
         self._commit = commit
 
     @property
@@ -166,6 +167,7 @@ class GitRepo:
         self._git_call('fetch', '--all', '--tags')
         self._git_call('checkout', f'tags/{tag}')
         # error will be raised by _git_call if tag not found
+        self._git_call('submodule', 'update', '--init', '--recursive')
 
     @property
     def default_branch(self) -> str:

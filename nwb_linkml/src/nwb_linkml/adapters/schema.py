@@ -33,6 +33,10 @@ class SchemaAdapter(Adapter):
     namespace: Optional[str] = Field(
         None,
         description="""String of containing namespace. Populated by NamespacesAdapter""")
+    version: Optional[str] = Field(
+        None,
+        description="Version of schema, populated by NamespacesAdapter since individual schema files dont know their version in NWB Schema Lang"
+    )
     split: bool = Field(
         False,
         description="Split anonymous subclasses into a separate schema file"
@@ -67,7 +71,6 @@ class SchemaAdapter(Adapter):
         - `id` (but need to have a placeholder to instantiate)
         - `version`
 
-
         """
         res = BuildResult()
         for dset in self.datasets:
@@ -90,7 +93,8 @@ class SchemaAdapter(Adapter):
                 imports = [i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ],
                 classes=res.classes,
                 slots=res.slots,
-                types=res.types
+                types=res.types,
+                version=self.version
             )
             # every schema needs the language elements
             sch.imports.append('.'.join([self.namespace, 'nwb.language']))

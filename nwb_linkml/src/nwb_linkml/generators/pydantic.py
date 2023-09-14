@@ -219,10 +219,14 @@ class NWBPydanticGenerator(PydanticGenerator):
             # Don't get classes that are defined in this schema!
             if module_name == self.schema.name:
                 continue
-
-            if self.versions and module_name in self.versions:
-                version = version_module_case(self.versions[module_name])
-                local_mod_name = '....' + module_case(module_name) + '.' + version + '.' + 'namespace'
+            # pdb.set_trace()
+            schema_name = module_name.split('.')[0]
+            if self.versions and schema_name != self.schema.name.split('.')[0] and schema_name in self.versions:
+                version = version_module_case(self.versions[schema_name])
+                if self.split:
+                    local_mod_name = '...' + module_case(schema_name) + '.' + version + '.' + module_case(module_name)
+                else:
+                    local_mod_name = '...' + module_case(schema_name) + '.' + version + '.' + 'namespace'
             else:
 
                 local_mod_name = '.' + module_case(module_name)
@@ -372,7 +376,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         try:
             dtype = flat_to_npytyping[list(attrs.values())[0].range]
         except KeyError as e:
-            warnings.warn(e)
+            warnings.warn(str(e))
             range = list(attrs.values())[0].range
             return f'List[{range}] | {range}'
         suffix = "]"

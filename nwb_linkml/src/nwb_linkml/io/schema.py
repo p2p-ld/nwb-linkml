@@ -25,7 +25,8 @@ def load_yaml(path:Path) -> dict:
         ns_dict = amap.apply(ns_dict)
     return ns_dict
 
-def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
+def _load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
+    """Loads the NWB SCHEMA LANGUAGE namespaces (not the namespacesadapter)"""
     if isinstance(path, NamespaceRepo):
         path = path.provide_from_git()
 
@@ -37,6 +38,10 @@ def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
 def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
     if yaml is not None:
         source = yaml
+        # apply maps
+        maps = [m for m in Map.instances if m.phase == PHASES.postload]
+        for amap in maps:
+            source = amap.apply(source)
     else:
         source = load_yaml(path)
 
@@ -64,25 +69,39 @@ def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
     )
     return schema
 
-def load_namespace_schema(namespace: Namespaces, path:Path=Path('..')) -> NamespacesAdapter:
+def load_namespace_adapter(namespace: Path | NamespaceRepo | Namespaces, path:Optional[Path]=None) -> NamespacesAdapter:
     """
     Load all schema referenced by a namespace file
 
     Args:
-        namespace (:class:`.Namespace`):
+        namespace (:class:`:class:`.Namespace`):
         path (:class:`pathlib.Path`): Location of the namespace file - all relative paths are interpreted relative to this
 
     Returns:
         :class:`.NamespacesAdapter`
     """
+    if path is None:
+        path = Path('..')
 
-    path = Path(path).resolve()
+    if isinstance(namespace, Path):
+        path = namespace
+        namespaces = _load_namespaces(path)
+    elif isinstance(namespace, NamespaceRepo):
+        path = namespace.provide_from_git()
+        namespaces = _load_namespaces(namespace)
+
+    elif isinstance(namespace, Namespaces):
+        namespaces = namespace
+    else:
+        raise ValueError(f"Namespace must be a path, namespace repo, or already loaded namespaces")
+
+
     if path.is_file():
         # given the namespace file itself, so find paths relative to its directory
         path = path.parent
 
     sch = []
-    for ns in namespace.namespaces:
+    for ns in namespaces.namespaces:
         for schema in ns.schema_:
             if schema.source is None:
                 # this is normal, we'll resolve later
@@ -91,7 +110,7 @@ def load_namespace_schema(namespace: Namespaces, path:Path=Path('..')) -> Namesp
             sch.append(load_schema_file(yml_file))
 
     adapter = NamespacesAdapter(
-        namespaces=namespace,
+        namespaces=namespaces,
         schemas=sch
     )
 
@@ -99,13 +118,8 @@ def load_namespace_schema(namespace: Namespaces, path:Path=Path('..')) -> Namesp
 
 def load_nwb_core() -> NamespacesAdapter:
     # First get hdmf-common:
-    hdmf_ns_file = HDMF_COMMON_REPO.provide_from_git()
-    hdmf_ns = load_namespaces(hdmf_ns_file)
-    hdmf_schema = load_namespace_schema(hdmf_ns, hdmf_ns_file)
-
-    namespace_file = NWB_CORE_REPO.provide_from_git()
-    ns = load_namespaces(namespace_file)
-    schema = load_namespace_schema(ns, namespace_file)
+    hdmf_schema = load_namespace_adapter(HDMF_COMMON_REPO)
+    schema = load_namespace_adapter(NWB_CORE_REPO)
 
     schema.imported.append(hdmf_schema)
 
