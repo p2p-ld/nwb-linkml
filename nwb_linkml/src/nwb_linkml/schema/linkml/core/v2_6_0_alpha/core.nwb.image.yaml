@@ -1,0 +1,317 @@
+name: core.nwb.image
+id: core.nwb.image
+version: 2.6.0-alpha
+imports:
+- core.nwb.base
+- core.nwb.device
+- core.nwb.language
+default_prefix: core.nwb.image/
+classes:
+  GrayscaleImage:
+    name: GrayscaleImage
+    description: A grayscale image.
+    is_a: Image
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      array:
+        name: array
+        range: GrayscaleImage__Array
+    tree_root: true
+  GrayscaleImage__Array:
+    name: GrayscaleImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+  RGBImage:
+    name: RGBImage
+    description: A color image.
+    is_a: Image
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      array:
+        name: array
+        range: RGBImage__Array
+    tree_root: true
+  RGBImage__Array:
+    name: RGBImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b:
+        name: r, g, b
+        range: numeric
+        required: true
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  RGBAImage:
+    name: RGBAImage
+    description: A color image with transparency.
+    is_a: Image
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      array:
+        name: array
+        range: RGBAImage__Array
+    tree_root: true
+  RGBAImage__Array:
+    name: RGBAImage__Array
+    is_a: Arraylike
+    attributes:
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b, a:
+        name: r, g, b, a
+        range: numeric
+        required: true
+        minimum_cardinality: 4
+        maximum_cardinality: 4
+  ImageSeries:
+    name: ImageSeries
+    description: General image data that is common between acquisition and stimulus
+      time series. Sometimes the image data is stored in the file in a raw format
+      while other times it will be stored as a series of external image files in the
+      host file system. The data field will either be binary data, if the data is
+      stored in the NWB file, or empty, if the data is stored in an external image
+      stack. [frame][x][y] or [frame][x][y][z].
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: Binary data representing images across frames. If data are stored
+          in an external file, this should be an empty 3D array.
+        multivalued: false
+        range: ImageSeries__data
+        required: true
+      dimension:
+        name: dimension
+        description: Number of pixels on x, y, (and z) axes.
+        multivalued: true
+        range: int32
+        required: false
+      external_file:
+        name: external_file
+        description: Paths to one or more external file(s). The field is only present
+          if format='external'. This is only relevant if the image series is stored
+          in the file system as one or more image file(s). This field should NOT be
+          used if the image is stored in another NWB file and that file is linked
+          to this file.
+        multivalued: true
+        range: text
+        required: false
+      format:
+        name: format
+        description: Format of image. If this is 'external', then the attribute 'external_file'
+          contains the path information to the image files. If this is 'raw', then
+          the raw (single-channel) binary data is stored in the 'data' dataset. If
+          this attribute is not present, then the default format='raw' case is assumed.
+        multivalued: false
+        range: text
+        required: false
+    tree_root: true
+  ImageSeries__data:
+    name: ImageSeries__data
+    description: Binary data representing images across frames. If data are stored
+      in an external file, this should be an empty 3D array.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      array:
+        name: array
+        range: ImageSeries__data__Array
+  ImageSeries__data__Array:
+    name: ImageSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      frame:
+        name: frame
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      z:
+        name: z
+        range: numeric
+        required: false
+  ImageMaskSeries:
+    name: ImageMaskSeries
+    description: An alpha mask that is applied to a presented visual stimulus. The
+      'data' array contains an array of mask values that are applied to the displayed
+      image. Mask values are stored as RGBA. Mask can vary with time. The timestamps
+      array indicates the starting time of a mask, and that mask pattern continues
+      until it's explicitly changed.
+    is_a: ImageSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
+  OpticalSeries:
+    name: OpticalSeries
+    description: Image data that is presented or recorded. A stimulus template movie
+      will be stored only as an image. When the image is presented as stimulus, additional
+      data is required, such as field of view (e.g., how much of the visual field
+      the image covers, or how what is the area of the target being imaged). If the
+      OpticalSeries represents acquired imaging data, orientation is also important.
+    is_a: ImageSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      distance:
+        name: distance
+        description: Distance from camera/monitor to target/eye.
+        multivalued: false
+        range: float32
+        required: false
+      field_of_view:
+        name: field_of_view
+        description: Width, height and depth of image, or imaged area, in meters.
+        multivalued: false
+        range: OpticalSeries__field_of_view
+        required: false
+      data:
+        name: data
+        description: Images presented to subject, either grayscale or RGB
+        multivalued: false
+        range: OpticalSeries__data
+        required: true
+      orientation:
+        name: orientation
+        description: Description of image relative to some reference frame (e.g.,
+          which way is up). Must also specify frame of reference.
+        multivalued: false
+        range: text
+        required: false
+    tree_root: true
+  OpticalSeries__field_of_view:
+    name: OpticalSeries__field_of_view
+    description: Width, height and depth of image, or imaged area, in meters.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(field_of_view)
+        range: string
+        required: true
+        equals_string: field_of_view
+      array:
+        name: array
+        range: OpticalSeries__field_of_view__Array
+  OpticalSeries__field_of_view__Array:
+    name: OpticalSeries__field_of_view__Array
+    is_a: Arraylike
+    attributes:
+      width, height:
+        name: width, height
+        range: float32
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      width, height, depth:
+        name: width, height, depth
+        range: float32
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  OpticalSeries__data:
+    name: OpticalSeries__data
+    description: Images presented to subject, either grayscale or RGB
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      array:
+        name: array
+        range: OpticalSeries__data__Array
+  OpticalSeries__data__Array:
+    name: OpticalSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      frame:
+        name: frame
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: true
+      y:
+        name: y
+        range: numeric
+        required: true
+      r, g, b:
+        name: r, g, b
+        range: numeric
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  IndexSeries:
+    name: IndexSeries
+    description: Stores indices to image frames stored in an ImageSeries. The purpose
+      of the IndexSeries is to allow a static image stack to be stored in an Images
+      object, and the images in the stack to be referenced out-of-order. This can
+      be for the display of individual images, or of movie segments (as a movie is
+      simply a series of images). The data field stores the index of the frame in
+      the referenced Images object, and the timestamps array indicates when that image
+      was displayed.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: Index of the image (using zero-indexing) in the linked Images
+          object.
+        multivalued: true
+        range: uint32
+        required: true
+    tree_root: true

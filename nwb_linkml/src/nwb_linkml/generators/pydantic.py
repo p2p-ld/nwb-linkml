@@ -82,7 +82,7 @@ metamodel_version = "{{metamodel_version}}"
 version = "{{version if version else None}}"
 """
     ### BASE MODEL ###
-    if pydantic_ver == "1":
+    if pydantic_ver == "1":  # pragma: no cover
         template += """
 class WeakRefShimBaseModel(BaseModel):
    __slots__ = '__weakref__'
@@ -165,7 +165,7 @@ class {{ c.name }}
 {% endfor %}
 """
     ### FWD REFS / REBUILD MODEL ###
-    if pydantic_ver == "1":
+    if pydantic_ver == "1": # pragma: no cover
         template += """
 # Update forward refs
 # see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
@@ -337,7 +337,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             class_def.description = class_def.description.replace('"', '\\"')
         return class_def
 
-    def _check_anyof(self, s:SlotDefinition, sn: SlotDefinitionName, sv:SchemaView):
+    def _check_anyof(self, s:SlotDefinition, sn: SlotDefinitionName, sv:SchemaView): # pragma: no cover
         # Confirm that the original slot range (ignoring the default that comes in from
         # induced_slot) isn't in addition to setting any_of
         if len(s.any_of) > 0 and sv.get_slot(sn).range is not None:
@@ -506,7 +506,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         # for class_def in sv.all_classes().values():
         #     for slot_name in sv.class_slots(class_def.name):
         #        slot = sv.induced_slot(slot_name, class_def.name)
-        if slot.designates_type:
+        if slot.designates_type:  # pragma: no cover
             target_value = get_type_designator_value(sv, slot, class_def)
             slot_value = f'"{target_value}"'
             if slot.multivalued:
@@ -534,7 +534,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         predefined_slot_values = {}
         """splitting up parent class :meth:`.get_predefined_slot_values`"""
 
-        if self.template_file is not None:
+        if self.template_file is not None: # pragma: no cover
             with open(self.template_file) as template_file:
                 template_obj = Template(template_file.read())
         else:
@@ -645,7 +645,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         )
         return code
 
-    def compile_module(self, module_path:Path=None, **kwargs) -> ModuleType:
+    def compile_module(self, module_path:Path=None, **kwargs) -> ModuleType:  # pragma: no cover - replaced with provider
         """
         Compiles generated python code to a module
         :return:
@@ -662,7 +662,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         except NameError as e:
             raise e
 
-def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:
+def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:  # pragma: no cover - replaced with provider
     """
     Compile the text or file and return the resulting module
     @param text_or_fn: Python text or file name that references python file
@@ -675,22 +675,6 @@ def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:
         package_path = Path(text_or_fn)
     spec = compile(python_txt, '<string>', 'exec')
     module = ModuleType('test')
-    # if package_path:
-    #     if package_path.is_absolute():
-    #         module.__package__ = str(package_path)
-    #     else:
-    #         package_path_abs = os.path.join(os.getcwd(), package_path)
-    #         # We have to calculate the path to expected path relative to the current working directory
-    #         for path in sys.path:
-    #             if package_path.startswith(path):
-    #                 path_from_tests_parent = os.path.relpath(package_path, path)
-    #                 break
-    #             if package_path_abs.startswith(path):
-    #                 path_from_tests_parent = os.path.relpath(package_path_abs, path)
-    #                 break
-    #         else:
-    #             path_from_tests_parent = os.path.relpath(package_path, os.path.join(os.getcwd(), '..'))
-    #         module.__package__ = os.path.dirname(os.path.relpath(path_from_tests_parent, os.getcwd())).replace(os.path.sep, '.')
-    # sys.modules[module.__name__] = module
+
     exec(spec, module.__dict__)
     return module

@@ -1,0 +1,216 @@
+name: core.nwb.behavior
+id: core.nwb.behavior
+version: 2.6.0-alpha
+imports:
+- core.nwb.base
+- core.nwb.misc
+- core.nwb.language
+default_prefix: core.nwb.behavior/
+classes:
+  SpatialSeries:
+    name: SpatialSeries
+    description: 'Direction, e.g., of gaze or travel, or position. The TimeSeries::data
+      field is a 2D array storing position or direction relative to some reference
+      frame. Array structure: [num measurements] [num dimensions]. Each SpatialSeries
+      has a text dataset reference_frame that indicates the zero-position, or the
+      zero-axes for direction. For example, if representing gaze direction, ''straight-ahead''
+      might be a specific pixel on the monitor, or some other point in space. For
+      position data, the 0,0 point might be the top-left corner of an enclosure, as
+      viewed from the tracking camera. The unit of data will indicate how to interpret
+      SpatialSeries values.'
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: 1-D or 2-D array storing position or direction relative to some
+          reference frame.
+        multivalued: false
+        range: SpatialSeries__data
+        required: true
+      reference_frame:
+        name: reference_frame
+        description: Description defining what exactly 'straight-ahead' means.
+        multivalued: false
+        range: text
+        required: false
+    tree_root: true
+  SpatialSeries__data:
+    name: SpatialSeries__data
+    description: 1-D or 2-D array storing position or direction relative to some reference
+      frame.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. The default
+          value is 'meters'. Actual stored values are not necessarily stored in these
+          units. To access the data in these units, multiply 'data' by 'conversion'
+          and add 'offset'.
+        range: text
+      array:
+        name: array
+        range: SpatialSeries__data__Array
+  SpatialSeries__data__Array:
+    name: SpatialSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: true
+      x:
+        name: x
+        range: numeric
+        required: false
+        minimum_cardinality: 1
+        maximum_cardinality: 1
+      x,y:
+        name: x,y
+        range: numeric
+        required: false
+        minimum_cardinality: 2
+        maximum_cardinality: 2
+      x,y,z:
+        name: x,y,z
+        range: numeric
+        required: false
+        minimum_cardinality: 3
+        maximum_cardinality: 3
+  BehavioralEpochs:
+    name: BehavioralEpochs
+    description: TimeSeries for storing behavioral epochs.  The objective of this
+      and the other two Behavioral interfaces (e.g. BehavioralEvents and BehavioralTimeSeries)
+      is to provide generic hooks for software tools/scripts. This allows a tool/script
+      to take the output one specific interface (e.g., UnitTimes) and plot that data
+      relative to another data modality (e.g., behavioral events) without having to
+      define all possible modalities in advance. Declaring one of these interfaces
+      means that one or more TimeSeries of the specified type is published. These
+      TimeSeries should reside in a group having the same name as the interface. For
+      example, if a BehavioralTimeSeries interface is declared, the module will have
+      one or more TimeSeries defined in the module sub-group 'BehavioralTimeSeries'.
+      BehavioralEpochs should use IntervalSeries. BehavioralEvents is used for irregular
+      events. BehavioralTimeSeries is for continuous data.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      interval_series:
+        name: interval_series
+        description: IntervalSeries object containing start and stop times of epochs.
+        multivalued: true
+        range: IntervalSeries
+        required: false
+    tree_root: true
+  BehavioralEvents:
+    name: BehavioralEvents
+    description: TimeSeries for storing behavioral events. See description of <a href="#BehavioralEpochs">BehavioralEpochs</a>
+      for more details.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      time_series:
+        name: time_series
+        description: TimeSeries object containing behavioral events.
+        multivalued: true
+        range: TimeSeries
+        required: false
+    tree_root: true
+  BehavioralTimeSeries:
+    name: BehavioralTimeSeries
+    description: TimeSeries for storing Behavoioral time series data. See description
+      of <a href="#BehavioralEpochs">BehavioralEpochs</a> for more details.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      time_series:
+        name: time_series
+        description: TimeSeries object containing continuous behavioral data.
+        multivalued: true
+        range: TimeSeries
+        required: false
+    tree_root: true
+  PupilTracking:
+    name: PupilTracking
+    description: Eye-tracking data, representing pupil size.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      time_series:
+        name: time_series
+        description: TimeSeries object containing time series data on pupil size.
+        multivalued: true
+        range: TimeSeries
+        required: true
+    tree_root: true
+  EyeTracking:
+    name: EyeTracking
+    description: Eye-tracking data, representing direction of gaze.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      spatial_series:
+        name: spatial_series
+        description: SpatialSeries object containing data measuring direction of gaze.
+        multivalued: true
+        range: SpatialSeries
+        required: false
+    tree_root: true
+  CompassDirection:
+    name: CompassDirection
+    description: With a CompassDirection interface, a module publishes a SpatialSeries
+      object representing a floating point value for theta. The SpatialSeries::reference_frame
+      field should indicate what direction corresponds to 0 and which is the direction
+      of rotation (this should be clockwise). The si_unit for the SpatialSeries should
+      be radians or degrees.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      spatial_series:
+        name: spatial_series
+        description: SpatialSeries object containing direction of gaze travel.
+        multivalued: true
+        range: SpatialSeries
+        required: false
+    tree_root: true
+  Position:
+    name: Position
+    description: Position data, whether along the x, x/y or x/y/z axis.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      spatial_series:
+        name: spatial_series
+        description: SpatialSeries object containing position data.
+        multivalued: true
+        range: SpatialSeries
+        required: true
+    tree_root: true

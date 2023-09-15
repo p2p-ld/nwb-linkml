@@ -1,0 +1,14 @@
+name: hdmf-common
+annotations:
+  namespace:
+    tag: namespace
+    value: 'True'
+description: Common data structures provided by HDMF
+id: hdmf-common
+version: 1.5.0
+imports:
+- hdmf-common.base
+- hdmf-common.table
+- hdmf-common.sparse
+- hdmf-common.nwb.language
+default_prefix: hdmf-common/

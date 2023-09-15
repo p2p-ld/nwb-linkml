@@ -26,7 +26,10 @@ def module_case(name:str) -> str:
         - -
         - .
     """
-    return name.replace('-', '_').replace('.', '_').lower()
+    return name.replace('-', '_'
+              ).replace('.', '_'
+              ).replace('/', '.'
+              ).lower()
 
 def version_module_case(name:str) -> str:
     """

@@ -1,0 +1,28 @@
+name: core.nwb.device
+id: core.nwb.device
+version: 2.5.0
+imports:
+- core.nwb.base
+- core.nwb.language
+default_prefix: core.nwb.device/
+classes:
+  Device:
+    name: Device
+    description: Metadata about a data acquisition device, e.g., recording system,
+      electrode, microscope.
+    is_a: NWBContainer
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of the device (e.g., model, firmware version, processing
+          software version, etc.) as free-form text.
+        range: text
+      manufacturer:
+        name: manufacturer
+        description: The name of the manufacturer of the device.
+        range: text
+    tree_root: true

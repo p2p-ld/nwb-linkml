@@ -132,8 +132,21 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
                 pydantic_task = None
 
     if not dry_run:
+        shutil.rmtree(yaml_path / 'linkml')
+        shutil.rmtree(pydantic_path / 'pydantic')
         shutil.move(tmp_dir / 'linkml', yaml_path)
         shutil.move(tmp_dir / 'pydantic', pydantic_path)
+
+        # import the most recent version of the schemaz we built
+        latest_version = sorted((pydantic_path / 'pydantic' / 'core').iterdir(), key=os.path.getmtime)[-1]
+
+        # make inits to use the schema! we don't usually do this in the
+        # provider class because we directly import the files there.
+        with open(pydantic_path / 'pydantic' / '__init__.py', 'w') as initfile:
+            initfile.write(' ')
+
+        with open(pydantic_path / '__init__.py', 'w') as initfile:
+            initfile.write(f'from .pydantic.core.{latest_version.name}.namespace import *')
 
     if len(failed_versions) > 0:
         print('Failed Building Versions:')

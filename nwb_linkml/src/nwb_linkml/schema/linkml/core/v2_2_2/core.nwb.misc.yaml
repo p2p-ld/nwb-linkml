@@ -1,0 +1,406 @@
+name: core.nwb.misc
+id: core.nwb.misc
+version: 2.2.2
+imports:
+- core.nwb.base
+- ../../hdmf_common/v1_1_3/namespace
+- core.nwb.ecephys
+- core.nwb.language
+default_prefix: core.nwb.misc/
+classes:
+  AbstractFeatureSeries:
+    name: AbstractFeatureSeries
+    description: Abstract features, such as quantitative descriptions of sensory stimuli.
+      The TimeSeries::data field is a 2D array, storing those features (e.g., for
+      visual grating stimulus this might be orientation, spatial frequency and contrast).
+      Null stimuli (eg, uniform gray) can be marked as being an independent feature
+      (eg, 1.0 for gray, 0.0 for actual stimulus) or by storing NaNs for feature values,
+      or through use of the TimeSeries::control fields. A set of features is considered
+      to persist until the next set of features is defined. The final set of features
+      stored should be the null set. This is useful when storing the raw stimulus
+      is impractical.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: Values of each feature at each time.
+        multivalued: false
+        range: AbstractFeatureSeries__data
+        required: true
+      feature_units:
+        name: feature_units
+        description: Units of each feature.
+        multivalued: true
+        range: text
+        required: false
+      features:
+        name: features
+        description: Description of the features represented in TimeSeries::data.
+        multivalued: true
+        range: text
+        required: true
+    tree_root: true
+  AbstractFeatureSeries__data:
+    name: AbstractFeatureSeries__data
+    description: Values of each feature at each time.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Since there can be different units for different features, store
+          the units in 'feature_units'. The default value for this attribute is "see
+          'feature_units'".
+        range: text
+      array:
+        name: array
+        range: AbstractFeatureSeries__data__Array
+  AbstractFeatureSeries__data__Array:
+    name: AbstractFeatureSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: true
+      num_features:
+        name: num_features
+        range: numeric
+        required: false
+  AnnotationSeries:
+    name: AnnotationSeries
+    description: Stores user annotations made during an experiment. The data[] field
+      stores a text array, and timestamps are stored for each annotation (ie, interval=1).
+      This is largely an alias to a standard TimeSeries storing a text array but that
+      is identifiable as storing annotations in a machine-readable way.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: Annotations made during an experiment.
+        multivalued: true
+        range: text
+        required: true
+    tree_root: true
+  IntervalSeries:
+    name: IntervalSeries
+    description: Stores intervals of data. The timestamps field stores the beginning
+      and end of intervals. The data field stores whether the interval just started
+      (>0 value) or ended (<0 value). Different interval types can be represented
+      in the same series by using multiple key values (eg, 1 for feature A, 2 for
+      feature B, 3 for feature C, etc). The field data stores an 8-bit integer. This
+      is largely an alias of a standard TimeSeries but that is identifiable as representing
+      time intervals in a machine-readable way.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: Use values >0 if interval started, <0 if interval ended.
+        multivalued: true
+        range: int8
+        required: true
+    tree_root: true
+  DecompositionSeries:
+    name: DecompositionSeries
+    description: Spectral analysis of a time series, e.g. of an LFP or a speech signal.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      data:
+        name: data
+        description: Data decomposed into frequency bands.
+        multivalued: false
+        range: DecompositionSeries__data
+        required: true
+      metric:
+        name: metric
+        description: The metric used, e.g. phase, amplitude, power.
+        multivalued: false
+        range: text
+        required: true
+      bands:
+        name: bands
+        description: Table for describing the bands that this series was generated
+          from. There should be one row in this table for each band.
+        multivalued: false
+        range: DecompositionSeries__bands
+        required: true
+    tree_root: true
+  DecompositionSeries__data:
+    name: DecompositionSeries__data
+    description: Data decomposed into frequency bands.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+      array:
+        name: array
+        range: DecompositionSeries__data__Array
+  DecompositionSeries__data__Array:
+    name: DecompositionSeries__data__Array
+    is_a: Arraylike
+    attributes:
+      num_times:
+        name: num_times
+        range: numeric
+        required: true
+      num_channels:
+        name: num_channels
+        range: numeric
+        required: true
+      num_bands:
+        name: num_bands
+        range: numeric
+        required: true
+  DecompositionSeries__bands:
+    name: DecompositionSeries__bands
+    description: Table for describing the bands that this series was generated from.
+      There should be one row in this table for each band.
+    is_a: DynamicTable
+    attributes:
+      name:
+        name: name
+        ifabsent: string(bands)
+        range: string
+        required: true
+        equals_string: bands
+      band_name:
+        name: band_name
+        description: Name of the band, e.g. theta.
+        multivalued: true
+        range: text
+      band_limits:
+        name: band_limits
+        description: Low and high limit of each band in Hz. If it is a Gaussian filter,
+          use 2 SD on either side of the center.
+        multivalued: false
+        range: DecompositionSeries__bands__band_limits
+        required: true
+      band_mean:
+        name: band_mean
+        description: The mean Gaussian filters, in Hz.
+        multivalued: true
+        range: float32
+        required: true
+      band_stdev:
+        name: band_stdev
+        description: The standard deviation of Gaussian filters, in Hz.
+        multivalued: true
+        range: float32
+        required: true
+  DecompositionSeries__bands__band_limits:
+    name: DecompositionSeries__bands__band_limits
+    description: Low and high limit of each band in Hz. If it is a Gaussian filter,
+      use 2 SD on either side of the center.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(band_limits)
+        range: string
+        required: true
+        equals_string: band_limits
+  Units:
+    name: Units
+    description: Data about spiking units. Event times of observed units (e.g. cell,
+      synapse, etc.) should be concatenated and stored in spike_times.
+    is_a: DynamicTable
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      spike_times_index:
+        name: spike_times_index
+        description: Index into the spike_times dataset.
+        multivalued: false
+        range: Units__spike_times_index
+        required: false
+      spike_times:
+        name: spike_times
+        description: Spike times for each unit.
+        multivalued: false
+        range: Units__spike_times
+        required: false
+      obs_intervals_index:
+        name: obs_intervals_index
+        description: Index into the obs_intervals dataset.
+        multivalued: false
+        range: Units__obs_intervals_index
+        required: false
+      obs_intervals:
+        name: obs_intervals
+        description: Observation intervals for each unit.
+        multivalued: false
+        range: Units__obs_intervals
+        required: false
+      electrodes_index:
+        name: electrodes_index
+        description: Index into electrodes.
+        multivalued: false
+        range: Units__electrodes_index
+        required: false
+      electrodes:
+        name: electrodes
+        description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
+        multivalued: false
+        range: Units__electrodes
+        required: false
+      electrode_group:
+        name: electrode_group
+        description: Electrode group that each spike unit came from.
+        multivalued: true
+        range: ElectrodeGroup
+      waveform_mean:
+        name: waveform_mean
+        description: Spike waveform mean for each spike unit.
+        multivalued: false
+        range: Units__waveform_mean
+        required: false
+      waveform_sd:
+        name: waveform_sd
+        description: Spike waveform standard deviation for each spike unit.
+        multivalued: false
+        range: Units__waveform_sd
+        required: false
+    tree_root: true
+  Units__spike_times_index:
+    name: Units__spike_times_index
+    description: Index into the spike_times dataset.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(spike_times_index)
+        range: string
+        required: true
+        equals_string: spike_times_index
+  Units__spike_times:
+    name: Units__spike_times
+    description: Spike times for each unit.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(spike_times)
+        range: string
+        required: true
+        equals_string: spike_times
+      resolution:
+        name: resolution
+        description: The smallest possible difference between two spike times. Usually
+          1 divided by the acquisition sampling rate from which spike times were extracted,
+          but could be larger if the acquisition time series was downsampled or smaller
+          if the acquisition time series was smoothed/interpolated and it is possible
+          for the spike time to be between samples.
+        range: float64
+  Units__obs_intervals_index:
+    name: Units__obs_intervals_index
+    description: Index into the obs_intervals dataset.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(obs_intervals_index)
+        range: string
+        required: true
+        equals_string: obs_intervals_index
+  Units__obs_intervals:
+    name: Units__obs_intervals
+    description: Observation intervals for each unit.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(obs_intervals)
+        range: string
+        required: true
+        equals_string: obs_intervals
+  Units__electrodes_index:
+    name: Units__electrodes_index
+    description: Index into electrodes.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(electrodes_index)
+        range: string
+        required: true
+        equals_string: electrodes_index
+  Units__electrodes:
+    name: Units__electrodes
+    description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(electrodes)
+        range: string
+        required: true
+        equals_string: electrodes
+  Units__waveform_mean:
+    name: Units__waveform_mean
+    description: Spike waveform mean for each spike unit.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(waveform_mean)
+        range: string
+        required: true
+        equals_string: waveform_mean
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        range: text
+  Units__waveform_sd:
+    name: Units__waveform_sd
+    description: Spike waveform standard deviation for each spike unit.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(waveform_sd)
+        range: string
+        required: true
+        equals_string: waveform_sd
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        range: text

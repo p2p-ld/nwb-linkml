@@ -46,7 +46,7 @@ class BuildResult:
         self.types.extend(other.types)
         return self
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         out_str = "\nBuild Result:\n"
         out_str += '-'*len(out_str)
 
@@ -122,28 +122,3 @@ class Adapter(BaseModel):
         for item in self.walk(input):
             if any([type(item) == atype for atype in get_type]):
                 yield item
-
-    #
-    #
-    # if isinstance(input, BaseModel):
-    #     for key in input.__fields__.keys():
-    #         val = getattr(input, key)
-    #         if key == field:
-    #             yield val
-    #         if isinstance(val, (BaseModel, dict, list)):
-    #             yield from self.walk(val, field)
-    #
-    # elif isinstance(input, dict):
-    #     for key, val in input.items():
-    #         if key == field:
-    #             yield val
-    #         if isinstance(val, (BaseModel, dict, list)):
-    #             yield from self.walk(val, field)
-    #
-    # elif isinstance(input, (list, tuple)):
-    #     for val in input:
-    #         yield from self.walk(val, field)
-    #
-    # else:
-    #     # do nothing, is a string or whatever
-    #     pass

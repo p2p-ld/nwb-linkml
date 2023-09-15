@@ -5,3 +5,4 @@ omit =
     */nwb_schema_language/*
     */nwb_linkml/models/*
     */tests/*
+    */plot.py

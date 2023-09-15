@@ -516,10 +516,9 @@ class PydanticProvider(Provider):
             fn = path.parts[-1]
 
         version = version_module_case(version)
-
         # this is extremely fragile, we should not be inferring version number from paths...
         if out_file is None:
-            fn = fn.strip('.yaml')
+            fn = fn.removesuffix('.yaml')
             fn = module_case(fn) + '.py'
             out_file = self.path / name / version / fn
 
