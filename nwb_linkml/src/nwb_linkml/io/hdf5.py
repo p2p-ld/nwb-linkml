@@ -26,6 +26,7 @@ class HDF5Element():
     cls: h5py.Dataset | h5py.Group
     parent: Type[BaseModel]
     model: Optional[Any] = None
+    root_model: Optional[Type[BaseModel]] = None
 
     @abstractmethod
     def read(self) -> BaseModel | List[BaseModel]:
@@ -89,6 +90,13 @@ def take_outer_type(annotation):
     if typing.get_origin(annotation) is list:
         return list
     return annotation
+
+def submodel_by_path(model: BaseModel, path:str) -> Type[BaseModel | dict | list]:
+    """
+    Given a pydantic model and an absolute HDF5 path, get the type annotation
+    """
+
+
 @dataclass
 class H5Dataset(HDF5Element):
     cls: h5py.Dataset
@@ -178,7 +186,7 @@ class HDF5IO():
         data = {}
         for k, v in src.items():
             if isinstance(v, h5py.Group):
-                data[k] = H5Group(cls=v, parent=parent).read()
+                data[k] = H5Group(cls=v, parent=parent, root_model=parent).read()
             elif isinstance(v, h5py.Dataset):
                 data[k] = H5Dataset(cls=v, parent=parent).read()
 

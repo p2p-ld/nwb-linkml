@@ -47,8 +47,7 @@ class NamespacesAdapter(Adapter):
         with hdmf-common)
         """
         from nwb_linkml.io import schema as schema_io
-        ns_adapter = schema_io.load_namespaces(path)
-        ns_adapter = schema_io.load_namespace_adapter(ns_adapter, path)
+        ns_adapter = schema_io.load_namespace_adapter(path)
 
         # try and find imported schema
 
