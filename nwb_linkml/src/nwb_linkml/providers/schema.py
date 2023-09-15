@@ -189,7 +189,13 @@ class Provider(ABC):
             namespace_path = module_path / 'models' / 'pydantic'
             builtin_namespaces = list(namespace_path.iterdir())
 
-        for ns_dir in builtin_namespaces + list(self.path.iterdir()):
+        try:
+            tmp_paths = list(self.path.iterdir())
+        except FileNotFoundError:
+            # fine, just return the builtins
+            tmp_paths = []
+
+        for ns_dir in builtin_namespaces + tmp_paths:
             if not ns_dir.is_dir():
                 continue
             if ns_dir.name not in versions.keys():
