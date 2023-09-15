@@ -183,10 +183,10 @@ class Provider(ABC):
         module_path = Path(importlib.util.find_spec('nwb_linkml').origin).parent
         builtin_namespaces = []
         if self.PROVIDES == 'linkml':
-            namespace_path = module_path / 'schema'
+            namespace_path = module_path / 'schema' / 'linkml'
             builtin_namespaces = list(namespace_path.iterdir())
         elif self.PROVIDES == 'pydantic':
-            namespace_path = module_path / 'models'
+            namespace_path = module_path / 'models' / 'pydantic'
             builtin_namespaces = list(namespace_path.iterdir())
 
         for ns_dir in builtin_namespaces + list(self.path.iterdir()):
@@ -557,8 +557,8 @@ class PydanticProvider(Provider):
         return serialized
 
     @classmethod
-    def module_name(self, namespace:str, version:Optional[str]=None) -> str:
-        name_pieces = ['nwb_linkml', 'models', namespace]
+    def module_name(self, namespace:str, version: Optional[str]=None) -> str:
+        name_pieces = ['nwb_linkml', 'models', 'pydantic',  namespace]
         if version is not None:
             name_pieces.append(version_module_case(version))
         module_name = '.'.join(name_pieces)
@@ -582,6 +582,10 @@ class PydanticProvider(Provider):
         Returns:
             :class:`types.ModuleType`
         """
+        # get latest version if None
+        if version is None:
+            version = self.versions[namespace][-1]
+
         path = self.namespace_path(namespace, version) / 'namespace.py'
         if not path.exists():
             raise ImportError(f'Module has not been built yet {path}')
