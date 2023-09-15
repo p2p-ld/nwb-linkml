@@ -155,7 +155,7 @@ class Provider(ABC):
             if self.PROVIDES == 'linkml':
                 namespace_path = module_path / 'schema'
             elif self.PROVIDES == 'pydantic':
-                namespace_path = module_path / 'models'
+                namespace_path = module_path / 'models' / 'pydantic'
 
         if version is not None:
             version_path = namespace_path / version_module_case(version)
