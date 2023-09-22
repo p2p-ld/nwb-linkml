@@ -76,7 +76,6 @@ def test_truncate_file(tmp_output_dir):
     assert target_h5f[target_h5f['link']['child'].attrs['reference_contig']].name == target_h5f['data']['dataset_contig'].name
     assert target_h5f[target_h5f['link']['child'].attrs['reference_chunked']].name == target_h5f['data']['dataset_chunked'].name
     assert target_h5f['data']['dataset_contig'].attrs['anattr'] == 1
-
 @pytest.mark.skip()
 def test_flatten_hdf():
     from nwb_linkml.io.hdf5 import HDF5IO, flatten_hdf
@@ -85,6 +84,6 @@ def test_flatten_hdf():
     h5f = h5py.File(path)
     flat = flatten_hdf(h5f)
     assert not any(['specifications' in v.path for v in flat.values()])
-
+    pdb.set_trace()
     raise NotImplementedError('Just a stub for local testing for now, finish me!')
 

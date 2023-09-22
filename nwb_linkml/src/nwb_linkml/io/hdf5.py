@@ -54,9 +54,8 @@ class H5SourceItem(BaseModel):
     """What kind of hdf5 element this is"""
     depends: List[str] = Field(default_factory=list)
     """Paths of other source items that this item depends on before it can be instantiated. eg. from softlinks"""
-
-
-
+    attrs: dict = Field(default_factory=dict)
+    """Any static attrs that can be had from the element"""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
     @property
@@ -64,16 +63,23 @@ class H5SourceItem(BaseModel):
         """path split by /"""
         return self.path.split('/')
 
+FlatH5 = Dict[str, H5SourceItem]
+
 class ReadQueue(BaseModel):
     """Container model to store items as they are built """
+    h5f: h5py.File = Field(
+        description="Open hdf5 file used when resolving the queue!"
+    )
     queue: Dict[str,H5SourceItem] = Field(
         default_factory=dict,
         description="Items left to be instantiated, keyed by hdf5 path",
     )
-    completed: Dict[str, BaseModel] = Field(
+    completed: Dict[str, Any] = Field(
         default_factory=dict,
         description="Items that have already been instantiated, keyed by hdf5 path"
     )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
 
 class HDF5IO():
 
@@ -357,13 +363,36 @@ def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, 
             h5_type = 'group'
         # dereference and get name of reference
         depends = list(set([h5f[i].name for i in refs]))
+        if not name.startswith('/'):
+            name = '/' + name
         items[name] = H5SourceItem.model_construct(
             path = name,
             leaf = leaf,
-            depends = depends
+            depends = depends,
+            h5_type=h5_type,
+            attrs = dict(obj.attrs.items())
         )
 
     h5f.visititems(_itemize)
     return items
+
+def sort_flat_hdf(flat: Dict[str, H5SourceItem]) -> Dict[str, H5SourceItem]:
+    """
+    Sort flat hdf5 file in a rough order of solvability
+
+    * First process any leaf items
+
+    * Put any items with dependencies at the end
+
+    Args:
+        flat:
+
+    Returns:
+
+    """
+    class Rank(NamedTuple):
+        has_depends: bool
+        not_leaf: bool
+
 
 
