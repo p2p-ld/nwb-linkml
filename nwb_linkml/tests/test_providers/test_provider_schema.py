@@ -1,6 +1,8 @@
 import pdb
 import shutil
 import os
+import sys
+from pathlib import Path
 
 from typing import Optional, Union, List
 from ..fixtures import tmp_output_dir, set_config_vars
@@ -8,6 +10,8 @@ from ..fixtures import tmp_output_dir, set_config_vars
 import pytest
 
 from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
+import nwb_linkml
+from nwb_linkml.maps.naming import version_module_case
 
 
 CORE_MODULES = (
@@ -62,14 +66,24 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
         })
     ]
 )
-def test_pydantic_provider(tmp_output_dir, class_name, test_fields):
+def test_pydantic_provider_core(tmp_output_dir, class_name, test_fields):
     provider = PydanticProvider(path=tmp_output_dir)
     # clear any prior output
     assert provider.path.parent == tmp_output_dir
     shutil.rmtree(provider.path, ignore_errors=True)
     assert not provider.path.exists()
 
-    core = provider.get('core')
+    # first, we should not build if we're allowed to get core from repo
+    core = provider.get('core', allow_repo=True)
+    assert Path(nwb_linkml.__file__).parent in Path(core.__file__).parents
+    assert not (provider.path / 'core').exists()
+
+    # then, if we're not allowed to get repo versions, we build!
+    del sys.modules[core.__name__]
+    core = provider.get('core', allow_repo=False)
+    # ensure we didn't get the builtin one
+    assert Path(nwb_linkml.__file__).parent not in Path(core.__file__).parents
+    assert (tmp_output_dir / 'pydantic' / 'core' / version_module_case(core.version) / 'namespace.py').exists()
 
     test_class = getattr(core, class_name)
     assert test_class == provider.get_class('core', class_name)

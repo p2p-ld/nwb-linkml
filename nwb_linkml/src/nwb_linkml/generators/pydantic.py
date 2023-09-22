@@ -19,11 +19,12 @@ The `serialize` method
 import pdb
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict, Set, Tuple, Optional, TypedDict
+from typing import List, Dict, Set, Tuple, Optional, TypedDict, Type
 import os, sys
 from types import ModuleType
 from copy import deepcopy, copy
 import warnings
+import inspect
 
 from nwb_linkml.maps import flat_to_npytyping
 from linkml.generators import PydanticGenerator
@@ -48,10 +49,14 @@ from linkml.utils.ifabsent_functions import ifabsent_value_declaration
 from nwb_linkml.maps.naming import module_case, version_module_case
 
 from jinja2 import Template
+from pydantic import BaseModel
+
+class LinkML_Meta(BaseModel):
+    """Extra LinkML Metadata stored as a class attribute"""
+    tree_root: bool = False
 
 
-
-def default_template(pydantic_ver: str = "1") -> str:
+def default_template(pydantic_ver: str = "1", extra_classes:Optional[List[Type[BaseModel]]] = None) -> str:
     """Constructs a default template for pydantic classes based on the version of pydantic"""
     ### HEADER ###
     template = """
@@ -94,7 +99,6 @@ class ConfiguredBaseModel(WeakRefShimBaseModel,
                 extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
-    pass
 """
     else:
         template += """
@@ -104,8 +108,22 @@ class ConfiguredBaseModel(BaseModel,
                 extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
-    pass
 """
+    ### Injected Fields
+    template += """
+{%- if injected_fields != None -%}
+    {% for field in injected_fields %}
+    {{ field }}
+    {% endfor %}
+{%- else -%}
+    pass
+{%- endif -%}
+    """
+    ### Extra classes
+    if extra_classes is not None:
+        template += """{{ '\n\n' }}"""
+        for cls in extra_classes:
+            template += inspect.getsource(cls) + '\n\n'
     ### ENUMS ###
     template += """
 {% for e in enums.values() %}
@@ -142,11 +160,15 @@ class {{ c.name }}
     \"\"\"
     {%- endif %}
     {% for attr in c.attributes.values() if c.attributes -%}
-    {{attr.name}}: {%- if attr.equals_string -%}
+    {{attr.name}}:{{ ' ' }}{%- if attr.equals_string -%}
         Literal[{{ predefined_slot_values[c.name][attr.name] }}]
         {%- else -%}
         {{ attr.annotations['python_range'].value }}
-        {%- endif -%} = Field(
+        {%- endif -%}
+        {%- if attr.annotations['fixed_field'] -%}
+        {{ ' ' }}= {{ attr.annotations['fixed_field'].value }}
+        {%- else -%}
+        {{ ' ' }}= Field(
     {%- if predefined_slot_values[c.name][attr.name] -%}
         {{ predefined_slot_values[c.name][attr.name] }}
     {%- elif attr.required -%}
@@ -159,6 +181,7 @@ class {{ c.name }}
     {%- if attr.minimum_value != None %}, ge={{attr.minimum_value}}{% endif -%}
     {%- if attr.maximum_value != None %}, le={{attr.maximum_value}}{% endif -%}
     )
+    {%- endif %}
     {% else -%}
     None
     {% endfor %}
@@ -192,6 +215,9 @@ class NWBPydanticGenerator(PydanticGenerator):
     # SKIP_SLOTS=('VectorData',)
     SKIP_SLOTS=('',)
     SKIP_CLASSES=('',)
+    INJECTED_FIELDS = (
+        'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")',
+    )
     # SKIP_CLASSES=('VectorData','VectorIndex')
     split:bool=True
     schema_map:Optional[Dict[str, SchemaDefinition]]=None
@@ -410,6 +436,18 @@ class NWBPydanticGenerator(PydanticGenerator):
         union += '\n' + ' '*4 + ']'
         return union
 
+    def _get_linkml_classvar(self, cls:ClassDefinition) -> SlotDefinition:
+        """A class variable that holds additional linkml attrs"""
+        slot = SlotDefinition(
+            name='linkml_meta'
+        )
+        slot.annotations['python_range'] = Annotation('python_range', 'ClassVar[LinkML_Meta]')
+        meta_fields = {k: getattr(cls, k, None) for k in LinkML_Meta.model_fields.keys()}
+        meta_field_strings = [f'{k}={v}' for k,v in meta_fields.items() if v is not None]
+        meta_field_string = ', '.join(meta_field_strings)
+        slot.annotations['fixed_field'] = Annotation('fixed_field', f'Field(LinkML_Meta({meta_field_string}), frozen=True)')
+
+        return slot
 
     def sort_classes(self, clist: List[ClassDefinition], imports:Dict[str, List[str]]) -> List[ClassDefinition]:
         """
@@ -538,7 +576,8 @@ class NWBPydanticGenerator(PydanticGenerator):
             with open(self.template_file) as template_file:
                 template_obj = Template(template_file.read())
         else:
-            template_obj = Template(default_template(self.pydantic_version))
+            template_obj = Template(default_template(self.pydantic_version,
+                                                     extra_classes=[LinkML_Meta]))
 
         sv: SchemaView
         sv = self.schemaview
@@ -580,6 +619,9 @@ class NWBPydanticGenerator(PydanticGenerator):
             # Not sure why this happens
             for attribute in list(class_def.attributes.keys()):
                 del class_def.attributes[attribute]
+
+            # make class attr that stores extra linkml attrs
+            class_def.attributes['linkml_meta'] = self._get_linkml_classvar(class_def)
 
             class_name = class_original.name
             predefined_slot_values[camelcase(class_name)] = {}
@@ -632,6 +674,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                     pyrange = f"Optional[{pyrange}]"
                 ann = Annotation("python_range", pyrange)
                 s.annotations[ann.tag] = ann
+
         code = template_obj.render(
             imports=imports,
             schema=pyschema,
@@ -642,6 +685,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             metamodel_version=self.schema.metamodel_version,
             version=self.schema.version,
             class_isa_plus_mixins=self.get_class_isa_plus_mixins(sorted_classes),
+            injected_fields=self.INJECTED_FIELDS
         )
         return code
 
@@ -678,3 +722,4 @@ def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:  #
 
     exec(spec, module.__dict__)
     return module
+

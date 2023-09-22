@@ -39,7 +39,8 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
-    'pydantic': ('https://docs.pydantic.dev/latest/', None)
+    'pydantic': ('https://docs.pydantic.dev/latest/', None),
+    'h5py': ('https://docs.h5py.org/en/stable/', None)
 
 }
 

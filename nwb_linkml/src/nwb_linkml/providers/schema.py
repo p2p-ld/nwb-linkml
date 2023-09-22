@@ -172,7 +172,7 @@ class Provider(ABC):
         return version_path
 
     @property
-    def versions(self) -> Dict[str,List[str]]:
+    def available_versions(self) -> Dict[str,List[str]]:
         """
         Dictionary mapping a namespace to a list of built versions
         """
@@ -511,7 +511,7 @@ class PydanticProvider(Provider):
             path = LinkMLProvider(path=self.config.cache_dir).namespace_path(namespace, version) / 'namespace.yaml'
             if version is None:
                 # Get the most recently built version
-                version = LinkMLProvider(path=self.config.cache_dir).versions[name][-1]
+                version = LinkMLProvider(path=self.config.cache_dir).available_versions[name][-1]
             fn = path.parts[-1]
         else:
             # given a path to a namespace linkml yaml file
@@ -563,10 +563,8 @@ class PydanticProvider(Provider):
         return serialized
 
     @classmethod
-    def module_name(self, namespace:str, version: Optional[str]=None) -> str:
-        name_pieces = ['nwb_linkml', 'models', 'pydantic',  namespace]
-        if version is not None:
-            name_pieces.append(version_module_case(version))
+    def module_name(self, namespace:str, version: str) -> str:
+        name_pieces = ['nwb_linkml', 'models', 'pydantic',  namespace, version_module_case(version), 'namespace']
         module_name = '.'.join(name_pieces)
         return module_name
     def import_module(
@@ -590,7 +588,7 @@ class PydanticProvider(Provider):
         """
         # get latest version if None
         if version is None:
-            version = self.versions[namespace][-1]
+            version = self.available_versions[namespace][-1]
 
         path = self.namespace_path(namespace, version) / 'namespace.py'
         if not path.exists():
@@ -602,7 +600,9 @@ class PydanticProvider(Provider):
         spec.loader.exec_module(module)
         return module
 
-    def get(self, namespace: str, version: Optional[str] = None) -> ModuleType:
+    def get(self, namespace: str,
+            version: Optional[str] = None,
+            allow_repo: bool = True) -> ModuleType:
         """
         Get the imported module for a given namespace and version.
 
@@ -628,22 +628,27 @@ class PydanticProvider(Provider):
             namespace (str): Name of namespace to import. Must have either been previously built with :meth:`.PydanticProvider.build` or
                 a matching namespace/version combo must be available to the :class:`.LinkMLProvider`
             version (Optional[str]): Version to import. If ``None``, get the most recently build module
+            allow_repo (bool): Allow getting modules provided within :mod:`nwb_linkml.models.pydantic`
 
         Returns:
             The imported :class:`types.ModuleType` object that has all the built classes at the root level.
 
         """
+
+        if version is None:
+            version = self.available_versions[namespace][-1]
+
         module_name = self.module_name(namespace, version)
         if module_name in sys.modules:
             return sys.modules[module_name]
 
         try:
-            path = self.namespace_path(namespace, version)
+            path = self.namespace_path(namespace, version, allow_repo)
         except FileNotFoundError:
             path = None
 
         if path is None or not path.exists():
-            _ = self.build(namespace, version)
+            _ = self.build(namespace, version=version)
         module = self.import_module(namespace, version)
         return module
 
@@ -688,6 +693,21 @@ class SchemaProvider(Provider):
     """
     Alias for :meth:`.LinkMLProvider.build_from_dicts` that also builds a pydantic model
     """
+
+    def __init__(
+            self,
+            versions: Optional[Dict[str, str]] = None,
+            **kwargs
+        ):
+        """
+        Args:
+            versions (dict): Dictionary like ``{'namespace': 'v1.0.0'}`` used to specify that this provider should always
+                return models from a specific version of a namespace (unless explicitly requested otherwise
+                in a call to :meth:`.get` ).
+            **kwargs: passed to superclass __init__ (see :class:`.Provider` )
+        """
+        self.versions = versions
+        super(SchemaProvider, self).__init__(**kwargs)
 
     @property
     def path(self) -> Path:
@@ -737,6 +757,9 @@ class SchemaProvider(Provider):
 
         Wrapper around :meth:`.PydanticProvider.get`
         """
+        if version is None and self.versions is not None:
+            version = self.versions.get(namespace, None)
+
         return PydanticProvider(path=self.path).get(namespace, version)
 
     def get_class(self, namespace: str, class_: str, version: Optional[str] = None) -> Type[BaseModel]:
@@ -745,6 +768,9 @@ class SchemaProvider(Provider):
 
         Wrapper around :meth:`.PydanticProvider.get_class`
         """
+        if version is None and self.versions is not None:
+            version = self.versions.get(namespace, None)
+
         return PydanticProvider(path=self.path).get_class(namespace, class_, version)
 
 
