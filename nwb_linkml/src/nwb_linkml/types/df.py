@@ -44,6 +44,9 @@ class DataFrame(BaseModel, pd.DataFrame):
         but when the model is dumped to a dictionary or serialized, the dataframe IS used,
         so changes will be reflected then.
 
+        Fields that shadow pandas methods WILL prevent them from being usable, except
+        by directly accessing the dataframe like ``mymodel._df``
+
     """
 
     _df: pd.DataFrame = None
@@ -87,16 +90,20 @@ class DataFrame(BaseModel, pd.DataFrame):
                 return object.__getattribute__(self._df, item)
             except AttributeError:
                 return object.__getattribute__(self, item)
+
     @model_validator(mode='after')
     def recreate_df(self):
-        """Remake DF when validating (eg. when updating values on assignment)"""
+        """
+        Remake DF when validating (eg. when updating values on assignment)
+        """
         self.update_df()
 
     @model_serializer(mode='wrap', when_used='always')
     def serialize_model(self, nxt: SerializerFunctionWrapHandler) -> Dict[str, Any]:
         """
-        We don't handle values that are changed
-
+        We don't handle values that are changed on the dataframe by directly
+        updating the underlying model lists, but we implicitly handle them
+        by using the dataframe as the source when serializing
         """
         if self._df is None:
             return nxt(self)
@@ -107,5 +114,4 @@ class DataFrame(BaseModel, pd.DataFrame):
                 k: [inner_v for inner_v in v if inner_v is not None]
                 for k, v in out.items()
             }
-
             return nxt(self.__class__(**out))
