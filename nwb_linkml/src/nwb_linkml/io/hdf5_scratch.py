@@ -8,6 +8,15 @@ field more so that at each pass i can work through the items whose dependencies
 have been solved from the bottom up.
 """
 
+from typing import List
+from nwb_linkml.types.df import DataFrame
+
+class MyDf(DataFrame):
+    ints: List[int]
+
+a = MyDf(ints=[1,2,3])
+
+
 from nwb_linkml.io.hdf5 import HDF5IO, flatten_hdf
 import h5py
 from typing import NamedTuple, Tuple, Optional
