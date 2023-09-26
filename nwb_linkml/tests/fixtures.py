@@ -27,3 +27,8 @@ def nwb_core_fixture() -> NamespacesAdapter:
     nwb_core.populate_imports()
     return nwb_core
 
+
+@pytest.fixture(scope="session")
+def data_dir() -> Path:
+    path = Path(__file__).parent.resolve() / 'data'
+    return path

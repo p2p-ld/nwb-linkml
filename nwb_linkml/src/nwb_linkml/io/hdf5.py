@@ -12,8 +12,6 @@ Mapping operations (mostly TODO atm)
 * Create new models from DynamicTables
 * Handle softlinks as object references and vice versa by adding a ``path`` attr
 
-
-
 Other TODO:
 
 * Read metadata only, don't read all arrays
@@ -21,64 +19,24 @@ Other TODO:
 
 """
 import pdb
-import typing
 import warnings
-from typing import Optional, List, Dict, overload, Literal, Type, Any
+from typing import Optional, Dict, overload, Type
 from pathlib import Path
 from types import ModuleType
-from typing import TypeVar, TYPE_CHECKING, NamedTuple
-from abc import abstractmethod
+from typing import TYPE_CHECKING, NamedTuple
 import json
 import subprocess
 import shutil
 
 import h5py
-from pydantic import BaseModel, Field, ConfigDict
-from dataclasses import dataclass, field
+from pydantic import BaseModel
 
+from nwb_linkml.maps.hdf5 import H5SourceItem, flatten_hdf, ReadPhases, ReadQueue
 from nwb_linkml.translate import generate_from_nwbfile
 #from nwb_linkml.models.core_nwb_file import NWBFile
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
 from nwb_linkml.providers.schema import SchemaProvider
-
-
-
-class H5SourceItem(BaseModel):
-    """Tuple of items for each element when flattening an hdf5 file"""
-    path: str
-    """Absolute hdf5 path of element"""
-    leaf: bool
-    """If ``True``, this item has no children (and thus we should start instantiating it before ascending to parent classes)"""
-    h5_type: Literal['group', 'dataset']
-    """What kind of hdf5 element this is"""
-    depends: List[str] = Field(default_factory=list)
-    """Paths of other source items that this item depends on before it can be instantiated. eg. from softlinks"""
-    attrs: dict = Field(default_factory=dict)
-    """Any static attrs that can be had from the element"""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    @property
-    def parts(self) -> List[str]:
-        """path split by /"""
-        return self.path.split('/')
-
-FlatH5 = Dict[str, H5SourceItem]
-
-class ReadQueue(BaseModel):
-    """Container model to store items as they are built """
-    h5f: h5py.File = Field(
-        description="Open hdf5 file used when resolving the queue!"
-    )
-    queue: Dict[str,H5SourceItem] = Field(
-        default_factory=dict,
-        description="Items left to be instantiated, keyed by hdf5 path",
-    )
-    completed: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Items that have already been instantiated, keyed by hdf5 path"
-    )
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class HDF5IO():
@@ -110,27 +68,39 @@ class HDF5IO():
 
         # get all children of selected item
         if isinstance(src, (h5py.File, h5py.Group)):
-            children = self._flatten_hdf(src)
+            children = flatten_hdf(src)
         else:
             raise NotImplementedError('directly read individual datasets')
 
+        queue = ReadQueue(
+            h5f=self.path,
+            queue=children,
+            provider=provider
+        )
 
+        #pdb.set_trace()
+        # Apply initial planning phase of reading
+        queue.apply_phase(ReadPhases.plan)
 
+        # Now do read operations until we're finished
+        queue.apply_phase(ReadPhases.read)
 
-
-        data = {}
-        for k, v in src.items():
-            if isinstance(v, h5py.Group):
-                data[k] = H5Group(cls=v, parent=parent, root_model=parent).read()
-            elif isinstance(v, h5py.Dataset):
-                data[k] = H5Dataset(cls=v, parent=parent).read()
-
-        if path is None:
-            return parent(**data)
-        if 'neurodata_type' in src.attrs:
-            raise NotImplementedError('Making a submodel not supported yet')
-        else:
-            return data
+        pdb.set_trace()
+        #
+        #
+        # data = {}
+        # for k, v in src.items():
+        #     if isinstance(v, h5py.Group):
+        #         data[k] = H5Group(cls=v, parent=parent, root_model=parent).read()
+        #     elif isinstance(v, h5py.Dataset):
+        #         data[k] = H5Dataset(cls=v, parent=parent).read()
+        #
+        # if path is None:
+        #     return parent(**data)
+        # if 'neurodata_type' in src.attrs:
+        #     raise NotImplementedError('Making a submodel not supported yet')
+        # else:
+        #     return data
 
 
 
@@ -314,20 +284,6 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
 
     return target
 
-def unwrap_optional(annotation):
-    if typing.get_origin(annotation) == typing.Union:
-        args = typing.get_args(annotation)
-
-        if len(args) == 2 and args[1].__name__ == 'NoneType':
-            annotation = args[0]
-    return annotation
-
-def take_outer_type(annotation):
-    if typing.get_origin(annotation) is list:
-        return list
-    return annotation
-
-
 
 def submodel_by_path(model: BaseModel, path:str) -> Type[BaseModel | dict | list]:
     """
@@ -336,63 +292,5 @@ def submodel_by_path(model: BaseModel, path:str) -> Type[BaseModel | dict | list
     parts = path.split('/')
     for part in parts:
         ann = model.model_fields[part].annotation
-
-
-def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, H5SourceItem]:
-    """
-    Flatten all child elements of hdf element into a dict of :class:`.H5SourceItem` s keyed by their path
-
-    Args:
-        h5f (:class:`h5py.File` | :class:`h5py.Group`): HDF file or group to flatten!
-    """
-    items = {}
-    def _itemize(name: str, obj: h5py.Dataset | h5py.Group):
-        if skip in name:
-            return
-        leaf = isinstance(obj, h5py.Dataset) or len(obj.keys()) == 0
-        # get references in attrs and datasets
-        refs = [ref for ref in obj.attrs.values() if isinstance(ref, h5py.h5r.Reference)]
-        if isinstance(obj, h5py.Dataset):
-            h5_type = 'dataset'
-            if obj.shape == ():
-                if isinstance(obj[()], h5py.h5r.Reference):
-                    refs.append(obj[()])
-            elif isinstance(obj[0], h5py.h5r.Reference):
-                refs.extend(obj[:].tolist())
-        else:
-            h5_type = 'group'
-        # dereference and get name of reference
-        depends = list(set([h5f[i].name for i in refs]))
-        if not name.startswith('/'):
-            name = '/' + name
-        items[name] = H5SourceItem.model_construct(
-            path = name,
-            leaf = leaf,
-            depends = depends,
-            h5_type=h5_type,
-            attrs = dict(obj.attrs.items())
-        )
-
-    h5f.visititems(_itemize)
-    return items
-
-def sort_flat_hdf(flat: Dict[str, H5SourceItem]) -> Dict[str, H5SourceItem]:
-    """
-    Sort flat hdf5 file in a rough order of solvability
-
-    * First process any leaf items
-
-    * Put any items with dependencies at the end
-
-    Args:
-        flat:
-
-    Returns:
-
-    """
-    class Rank(NamedTuple):
-        has_depends: bool
-        not_leaf: bool
-
 
 

@@ -5,6 +5,7 @@ import pdb
 from typing import List, Any, get_origin, get_args, Union, Optional, Dict
 from types import NoneType
 
+import h5py
 import numpy as np
 import pandas as pd
 from pydantic import (
@@ -115,3 +116,25 @@ class DataFrame(BaseModel, pd.DataFrame):
                 for k, v in out.items()
             }
             return nxt(self.__class__(**out))
+
+
+class DataFrameProxy(DataFrame):
+    def __init__(self, hdf5_file: str, hdf5_path:str, **kwargs):
+        # pdb.set_trace()
+        super().__init__(**kwargs)
+
+        self.hdf5_file = hdf5_file
+        self.hdf5_path = hdf5_path
+
+
+    def _load(self):
+        cols = {}
+        with h5py.File(self.hdf5_file, 'r') as h5f:
+            obj = h5f.get(self.hdf5_path)
+            for col in self.model_fields.keys():
+                if col in obj.keys():
+                    setattr(self, col, obj[col][:])
+
+    def __getitem__(self, item:str):
+        pass
+

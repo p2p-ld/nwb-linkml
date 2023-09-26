@@ -9,13 +9,14 @@ from ..fixtures import tmp_output_dir, set_config_vars
 
 from nwb_linkml.io.hdf5 import HDF5IO
 from nwb_linkml.io.hdf5 import truncate_file
+
 @pytest.mark.skip()
 def test_hdf_read():
     NWBFILE = Path('/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773.nwb')
     if not NWBFILE.exists():
         return
     io = HDF5IO(path=NWBFILE)
-    model = io.read('acquisition')
+    model = io.read()
 
     pdb.set_trace()
 
@@ -76,10 +77,12 @@ def test_truncate_file(tmp_output_dir):
     assert target_h5f[target_h5f['link']['child'].attrs['reference_contig']].name == target_h5f['data']['dataset_contig'].name
     assert target_h5f[target_h5f['link']['child'].attrs['reference_chunked']].name == target_h5f['data']['dataset_chunked'].name
     assert target_h5f['data']['dataset_contig'].attrs['anattr'] == 1
+
 @pytest.mark.skip()
 def test_flatten_hdf():
-    from nwb_linkml.io.hdf5 import HDF5IO, flatten_hdf
-    path = '/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773_probe-769322820_ecephys.nwb'
+    from nwb_linkml.io.hdf5 import HDF5IO
+    from nwb_linkml.maps.hdf5 import flatten_hdf
+    path = '/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773.nwb'
     import h5py
     h5f = h5py.File(path)
     flat = flatten_hdf(h5f)

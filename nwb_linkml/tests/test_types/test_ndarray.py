@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError, Field
 from nwb_linkml.types.ndarray import NDArray
 from nptyping import Shape, Number
 
+from ..fixtures import data_dir
 def test_ndarray_type():
 
     class Model(BaseModel):
@@ -54,3 +55,6 @@ def test_ndarray_union():
     with pytest.raises(ValidationError):
         instance = Model(array=np.random.random((5,10,4,6)))
 
+@pytest.mark.skip()
+def test_ndarray_proxy(data_dir):
+    h5f_source = data_dir / 'aibs_ecephys.nwb'

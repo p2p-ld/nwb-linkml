@@ -17,10 +17,11 @@ class MyDf(DataFrame):
 a = MyDf(ints=[1,2,3])
 
 
-from nwb_linkml.io.hdf5 import HDF5IO, flatten_hdf
+from nwb_linkml.io.hdf5 import HDF5IO
 import h5py
 from typing import NamedTuple, Tuple, Optional
-from nwb_linkml.io.hdf5 import H5SourceItem, FlatH5, ReadQueue, HDF5IO
+from nwb_linkml.io.hdf5 import HDF5IO
+from nwb_linkml.maps.hdf5 import H5SourceItem, FlatH5, ReadQueue, flatten_hdf
 from nwb_linkml.providers.schema import SchemaProvider
 from rich import print
 from pydantic import BaseModel
