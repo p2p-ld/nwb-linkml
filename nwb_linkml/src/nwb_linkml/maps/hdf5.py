@@ -6,7 +6,7 @@ so we will make our own mapping class here and re-evaluate whether they should b
 """
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Literal, List, Dict, Optional
+from typing import Literal, List, Dict, Optional, Type
 
 import h5py
 from enum import StrEnum
@@ -14,7 +14,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, ConfigDict
 
 from nwb_linkml.providers.schema import SchemaProvider
-from nwb_linkml.maps.hdmf import dynamictable_to_df
+from nwb_linkml.maps.hdmf import dynamictable_to_model
 from nwb_linkml.types.hdf5 import HDF5_Path
 
 
@@ -70,6 +70,10 @@ class H5ReadResult(BaseModel):
     """
     If completed, built result. A dict that can be instantiated into the model.
     If completed is True and result is None, then remove this object
+    """
+    model: Optional[Type[BaseModel]] = None
+    """
+    The model that this item should be cast into
     """
     completes: List[str] = Field(default_factory=list)
     """
@@ -181,7 +185,7 @@ class ResolveDynamicTable(HDF5Map):
             else:
                 base_model = None
 
-            model = dynamictable_to_df(obj, base=base_model)
+            model = dynamictable_to_model(obj, base=base_model)
 
             completes = ['/'.join([src.path, child]) for child in obj.keys()]
 
@@ -227,9 +231,12 @@ class ResolveModelGroup(HDF5Map):
             source=src,
             completed=True,
             result = res,
+            model = model,
             namespace=src.namespace,
             neurodata_type=src.neurodata_type
         )
+
+
 #
 # class ResolveModelDataset(HDF5Map):
 #     phase = ReadPhases.read

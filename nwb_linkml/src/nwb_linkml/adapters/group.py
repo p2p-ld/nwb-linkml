@@ -18,8 +18,8 @@ class GroupAdapter(ClassAdapter):
     def build(self) -> BuildResult:
         # Handle container groups with only * quantity unnamed groups
         if len(self.cls.groups) > 0 and \
-                all([self._check_if_container(g) for g in self.cls.groups]) and \
-                self.parent is not None:
+                all([self._check_if_container(g) for g in self.cls.groups]): # and \
+                # self.parent is not None:
             return self.handle_container_group(self.cls)
 
         # handle if we are a terminal container group without making a new class
@@ -58,22 +58,38 @@ class GroupAdapter(ClassAdapter):
 
         """
 
+
         # don't build subgroups as their own classes, just make a slot
         # that can contain them
-        if not self.cls.name:
-            name = 'children'
-        else:
+        if self.cls.name:
             name = cls.name
+        # elif len(cls.groups) == 1:
+        #     name = camel_to_snake(cls.groups[0].neurodata_type_inc)
+        else:
+            name = 'children'
 
-        res = BuildResult(
-            slots = [SlotDefinition(
-                name=name,
-                multivalued=True,
-                description=cls.doc,
-                any_of=[{'range': subcls.neurodata_type_inc} for subcls in cls.groups]
-            )]
-        )
-        return res
+        slot = SlotDefinition(
+                    name=name,
+                    multivalued=True,
+                    any_of=[{'range': subcls.neurodata_type_inc} for subcls in cls.groups],
+                    inlined=True,
+                    inlined_as_list=False
+                )
+
+        if self.parent is not None:
+            # if we  have a parent,
+            # just return the slot itself without the class
+            slot.description = cls.doc
+            return BuildResult(
+                slots=[slot]
+            )
+        else:
+            # We are a top-level container class like ProcessingModule
+            base = self.build_base()
+            # remove all the attributes and replace with child slot
+            base.classes[0].attributes = [slot]
+            return base
+
 
     def handle_container_slot(self, cls:Group) -> BuildResult:
         """

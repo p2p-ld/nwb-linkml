@@ -192,13 +192,15 @@ class ClassAdapter(Adapter):
                 required=True,
                 ifabsent=f'string({self.cls.name})',
                 equals_string=self.cls.name,
-                range='string'
+                range='string',
+                identifier=True
             )
         else:
             name_slot = SlotDefinition(
                 name='name',
                 required=True,
-                range='string'
+                range='string',
+                identifier=True
             )
         return name_slot
 
