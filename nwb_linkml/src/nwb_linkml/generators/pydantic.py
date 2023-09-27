@@ -503,7 +503,65 @@ class NWBPydanticGenerator(PydanticGenerator):
         if range_cls.is_a == "Arraylike":
             return self._get_numpy_slot_range(range_cls)
         else:
-            return super().get_class_slot_range(slot_range, inlined, inlined_as_list)
+            return self._get_class_slot_range_origin(slot_range, inlined, inlined_as_list)
+
+    def _get_class_slot_range_origin(self, slot_range: str, inlined: bool, inlined_as_list: bool) -> str:
+        """
+        Parent class get class range
+
+        Overriding to not use strings in the type hint when a class has an identifier value
+        """
+        sv = self.schemaview
+        range_cls = sv.get_class(slot_range)
+
+        # Hardcoded handling for Any
+        if range_cls.class_uri == "linkml:Any":
+            return "Any"
+
+        # Inline the class itself only if the class is defined as inline, or if the class has no
+        # identifier slot and also isn't a mixin.
+        if (
+            inlined
+            or inlined_as_list
+            or (
+                #sv.get_identifier_slot(range_cls.name, use_key=True) is None and
+                not sv.is_mixin(range_cls.name)
+            )
+        ):
+            if (
+                len([x for x in sv.class_induced_slots(slot_range) if x.designates_type]) > 0
+                and len(sv.class_descendants(slot_range)) > 1
+            ):
+                return (
+                    "Union["
+                    + ",".join([camelcase(c) for c in sv.class_descendants(slot_range)])
+                    + "]"
+                )
+            else:
+                return f"{camelcase(slot_range)}"
+
+        # For the more difficult cases, set string as the default and attempt to improve it
+        range_cls_identifier_slot_range = "str"
+
+        # For mixins, try to use the identifier slot of descendant classes
+        if (
+            self.gen_mixin_inheritance
+            and sv.is_mixin(range_cls.name)
+            and sv.get_identifier_slot(range_cls.name)
+        ):
+            range_cls_identifier_slot_range = self.get_mixin_identifier_range(range_cls)
+
+        # If the class itself has an identifier slot, it can be allowed to overwrite a value from mixin above
+        # if (
+        #     sv.get_identifier_slot(range_cls.name) is not None
+        #     and sv.get_identifier_slot(range_cls.name).range is not None
+        # ):
+        #     range_cls_identifier_slot_range = _get_pyrange(
+        #         sv.get_type(sv.get_identifier_slot(range_cls.name).range), sv
+        #     )
+
+        return range_cls_identifier_slot_range
+
 
     def get_class_isa_plus_mixins(self, classes:Optional[List[ClassDefinition]] = None) -> Dict[str, List[str]]:
         """
