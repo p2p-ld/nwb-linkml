@@ -3,6 +3,7 @@ Extension of nptyping NDArray for pydantic that allows for JSON-Schema serializa
 
 * Order to store data in (row first)
 """
+import base64
 import pdb
 from pathlib import Path
 from typing import (
@@ -12,6 +13,8 @@ from typing import (
 Generic,
 TypeVar
 )
+import sys
+from copy import copy
 
 from pydantic_core import core_schema
 from pydantic import (
@@ -24,6 +27,8 @@ from pydantic.json_schema import JsonSchemaValue
 
 import numpy as np
 import h5py
+from dask.array.core import Array as DaskArray
+import blosc2
 
 from nptyping import NDArray as _NDArray
 from nptyping.ndarray import NDArrayMeta
@@ -31,6 +36,7 @@ from nptyping import Shape, Number
 from nptyping.shape_expression import check_shape
 
 from nwb_linkml.maps.dtype import np_to_python
+
 
 class NDArray(_NDArray):
     """
@@ -56,7 +62,11 @@ class NDArray(_NDArray):
             assert value.dtype == dtype, f"Invalid dtype! expected {dtype}, got {value.dtype}"
             return value
         def validate_array(value: Any) -> np.ndarray:
-            assert cls.__instancecheck__(value), f'Invalid shape! expected shape {shape.prepared_args}, got shape {value.shape}'
+            if isinstance(value, np.ndarray):
+                assert cls.__instancecheck__(value), f'Invalid shape! expected shape {shape.prepared_args}, got shape {value.shape}'
+            elif isinstance(value, DaskArray):
+                assert shape is Any or check_shape(value.shape, shape), f'Invalid shape! expected shape {shape.prepared_args}, got shape {value.shape}'
+
             return value
 
         def coerce_list(value: Any) -> np.ndarray:
@@ -106,36 +116,60 @@ class NDArray(_NDArray):
                     )
 
 
+        def array_to_list(instance: np.ndarray | DaskArray) -> list|dict:
+            if isinstance(instance, DaskArray):
+                arr = instance.__array__()
+            else:
+                arr = instance
+
+            # If we're larger than 16kB then compress array!
+            if sys.getsizeof(arr) > 16 * 1024:
+                packed = blosc2.pack_array2(arr)
+                packed = base64.b64encode(packed)
+                ret= {
+                    'array': packed,
+                    'shape': copy(arr.shape),
+                    'dtype': copy(arr.dtype.name),
+                    'unpack_fns': ['base64.b64decode', 'blosc2.unpack_array2']
+                }
+                return ret
+            else:
+                return arr.tolist()
+
+
+
+
         return core_schema.json_or_python_schema(
             json_schema=list_schema,
             python_schema=core_schema.chain_schema(
                 [
                     core_schema.no_info_plain_validator_function(coerce_list),
-                    core_schema.is_instance_schema(np.ndarray),
+                    core_schema.union_schema([
+                        core_schema.is_instance_schema(cls=np.ndarray),
+                        core_schema.is_instance_schema(cls=DaskArray)
+                        ]),
                     core_schema.no_info_plain_validator_function(validate_dtype),
                     core_schema.no_info_plain_validator_function(validate_array)
                 ]
             ),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda instance: instance.tolist(),
+                array_to_list,
                 when_used='json'
             )
         )
-
-
 class NDArrayProxy():
     """
     Thin proxy to numpy arrays stored within hdf5 files,
     only read into memory when accessed, but otherwise
     passthrough all attempts to access attributes.
     """
-    def __init__(self, h5f_file: Path, path: str):
+    def __init__(self, h5f_file: Path|str, path: str):
         """
         Args:
             h5f_file (:class:`pathlib.Path`): Path to source HDF5 file
             path (str): Location within HDF5 file where this array is located
         """
-        self.h5f_file = h5f_file
+        self.h5f_file = Path(h5f_file)
         self.path = path
 
     def __getattr__(self, item):
@@ -148,3 +182,20 @@ class NDArrayProxy():
             return obj[slice]
     def __setitem__(self, slice, value):
         raise NotImplementedError(f"Cant write into an arrayproxy yet!")
+
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: _NDArray,
+        _handler: Callable[[Any], core_schema.CoreSchema],
+
+    ) -> core_schema.CoreSchema:
+        # return core_schema.no_info_after_validator_function(
+        #     serialization=core_schema.plain_serializer_function_ser_schema(
+        #         lambda instance: instance.tolist(),
+        #         when_used='json'
+        #     )
+        # )
+
+        return NDArray_.__get_pydantic_core_schema__(cls, _source_type, _handler)
