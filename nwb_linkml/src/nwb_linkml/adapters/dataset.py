@@ -118,7 +118,7 @@ class DatasetAdapter(ClassAdapter):
                 - null
 
         """
-        if self.cls.name and ((
+        if self.cls.name and len(self.cls.attributes) == 0 and ((
                 # single-layer list
                 not any([isinstance(dim, list) for dim in self.cls.dims]) and
                 len(self.cls.dims) == 1
@@ -209,27 +209,36 @@ class DatasetAdapter(ClassAdapter):
         dims_shape = tuple(dict.fromkeys(dims_shape).keys())
 
         # if we only have one possible dimension, it's equivalent to a list, so we just return the slot
-        if len(dims_shape) == 1 and self.parent:
-            quantity = QUANTITY_MAP[dataset.quantity]
-            slot = SlotDefinition(
-                name=dataset.name,
-                range=dtype,
-                description=dataset.doc,
-                required=quantity['required'],
-                multivalued=True
-            )
-            res.classes[0].attributes.update({dataset.name: slot})
-            self._handlers.append('arraylike-1d')
-            return res
+        # if len(dims_shape) == 1 and self.parent:
+        #     quantity = QUANTITY_MAP[dataset.quantity]
+        #     slot = SlotDefinition(
+        #         name=dataset.name,
+        #         range=dtype,
+        #         description=dataset.doc,
+        #         required=quantity['required'],
+        #         multivalued=True
+        #     )
+        #     res.classes[0].attributes.update({dataset.name: slot})
+        #     self._handlers.append('arraylike-1d')
+        #     return res
+
+        # --------------------------------------------------
+        # SPECIAL CASE - allen institute's ndx-aibs-ecephys.extension
+        # confuses "dims" with "shape" , eg shape = [None], dims = [3].
+        # So we hardcode that here...
+        # --------------------------------------------------
+        if len(dims_shape) == 1 and isinstance(dims_shape[0][0], int) and dims_shape[0][1] is None:
+            dims_shape = (('dim', dims_shape[0][0]),)
+
 
         # now make slots for each of them
         slots = []
         for dims, shape in dims_shape:
-            # if a dim is present in all possible combinations of dims, make it required
-            if all([dims in inner_dim for inner_dim in dataset.dims]):
+            # if there is just a single list of possible dimensions, it's required
+            if not any([isinstance(inner_dim, list) for inner_dim in dataset.dims]):
                 required = True
-            # or if there is just a single list of possible dimensions
-            elif not any([isinstance(inner_dim, list) for inner_dim in dataset.dims]):
+            # if a dim is present in all possible combinations of dims, make it required
+            elif all([dims in inner_dim for inner_dim in dataset.dims]):
                 required = True
             else:
                 required = False

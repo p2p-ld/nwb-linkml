@@ -217,6 +217,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     SKIP_CLASSES=('',)
     INJECTED_FIELDS = (
         'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")',
+        'object_id: Optional[str] = Field(None, description="Unique UUID for each object")'
     )
     # SKIP_CLASSES=('VectorData','VectorIndex')
     split:bool=True

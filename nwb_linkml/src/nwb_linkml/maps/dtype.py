@@ -71,3 +71,21 @@ np_to_python = {
     **{n:float for n in (np.float16, np.float32, np.floating, np.float32, np.float64, np.single, np.double, np.float_)},
     **{n:str for n in (np.character, np.str_, np.string_, np.unicode_)}
 }
+
+allowed_precisions = {
+    'float': ['double'],
+    'int8': ['short', 'int', 'long', 'int16', 'int32', 'int64'],
+    'short': ['int', 'long'],
+    'int': ['long'],
+    'uint8': ['uint8', 'uint16', 'uint32', 'uint64'],
+    'uint16': ['uint16', 'uint32', 'uint64'],
+    'uint32': ['uint32', 'uint64'],
+    'float16': ['float16', 'float32', 'float64'],
+    'float32': ['float32', 'float64'],
+    'utf': ['ascii']
+}
+"""
+Following HDMF, it turns out that specifying precision actually specifies minimum precision
+https://github.com/hdmf-dev/hdmf/blob/ddc842b5c81d96e0b957b96e88533b16c137e206/src/hdmf/validate/validator.py#L22
+https://github.com/hdmf-dev/hdmf/blob/ddc842b5c81d96e0b957b96e88533b16c137e206/src/hdmf/spec/spec.py#L694-L714
+"""

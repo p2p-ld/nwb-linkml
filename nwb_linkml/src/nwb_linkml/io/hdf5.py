@@ -37,6 +37,7 @@ from nwb_linkml.translate import generate_from_nwbfile
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
 from nwb_linkml.providers.schema import SchemaProvider
+from nwb_linkml.types.hdf5 import HDF5_Path
 
 
 class HDF5IO():
@@ -58,8 +59,9 @@ class HDF5IO():
     def read(self, path:str) -> BaseModel | Dict[str, BaseModel]: ...
 
     def read(self, path:Optional[str] = None):
+        print('starting read')
         provider = self.make_provider()
-
+        print('provider made')
         h5f = h5py.File(str(self.path))
         if path:
             src = h5f.get(path)
@@ -71,7 +73,7 @@ class HDF5IO():
             children = flatten_hdf(src)
         else:
             raise NotImplementedError('directly read individual datasets')
-
+        print('hdf flattened')
         queue = ReadQueue(
             h5f=self.path,
             queue=children,
@@ -81,11 +83,30 @@ class HDF5IO():
         #pdb.set_trace()
         # Apply initial planning phase of reading
         queue.apply_phase(ReadPhases.plan)
-
+        print('phase - plan completed')
         # Now do read operations until we're finished
         queue.apply_phase(ReadPhases.read)
 
+        print('phase - read completed')
+
+        # if len(queue.queue)> 0:
+        #     warnings.warn('Did not complete all items during read phase!')
+
+
+
+        queue.apply_phase(ReadPhases.construct)
+        # --------------------------------------------------
+        # FIXME: Hardcoding top-level file reading just for the win
+        # --------------------------------------------------
+        root = finish_root_hackily(queue)
+
+        file = NWBFile(**root)
+
+
         pdb.set_trace()
+
+
+
         #
         #
         # data = {}
@@ -169,6 +190,22 @@ class HDF5IO():
             return list(data[:])
 
 
+def finish_root_hackily(queue: ReadQueue) -> dict:
+    root = {'name': 'root'}
+    for k, v in queue.queue.items():
+        if isinstance(v.result, dict):
+            res_dict = {}
+            for inner_k, inner_v in v.result.items():
+                if isinstance(inner_v, HDF5_Path):
+                     inner_res = queue.completed.get(inner_v)
+                     if inner_res is not None:
+                        res_dict[inner_k] = inner_res.result
+                else:
+                    res_dict[inner_k] = inner_v
+            root[res_dict['name']] = res_dict
+        else:
+            root[v.path.split('/')[-1]] = v.result
+    return root
 
 def read_specs_as_dicts(group: h5py.Group) -> dict:
     """

@@ -4,18 +4,21 @@ Maps for reading and writing from HDF5
 We have sort of diverged from the initial idea of a generalized map as in :class:`linkml.map.Map` ,
 so we will make our own mapping class here and re-evaluate whether they should be unified later
 """
+import pdb
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Literal, List, Dict, Optional, Type
+from typing import Literal, List, Dict, Optional, Type, Union
 
 import h5py
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, ValidationError
+import dask.array as da
 
 from nwb_linkml.providers.schema import SchemaProvider
 from nwb_linkml.maps.hdmf import dynamictable_to_model
 from nwb_linkml.types.hdf5 import HDF5_Path
+from nwb_linkml.types.ndarray import NDArrayProxy
 
 
 class ReadPhases(StrEnum):
@@ -55,7 +58,7 @@ class H5ReadResult(BaseModel):
     """Result returned by each of our mapping operations"""
     path: str
     """absolute hdf5 path of element"""
-    source: H5SourceItem
+    source: Union[H5SourceItem, 'H5ReadResult']
     """
     Source that this result is based on. 
     The map can modify this item, so the container should update the source
@@ -66,7 +69,7 @@ class H5ReadResult(BaseModel):
     Was this item completed by this map step? False for cases where eg. 
     we still have dependencies that need to be completed before this one
     """
-    result: Optional[BaseModel | dict | str | int | float] = None
+    result: Optional[dict | str | int | float | BaseModel] = None
     """
     If completed, built result. A dict that can be instantiated into the model.
     If completed is True and result is None, then remove this object
@@ -86,6 +89,14 @@ class H5ReadResult(BaseModel):
     neurodata_type: Optional[str] = None
     """
     Optional: The neurodata type to use for this object 
+    """
+    applied: List[str] = Field(default_factory=list)
+    """
+    Which stages were applied to this item
+    """
+    errors: List[str] = Field(default_factory=list)
+    """
+    Problems that occurred during resolution
     """
 
 
@@ -132,6 +143,8 @@ class PruneEmpty(HDF5Map):
             source=src,
             completed=True
         )
+
+
 
 # class ResolveVectorData(HDF5Map):
 #     """
@@ -194,7 +207,8 @@ class ResolveDynamicTable(HDF5Map):
             source=src,
             result=model,
             completes=completes,
-            completed = True
+            completed = True,
+            applied=['ResolveDynamicTable']
         )
 
 
@@ -212,6 +226,8 @@ class ResolveModelGroup(HDF5Map):
 
     @classmethod
     def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+
+
         model = provider.get_class(src.namespace, src.neurodata_type)
         res = {}
         with h5py.File(src.h5f_path, 'r') as h5f:
@@ -222,7 +238,12 @@ class ResolveModelGroup(HDF5Map):
                     continue
                 if key in obj.keys():
                     # stash a reference to this, we'll compile it at the end
-                    res[key] = HDF5_Path('/'.join([src.path, key]))
+                    if src.path == '/':
+                        target_path = '/' + key
+                    else:
+                        target_path = '/'.join([src.path, key])
+
+                    res[key] = HDF5_Path(target_path)
 
         res['hdf5_path'] = src.path
         res['name'] = src.parts[-1]
@@ -233,25 +254,44 @@ class ResolveModelGroup(HDF5Map):
             result = res,
             model = model,
             namespace=src.namespace,
-            neurodata_type=src.neurodata_type
+            neurodata_type=src.neurodata_type,
+            applied=['ResolveModelGroup']
         )
 
+class ResolveDatasetAsDict(HDF5Map):
+    """Mutually exclusive with :class:`.ResolveScalars`"""
+    phase = ReadPhases.read
+    priority = 11
+    exclusive = True
 
-#
-# class ResolveModelDataset(HDF5Map):
-#     phase = ReadPhases.read
-#     priority = 10
-#     exclusive = True
-#
-#     @classmethod
-#     def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-#         if 'neurodata_type' in src.attrs and src.h5_type == 'dataset':
-#             return True
-#         else:
-#             return False
-#
-#     def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
-#
+    @classmethod
+    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
+        if src.h5_type == 'dataset' and 'neurodata_type' not in src.attrs:
+            with h5py.File(src.h5f_path, 'r') as h5f:
+                obj = h5f.get(src.path)
+                if obj.shape != ():
+                    return True
+                else: return False
+        else:
+            return False
+
+    @classmethod
+    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+
+        res = {
+            'array': NDArrayProxy(h5f_file=src.h5f_path, path=src.path),
+            'hdf5_path' : src.path,
+            'name': src.parts[-1],
+            **src.attrs
+        }
+        return H5ReadResult(
+            path = src.path,
+            source=src,
+            completed=True,
+            result=res,
+            applied=['ResolveDatasetAsDict']
+        )
+
 class ResolveScalars(HDF5Map):
     phase = ReadPhases.read
     priority = 11 #catchall
@@ -264,6 +304,8 @@ class ResolveScalars(HDF5Map):
                 obj = h5f.get(src.path)
                 if obj.shape == ():
                     return True
+                else:
+                    return False
         else:
             return False
     @classmethod
@@ -275,8 +317,137 @@ class ResolveScalars(HDF5Map):
             path=src.path,
             source = src,
             completed=True,
-            result = res
+            result = res,
+            applied=['ResolveScalars']
         )
+
+class ResolveContainerGroups(HDF5Map):
+    phase = ReadPhases.read
+    priority = 9
+
+    @classmethod
+    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
+        if src.h5_type == 'group' and 'neurodata_type' not in src.attrs and len(src.attrs) == 0:
+            with h5py.File(src.h5f_path, 'r') as h5f:
+                obj = h5f.get(src.path)
+                if len(obj.keys()) > 0:
+                    return True
+                else:
+                    return False
+        else:
+            return False
+
+    @classmethod
+    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+        """Simple, just return a dict with references to its children"""
+        with h5py.File(src.h5f_path, 'r') as h5f:
+            obj = h5f.get(src.path)
+            children = {}
+            for k, v in obj.items():
+                children[k] = HDF5_Path(v.name)
+
+        res = {
+            'name': src.parts[-1],
+            **children
+        }
+
+        return H5ReadResult(
+            path=src.path,
+            source=src,
+            completed=True,
+            result=res,
+            applied=['ResolveContainerGroups']
+        )
+
+
+# --------------------------------------------------
+# Completion Steps
+# --------------------------------------------------
+
+class CompleteDynamicTables(HDF5Map):
+    """Nothing to do! already done!"""
+    phase = ReadPhases.construct
+    priority = 1
+    exclusive = True
+    @classmethod
+    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
+        if 'ResolveDynamicTable' in src.applied:
+            return True
+        else:
+            return False
+
+    @classmethod
+    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+        return src
+
+class CompleteModelGroups(HDF5Map):
+    phase = ReadPhases.construct
+    priority = 2
+
+    @classmethod
+    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
+        if src.model is not None:
+            return True
+        else:
+            return False
+
+    @classmethod
+    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+        # gather any results that were left for completion elsewhere
+        res = {k:v for k,v in src.result.items() if not isinstance(v, HDF5_Path)}
+        errors = []
+        completes = []
+        for path, item in src.result.items():
+            if isinstance(item, HDF5_Path):
+                other_item = completed.get(item, None)
+                if other_item is None:
+                    errors.append(f'Couldnt find {item}')
+                    continue
+                if isinstance(other_item.result, dict):
+                    # resolve any other children that it might have...
+                    # FIXME: refactor this lmao so bad
+                    for k,v in other_item.result.items():
+                        if isinstance(v, HDF5_Path):
+                            inner_result = completed.get(v, None)
+                            if inner_result is None:
+                                errors.append(f'Couldnt find inner item {v}')
+                                continue
+                            other_item.result[k] = inner_result.result
+                            completes.append(v)
+                    res[other_item.result['name']] = other_item.result
+                else:
+                    res[path] = other_item.result
+
+                completes.append(other_item.path)
+
+        #try:
+        instance = src.model(**res)
+        return H5ReadResult(
+            path=src.path,
+            source=src,
+            result=instance,
+            model=src.model,
+            completed=True,
+            completes=completes,
+            neurodata_type=src.neurodata_type,
+            namespace=src.namespace,
+            applied=src.applied + ['CompleteModelGroups'],
+            errors=errors
+        )
+        # except ValidationError:
+        #     # didn't get it! try again next time
+        #     return H5ReadResult(
+        #         path=src.path,
+        #         source=src,
+        #         result=src,
+        #         model=src.model,
+        #         completed=True,
+        #         completes=completes,
+        #         neurodata_type=src.neurodata_type,
+        #         namespace=src.namespace,
+        #         applied=src.applied + ['CompleteModelGroups']
+        #     )
+
 
 
 
@@ -291,7 +462,7 @@ class ReadQueue(BaseModel):
     provider: SchemaProvider = Field(
         description="SchemaProvider used by each of the items in the read queue"
     )
-    queue: Dict[str,H5SourceItem] = Field(
+    queue: Dict[str,H5SourceItem|H5ReadResult] = Field(
         default_factory=dict,
         description="Items left to be instantiated, keyed by hdf5 path",
     )
@@ -300,10 +471,15 @@ class ReadQueue(BaseModel):
         description="Items that have already been instantiated, keyed by hdf5 path"
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)
+    phases_completed: List[ReadPhases] = Field(
+        default_factory=list,
+        description="Phases that have already been completed")
 
     def apply_phase(self, phase:ReadPhases):
         phase_maps = [m for m in HDF5Map.__subclasses__() if m.phase == phase]
         phase_maps = sorted(phase_maps, key=lambda x: x.priority)
+
+        # if we've moved to the
 
         results = []
 
@@ -316,6 +492,7 @@ class ReadQueue(BaseModel):
                         break # out of inner iteration
 
         # remake the source queue and save results
+        completes = []
         for res in results:
             # remove the original item
             del self.queue[res.path]
@@ -327,16 +504,42 @@ class ReadQueue(BaseModel):
                 # just drop it.
 
                 # if we have completed other things, delete them from the queue
-                for also_completed in res.completes:
-                    try:
-                        del self.queue[also_completed]
-                    except KeyError:
-                        # normal, we might have already deleted this in a previous step
-                        pass
+                completes.extend(res.completes)
+                # for also_completed in res.completes:
+                #     try:
+                #         del self.queue[also_completed]
+                #     except KeyError:
+                #         # normal, we might have already deleted this in a previous step
+                #         pass
             else:
                 # if we didn't complete the item (eg. we found we needed more dependencies),
                 # add the updated source to the queue again
-                self.queue[res.path] = res.source
+                if phase != ReadPhases.construct:
+                    self.queue[res.path] = res.source
+                else:
+                    self.queue[res.path] = res
+
+        # delete the ones that were already completed but might have been
+        # incorrectly added back in the pile
+        for c in completes:
+            try:
+                del self.queue[c]
+            except KeyError:
+                pass
+
+        # if we have nothing left in our queue, we have completed this phase
+        # and prepare only ever has one pass
+        if phase == ReadPhases.plan:
+            self.phases_completed.append(phase)
+            return
+
+        if len(self.queue) == 0:
+            self.phases_completed.append(phase)
+            if phase != ReadPhases.construct:
+                # if we're not in the last phase, move our completed to our queue
+                self.queue = self.completed.copy()
+
+
 
 
 
@@ -367,8 +570,8 @@ def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, 
         # get references in attrs and datasets to populate dependencies
         #depends = get_references(obj)
 
-        #if not name.startswith('/'):
-        #    name = '/' + name
+        if not name.startswith('/'):
+           name = '/' + name
 
         attrs = dict(obj.attrs.items())
 
@@ -384,6 +587,8 @@ def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, 
         )
 
     h5f.visititems(_itemize)
+    # # then add the root item
+    # _itemize(h5f.name, h5f)
     return items
 
 
