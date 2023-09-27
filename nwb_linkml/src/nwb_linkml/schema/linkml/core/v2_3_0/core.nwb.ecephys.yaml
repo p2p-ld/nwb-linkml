@@ -18,6 +18,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       filtering:
@@ -65,6 +66,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -103,6 +105,7 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes)
+        identifier: true
         range: string
         required: true
         equals_string: electrodes
@@ -120,6 +123,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -145,6 +149,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -179,6 +184,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -215,6 +221,7 @@ classes:
       name:
         name: name
         ifabsent: string(features)
+        identifier: true
         range: string
         required: true
         equals_string: features
@@ -246,6 +253,7 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes)
+        identifier: true
         range: string
         required: true
         equals_string: electrodes
@@ -256,6 +264,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       detection_method:
@@ -288,16 +297,12 @@ classes:
       during experiment acquisition.
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      spike_event_series:
-        name: spike_event_series
-        description: SpikeEventSeries object(s) containing detected spike event waveforms.
-        multivalued: true
-        range: SpikeEventSeries
-        required: false
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: SpikeEventSeries
     tree_root: true
   FilteredEphys:
     name: FilteredEphys
@@ -314,17 +319,12 @@ classes:
       the ElectricalSeries 'filtering' attribute.
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      electrical_series:
-        name: electrical_series
-        description: ElectricalSeries object(s) containing filtered electrophysiology
-          data.
-        multivalued: true
-        range: ElectricalSeries
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: ElectricalSeries
     tree_root: true
   LFP:
     name: LFP
@@ -333,17 +333,12 @@ classes:
       properties should be noted in the ElectricalSeries 'filtering' attribute.
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      electrical_series:
-        name: electrical_series
-        description: ElectricalSeries object(s) containing LFP data for one or more
-          channels.
-        multivalued: true
-        range: ElectricalSeries
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: ElectricalSeries
     tree_root: true
   ElectrodeGroup:
     name: ElectrodeGroup
@@ -352,6 +347,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -383,6 +379,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       waveform_filtering:
@@ -418,6 +415,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveform_mean)
+        identifier: true
         range: string
         required: true
         equals_string: waveform_mean
@@ -444,6 +442,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveform_sd)
+        identifier: true
         range: string
         required: true
         equals_string: waveform_sd
@@ -470,6 +469,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:

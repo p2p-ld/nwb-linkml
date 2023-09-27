@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, date
 from enum import Enum
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any, Union, ClassVar
 from pydantic import BaseModel as BaseModel, Field
 from nptyping import Shape, Float, Float32, Double, Float64, LongLong, Int64, Int, Int32, Int16, Short, Int8, UInt, UInt32, UInt16, UInt8, UInt64, Number, String, Unicode, Unicode, Unicode, String, Bool, Datetime64
 from nwb_linkml.types import NDArray
@@ -26,18 +26,26 @@ class ConfiguredBaseModel(BaseModel,
                 extra = 'forbid',
                 arbitrary_types_allowed = True,
                 use_enum_values = True):
-    pass
+    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    
+
+class LinkML_Meta(BaseModel):
+    """Extra LinkML Metadata stored as a class attribute"""
+    tree_root: bool = False
+
+
 
 
 class CSRMatrix(Container):
     """
     A compressed sparse row matrix. Data are stored in the standard CSR format, where column indices for row i are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
     """
-    name:str= Field(...)
-    shape:Optional[int]= Field(None, description="""The shape (number of rows, number of columns) of this sparse matrix.""")
-    indices:List[int]= Field(default_factory=list, description="""The column indices.""")
-    indptr:List[int]= Field(default_factory=list, description="""The row index pointer.""")
-    data:List[Any]= Field(default_factory=list, description="""The non-zero values in the matrix.""")
+    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
+    name: str = Field(...)
+    shape: Optional[int] = Field(None, description="""The shape (number of rows, number of columns) of this sparse matrix.""")
+    indices: List[int] = Field(default_factory=list, description="""The column indices.""")
+    indptr: List[int] = Field(default_factory=list, description="""The row index pointer.""")
+    data: List[Any] = Field(default_factory=list, description="""The non-zero values in the matrix.""")
     
 
 

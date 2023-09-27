@@ -14,6 +14,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -26,6 +27,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -38,6 +40,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       resolution:
@@ -84,6 +87,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -95,6 +99,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -105,6 +110,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -178,6 +184,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -250,6 +257,7 @@ classes:
       name:
         name: name
         ifabsent: string(starting_time)
+        identifier: true
         range: string
         required: true
         equals_string: starting_time
@@ -277,6 +285,7 @@ classes:
       name:
         name: name
         ifabsent: string(sync)
+        identifier: true
         range: string
         required: true
         equals_string: sync
@@ -285,26 +294,13 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      description:
-        name: description
-        description: Description of this collection of processed data.
-        range: text
-      nwb_data_interface:
-        name: nwb_data_interface
-        description: Data objects stored in this collection.
-        multivalued: true
-        range: NWBDataInterface
-        required: false
-      dynamic_table:
-        name: dynamic_table
-        description: Tables stored in this collection.
-        multivalued: true
-        range: DynamicTable
-        required: false
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: NWBDataInterface
+      - range: DynamicTable
     tree_root: true
   Images:
     name: Images
@@ -313,6 +309,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:

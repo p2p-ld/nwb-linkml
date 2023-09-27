@@ -16,6 +16,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -49,6 +50,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -83,6 +85,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -106,6 +109,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       bias_current:
@@ -134,6 +138,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -150,6 +155,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -172,6 +178,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -230,6 +237,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -250,6 +258,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_fast)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_fast
@@ -268,6 +277,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_slow)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_slow
@@ -286,6 +296,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_bandwidth)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_bandwidth
@@ -305,6 +316,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_correction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_correction
@@ -324,6 +336,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_prediction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_prediction
@@ -343,6 +356,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_capacitance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_capacitance_comp
@@ -362,6 +376,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_series_resistance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_series_resistance_comp
@@ -381,6 +396,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -397,6 +413,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -417,6 +434,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -471,6 +489,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       sweep_number:
@@ -498,6 +517,7 @@ classes:
       name:
         name: name
         ifabsent: string(series_index)
+        identifier: true
         range: string
         required: true
         equals_string: series_index

@@ -23,6 +23,7 @@ classes:
       name:
         name: name
         ifabsent: string(root)
+        identifier: true
         range: string
         required: true
         equals_string: root
@@ -89,6 +90,8 @@ classes:
           the /acquisition group, the data can exist in a separate NWB file that is
           linked to by the file being used for processing and analysis.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: NWBDataInterface
         - range: DynamicTable
@@ -104,6 +107,8 @@ classes:
           The analysis data should be documented so that it could be shared with other
           labs.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: NWBContainer
         - range: DynamicTable
@@ -113,6 +118,8 @@ classes:
           not intended for sharing. By placing data here, users acknowledge that there
           is no guarantee that their data meets any standard.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: NWBContainer
         - range: DynamicTable
@@ -129,6 +136,8 @@ classes:
           refers to intermediate analysis of the acquired data to make it more amenable
           to scientific analysis.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: ProcessingModule
       stimulus:
@@ -202,6 +211,7 @@ classes:
       name:
         name: name
         ifabsent: string(stimulus)
+        identifier: true
         range: string
         required: true
         equals_string: stimulus
@@ -209,6 +219,8 @@ classes:
         name: presentation
         description: Stimuli presented during the experiment.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: TimeSeries
       templates:
@@ -218,6 +230,8 @@ classes:
           are used, the stimulus instances must convert presentation times to the
           experiment`s time reference frame.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: TimeSeries
   NWBFile__general:
@@ -240,6 +254,7 @@ classes:
       name:
         name: name
         ifabsent: string(general)
+        identifier: true
         range: string
         required: true
         equals_string: general
@@ -358,6 +373,8 @@ classes:
         description: Description of hardware devices used during experiment, e.g.,
           monitors, ADC boards, microscopes, etc.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: Device
       subject:
@@ -383,12 +400,16 @@ classes:
         name: optogenetics
         description: Metadata describing optogenetic stimuluation.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: OptogeneticStimulusSite
       optophysiology:
         name: optophysiology
         description: Metadata related to optophysiology.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: ImagingPlane
   NWBFile__general__source_script:
@@ -399,6 +420,7 @@ classes:
       name:
         name: name
         ifabsent: string(source_script)
+        identifier: true
         range: string
         required: true
         equals_string: source_script
@@ -418,6 +440,7 @@ classes:
       name:
         name: name
         ifabsent: string(subject)
+        identifier: true
         range: string
         required: true
         equals_string: subject
@@ -478,6 +501,7 @@ classes:
       name:
         name: name
         ifabsent: string(extracellular_ephys)
+        identifier: true
         range: string
         required: true
         equals_string: extracellular_ephys
@@ -501,6 +525,7 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes)
+        identifier: true
         range: string
         required: true
         equals_string: electrodes
@@ -573,6 +598,7 @@ classes:
       name:
         name: name
         ifabsent: string(intracellular_ephys)
+        identifier: true
         range: string
         required: true
         equals_string: intracellular_ephys
@@ -605,6 +631,7 @@ classes:
       name:
         name: name
         ifabsent: string(intervals)
+        identifier: true
         range: string
         required: true
         equals_string: intervals

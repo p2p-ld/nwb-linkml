@@ -16,6 +16,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -49,6 +50,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -83,6 +85,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -107,6 +110,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -140,6 +144,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -156,6 +161,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -179,6 +185,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -237,6 +244,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -258,6 +266,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_fast)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_fast
@@ -276,6 +285,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_slow)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_slow
@@ -294,6 +304,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_bandwidth)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_bandwidth
@@ -313,6 +324,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_correction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_correction
@@ -332,6 +344,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_prediction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_prediction
@@ -351,6 +364,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_capacitance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_capacitance_comp
@@ -370,6 +384,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_series_resistance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_series_resistance_comp
@@ -389,6 +404,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -405,6 +421,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -426,6 +443,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       cell_id:
@@ -489,6 +507,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       sweep_number:
@@ -516,6 +535,7 @@ classes:
       name:
         name: name
         ifabsent: string(series_index)
+        identifier: true
         range: string
         required: true
         equals_string: series_index
@@ -526,6 +546,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -545,6 +566,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -568,6 +590,7 @@ classes:
       name:
         name: name
         ifabsent: string(stimulus)
+        identifier: true
         range: string
         required: true
         equals_string: stimulus
@@ -578,6 +601,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -601,6 +625,7 @@ classes:
       name:
         name: name
         ifabsent: string(response)
+        identifier: true
         range: string
         required: true
         equals_string: response
@@ -622,6 +647,7 @@ classes:
       name:
         name: name
         ifabsent: string(intracellular_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: intracellular_recordings
@@ -659,6 +685,7 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings
@@ -685,6 +712,7 @@ classes:
       name:
         name: name
         ifabsent: string(recordings)
+        identifier: true
         range: string
         required: true
         equals_string: recordings
@@ -702,6 +730,7 @@ classes:
       name:
         name: name
         ifabsent: string(recordings_index)
+        identifier: true
         range: string
         required: true
         equals_string: recordings_index
@@ -716,6 +745,7 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings
@@ -747,6 +777,7 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings
@@ -764,6 +795,7 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings_index)
+        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings_index
@@ -778,6 +810,7 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions)
+        identifier: true
         range: string
         required: true
         equals_string: repetitions
@@ -804,6 +837,7 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings
@@ -821,6 +855,7 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings_index)
+        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings_index
@@ -833,6 +868,7 @@ classes:
       name:
         name: name
         ifabsent: string(experimental_conditions)
+        identifier: true
         range: string
         required: true
         equals_string: experimental_conditions
@@ -857,6 +893,7 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions)
+        identifier: true
         range: string
         required: true
         equals_string: repetitions
@@ -874,6 +911,7 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions_index)
+        identifier: true
         range: string
         required: true
         equals_string: repetitions_index

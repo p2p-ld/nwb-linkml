@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       axis_1_phase_map:
@@ -86,6 +87,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_1_phase_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_1_phase_map
@@ -125,6 +127,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_1_power_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_1_power_map
@@ -163,6 +166,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_2_phase_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_2_phase_map
@@ -202,6 +206,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_2_power_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_2_power_map
@@ -241,6 +246,7 @@ classes:
       name:
         name: name
         ifabsent: string(focal_depth_image)
+        identifier: true
         range: string
         required: true
         equals_string: focal_depth_image
@@ -289,6 +295,7 @@ classes:
       name:
         name: name
         ifabsent: string(sign_map)
+        identifier: true
         range: string
         required: true
         equals_string: sign_map
@@ -324,6 +331,7 @@ classes:
       name:
         name: name
         ifabsent: string(vasculature_image)
+        identifier: true
         range: string
         required: true
         equals_string: vasculature_image

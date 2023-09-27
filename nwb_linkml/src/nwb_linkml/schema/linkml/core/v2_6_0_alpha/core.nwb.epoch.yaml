@@ -15,6 +15,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       start_time:
@@ -59,6 +60,7 @@ classes:
       name:
         name: name
         ifabsent: string(tags_index)
+        identifier: true
         range: string
         required: true
         equals_string: tags_index
@@ -70,6 +72,7 @@ classes:
       name:
         name: name
         ifabsent: string(timeseries)
+        identifier: true
         range: string
         required: true
         equals_string: timeseries
@@ -81,6 +84,7 @@ classes:
       name:
         name: name
         ifabsent: string(timeseries_index)
+        identifier: true
         range: string
         required: true
         equals_string: timeseries_index

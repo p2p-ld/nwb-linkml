@@ -16,6 +16,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       pmt_gain:
@@ -42,6 +43,7 @@ classes:
       name:
         name: name
         ifabsent: string(field_of_view)
+        identifier: true
         range: string
         required: true
         equals_string: field_of_view
@@ -72,6 +74,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -95,6 +98,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -122,6 +126,7 @@ classes:
       name:
         name: name
         ifabsent: string(rois)
+        identifier: true
         range: string
         required: true
         equals_string: rois
@@ -132,16 +137,12 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      roi_response_series:
-        name: roi_response_series
-        description: RoiResponseSeries object(s) containing dF/F for a ROI.
-        multivalued: true
-        range: RoiResponseSeries
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: RoiResponseSeries
     tree_root: true
   Fluorescence:
     name: Fluorescence
@@ -150,17 +151,12 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      roi_response_series:
-        name: roi_response_series
-        description: RoiResponseSeries object(s) containing fluorescence data for
-          a ROI.
-        multivalued: true
-        range: RoiResponseSeries
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: RoiResponseSeries
     tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
@@ -173,99 +169,13 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      plane_segmentation:
-        name: plane_segmentation
-        description: Results from image segmentation of a specific imaging plane.
-        multivalued: true
-        range: PlaneSegmentation
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: DynamicTable
     tree_root: true
-  PlaneSegmentation:
-    name: PlaneSegmentation
-    description: Results from image segmentation of a specific imaging plane.
-    is_a: DynamicTable
-    attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      image_mask:
-        name: image_mask
-        description: ROI masks for each ROI. Each image mask is the size of the original
-          imaging plane (or volume) and members of the ROI are finite non-zero.
-        multivalued: false
-        range: PlaneSegmentation__image_mask
-        required: false
-      pixel_mask_index:
-        name: pixel_mask_index
-        description: Index into pixel_mask.
-        multivalued: false
-        range: PlaneSegmentation__pixel_mask_index
-        required: false
-      pixel_mask:
-        name: pixel_mask
-        description: 'Pixel masks for each ROI: a list of indices and weights for
-          the ROI. Pixel masks are concatenated and parsing of this dataset is maintained
-          by the PlaneSegmentation'
-        multivalued: true
-        range: AnyType
-      voxel_mask_index:
-        name: voxel_mask_index
-        description: Index into voxel_mask.
-        multivalued: false
-        range: PlaneSegmentation__voxel_mask_index
-        required: false
-      voxel_mask:
-        name: voxel_mask
-        description: 'Voxel masks for each ROI: a list of indices and weights for
-          the ROI. Voxel masks are concatenated and parsing of this dataset is maintained
-          by the PlaneSegmentation'
-        multivalued: true
-        range: AnyType
-      reference_images:
-        name: reference_images
-        description: Image stacks that the segmentation masks apply to.
-        multivalued: true
-        any_of:
-        - range: ImageSeries
-  PlaneSegmentation__image_mask:
-    name: PlaneSegmentation__image_mask
-    description: ROI masks for each ROI. Each image mask is the size of the original
-      imaging plane (or volume) and members of the ROI are finite non-zero.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(image_mask)
-        range: string
-        required: true
-        equals_string: image_mask
-  PlaneSegmentation__pixel_mask_index:
-    name: PlaneSegmentation__pixel_mask_index
-    description: Index into pixel_mask.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(pixel_mask_index)
-        range: string
-        required: true
-        equals_string: pixel_mask_index
-  PlaneSegmentation__voxel_mask_index:
-    name: PlaneSegmentation__voxel_mask_index
-    description: Index into voxel_mask.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(voxel_mask_index)
-        range: string
-        required: true
-        equals_string: voxel_mask_index
   ImagingPlane:
     name: ImagingPlane
     description: An imaging plane and its metadata.
@@ -273,6 +183,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -369,6 +280,7 @@ classes:
       name:
         name: name
         ifabsent: string(manifold)
+        identifier: true
         range: string
         required: true
         equals_string: manifold
@@ -422,6 +334,7 @@ classes:
       name:
         name: name
         ifabsent: string(origin_coords)
+        identifier: true
         range: string
         required: true
         equals_string: origin_coords
@@ -457,6 +370,7 @@ classes:
       name:
         name: name
         ifabsent: string(grid_spacing)
+        identifier: true
         range: string
         required: true
         equals_string: grid_spacing
@@ -490,6 +404,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -511,36 +426,10 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      corrected_image_stack:
-        name: corrected_image_stack
-        description: Reuslts from motion correction of an image stack.
-        multivalued: true
-        range: CorrectedImageStack
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: NWBDataInterface
     tree_root: true
-  CorrectedImageStack:
-    name: CorrectedImageStack
-    description: Reuslts from motion correction of an image stack.
-    is_a: NWBDataInterface
-    attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      corrected:
-        name: corrected
-        description: Image stack with frames shifted to the common coordinates.
-        multivalued: false
-        range: ImageSeries
-        required: true
-      xy_translation:
-        name: xy_translation
-        description: Stores the x,y delta necessary to align each frame to the common
-          coordinates, for example, to align each frame to a reference image.
-        multivalued: false
-        range: TimeSeries
-        required: true

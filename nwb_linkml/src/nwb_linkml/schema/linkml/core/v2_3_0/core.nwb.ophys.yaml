@@ -16,6 +16,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       pmt_gain:
@@ -42,6 +43,7 @@ classes:
       name:
         name: name
         ifabsent: string(field_of_view)
+        identifier: true
         range: string
         required: true
         equals_string: field_of_view
@@ -72,6 +74,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -95,6 +98,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -122,6 +126,7 @@ classes:
       name:
         name: name
         ifabsent: string(rois)
+        identifier: true
         range: string
         required: true
         equals_string: rois
@@ -132,16 +137,12 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      roi_response_series:
-        name: roi_response_series
-        description: RoiResponseSeries object(s) containing dF/F for a ROI.
-        multivalued: true
-        range: RoiResponseSeries
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: RoiResponseSeries
     tree_root: true
   Fluorescence:
     name: Fluorescence
@@ -150,17 +151,12 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      roi_response_series:
-        name: roi_response_series
-        description: RoiResponseSeries object(s) containing fluorescence data for
-          a ROI.
-        multivalued: true
-        range: RoiResponseSeries
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: RoiResponseSeries
     tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
@@ -173,16 +169,12 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      plane_segmentation:
-        name: plane_segmentation
-        description: Results from image segmentation of a specific imaging plane.
-        multivalued: true
-        range: PlaneSegmentation
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: PlaneSegmentation
     tree_root: true
   PlaneSegmentation:
     name: PlaneSegmentation
@@ -191,6 +183,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       image_mask:
@@ -230,6 +223,8 @@ classes:
         name: reference_images
         description: Image stacks that the segmentation masks apply to.
         multivalued: true
+        inlined: true
+        inlined_as_list: false
         any_of:
         - range: ImageSeries
     tree_root: true
@@ -242,6 +237,7 @@ classes:
       name:
         name: name
         ifabsent: string(image_mask)
+        identifier: true
         range: string
         required: true
         equals_string: image_mask
@@ -253,6 +249,7 @@ classes:
       name:
         name: name
         ifabsent: string(pixel_mask_index)
+        identifier: true
         range: string
         required: true
         equals_string: pixel_mask_index
@@ -264,6 +261,7 @@ classes:
       name:
         name: name
         ifabsent: string(voxel_mask_index)
+        identifier: true
         range: string
         required: true
         equals_string: voxel_mask_index
@@ -272,219 +270,13 @@ classes:
     description: An imaging plane and its metadata.
     is_a: NWBContainer
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      description:
-        name: description
-        description: Description of the imaging plane.
-        multivalued: false
-        range: text
-        required: false
-      excitation_lambda:
-        name: excitation_lambda
-        description: Excitation wavelength, in nm.
-        multivalued: false
-        range: float32
-        required: true
-      imaging_rate:
-        name: imaging_rate
-        description: Rate that images are acquired, in Hz. If the corresponding TimeSeries
-          is present, the rate should be stored there instead.
-        multivalued: false
-        range: float32
-        required: false
-      indicator:
-        name: indicator
-        description: Calcium indicator.
-        multivalued: false
-        range: text
-        required: true
-      location:
-        name: location
-        description: Location of the imaging plane. Specify the area, layer, comments
-          on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
-          standard atlas names for anatomical regions when possible.
-        multivalued: false
-        range: text
-        required: true
-      manifold:
-        name: manifold
-        description: DEPRECATED Physical position of each pixel. 'xyz' represents
-          the position of the pixel relative to the defined coordinate space. Deprecated
-          in favor of origin_coords and grid_spacing.
-        multivalued: false
-        range: ImagingPlane__manifold
-        required: false
-      origin_coords:
-        name: origin_coords
-        description: Physical location of the first element of the imaging plane (0,
-          0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for
-          what the physical location is relative to (e.g., bregma).
-        multivalued: false
-        range: ImagingPlane__origin_coords
-        required: false
-      grid_spacing:
-        name: grid_spacing
-        description: Space between pixels in (x, y) or voxels in (x, y, z) directions,
-          in the specified unit. Assumes imaging plane is a regular grid. See also
-          reference_frame to interpret the grid.
-        multivalued: false
-        range: ImagingPlane__grid_spacing
-        required: false
-      reference_frame:
-        name: reference_frame
-        description: Describes reference frame of origin_coords and grid_spacing.
-          For example, this can be a text description of the anatomical location and
-          orientation of the grid defined by origin_coords and grid_spacing or the
-          vectors needed to transform or rotate the grid to a common anatomical axis
-          (e.g., AP/DV/ML). This field is necessary to interpret origin_coords and
-          grid_spacing. If origin_coords and grid_spacing are not present, then this
-          field is not required. For example, if the microscope takes 10 x 10 x 2
-          images, where the first value of the data matrix (index (0, 0, 0)) corresponds
-          to (-1.2, -0.6, -2) mm relative to bregma, the spacing between pixels is
-          0.2 mm in x, 0.2 mm in y and 0.5 mm in z, and larger numbers in x means
-          more anterior, larger numbers in y means more rightward, and larger numbers
-          in z means more ventral, then enter the following -- origin_coords = (-1.2,
-          -0.6, -2) grid_spacing = (0.2, 0.2, 0.5) reference_frame = "Origin coordinates
-          are relative to bregma. First dimension corresponds to anterior-posterior
-          axis (larger index = more anterior). Second dimension corresponds to medial-lateral
-          axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral
-          axis (larger index = more ventral)."
-        multivalued: false
-        range: text
-        required: false
-      optical_channel:
-        name: optical_channel
-        description: An optical channel used to record from an imaging plane.
-        multivalued: true
-        range: OpticalChannel
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: OpticalChannel
     tree_root: true
-  ImagingPlane__manifold:
-    name: ImagingPlane__manifold
-    description: DEPRECATED Physical position of each pixel. 'xyz' represents the
-      position of the pixel relative to the defined coordinate space. Deprecated in
-      favor of origin_coords and grid_spacing.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(manifold)
-        range: string
-        required: true
-        equals_string: manifold
-      conversion:
-        name: conversion
-        description: Scalar to multiply each element in data to convert it to the
-          specified 'unit'. If the data are stored in acquisition system units or
-          other units that require a conversion to be interpretable, multiply the
-          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
-          the data acquisition system stores values in this object as pixels from
-          x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then
-          the 'conversion' multiplier to get from raw data acquisition pixel units
-          to meters is 2/1000.
-        range: float32
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. The default
-          value is 'meters'.
-        range: text
-      array:
-        name: array
-        range: ImagingPlane__manifold__Array
-  ImagingPlane__manifold__Array:
-    name: ImagingPlane__manifold__Array
-    is_a: Arraylike
-    attributes:
-      height:
-        name: height
-        range: float32
-        required: true
-      width:
-        name: width
-        range: float32
-        required: true
-      x, y, z:
-        name: x, y, z
-        range: float32
-        required: true
-        minimum_cardinality: 3
-        maximum_cardinality: 3
-      depth:
-        name: depth
-        range: float32
-        required: false
-  ImagingPlane__origin_coords:
-    name: ImagingPlane__origin_coords
-    description: Physical location of the first element of the imaging plane (0, 0)
-      for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the
-      physical location is relative to (e.g., bregma).
-    attributes:
-      name:
-        name: name
-        ifabsent: string(origin_coords)
-        range: string
-        required: true
-        equals_string: origin_coords
-      unit:
-        name: unit
-        description: Measurement units for origin_coords. The default value is 'meters'.
-        range: text
-      array:
-        name: array
-        range: ImagingPlane__origin_coords__Array
-  ImagingPlane__origin_coords__Array:
-    name: ImagingPlane__origin_coords__Array
-    is_a: Arraylike
-    attributes:
-      x, y:
-        name: x, y
-        range: float32
-        required: false
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-      x, y, z:
-        name: x, y, z
-        range: float32
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
-  ImagingPlane__grid_spacing:
-    name: ImagingPlane__grid_spacing
-    description: Space between pixels in (x, y) or voxels in (x, y, z) directions,
-      in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame
-      to interpret the grid.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(grid_spacing)
-        range: string
-        required: true
-        equals_string: grid_spacing
-      unit:
-        name: unit
-        description: Measurement units for grid_spacing. The default value is 'meters'.
-        range: text
-      array:
-        name: array
-        range: ImagingPlane__grid_spacing__Array
-  ImagingPlane__grid_spacing__Array:
-    name: ImagingPlane__grid_spacing__Array
-    is_a: Arraylike
-    attributes:
-      x, y:
-        name: x, y
-        range: float32
-        required: false
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-      x, y, z:
-        name: x, y, z
-        range: float32
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
   OpticalChannel:
     name: OpticalChannel
     description: An optical channel used to record from an imaging plane.
@@ -492,6 +284,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -514,16 +307,12 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-      name:
-        name: name
-        range: string
-        required: true
-      corrected_image_stack:
-        name: corrected_image_stack
-        description: Reuslts from motion correction of an image stack.
-        multivalued: true
-        range: CorrectedImageStack
-        required: true
+    - name: children
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: CorrectedImageStack
     tree_root: true
   CorrectedImageStack:
     name: CorrectedImageStack
@@ -532,6 +321,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       corrected:

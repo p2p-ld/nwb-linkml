@@ -23,6 +23,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -51,6 +52,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -85,6 +87,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -107,6 +110,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -123,6 +127,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -159,6 +164,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -196,6 +202,7 @@ classes:
       name:
         name: name
         ifabsent: string(source_channels)
+        identifier: true
         range: string
         required: true
         equals_string: source_channels
@@ -208,6 +215,7 @@ classes:
       name:
         name: name
         ifabsent: string(bands)
+        identifier: true
         range: string
         required: true
         equals_string: bands
@@ -244,6 +252,7 @@ classes:
       name:
         name: name
         ifabsent: string(band_limits)
+        identifier: true
         range: string
         required: true
         equals_string: band_limits
@@ -255,6 +264,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       spike_times_index:
@@ -361,6 +371,7 @@ classes:
       name:
         name: name
         ifabsent: string(spike_times_index)
+        identifier: true
         range: string
         required: true
         equals_string: spike_times_index
@@ -372,6 +383,7 @@ classes:
       name:
         name: name
         ifabsent: string(spike_times)
+        identifier: true
         range: string
         required: true
         equals_string: spike_times
@@ -391,6 +403,7 @@ classes:
       name:
         name: name
         ifabsent: string(obs_intervals_index)
+        identifier: true
         range: string
         required: true
         equals_string: obs_intervals_index
@@ -402,6 +415,7 @@ classes:
       name:
         name: name
         ifabsent: string(obs_intervals)
+        identifier: true
         range: string
         required: true
         equals_string: obs_intervals
@@ -413,6 +427,7 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes_index)
+        identifier: true
         range: string
         required: true
         equals_string: electrodes_index
@@ -424,6 +439,7 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes)
+        identifier: true
         range: string
         required: true
         equals_string: electrodes
@@ -435,6 +451,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveform_mean)
+        identifier: true
         range: string
         required: true
         equals_string: waveform_mean
@@ -454,6 +471,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveform_sd)
+        identifier: true
         range: string
         required: true
         equals_string: waveform_sd
@@ -495,6 +513,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveforms)
+        identifier: true
         range: string
         required: true
         equals_string: waveforms
@@ -515,6 +534,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveforms_index)
+        identifier: true
         range: string
         required: true
         equals_string: waveforms_index
@@ -527,6 +547,7 @@ classes:
       name:
         name: name
         ifabsent: string(waveforms_index_index)
+        identifier: true
         range: string
         required: true
         equals_string: waveforms_index_index

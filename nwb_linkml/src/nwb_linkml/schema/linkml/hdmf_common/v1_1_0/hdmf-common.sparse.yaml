@@ -11,6 +11,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       shape:
@@ -43,6 +44,7 @@ classes:
       name:
         name: name
         ifabsent: string(indices)
+        identifier: true
         range: string
         required: true
         equals_string: indices
@@ -53,6 +55,7 @@ classes:
       name:
         name: name
         ifabsent: string(indptr)
+        identifier: true
         range: string
         required: true
         equals_string: indptr
@@ -63,6 +66,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data

@@ -14,6 +14,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       array:
@@ -39,6 +40,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       array:
@@ -70,6 +72,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       array:
@@ -106,6 +109,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -149,6 +153,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -186,6 +191,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -200,6 +206,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       distance:
@@ -235,6 +242,7 @@ classes:
       name:
         name: name
         ifabsent: string(field_of_view)
+        identifier: true
         range: string
         required: true
         equals_string: field_of_view
@@ -264,6 +272,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -305,6 +314,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
