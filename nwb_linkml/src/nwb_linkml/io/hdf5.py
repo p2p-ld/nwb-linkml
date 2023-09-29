@@ -20,7 +20,7 @@ Other TODO:
 """
 import pdb
 import warnings
-from typing import Optional, Dict, overload, Type
+from typing import Optional, Dict, overload, Type, Union
 from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, NamedTuple
@@ -58,7 +58,7 @@ class HDF5IO():
     @overload
     def read(self, path:str) -> BaseModel | Dict[str, BaseModel]: ...
 
-    def read(self, path:Optional[str] = None):
+    def read(self, path:Optional[str] = None) -> Union['NWBFile', BaseModel, Dict[str, BaseModel]]:
         print('starting read')
         provider = self.make_provider()
         print('provider made')
@@ -95,6 +95,8 @@ class HDF5IO():
 
 
         queue.apply_phase(ReadPhases.construct)
+
+        pdb.set_trace()
         # --------------------------------------------------
         # FIXME: Hardcoding top-level file reading just for the win
         # --------------------------------------------------

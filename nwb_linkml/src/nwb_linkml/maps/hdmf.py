@@ -69,12 +69,12 @@ def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -
         #types[col] = (List[type_ | None], ...)
         types[col] = (type_, None)
 
-    if base is None:
-        #base = DataFrame
-        base = BaseModel
-    else:
-        base = (BaseModel, base)
-        #base = (DataFrame, base)
+    # if base is None:
+    #     #base = DataFrame
+    #     base = BaseModel
+    # else:
+    #     base = (BaseModel, base)
+    #     #base = (DataFrame, base)
 
 
     model = create_model(group.name.split('/')[-1], **types, __base__=base)
@@ -83,12 +83,12 @@ def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -
 
 def dynamictable_to_model(
     group:h5py.Group,
-    model:Optional[Type[DataFrame]]=None,
-    base:Optional[BaseModel] = None) -> BaseModel:
+    model:Optional[Type[BaseModel]]=None,
+    base:Optional[Type[BaseModel]] = None) -> BaseModel:
     """
     Instantiate a dynamictable model
 
-    Calls :func:`.model_from_dynamictable` if model is not provided.
+    Calls :func:`.model_from_dynamictable` if ``model`` is not provided.
     """
     if model is None:
         model = model_from_dynamictable(group, base)
