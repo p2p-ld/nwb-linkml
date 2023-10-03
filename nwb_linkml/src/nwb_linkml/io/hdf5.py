@@ -80,7 +80,6 @@ class HDF5IO():
             provider=provider
         )
 
-        #pdb.set_trace()
         # Apply initial planning phase of reading
         queue.apply_phase(ReadPhases.plan)
         print('phase - plan completed')
@@ -89,23 +88,14 @@ class HDF5IO():
 
         print('phase - read completed')
 
+        # pdb.set_trace()
         # if len(queue.queue)> 0:
         #     warnings.warn('Did not complete all items during read phase!')
-
-
 
         queue.apply_phase(ReadPhases.construct)
 
         pdb.set_trace()
-        # --------------------------------------------------
-        # FIXME: Hardcoding top-level file reading just for the win
-        # --------------------------------------------------
-        root = finish_root_hackily(queue)
 
-        file = NWBFile(**root)
-
-
-        pdb.set_trace()
 
 
 

@@ -468,11 +468,11 @@ class PydanticProvider(Provider):
             out_file: Optional[Path] = None,
             version: Optional[str] = None,
             versions: Optional[dict] = None,
-            split: bool = False,
+            split: bool = True,
             dump: bool = True,
             force: bool = False,
             **kwargs
-    ) -> str:
+    ) -> str | List[str]:
         """
 
         Notes:
@@ -528,12 +528,6 @@ class PydanticProvider(Provider):
             fn = module_case(fn) + '.py'
             out_file = self.path / name / version / fn
 
-        if out_file.exists() and not force:
-            with open(out_file, 'r') as ofile:
-                serialized = ofile.read()
-            return serialized
-
-
         default_kwargs = {
             'split': split,
             'emit_metadata': True,
@@ -541,6 +535,17 @@ class PydanticProvider(Provider):
             'pydantic_version': '2'
         }
         default_kwargs.update(kwargs)
+        if split:
+            return self._build_split(path, versions, default_kwargs, dump, out_file, force)
+        else:
+            return self._build_unsplit(path, versions, default_kwargs, dump, out_file, force)
+
+
+    def _build_unsplit(self, path, versions, default_kwargs, dump, out_file, force):
+        if out_file.exists() and not force:
+            with open(out_file, 'r') as ofile:
+                serialized = ofile.read()
+            return serialized
 
         generator = NWBPydanticGenerator(
             str(path),
@@ -552,19 +557,28 @@ class PydanticProvider(Provider):
             out_file.parent.mkdir(parents=True,exist_ok=True)
             with open(out_file, 'w') as ofile:
                 ofile.write(serialized)
-            with open(out_file.parent / '__init__.py', 'w') as initfile:
-                initfile.write(' ')
-            # make parent file, being a bit more careful because it could be for another module
+
+            # make initfiles for this directory and parent,
+            initfile = out_file.parent / '__init__.py'
             parent_init = out_file.parent.parent / '__init__.py'
-            if not parent_init.exists():
-                with open(parent_init, 'w') as initfile:
-                    initfile.write(' ')
+            for ifile in (initfile, parent_init):
+                if not ifile.exists():
+                    with open(ifile, 'w') as ifile_open:
+                        ifile_open.write(' ')
 
         return serialized
 
+    def _build_split(self, path:Path, versions, default_kwargs, dump, out_file, force) -> List[str]:
+        serialized = []
+        for schema_file in path.parent.glob('*.yaml'):
+            this_out = out_file.parent / (module_case(schema_file.stem) + '.py')
+            serialized.append(self._build_unsplit(schema_file, versions, default_kwargs, dump, this_out, force))
+        return serialized
+
+
     @classmethod
     def module_name(self, namespace:str, version: str) -> str:
-        name_pieces = ['nwb_linkml', 'models', 'pydantic',  namespace, version_module_case(version), 'namespace']
+        name_pieces = ['nwb_linkml', 'models', 'pydantic',  module_case(namespace), version_module_case(version)]
         module_name = '.'.join(name_pieces)
         return module_name
     def import_module(
@@ -594,6 +608,19 @@ class PydanticProvider(Provider):
         if not path.exists():
             raise ImportError(f'Module has not been built yet {path}')
         module_name = self.module_name(namespace, version)
+
+        # import module level first - when python does relative imports,
+        # it needs to have the parent modules imported separately
+        # this breaks split model creation when they are outside of the
+        # package repository (ie. loaded from an nwb file) because it tries
+        # to look for the containing namespace folder within the nwb_linkml package and fails
+        init_spec = importlib.util.spec_from_file_location(module_name, path.parent / '__init__.py')
+        init_module = importlib.util.module_from_spec(init_spec)
+        sys.modules[module_name] = init_module
+        init_spec.loader.exec_module(init_module)
+
+        # then the namespace package
+        module_name = module_name + '.namespace'
         spec = importlib.util.spec_from_file_location(module_name, path)
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
@@ -638,7 +665,7 @@ class PydanticProvider(Provider):
         if version is None:
             version = self.available_versions[namespace][-1]
 
-        module_name = self.module_name(namespace, version)
+        module_name = self.module_name(namespace, version) + '.namespace'
         if module_name in sys.modules:
             return sys.modules[module_name]
 
@@ -745,10 +772,10 @@ class SchemaProvider(Provider):
         linkml_provider = LinkMLProvider(path=self.path, verbose=verbose)
         pydantic_provider = PydanticProvider(path=self.path, verbose=verbose)
 
-        linkml_res = linkml_provider.build(ns_adapter=ns_adapter, **linkml_kwargs)
+        linkml_res = linkml_provider.build(ns_adapter=ns_adapter, versions=self.versions, **linkml_kwargs)
         results = {}
         for ns, ns_result in linkml_res.items():
-            results[ns] = pydantic_provider.build(ns_result['namespace'], **pydantic_kwargs)
+            results[ns] = pydantic_provider.build(ns_result['namespace'], versions=self.versions, **pydantic_kwargs)
         return results
 
     def get(self, namespace: str, version: Optional[str] = None) -> ModuleType:

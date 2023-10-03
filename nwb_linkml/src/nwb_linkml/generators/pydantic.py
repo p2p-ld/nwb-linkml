@@ -247,7 +247,6 @@ class NWBPydanticGenerator(PydanticGenerator):
             # Don't get classes that are defined in this schema!
             if module_name == self.schema.name:
                 continue
-            # pdb.set_trace()
             schema_name = module_name.split('.')[0]
             if self.versions and schema_name != self.schema.name.split('.')[0] and schema_name in self.versions:
                 version = version_module_case(self.versions[schema_name])
@@ -255,6 +254,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                     local_mod_name = '...' + module_case(schema_name) + '.' + version + '.' + module_case(module_name)
                 else:
                     local_mod_name = '...' + module_case(schema_name) + '.' + version + '.' + 'namespace'
+
             else:
 
                 local_mod_name = '.' + module_case(module_name)
@@ -709,6 +709,14 @@ class NWBPydanticGenerator(PydanticGenerator):
                     self.generate_python_range(slot_range, s, class_def)
                     for slot_range in slot_ranges
                 ]
+                # --------------------------------------------------
+                # Special Case - since we get abstract classes from
+                # potentially multiple versions (which are then different)
+                # model classes, we allow container classes to also
+                # be generic descendants of BaseModel
+                # --------------------------------------------------
+                if 'DynamicTable' in pyranges:
+                    pyranges.append('BaseModel')
 
                 pyranges = list(set(pyranges))  # remove duplicates
                 pyranges.sort()
