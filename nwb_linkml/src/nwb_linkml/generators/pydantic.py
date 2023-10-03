@@ -93,7 +93,7 @@ class WeakRefShimBaseModel(BaseModel):
    __slots__ = '__weakref__'
 
 class ConfiguredBaseModel(WeakRefShimBaseModel,
-                validate_assignment = True,
+                validate_assignment = False,
                 validate_all = True,
                 underscore_attrs_are_private = True,
                 extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
@@ -273,7 +273,8 @@ class NWBPydanticGenerator(PydanticGenerator):
         all_classes = sv.all_classes(imports=True)
         needed_classes = []
         for clsname, cls in all_classes.items():
-            if cls.tree_root:
+            #if cls.tree_root:
+            if cls.is_a != 'Arraylike':
                 needed_classes.append(clsname)
 
         imports = self._locate_imports(needed_classes, sv)

@@ -4,6 +4,7 @@ Maps for reading and writing from HDF5
 We have sort of diverged from the initial idea of a generalized map as in :class:`linkml.map.Map` ,
 so we will make our own mapping class here and re-evaluate whether they should be unified later
 """
+import datetime
 import pdb
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -514,6 +515,7 @@ class CompleteModelGroups(HDF5Map):
     def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
         if src.model is not None and \
                 src.source.h5_type == 'group' and \
+                src.neurodata_type != 'NWBFile' and \
                 all([depend in completed.keys() for depend in src.depends]):
             return True
         else:
@@ -560,6 +562,73 @@ class CompleteModelGroups(HDF5Map):
         #         applied=src.applied + ['CompleteModelGroups']
         #     )
 
+class CompleteNWBFile(HDF5Map):
+    """
+    The Top-Level NWBFile class is so special cased we just make its own completion special case!
+
+    .. todo::
+
+        This is truly hideous, just meant as a way to get to the finish line on a late night, will be cleaned up later
+
+    """
+    phase = ReadPhases.construct
+    priority = 11
+
+    @classmethod
+    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
+        if src.neurodata_type == 'NWBFile' and \
+                all([depend in completed.keys() for depend in src.depends]):
+            return True
+        else:
+            return False
+
+    @classmethod
+    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+        res = {k:v for k,v in src.result.items() if not isinstance(v, HDF5_Path)}
+        unpacked_results, errors, completes = resolve_references(src.result, completed)
+        res.update(unpacked_results)
+
+        res['name'] = 'root'
+        res['file_create_date'] = [datetime.datetime.fromisoformat(ts.decode('utf-8')) for ts in  res['file_create_date']['array'][:]]
+        if 'stimulus' not in res.keys():
+            res['stimulus'] = provider.get_class('core', 'NWBFileStimulus')()
+        electrode_groups = []
+        egroup_keys = list(res['general'].get('extracellular_ephys', {}).keys())
+        egroup_dict = {}
+        for k in egroup_keys:
+            if k != 'electrodes':
+                egroup = res['general']['extracellular_ephys'][k]
+                electrode_groups.append(egroup)
+                egroup_dict[egroup.hdf5_path] = egroup
+                del res['general']['extracellular_ephys'][k]
+        if len(electrode_groups) > 0:
+            res['general']['extracellular_ephys']['electrode_group'] = electrode_groups
+        trode_type = provider.get_class('core', 'NWBFileGeneralExtracellularEphysElectrodes')
+        #anmro = list(type(res['general']['extracellular_ephys']['electrodes']).__mro__)
+        #anmro.insert(1, trode_type)
+        trodes_original = res['general']['extracellular_ephys']['electrodes']
+        trodes = trode_type.model_construct(trodes_original.model_dump())
+        res['general']['extracellular_ephys']['electrodes'] = trodes
+
+        #type(res['general']['extracellular_ephys']['electrodes']).__mro__ = tuple(anmro)
+        # electrodes_dict = res['general']['extracellular_ephys']['electrodes'].model_dump()
+        # with h5py.File(src.source.h5f_path, 'r') as h5f:
+        #      electrodes_dict['group'] = [egroup_dict[h5f[e].name] for e in electrodes_dict['group'][:]]
+        # res['general']['extracellular_ephys']['electrodes'] = electrodes_dict
+
+        instance = src.model(**res)
+        return H5ReadResult(
+            path=src.path,
+            source=src,
+            result=instance,
+            model=src.model,
+            completed=True,
+            completes=completes,
+            neurodata_type=src.neurodata_type,
+            namespace=src.namespace,
+            applied=src.applied + ['CompleteModelGroups'],
+            errors=errors
+        )
 
 
 

@@ -59,9 +59,9 @@ class HDF5IO():
     def read(self, path:str) -> BaseModel | Dict[str, BaseModel]: ...
 
     def read(self, path:Optional[str] = None) -> Union['NWBFile', BaseModel, Dict[str, BaseModel]]:
-        print('starting read')
+
         provider = self.make_provider()
-        print('provider made')
+
         h5f = h5py.File(str(self.path))
         if path:
             src = h5f.get(path)
@@ -73,7 +73,7 @@ class HDF5IO():
             children = flatten_hdf(src)
         else:
             raise NotImplementedError('directly read individual datasets')
-        print('hdf flattened')
+
         queue = ReadQueue(
             h5f=self.path,
             queue=children,
@@ -82,11 +82,11 @@ class HDF5IO():
 
         # Apply initial planning phase of reading
         queue.apply_phase(ReadPhases.plan)
-        print('phase - plan completed')
+
         # Now do read operations until we're finished
         queue.apply_phase(ReadPhases.read)
 
-        print('phase - read completed')
+
 
         # pdb.set_trace()
         # if len(queue.queue)> 0:
@@ -94,7 +94,10 @@ class HDF5IO():
 
         queue.apply_phase(ReadPhases.construct)
 
-        pdb.set_trace()
+        if path is None:
+            return queue.completed['/'].result
+        else:
+            return queue.completed[path].result
 
 
 

@@ -21,6 +21,13 @@ class GroupAdapter(ClassAdapter):
                 all([self._check_if_container(g) for g in self.cls.groups]): # and \
                 # self.parent is not None:
             return self.handle_container_group(self.cls)
+        # Or you can have groups like /intervals where there are some named groups, and some unnamed
+        # but they all have the same type
+        elif len(self.cls.groups) > 0 and \
+            all([g.neurodata_type_inc == self.cls.groups[0].neurodata_type_inc for g in self.cls.groups]) and \
+            self.cls.groups[0].neurodata_type_inc is not None and \
+            all([g.quantity in ('?', '*') for g in self.cls.groups]):
+            return self.handle_container_group(self.cls)
 
         # handle if we are a terminal container group without making a new class
         if len(self.cls.groups) == 0 and \

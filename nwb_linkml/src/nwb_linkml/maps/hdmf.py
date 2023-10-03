@@ -60,7 +60,7 @@ def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -
         #nptype = nptyping.typing_.name_per_dtype[group[col].dtype.type]
         nptype = group[col].dtype.type
         if nptype == np.void:
-            warnings.warn(f"Cant handle numpy void type for column {col} in {group.name}")
+            # warnings.warn(f"Cant handle numpy void type for column {col} in {group.name}")
             continue
         type_ = Optional[NDArray[Any, nptype]]
 
