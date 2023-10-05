@@ -190,11 +190,20 @@ class Provider(ABC):
             namespace_path = module_path / 'models' / 'pydantic'
             builtin_namespaces = list(namespace_path.iterdir())
 
+
+        tmp_paths = []
         try:
-            tmp_paths = list(self.path.iterdir())
+            tmp_paths.extend(list(self.path.iterdir()))
+            if self.PROVIDES == 'pydantic':
+                # we also include versions that we just have the linkml version of
+                # because they are also available, we just have to build them.
+                # maybe the semantics of this property are getting overloaded tho
+                # and we need to separate the maintenance of the temporary directory
+                # from providing from it
+                tmp_paths.extend(list(LinkMLProvider(path=self.config.cache_dir).path.iterdir()))
         except FileNotFoundError:
             # fine, just return the builtins
-            tmp_paths = []
+            pass
 
         for ns_dir in builtin_namespaces + tmp_paths:
             if not ns_dir.is_dir():
