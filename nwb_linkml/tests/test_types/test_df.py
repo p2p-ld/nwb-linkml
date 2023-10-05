@@ -1,6 +1,5 @@
 import pytest
 
-import pandas as pd
 from pydantic import BaseModel, ValidationError
 from typing import List, Union, Optional
 
@@ -9,6 +8,7 @@ def test_df():
     """
     Dataframe class should behave like both a pydantic model and a dataframe
     """
+    import pandas as pd
     from nwb_linkml.types.df import DataFrame
 
     class MyDf(DataFrame):

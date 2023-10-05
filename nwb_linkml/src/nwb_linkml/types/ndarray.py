@@ -161,6 +161,7 @@ class NDArray(_NDArray):
                 when_used='json'
             )
         )
+
 class NDArrayProxy():
     """
     Thin proxy to numpy arrays stored within hdf5 files,
