@@ -2,7 +2,7 @@
 Monkeypatches to external modules
 """
 
-def patch_npytyping():
+def patch_npytyping_perf():
     """
     npytyping makes an expensive call to inspect.stack()
     that makes imports of pydantic models take ~200x longer than
@@ -37,6 +37,19 @@ def patch_npytyping():
     recarray.RecArrayMeta.__module__ = property(new_module_recarray)
     dataframe.DataFrameMeta.__module__ = property(new_module_dataframe)
     base_meta_classes.SubscriptableMeta._get_module = new_get_module
+
+def patch_nptyping_warnings():
+    """
+    nptyping shits out a bunch of numpy deprecation warnings from using
+    olde aliases
+    """
+    import warnings
+    warnings.filterwarnings(
+        'ignore',
+        category=DeprecationWarning,
+        module='nptyping.*'
+    )
+
 
 def patch_schemaview():
     """
@@ -96,5 +109,6 @@ def patch_schemaview():
     SchemaView.imports_closure = imports_closure
 
 def apply_patches():
-    patch_npytyping()
+    patch_npytyping_perf()
+    patch_nptyping_warnings()
     patch_schemaview()

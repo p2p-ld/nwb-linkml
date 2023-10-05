@@ -56,7 +56,7 @@ class LinkML_Meta(BaseModel):
     tree_root: bool = False
 
 
-def default_template(pydantic_ver: str = "1", extra_classes:Optional[List[Type[BaseModel]]] = None) -> str:
+def default_template(pydantic_ver: str = "2", extra_classes:Optional[List[Type[BaseModel]]] = None) -> str:
     """Constructs a default template for pydantic classes based on the version of pydantic"""
     ### HEADER ###
     template = """
@@ -68,7 +68,12 @@ from __future__ import annotations
 from datetime import datetime, date
 from enum import Enum
 from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
+from pydantic import BaseModel as BaseModel, Field"""
+    if pydantic_ver == '2':
+        template += """
+from pydantic import ConfigDict
+        """
+    template +="""
 from nptyping import Shape, Float, Float32, Double, Float64, LongLong, Int64, Int, Int32, Int16, Short, Int8, UInt, UInt32, UInt16, UInt8, UInt64, Number, String, Unicode, Unicode, Unicode, String, Bool, Datetime64
 from nwb_linkml.types import NDArray
 import sys
@@ -102,12 +107,14 @@ class ConfiguredBaseModel(WeakRefShimBaseModel,
 """
     else:
         template += """
-class ConfiguredBaseModel(BaseModel,
-                validate_assignment = True,
-                validate_default = True,
-                extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
-                arbitrary_types_allowed = True,
-                use_enum_values = True):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment = True,
+        validate_default = True,
+        extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
+        arbitrary_types_allowed = True,
+        use_enum_values = True
+    )
 """
     ### Injected Fields
     template += """
