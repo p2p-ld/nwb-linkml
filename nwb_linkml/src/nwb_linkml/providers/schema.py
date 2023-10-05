@@ -40,11 +40,12 @@ so eg. for the linkML and pydantic providers:
 """
 import pdb
 import shutil
-from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict, Type
+from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict, Type, Callable
 from types import ModuleType
 from pathlib import Path
 import os
 from abc import abstractmethod, ABC
+from importlib.abc import MetaPathFinder
 import warnings
 import importlib
 import sys
@@ -205,7 +206,7 @@ class Provider(ABC):
 
         # flatten out in case we got duplicates between the builtins and cache
         res = {
-            k: [v.name for v in sorted(set(v_paths), key=os.path.getmtime)]
+            k: [v.name for v in sorted(set(v_paths), key=os.path.getmtime) if v.name.startswith('v')]
             for k, v_paths in versions.items()
         }
         return res
@@ -421,6 +422,7 @@ class LinkMLProvider(Provider):
                 del sch.imports[idx]
                 sch.imports.insert(idx, str(rel_path))
         return sch
+
     def get(self, namespace: str, version: Optional[str] = None) -> SchemaView:
         """
         Get a schema view over the namespace.
@@ -457,6 +459,15 @@ class PydanticProvider(Provider):
 
     """
     PROVIDES = 'pydantic'
+
+    def __init__(self,
+                 path: Optional[Path] = None,
+                 verbose: bool = True):
+        super(PydanticProvider, self).__init__(path, verbose)
+        # create a metapathfinder to find module we might create
+        pathfinder = EctopicModelFinder(self.path)
+        sys.meta_path.append(pathfinder)
+
 
     @property
     def path(self) -> Path:
@@ -535,6 +546,11 @@ class PydanticProvider(Provider):
             'pydantic_version': '2'
         }
         default_kwargs.update(kwargs)
+
+        # if we weren't given explicit versions to load, figure them out from the namespace
+        if versions is None:
+            versions = self._get_dependent_versions(path)
+
         if split:
             return self._build_split(path, versions, default_kwargs, dump, out_file, force)
         else:
@@ -573,7 +589,41 @@ class PydanticProvider(Provider):
         for schema_file in path.parent.glob('*.yaml'):
             this_out = out_file.parent / (module_case(schema_file.stem) + '.py')
             serialized.append(self._build_unsplit(schema_file, versions, default_kwargs, dump, this_out, force))
+
+        # If there are dependent versions that also need to be built, do that now!
+        needed = [(module_case(ns), version_module_case(version)) for ns, version in versions.items() if version_module_case(version) not in self.available_versions.get(ns, [])]
+        for needs in needed:
+            needed_path = path.parents[2] / needs[0] / needs[1] / 'namespace.yaml'
+            out_file_stem = out_file.parents[2] / needs[0] / needs[1]
+            for schema_file in needed_path.parent.glob('*.yaml'):
+                this_out = out_file_stem / (module_case(schema_file.stem) + '.py')
+                serialized.append(self._build_unsplit(schema_file, versions, default_kwargs, dump, this_out, force))
+
         return serialized
+
+    def _get_dependent_versions(self, path:Path) -> dict[str, str]:
+        """
+        For a given namespace schema file, get the versions of any other schemas it imports
+
+        Namespace imports will be in the importing schema like:
+
+            imports:
+            -../../hdmf_common/v1_8_0/namespace
+            -../../hdmf_experimental/v0_5_0/namespace
+
+        Returns:
+            dict[str,str]: A dictionary mapping a namespace to a version number
+        """
+        schema = io.schema.load_yaml(path)
+        versions = {}
+        for i in schema['imports']:
+            if i.startswith('..'):
+                import_path = (Path(path).parent / Path(i + '.yaml')).resolve()
+                imported_schema = io.schema.load_yaml(import_path)
+                versions[imported_schema['name']] = imported_schema['version']
+        return versions
+
+
 
 
     @classmethod
@@ -581,6 +631,7 @@ class PydanticProvider(Provider):
         name_pieces = ['nwb_linkml', 'models', 'pydantic',  module_case(namespace), version_module_case(version)]
         module_name = '.'.join(name_pieces)
         return module_name
+
     def import_module(
         self,
         namespace: str,
@@ -627,6 +678,9 @@ class PydanticProvider(Provider):
         spec.loader.exec_module(module)
         return module
 
+
+
+
     def get(self, namespace: str,
             version: Optional[str] = None,
             allow_repo: bool = True) -> ModuleType:
@@ -665,9 +719,10 @@ class PydanticProvider(Provider):
         if version is None:
             version = self.available_versions[namespace][-1]
 
-        module_name = self.module_name(namespace, version) + '.namespace'
-        if module_name in sys.modules:
-            return sys.modules[module_name]
+        module_name = self.module_name(namespace, version)
+        namespace_name = module_name + '.namespace'
+        if namespace_name in sys.modules:
+            return sys.modules[namespace_name]
 
         try:
             path = self.namespace_path(namespace, version, allow_repo)
@@ -676,8 +731,34 @@ class PydanticProvider(Provider):
 
         if path is None or not path.exists():
             _ = self.build(namespace, version=version)
+
+        if not allow_repo:
+            self._clear_package_imports()
+
         module = self.import_module(namespace, version)
         return module
+
+    @staticmethod
+    def _clear_package_imports():
+        """
+        When using allow_repo=False, delete any already-imported
+        namespaces from sys.modules that are within the nwb_linkml package
+        """
+        # make sure we don't have any in-repo modules
+        repo_base = Path(__file__).parents[1]
+        deletes = []
+        for k, v in sys.modules.items():
+            if not k.startswith('nwb_linkml.models.pydantic'):
+                continue
+            try:
+                Path(v.__file__).relative_to(repo_base)
+                # if it is a subpath, delete it
+                deletes.append(k)
+            except ValueError:
+                # path is not a subpath
+                continue
+        for d in deletes:
+            del sys.modules[d]
 
     def get_class(self, namespace: str, class_: str, version: Optional[str] = None) -> Type[BaseModel]:
         """
@@ -694,6 +775,41 @@ class PydanticProvider(Provider):
         """
         mod = self.get(namespace, version)
         return getattr(mod, class_)
+
+
+class EctopicModelFinder(MetaPathFinder):
+    """
+    A meta path finder that allows the import machinery to find a model
+    package even if it might be outside the actual nwb_linkml namespace,
+    as occurs when building split models in a temporary directory.
+
+    References:
+        - https://docs.python.org/3/reference/import.html#the-meta-path
+        - https://docs.python.org/3/library/importlib.html#importlib.abc.MetaPathFinder
+
+    """
+    MODEL_STEM = 'nwb_linkml.models.pydantic'
+
+    def __init__(self, path:Path, *args, **kwargs):
+        super(EctopicModelFinder, self).__init__(*args, **kwargs)
+        self.path = path
+
+    def find_spec(self, fullname, path, target=None):
+        if not fullname.startswith(self.MODEL_STEM):
+            return None
+        else:
+            # get submodule beneath model stem
+            submod = fullname.replace(self.MODEL_STEM, '').lstrip('.')
+            base_path = Path(self.path, *submod.split('.'))
+            # switch if we're asked for a package or a module
+            mod_path = Path(str(base_path) + '.py')
+            if mod_path.exists():
+                import_path = mod_path
+            else:
+                import_path = base_path / '__init__.py'
+
+            spec = importlib.util.spec_from_file_location(fullname, import_path)
+            return spec
 
 
 

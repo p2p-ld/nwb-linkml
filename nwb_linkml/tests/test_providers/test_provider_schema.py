@@ -61,7 +61,7 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
             'description': Optional[str],
             'comments': Optional[str],
             'data': 'TimeSeriesData',
-            'timestamps': Optional[List[float]],
+            'timestamps': 'Optional', # __name__ just gets the first part of Optional[TimeSeriesTimestamps]
             'control': Optional[List[int]],
         })
     ]

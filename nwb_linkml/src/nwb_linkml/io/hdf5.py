@@ -43,6 +43,7 @@ from nwb_linkml.providers.schema import SchemaProvider
 from nwb_linkml.types.hdf5 import HDF5_Path
 
 
+
 class HDF5IO():
 
     def __init__(self, path:Path):
@@ -85,44 +86,17 @@ class HDF5IO():
 
         # Apply initial planning phase of reading
         queue.apply_phase(ReadPhases.plan)
-
-        # Now do read operations until we're finished
+        # Read operations gather the data before casting into models
         queue.apply_phase(ReadPhases.read)
-
-
-
-        # pdb.set_trace()
-        # if len(queue.queue)> 0:
-        #     warnings.warn('Did not complete all items during read phase!')
-
+        # Construction operations actually cast the models
+        # this often needs to run several times as models with dependencies wait for their
+        # dependents to be cast
         queue.apply_phase(ReadPhases.construct)
 
         if path is None:
             return queue.completed['/'].result
         else:
             return queue.completed[path].result
-
-
-
-
-        #
-        #
-        # data = {}
-        # for k, v in src.items():
-        #     if isinstance(v, h5py.Group):
-        #         data[k] = H5Group(cls=v, parent=parent, root_model=parent).read()
-        #     elif isinstance(v, h5py.Dataset):
-        #         data[k] = H5Dataset(cls=v, parent=parent).read()
-        #
-        # if path is None:
-        #     return parent(**data)
-        # if 'neurodata_type' in src.attrs:
-        #     raise NotImplementedError('Making a submodel not supported yet')
-        # else:
-        #     return data
-
-
-
 
 
     def make_provider(self) -> SchemaProvider:
@@ -151,8 +125,6 @@ class HDF5IO():
         provider.build_from_dicts(schema)
         h5f.close()
         return provider
-
-
 
 
     def process_group(self, group:h5py.Group|h5py.File) -> dict | list:
