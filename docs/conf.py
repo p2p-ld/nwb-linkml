@@ -40,7 +40,8 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'pydantic': ('https://docs.pydantic.dev/latest/', None),
-    'h5py': ('https://docs.h5py.org/en/stable/', None)
+    'h5py': ('https://docs.h5py.org/en/stable/', None),
+    'dask': ('https://docs.dask.org/en/stable/', None)
 
 }
 

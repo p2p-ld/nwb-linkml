@@ -1,8 +1,19 @@
 """
 Pydantic models that behave like pandas dataframes
+
+.. note::
+
+    This is currently unused but kept in place as a stub in case it is worth revisiting in the future.
+    It turned out to be too momentarily difficult to make lazy-loading work with dask arrays per column
+    while still keeping pandas-like API intact. In the future we should investigate modifying the
+    :func:`dask.dataframe.read_hdf` function to treat individual hdf5 datasets like columns
+
+    pandas has been removed from dependencies for now, as it not used elsewhere, but it is
+    left in this module since it is necessary for it to make sense.
 """
+import ast
 import pdb
-from typing import List, Any, get_origin, get_args, Union, Optional, Dict
+from typing import List, Any, get_origin, get_args, Union, Optional, Dict, Type
 from types import NoneType
 
 import h5py
@@ -15,6 +26,10 @@ from pydantic import (
     ConfigDict,
     model_validator
 )
+
+from nwb_linkml.maps.hdmf import model_from_dynamictable, dereference_reference_vector
+from nwb_linkml.types.hdf5 import HDF5_Path
+
 
 class DataFrame(BaseModel, pd.DataFrame):
     """
@@ -116,3 +131,65 @@ class DataFrame(BaseModel, pd.DataFrame):
                 for k, v in out.items()
             }
             return nxt(self.__class__(**out))
+
+
+def dynamictable_to_df(group:h5py.Group,
+                       model:Optional[Type[DataFrame]]=None,
+                       base:Optional[BaseModel] = None) -> DataFrame:
+    if model is None:
+        model = model_from_dynamictable(group, base)
+
+    items = {}
+    for col, col_type in model.model_fields.items():
+        if col not in group.keys():
+            continue
+        idxname = col + '_index'
+        if idxname in group.keys():
+            idx = group.get(idxname)[:]
+            data = group.get(col)[idx-1]
+        else:
+            data = group.get(col)[:]
+
+        # Handle typing inside of list
+        if isinstance(data[0], bytes):
+            data = data.astype('unicode')
+        if isinstance(data[0], str):
+            # lists and other compound data types can get flattened out to strings when stored
+            # so we try and literal eval and recover them
+            try:
+                eval_type = type(ast.literal_eval(data[0]))
+            except (ValueError, SyntaxError):
+                eval_type = str
+
+            # if we've found one of those, get the data type within it.
+            if eval_type is not str:
+                eval_list = []
+                for item in data.tolist():
+                    try:
+                        eval_list.append(ast.literal_eval(item))
+                    except ValueError:
+                        eval_list.append(None)
+                data = eval_list
+        elif isinstance(data[0], h5py.h5r.Reference):
+            data = [HDF5_Path(group[d].name) for d in data]
+        elif isinstance(data[0], tuple) and any([isinstance(d, h5py.h5r.Reference) for d in data[0]]):
+            # references stored inside a tuple, reference + location.
+            # dereference them!?
+            dset = group.get(col)
+            names = dset.dtype.names
+            if names is not None and names[0] == 'idx_start' and names[1] == 'count':
+                data = dereference_reference_vector(dset, data)
+
+        else:
+            data = data.tolist()
+
+        # After list, check if we need to put this thing inside of
+        # another class, as indicated by the enclosing model
+
+
+
+        items[col] = data
+
+    return model(hdf5_path = group.name,
+                 name = group.name.split('/')[-1],
+                 **items)
