@@ -730,6 +730,10 @@ class PydanticProvider(Provider):
 
         module_name = self.module_name(namespace, version)
         namespace_name = module_name + '.namespace'
+
+        if not allow_repo:
+            self._clear_package_imports()
+
         if namespace_name in sys.modules:
             return sys.modules[namespace_name]
 
@@ -741,8 +745,7 @@ class PydanticProvider(Provider):
         if path is None or not path.exists():
             _ = self.build(namespace, version=version)
 
-        if not allow_repo:
-            self._clear_package_imports()
+
 
         module = self.import_module(namespace, version)
         return module
