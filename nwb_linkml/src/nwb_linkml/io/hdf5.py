@@ -20,16 +20,19 @@ Other TODO:
 """
 import pdb
 import warnings
-from typing import Optional, Dict, overload, Type, Union
+from typing import Optional, Dict, overload, Type, Union, List
 from pathlib import Path
 from types import ModuleType
 from typing import TYPE_CHECKING, NamedTuple
 import json
 import subprocess
 import shutil
+import os
 
 import h5py
 from pydantic import BaseModel
+from tqdm import tqdm
+import numpy as np
 
 from nwb_linkml.maps.hdf5 import H5SourceItem, flatten_hdf, ReadPhases, ReadQueue
 from nwb_linkml.translate import generate_from_nwbfile
@@ -241,6 +244,62 @@ def get_model(cls: h5py.Group | h5py.Dataset) -> Type[BaseModel]:
         mod = get_model(cls.parent)
         return mod.model_fields[cls.name.split('/')[-1]].annotation
 
+def find_references(h5f: h5py.File, path: str) -> List[str]:
+    """
+    Find all objects that make a reference to a given object in
+
+    * Attributes
+    * Dataset-level dtype (a dataset of references)
+    * Compound datasets (a dataset with one "column" of references)
+
+    Notes:
+        This is extremely slow because we collect all references first,
+        rather than checking them as we go and quitting early. PR if you want to make this faster!
+
+    Args:
+        h5f (:class:`h5py.File`): Open hdf5 file
+        path (str): Path to search for references to
+
+    Returns:
+        list[str]: List of paths that reference the given path
+    """
+    references = []
+
+    def _find_references(name, obj: h5py.Group | h5py.Dataset):
+        pbar.update()
+        refs = []
+        for attr in obj.attrs.values():
+            if isinstance(attr, h5py.h5r.Reference):
+                refs.append(attr)
+
+
+        if isinstance(obj, h5py.Dataset):
+            # dataset is all references
+            if obj.dtype.metadata is not None and isinstance(obj.dtype.metadata.get('ref', None), h5py.h5r.Reference):
+                refs.extend(obj[:].tolist())
+            # compound dtype
+            elif isinstance(obj.dtype, np.dtypes.VoidDType):
+                for name in obj.dtype.names:
+                    if isinstance(obj[name][0], h5py.h5r.Reference):
+                        refs.extend(obj[name].tolist())
+
+
+        for ref in refs:
+            assert isinstance(ref, h5py.h5r.Reference)
+            refname = h5f[ref].name
+            if name == path:
+                references.append(name)
+                return
+
+    pbar = tqdm()
+    try:
+        h5f.visititems(_find_references)
+    finally:
+        pbar.close()
+    return references
+
+
+
 
 def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path:
     """
@@ -266,33 +325,41 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
     # and also a temporary file that we'll make with h5repack
     target_tmp = target.parent / (target.stem + '_tmp.hdf5')
 
-
     # copy the whole thing
     if target.exists():
         target.unlink()
+    print(f'Copying {source} to {target}...')
     shutil.copy(source, target)
+    os.chmod(target, 0o774)
 
-    h5f_target = h5py.File(str(target), 'r+')
-    def _prune_dataset(name:str, obj: h5py.Dataset | h5py.Group):
-
+    to_resize = []
+    def _need_resizing(name:str, obj: h5py.Dataset | h5py.Group):
         if isinstance(obj, h5py.Dataset):
-            if obj.size > 10:
-                try:
-                    obj.resize(n, axis=0)
-                except TypeError:
-                    # contiguous arrays cant be resized directly
-                    # so we have to jank our way through it
-                    tmp_name = obj.name + '__tmp'
-                    original_name = obj.name
-                    obj.parent.move(obj.name, tmp_name)
-                    old_obj = obj.parent.get(tmp_name)
-                    new_obj = obj.parent.create_dataset(original_name, data=old_obj[0:n])
-                    for k, v in old_obj.attrs.items():
-                        new_obj.attrs[k] = v
-                    del new_obj.parent[tmp_name]
+            if obj.size > n:
+                to_resize.append(name)
+
+    print('Resizing datasets...')
+    # first we get the items that need to be resized and then resize them below
+    # problems with writing to the file from within the visititems call
+    h5f_target = h5py.File(str(target), 'r+')
+    h5f_target.visititems(_need_resizing)
 
 
-    h5f_target.visititems(_prune_dataset)
+    for resize in to_resize:
+        obj = h5f_target.get(resize)
+        try:
+            obj.resize(n, axis=0)
+        except TypeError:
+            # contiguous arrays cant be trivially resized, so we have to copy and create a new dataset
+            tmp_name = obj.name + '__tmp'
+            original_name = obj.name
+            obj.parent.move(obj.name, tmp_name)
+            old_obj = obj.parent.get(tmp_name)
+            new_obj = obj.parent.create_dataset(original_name, data=old_obj[0:n])
+            for k, v in old_obj.attrs.items():
+                new_obj.attrs[k] = v
+            del new_obj.parent[tmp_name]
+
     h5f_target.flush()
     h5f_target.close()
 
@@ -301,6 +368,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
         warnings.warn('Truncated file made, but since h5repack not found in path, file wont be any smaller')
         return target
 
+    print('Repacking hdf5...')
     res = subprocess.run(
         ['h5repack', '-f', 'GZIP=9', str(target), str(target_tmp)],
         capture_output=True

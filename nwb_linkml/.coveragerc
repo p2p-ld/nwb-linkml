@@ -6,3 +6,4 @@ omit =
     */nwb_linkml/models/*
     */tests/*
     */plot.py
+    */nwb_linkml/types/df.py

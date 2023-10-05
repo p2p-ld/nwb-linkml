@@ -4,14 +4,10 @@ Extension of nptyping NDArray for pydantic that allows for JSON-Schema serializa
 * Order to store data in (row first)
 """
 import base64
-import pdb
 from pathlib import Path
 from typing import (
     Any,
     Callable,
-    Annotated,
-Generic,
-TypeVar
 )
 import sys
 from copy import copy
@@ -60,6 +56,7 @@ class NDArray(_NDArray):
         def validate_dtype(value: np.ndarray) -> np.ndarray:
             if dtype is Any:
                 return value
+
             assert value.dtype == dtype or value.dtype.name in allowed_precisions[dtype.__name__], f"Invalid dtype! expected {dtype}, got {value.dtype}"
             return value
         def validate_array(value: Any) -> np.ndarray:

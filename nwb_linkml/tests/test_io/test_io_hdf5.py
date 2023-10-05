@@ -18,7 +18,6 @@ def test_hdf_read():
     io = HDF5IO(path=NWBFILE)
     model = io.read()
 
-    pdb.set_trace()
 
 @pytest.mark.skip()
 def test_truncate_file(tmp_output_dir):

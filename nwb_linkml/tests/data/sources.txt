@@ -1,3 +1,8 @@
+aibs.nwb
+    - https://dandiarchive.org/dandiset/000021/
+    - 000021/sub-738651046/sub-738651046_ses-760693773.nwb
+    - truncated datasets to length 10
+
 aibs_ecephys.nwb
     - https://dandiarchive.org/dandiset/000021/
     - 000021/sub-738651046/sub-738651046_ses-760693773_probe-769322820_ecephys.nwb
