@@ -801,12 +801,16 @@ class EctopicModelFinder(MetaPathFinder):
             # get submodule beneath model stem
             submod = fullname.replace(self.MODEL_STEM, '').lstrip('.')
             base_path = Path(self.path, *submod.split('.'))
+
             # switch if we're asked for a package or a module
             mod_path = Path(str(base_path) + '.py')
+            pkg_path = base_path / '__init__.py'
             if mod_path.exists():
                 import_path = mod_path
+            elif pkg_path.exists():
+                import_path = pkg_path
             else:
-                import_path = base_path / '__init__.py'
+                return None
 
             spec = importlib.util.spec_from_file_location(fullname, import_path)
             return spec
