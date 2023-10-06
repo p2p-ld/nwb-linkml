@@ -780,7 +780,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         except NameError as e:
             raise e
 
-def compile_python(text_or_fn: str, package_path: Path = None, module_name:str='test') -> ModuleType:  
+def compile_python(text_or_fn: str, package_path: Path = None, module_name:str='test') -> ModuleType:
     """
     Compile the text or file and return the resulting module
     @param text_or_fn: Python text or file name that references python file
