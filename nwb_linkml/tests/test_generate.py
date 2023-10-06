@@ -1,3 +1,11 @@
+"""
+Placeholder end-to-end tests for generating linkml translations and pydantic models.
+
+Should be replaced with more specific unit and integration tests, but in place for now
+to ensure that the basics of the whole thing operate -- not doing any actual data validation
+here.
+"""
+
 import pdb
 from pathlib import Path
 from typing import Dict

@@ -15,6 +15,13 @@ The `serialize` method
 - Generates linkML Classes
     - `generate_enums` runs first
 
+.. note::
+
+    This module is heinous. We have mostly copied and pasted the existing :class:`linkml.generators.PydanticGenerator`
+    and overridden what we need to make this work for NWB, but the source is...
+    a little messy. We will be tidying this up and trying to pull changes upstream,
+    but for now this is just our hacky little secret.
+
 """
 import pdb
 from dataclasses import dataclass, field
@@ -218,11 +225,11 @@ class {{ c.name }}
 @dataclass
 class NWBPydanticGenerator(PydanticGenerator):
 
-    SKIP_ENUM=('FlatDType',)
+    SKIP_ENUM:Tuple[str]=('FlatDType',)
     # SKIP_SLOTS=('VectorData',)
-    SKIP_SLOTS=('',)
-    SKIP_CLASSES=('',)
-    INJECTED_FIELDS = (
+    SKIP_SLOTS:Tuple[str]=('',)
+    SKIP_CLASSES:Tuple[str]=('',)
+    INJECTED_FIELDS:Tuple[str] = (
         'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")',
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")'
     )
@@ -231,7 +238,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     schema_map:Optional[Dict[str, SchemaDefinition]]=None
     versions:dict = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
-
+    pydantic_version = "2"
 
     def _locate_imports(
             self,
@@ -274,13 +281,12 @@ class NWBPydanticGenerator(PydanticGenerator):
     def _get_namespace_imports(self, sv:SchemaView) -> Dict[str, List[str]]:
         """
         Get imports for namespace packages. For these we import all
-        the tree_root classes, ie. all the classes that are top-level classes rather than
+        the tree_root classes, ie. all the classes that are top-level classes
         rather than nested classes
         """
         all_classes = sv.all_classes(imports=True)
         needed_classes = []
         for clsname, cls in all_classes.items():
-            #if cls.tree_root:
             if cls.is_a != 'Arraylike':
                 needed_classes.append(clsname)
 
@@ -764,12 +770,12 @@ class NWBPydanticGenerator(PydanticGenerator):
         )
         return code
 
-    def compile_module(self, module_path:Path=None, **kwargs) -> ModuleType:  # pragma: no cover - replaced with provider
+    def compile_module(self, module_path:Path=None, module_name:str='test') -> ModuleType:  # pragma: no cover - replaced with provider
         """
         Compiles generated python code to a module
         :return:
         """
-        pycode = self.serialize(**kwargs)
+        pycode = self.serialize()
         if module_path is not None:
             module_path = Path(module_path)
             init_file = module_path / '__init__.py'
@@ -777,11 +783,11 @@ class NWBPydanticGenerator(PydanticGenerator):
                 ifile.write(' ')
 
         try:
-            return compile_python(pycode, module_path)
+            return compile_python(pycode, module_path, module_name)
         except NameError as e:
             raise e
 
-def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:  # pragma: no cover - replaced with provider
+def compile_python(text_or_fn: str, package_path: Path = None, module_name:str='test') -> ModuleType:  # pragma: no cover - replaced with provider
     """
     Compile the text or file and return the resulting module
     @param text_or_fn: Python text or file name that references python file
@@ -793,8 +799,9 @@ def compile_python(text_or_fn: str, package_path: Path = None) -> ModuleType:  #
     if package_path is None and python_txt != text_or_fn:
         package_path = Path(text_or_fn)
     spec = compile(python_txt, '<string>', 'exec')
-    module = ModuleType('test')
+    module = ModuleType(module_name)
 
     exec(spec, module.__dict__)
+    sys.modules[module_name] = module
     return module
 
