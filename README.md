@@ -1,4 +1,8 @@
 # nwb-linkml
+
+[![Documentation Status](https://readthedocs.org/projects/nwb-linkml/badge/?version=latest)](https://nwb-linkml.readthedocs.io/en/latest/?badge=latest)
+
+
 Translating NWB schema language to linkml
 
 (very WIP dont @ me)
