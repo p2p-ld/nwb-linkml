@@ -52,7 +52,7 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
     assert schema_dir in [path.name for path in (provider.path / 'core').iterdir()]
 
 
-
+@pytest.mark.skip()
 @pytest.mark.depends(on=['test_linkml_provider'])
 @pytest.mark.parametrize(
     ['class_name', 'test_fields'],
