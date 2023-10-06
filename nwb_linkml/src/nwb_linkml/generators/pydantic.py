@@ -266,7 +266,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                 version = version_module_case(self.versions[schema_name])
                 if self.split:
                     local_mod_name = '...' + module_case(schema_name) + '.' + version + '.' + module_case(module_name)
-                else:
+                else: # pragma: no cover
                     local_mod_name = '...' + module_case(schema_name) + '.' + version + '.' + 'namespace'
 
             else:

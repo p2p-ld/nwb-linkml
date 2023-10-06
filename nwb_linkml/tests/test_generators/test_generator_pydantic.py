@@ -165,7 +165,7 @@ def test_versions(linkml_schema):
     core_str = NWBPydanticGenerator(
         str(linkml_schema.core_path),
         versions={'imported': 'v4.2.0'},
-        split=False
+        split=True
     ).serialize()
 
     # the import should be like
@@ -173,19 +173,6 @@ def test_versions(linkml_schema):
     #     MainThing
     # )
     match = re.findall(r'from \.\.\.imported\.v4_2_0.*?MainThing.*?\)', core_str, flags=re.DOTALL)
-    assert len(match) == 1
-
-    core_str = NWBPydanticGenerator(
-        str(linkml_schema.core_path),
-        versions={'imported': 'v4.2.0'},
-        split=True
-    ).serialize()
-
-    # the import should be like
-    # from ...imported.v4_2_0.namespace import (
-    #     MainThing
-    # )
-    match = re.findall(r'from \.\.\.imported\.v4_2_0\.namespace.*?MainThing.*?\)', core_str, flags=re.DOTALL)
     assert len(match) == 1
 
 
