@@ -5,17 +5,16 @@ import pytest
 from pathlib import Path
 import numpy as np
 
-from ..fixtures import tmp_output_dir, set_config_vars
+from ..fixtures import tmp_output_dir, set_config_vars, data_dir
 
 from nwb_linkml.io.hdf5 import HDF5IO
 from nwb_linkml.io.hdf5 import truncate_file
 
-# @pytest.mark.skip()
-def test_hdf_read():
-    NWBFILE = Path('/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773.nwb')
-    if not NWBFILE.exists():
-        return
+@pytest.mark.parametrize('dset', ['aibs.nwb'])
+def test_hdf_read(data_dir, dset):
+    NWBFILE = data_dir / dset
     io = HDF5IO(path=NWBFILE)
+    # the test for now is just whether we can read it lol
     model = io.read()
 
 
