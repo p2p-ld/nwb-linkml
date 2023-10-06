@@ -647,7 +647,7 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         sv: SchemaView
         sv = self.schemaview
-        if self.schema_map is not None:
+        if self.schema_map is not None:  # pragma: no cover
             sv.schema_map = self.schema_map
         schema = sv.schema
         pyschema = SchemaDefinition(
@@ -763,7 +763,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         )
         return code
 
-    def compile_module(self, module_path:Path=None, module_name:str='test') -> ModuleType:
+    def compile_module(self, module_path:Path=None, module_name:str='test') -> ModuleType: # pragma: no cover - replaced with provider
         """
         Compiles generated python code to a module
         :return:
@@ -780,7 +780,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         except NameError as e:
             raise e
 
-def compile_python(text_or_fn: str, package_path: Path = None, module_name:str='test') -> ModuleType:  # pragma: no cover - replaced with provider
+def compile_python(text_or_fn: str, package_path: Path = None, module_name:str='test') -> ModuleType:  
     """
     Compile the text or file and return the resulting module
     @param text_or_fn: Python text or file name that references python file
