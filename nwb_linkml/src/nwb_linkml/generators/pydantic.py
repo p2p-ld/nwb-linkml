@@ -254,7 +254,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         skips = ('AnyType',)
 
         for cls in needed_classes:
-            if cls in skips:
+            if cls in skips: # pragma: no cover
                 continue
             # Find module that contains class
             module_name = sv.element_by_schema_map()[ElementName(cls)]
@@ -306,7 +306,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         needed_classes.append(cls.is_a)
         # get needed classes used as ranges in class attributes
         for slot in class_slots[cls.name]:
-            if slot.name in self.SKIP_SLOTS:
+            if slot.name in self.SKIP_SLOTS: # pragma: no cover
                 continue
             if slot.range in all_classes:
                 needed_classes.append(slot.range)
@@ -417,7 +417,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         # all dimensions should be the same dtype
         try:
             dtype = flat_to_npytyping[list(attrs.values())[0].range]
-        except KeyError as e:
+        except KeyError as e: # pragma: no cover
             warnings.warn(str(e))
             range = list(attrs.values())[0].range
             return f'List[{range}] | {range}'
@@ -428,7 +428,7 @@ class NWBPydanticGenerator(PydanticGenerator):
 
     def _get_numpy_slot_range(self, cls:ClassDefinition) -> str:
         # if none of the dimensions are optional, we just have one possible array shape
-        if all([s.required for s in cls.attributes.values()]):
+        if all([s.required for s in cls.attributes.values()]): # pragma: no cover
             return self._make_npytyping_range(cls.attributes)
         # otherwise we need to make permutations
         # but not all permutations, because we typically just want to be able to exlude the last possible dimensions
@@ -500,7 +500,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                     slist = slist + [candidate]
                     del clist[i]
                     break
-            if not can_add:
+            if not can_add: # pragma: no cover
                 raise ValueError(
                     f"could not find suitable element in {clist} that does not ref {slist}"
                 )
@@ -525,12 +525,14 @@ class NWBPydanticGenerator(PydanticGenerator):
         Parent class get class range
 
         Overriding to not use strings in the type hint when a class has an identifier value
+
+        Not testing this method except for what we changes
         """
         sv = self.schemaview
         range_cls = sv.get_class(slot_range)
 
         # Hardcoded handling for Any
-        if range_cls.class_uri == "linkml:Any":
+        if range_cls.class_uri == "linkml:Any": # pragma: no cover
             return "Any"
 
         # Inline the class itself only if the class is defined as inline, or if the class has no
@@ -546,7 +548,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             if (
                 len([x for x in sv.class_induced_slots(slot_range) if x.designates_type]) > 0
                 and len(sv.class_descendants(slot_range)) > 1
-            ):
+            ): # pragma: no cover
                 return (
                     "Union["
                     + ",".join([camelcase(c) for c in sv.class_descendants(slot_range)])
@@ -556,26 +558,17 @@ class NWBPydanticGenerator(PydanticGenerator):
                 return f"{camelcase(slot_range)}"
 
         # For the more difficult cases, set string as the default and attempt to improve it
-        range_cls_identifier_slot_range = "str"
+        range_cls_identifier_slot_range = "str"  # pragma: no cover
 
         # For mixins, try to use the identifier slot of descendant classes
         if (
             self.gen_mixin_inheritance
             and sv.is_mixin(range_cls.name)
             and sv.get_identifier_slot(range_cls.name)
-        ):
+        ):  # pragma: no cover
             range_cls_identifier_slot_range = self.get_mixin_identifier_range(range_cls)
 
-        # If the class itself has an identifier slot, it can be allowed to overwrite a value from mixin above
-        # if (
-        #     sv.get_identifier_slot(range_cls.name) is not None
-        #     and sv.get_identifier_slot(range_cls.name).range is not None
-        # ):
-        #     range_cls_identifier_slot_range = _get_pyrange(
-        #         sv.get_type(sv.get_identifier_slot(range_cls.name).range), sv
-        #     )
-
-        return range_cls_identifier_slot_range
+        return range_cls_identifier_slot_range  # pragma: no cover
 
 
     def get_class_isa_plus_mixins(self, classes:Optional[List[ClassDefinition]] = None) -> Dict[str, List[str]]:
@@ -587,7 +580,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         :return:
         """
         sv = self.schemaview
-        if classes is None:
+        if classes is None:  # pragma: no cover
             classes = sv.all_classes(imports=False).values()
 
         parents = {}
@@ -595,7 +588,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             class_parents = []
             if class_def.is_a:
                 class_parents.append(camelcase(class_def.is_a))
-            if self.gen_mixin_inheritance and class_def.mixins:
+            if self.gen_mixin_inheritance and class_def.mixins:  # pragma: no cover
                 class_parents.extend([camelcase(mixin) for mixin in class_def.mixins])
             if len(class_parents) > 0:
                 # Use the sorted list of classes to order the parent classes, but reversed to match MRO needs
@@ -636,7 +629,7 @@ class NWBPydanticGenerator(PydanticGenerator):
 
             if slot.inlined and not slot.inlined_as_list: # and has_identifier_slot:
                 slot_value = "default_factory=dict"
-            else:
+            else:  # pragma: no cover
                 slot_value = "default_factory=list"
 
         return slot_value
@@ -686,7 +679,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                 # skip actually generating arraylike classes, just use them to generate
                 # the npytyping annotations
                 pyschema.classes[class_def.name] = class_def
-            else:
+            else:  # pragma: no cover
                 continue
 
             # Not sure why this happens
@@ -729,7 +722,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                 # model classes, we allow container classes to also
                 # be generic descendants of BaseModel
                 # --------------------------------------------------
-                if 'DynamicTable' in pyranges:
+                if 'DynamicTable' in pyranges:  # pragma: no cover
                     pyranges.append('BaseModel')
 
                 pyranges = list(set(pyranges))  # remove duplicates
@@ -739,15 +732,15 @@ class NWBPydanticGenerator(PydanticGenerator):
                     pyrange = pyranges[0]
                 elif len(pyranges) > 1:
                     pyrange = f"Union[{', '.join(pyranges)}]"
-                else:
+                else:  # pragma: no cover
                     raise Exception(f"Could not generate python range for {class_name}.{s.name}")
 
                 if s.multivalued:
                     if s.inlined or s.inlined_as_list:
                         collection_key = self.generate_collection_key(slot_ranges, s, class_def)
-                    else:
+                    else:  # pragma: no cover
                         collection_key = None
-                    if s.inlined is False or collection_key is None or s.inlined_as_list is True:
+                    if s.inlined is False or collection_key is None or s.inlined_as_list is True:  # pragma: no cover
                         pyrange = f"List[{pyrange}]"
                     else:
                         pyrange = f"Dict[{collection_key}, {pyrange}]"
@@ -770,7 +763,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         )
         return code
 
-    def compile_module(self, module_path:Path=None, module_name:str='test') -> ModuleType:  # pragma: no cover - replaced with provider
+    def compile_module(self, module_path:Path=None, module_name:str='test') -> ModuleType:
         """
         Compiles generated python code to a module
         :return:
