@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "nwb_schema_language"
-version = "0.1.1"
+version = "0.1.2"
 description = "Translation of the nwb-schema-language to LinkML"
 authors = ["Jonny Saunders <j@nny.fyi>"]
 license = "GNU GPL v3.0"
 readme = "README.md"
+homepage = "https://nwb-linkml.readthedocs.io"
+repository = "https://github.com/p2p-ld/nwb-linkml/"
+documentation = "https://nwb-linkml.readthedocs.io"
 packages = [
     { include = "nwb_schema_language", from="src"}
 ]
