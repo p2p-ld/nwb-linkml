@@ -408,7 +408,7 @@
                 },
                 "date": {
                     "description": "Date that a namespace was last modified or released",
-                    "format": "date",
+                    "format": "date-time",
                     "type": "string"
                 },
                 "doc": {

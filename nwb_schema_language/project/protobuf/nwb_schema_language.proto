@@ -66,7 +66,7 @@ message Namespace
   string name = 0
   string fullName = 0
   string version = 0
-  date date = 0
+  datetime date = 0
  repeated  string author = 0
  repeated  string contact = 0
  repeated  schema schema = 0

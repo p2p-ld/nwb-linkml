@@ -112,8 +112,8 @@ class Namespace(ConfiguredBaseModel):
     full_name: Optional[str] = Field(None, description="""Optional string with extended full name for the namespace.""")
     version: str = Field(...)
     date: Optional[datetime ] = Field(None, description="""Date that a namespace was last modified or released""")
-    author: List[str] | str = Field(default_factory=list, description="""List of strings with the names of the authors of the namespace.""")
-    contact: List[str] | str = Field(default_factory=list, description="""List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.""")
+    author: List[str] = Field(default_factory=list, description="""List of strings with the names of the authors of the namespace.""")
+    contact: List[str] = Field(default_factory=list, description="""List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.""")
     schema_: Optional[List[Schema]] = Field(alias="schema", default_factory=list, description="""List of the schema to be included in this namespace.""")
     
 

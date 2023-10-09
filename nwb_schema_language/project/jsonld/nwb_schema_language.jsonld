@@ -588,7 +588,7 @@
       "domain_of": [
         "Namespace"
       ],
-      "range": "date",
+      "range": "datetime",
       "@type": "SlotDefinition"
     },
     {
@@ -1504,9 +1504,9 @@
   ],
   "metamodel_version": "1.7.0",
   "source_file": "nwb_schema_language.yaml",
-  "source_file_date": "2023-08-30T20:53:55",
-  "source_file_size": 10793,
-  "generation_date": "2023-08-30T20:53:59",
+  "source_file_date": "2023-08-31T15:31:11",
+  "source_file_size": 10797,
+  "generation_date": "2023-10-09T15:03:07",
   "settings": [
     {
       "setting_key": "email",

@@ -1,10 +1,11 @@
 """
 Base class for adapters
 """
+import pdb
 from abc import abstractmethod
 import warnings
 from dataclasses import dataclass, field
-from typing import List, Dict, Type, Generator, Any, Tuple, Optional, TypeVar, TypeVarTuple, Unpack
+from typing import List, Dict, Type, Generator, Any, Tuple, Optional, TypeVar, TypeVarTuple, Unpack, Literal
 from pydantic import BaseModel, Field, validator
 from linkml_runtime.linkml_model import Element, SchemaDefinition, ClassDefinition, SlotDefinition, TypeDefinition
 
@@ -35,15 +36,8 @@ class BuildResult:
 
         self.schemas.extend(self._dedupe(self.schemas, other.schemas))
         self.classes.extend(self._dedupe(self.classes, other.classes))
-        # existing_names = [c.name for c in self.classes]
-        # for newc in other.classes:
-        #     if newc.name in existing_names:
-        #         warnings.warn(f'Not creating duplicate class for {newc.name}')
-        #         continue
-        #     self.classes.append(newc)
-        # self.classes.extend(other.classes)
-        self.slots.extend(other.slots)
-        self.types.extend(other.types)
+        self.slots.extend(self._dedupe(self.slots, other.slots))
+        self.types.extend(self._dedupe(self.types, other.types))
         return self
 
     def __repr__(self):  # pragma: no cover
@@ -76,7 +70,13 @@ class Adapter(BaseModel):
         Generate the corresponding linkML element for this adapter
         """
 
-    def walk(self, input: BaseModel | list | dict):
+    def walk(self, input: BaseModel | list | dict) -> Generator[BaseModel | Any | None, None, None]:
+        """
+        Iterate through all items in the given model.
+
+        Could be a staticmethod or a function, but bound to adapters to make it available to them :)
+        """
+
         yield input
         if isinstance(input, BaseModel):
 
@@ -92,7 +92,7 @@ class Adapter(BaseModel):
                 if isinstance(val, (BaseModel, dict, list)):
                     yield from self.walk(val)
 
-        elif isinstance(input, dict):
+        elif isinstance(input, dict): # pragma: no cover - not used in our adapters, but necessary for logical completeness
             for key, val in input.items():
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):
@@ -108,11 +108,44 @@ class Adapter(BaseModel):
             pass
 
     def walk_fields(self, input: BaseModel | list | dict, field: str | Tuple[str, ...]):
+        """
+        Recursively walk input for fields that match ``field``
+
+        Args:
+            input (:class:`pydantic.BaseModel`) : Model to walk (or a list or dictionary to walk too)
+            field (str, Tuple[str, ...]):
+
+        Returns:
+
+        """
         if isinstance(field, str):
             field = (field,)
         for item in self.walk(input):
             if isinstance(item, tuple) and item[0] in field and item[1] is not None:
                 yield item[1]
+
+    def walk_field_values(self, input: BaseModel | list | dict, field: str, value: Optional[Any] = None ) -> Generator[BaseModel, None, None]:
+        """
+        Recursively walk input for **models** that contain a ``field`` as a direct child with a value matching ``value``
+
+        Args:
+            input (:class:`pydantic.BaseModel`): Model to walk
+            field (str): Name of field - unlike :meth:`.walk_fields`, only one field can be given
+            value (Any): Value to match for given field. If ``None`` , return models that have the field
+
+        Returns:
+            :class:`pydantic.BaseModel` the matching model
+        """
+        for item in self.walk(input):
+            if isinstance(item, BaseModel):
+                if field in item.model_fields:
+                    if value is None:
+                        yield item
+                    field_value = item.model_dump().get(field, None)
+                    if value == field_value:
+                        yield item
+
+
 
 
     def walk_types(self, input: BaseModel | list | dict, get_type: T | List[Unpack[Ts]] | Tuple[Unpack[T]]) -> Generator[T, None, None]:

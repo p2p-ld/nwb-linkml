@@ -145,7 +145,7 @@ linkml:Sparqlpath xsd:string
           <name> @linkml:String ;
           <full_name> @linkml:String ? ;
           <version> @linkml:String ;
-          schema1:dateModified @linkml:Date ? ;
+          schema1:dateModified @linkml:Datetime ? ;
           schema1:author @linkml:String + ;
           schema1:email @linkml:String + ;
           <schema_> @<Schema> *

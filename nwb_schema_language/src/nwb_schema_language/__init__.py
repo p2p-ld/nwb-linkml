@@ -1,7 +1,6 @@
 import warnings
 from typing import List, Union
 try:
-    pass
     from .datamodel.nwb_schema_pydantic import Namespace, \
         Namespaces, \
         Schema, \

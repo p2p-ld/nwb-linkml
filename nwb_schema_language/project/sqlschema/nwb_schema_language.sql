@@ -74,7 +74,7 @@ CREATE TABLE "Namespace" (
 	name TEXT NOT NULL, 
 	full_name TEXT, 
 	version TEXT NOT NULL, 
-	date DATE, 
+	date DATETIME, 
 	author TEXT NOT NULL, 
 	contact TEXT NOT NULL, 
 	schema_ TEXT, 

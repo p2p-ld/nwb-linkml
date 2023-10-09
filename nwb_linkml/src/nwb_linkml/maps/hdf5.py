@@ -529,12 +529,6 @@ class CompleteModelGroups(HDF5Map):
         unpacked_results, errors, completes = resolve_references(src.result, completed)
         res.update(unpacked_results)
 
-        # # final cleanups
-        # for key, val in res.items():
-        #     # if we're supposed to be a list, but instead we're an array, fix that!
-        #
-
-        #try:
         instance = src.model(**res)
         return H5ReadResult(
             path=src.path,
@@ -548,19 +542,6 @@ class CompleteModelGroups(HDF5Map):
             applied=src.applied + ['CompleteModelGroups'],
             errors=errors
         )
-        # except ValidationError:
-        #     # didn't get it! try again next time
-        #     return H5ReadResult(
-        #         path=src.path,
-        #         source=src,
-        #         result=src,
-        #         model=src.model,
-        #         completed=True,
-        #         completes=completes,
-        #         neurodata_type=src.neurodata_type,
-        #         namespace=src.namespace,
-        #         applied=src.applied + ['CompleteModelGroups']
-        #     )
 
 class CompleteNWBFile(HDF5Map):
     """
@@ -719,14 +700,6 @@ class ReadQueue(BaseModel):
                 self.completed = {}
         elif max_passes>0:
             self.apply_phase(phase, max_passes=max_passes-1)
-
-
-
-
-
-
-
-
 
 
 def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, H5SourceItem]:

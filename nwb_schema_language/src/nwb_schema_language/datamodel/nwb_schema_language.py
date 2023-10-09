@@ -1,5 +1,5 @@
 # Auto generated from nwb_schema_language.yaml by pythongen.py version: 0.0.1
-# Generation date: 2023-08-30T20:54:02
+# Generation date: 2023-10-09T15:03:09
 # Schema: nwb-schema-language
 #
 # id: https://w3id.org/p2p_ld/nwb-schema-language
@@ -21,8 +21,8 @@ from linkml_runtime.utils.formatutils import camelcase, underscore, sfx
 from linkml_runtime.utils.enumerations import EnumDefinitionImpl
 from rdflib import Namespace, URIRef
 from linkml_runtime.utils.curienamespace import CurieNamespace
-from linkml_runtime.linkml_model.types import Boolean, Date, String
-from linkml_runtime.utils.metamodelcore import Bool, XSDDate
+from linkml_runtime.linkml_model.types import Boolean, Datetime, String
+from linkml_runtime.utils.metamodelcore import Bool, XSDDateTime
 
 metamodel_version = "1.7.0"
 version = None
@@ -58,7 +58,7 @@ class Namespace(YAMLRoot):
     author: Union[str, List[str]] = None
     contact: Union[str, List[str]] = None
     full_name: Optional[str] = None
-    date: Optional[Union[str, XSDDate]] = None
+    date: Optional[Union[str, XSDDateTime]] = None
     schema_: Optional[Union[Union[dict, "Schema"], List[Union[dict, "Schema"]]]] = empty_list()
 
     def __post_init__(self, *_: List[str], **kwargs: Dict[str, Any]):
@@ -92,8 +92,8 @@ class Namespace(YAMLRoot):
         if self.full_name is not None and not isinstance(self.full_name, str):
             self.full_name = str(self.full_name)
 
-        if self.date is not None and not isinstance(self.date, XSDDate):
-            self.date = XSDDate(self.date)
+        if self.date is not None and not isinstance(self.date, XSDDateTime):
+            self.date = XSDDateTime(self.date)
 
         if not isinstance(self.schema_, list):
             self.schema_ = [self.schema_] if self.schema_ is not None else []
@@ -629,7 +629,7 @@ slots.version = Slot(uri=NWB_SCHEMA_LANGUAGE.version, name="version", curie=NWB_
                    pattern=re.compile(r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'))
 
 slots.date = Slot(uri=SCHEMA.dateModified, name="date", curie=SCHEMA.curie('dateModified'),
-                   model_uri=NWB_SCHEMA_LANGUAGE.date, domain=None, range=Optional[Union[str, XSDDate]])
+                   model_uri=NWB_SCHEMA_LANGUAGE.date, domain=None, range=Optional[Union[str, XSDDateTime]])
 
 slots.author = Slot(uri=SCHEMA.author, name="author", curie=SCHEMA.curie('author'),
                    model_uri=NWB_SCHEMA_LANGUAGE.author, domain=None, range=Union[str, List[str]])

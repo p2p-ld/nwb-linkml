@@ -1,6 +1,6 @@
 import pytest
 import os
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from linkml_runtime.dumpers import yaml_dumper
 
@@ -49,9 +49,13 @@ def set_config_vars(tmp_output_dir):
 
 
 
-@pytest.fixture(scope="session")
-def nwb_core_fixture() -> NamespacesAdapter:
-    nwb_core = io.load_nwb_core()
+@pytest.fixture(
+    scope="session",
+    params=[
+    {'core_version': "2.6.0", 'hdmf_version': '1.5.0'}
+])
+def nwb_core_fixture(request) -> NamespacesAdapter:
+    nwb_core = io.load_nwb_core(**request.param)
     nwb_core.populate_imports()
     return nwb_core
 
@@ -63,34 +67,16 @@ def data_dir() -> Path:
 
 class TestSchemas(NamedTuple):
     core: SchemaDefinition
-    core_path: Path
     imported: SchemaDefinition
-    imported_path: Path
     namespace: SchemaDefinition
-    namespace_path: Path
+    core_path: Optional[Path] = None
+    imported_path: Optional[Path] = None
+    namespace_path: Optional[Path] = None
 
 @pytest.fixture(scope="module")
-def linkml_schema(tmp_output_dir_mod) -> TestSchemas:
-    """
-    A test schema that includes
-
-    - Two schemas, one importing from the other
-    - Arraylike
-    - Required/static "name" field
-    - linkml metadata like tree_root
-    - skipping classes
-    """
-    test_schema_path = tmp_output_dir_mod / 'test_schema'
-    test_schema_path.mkdir()
-
-    core_path = test_schema_path / 'core.yaml'
-    imported_path = test_schema_path / 'imported.yaml'
-    namespace_path = test_schema_path / 'namespace.yaml'
+def linkml_schema_bare() -> TestSchemas:
 
     schema = TestSchemas(
-        core_path=core_path,
-        imported_path=imported_path,
-        namespace_path=namespace_path,
         core=SchemaDefinition(
             name="core",
             id="core",
@@ -235,6 +221,32 @@ def linkml_schema(tmp_output_dir_mod) -> TestSchemas:
             imports=['core', 'imported']
         )
     )
+    return schema
+
+@pytest.fixture(scope="module")
+def linkml_schema(tmp_output_dir_mod, linkml_schema_bare) -> TestSchemas:
+    """
+    A test schema that includes
+
+    - Two schemas, one importing from the other
+    - Arraylike
+    - Required/static "name" field
+    - linkml metadata like tree_root
+    - skipping classes
+    """
+    schema = linkml_schema_bare
+
+    test_schema_path = tmp_output_dir_mod / 'test_schema'
+    test_schema_path.mkdir()
+
+    core_path = test_schema_path / 'core.yaml'
+    imported_path = test_schema_path / 'imported.yaml'
+    namespace_path = test_schema_path / 'namespace.yaml'
+
+    schema.core_path = core_path,
+    schema.imported_path = imported_path,
+    schema.namespace_path = namespace_path,
+
     yaml_dumper.dump(schema.core, schema.core_path)
     yaml_dumper.dump(schema.imported, schema.imported_path)
     yaml_dumper.dump(schema.namespace, schema.namespace_path)

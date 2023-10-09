@@ -82,7 +82,7 @@ type Namespace
     name: String!
     fullName: String
     version: String!
-    date: Date
+    date: Datetime
     author: [String]!
     contact: [String]!
     schema: [Schema]

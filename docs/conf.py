@@ -20,7 +20,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinxcontrib.autodoc_pydantic',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.doctest'
 ]
 
 templates_path = ['_templates']
@@ -68,3 +69,10 @@ graphviz_output_format = "svg"
 autodoc_pydantic_model_show_json_error_strategy = 'coerce'
 autodoc_pydantic_model_show_json = False
 autodoc_mock_imports = ['nptyping']
+
+# doctest
+doctest_global_setup = """
+from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition, SchemaDefinition
+from pydantic import BaseModel, Field
+import numpy as np
+"""
