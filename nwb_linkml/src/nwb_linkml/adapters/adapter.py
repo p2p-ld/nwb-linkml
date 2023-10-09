@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Type, Generator, Any, Tuple, Optional, TypeVar, TypeVarTuple, Unpack, Literal
 from pydantic import BaseModel, Field, validator
 from linkml_runtime.linkml_model import Element, SchemaDefinition, ClassDefinition, SlotDefinition, TypeDefinition
+from nwb_schema_language import Dataset, Attribute, Schema, Group
 
 # SchemaDefClass = dataclass(SchemaDefinition).__pydantic_model__
 
@@ -60,7 +61,7 @@ class BuildResult:
 
         return out_str
 
-T = TypeVar
+T = TypeVar('T', Dataset, Attribute, Schema, Group)
 Ts = TypeVarTuple('Ts')
 
 class Adapter(BaseModel):
@@ -148,7 +149,7 @@ class Adapter(BaseModel):
 
 
 
-    def walk_types(self, input: BaseModel | list | dict, get_type: T | List[Unpack[Ts]] | Tuple[Unpack[T]]) -> Generator[T, None, None]:
+    def walk_types(self, input: BaseModel | list | dict, get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]) -> Generator[T | Ts, None, None]:
         if not isinstance(get_type, (list, tuple)):
             get_type = [get_type]
 

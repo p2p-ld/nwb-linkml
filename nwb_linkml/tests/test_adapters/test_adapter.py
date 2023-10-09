@@ -1,10 +1,11 @@
 import pdb
 
+import numpy as np
 import pytest
 from ..fixtures import nwb_core_fixture
 
 from linkml_runtime.linkml_model import SchemaDefinition, ClassDefinition, SlotDefinition, TypeDefinition
-from nwb_schema_language import Dataset, Group, Schema, CompoundDtype
+from nwb_schema_language import Dataset, Group, Schema, CompoundDtype, Attribute
 
 from nwb_linkml.adapters import BuildResult
 
@@ -32,13 +33,22 @@ def test_walk_types(nwb_core_fixture, walk_class, known_number):
     assert len(class_list) == known_number
 
 def test_walk_fields(nwb_core_fixture):
-    dtype = nwb_core_fixture.walk_fields(nwb_core_fixture, 'dtype')
+    # should get same number of dtype fields as there are datasets and attributes + compound dtypes
+    dtype = list(nwb_core_fixture.walk_fields(nwb_core_fixture, 'dtype'))
+
+    dtype_havers = list(nwb_core_fixture.walk_types(nwb_core_fixture, (Dataset, Attribute)))
+    compound_dtypes = [len(d.dtype) for d in dtype_havers if isinstance(d.dtype, list)]
+    expected_dtypes = np.sum(compound_dtypes) + len(dtype_havers)
+    assert expected_dtypes == len(dtype)
 
 
 def test_walk_field_values(nwb_core_fixture):
     dtype_models = list(nwb_core_fixture.walk_field_values(nwb_core_fixture, 'dtype', value=None))
-
-    compounds = [d for d in dtype_models if isinstance(d.dtype, list) and len(d.dtype) > 0 and isinstance(d.dtype[0], CompoundDtype)]
+    assert all([hasattr(d, 'dtype') for d in dtype_models])
+    text_models = list(nwb_core_fixture.walk_field_values(nwb_core_fixture, 'dtype', value='text'))
+    assert all([d.dtype == 'text' for d in text_models])
+    # 135 known value from regex search
+    assert len(text_models) == len([d for d in dtype_models if d.dtype == 'text']) == 135
 
 
 def test_build_result(linkml_schema_bare):
