@@ -16,7 +16,7 @@ import numpy as np
 
 from pydantic import BaseModel
 
-from ..fixtures import tmp_output_dir, tmp_output_dir_mod, linkml_schema, TestSchemas
+from ..fixtures import tmp_output_dir, tmp_output_dir_mod, linkml_schema, TestSchemas, linkml_schema_bare
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator, compile_python
 from nwb_linkml.types.ndarray import NDArrayMeta
