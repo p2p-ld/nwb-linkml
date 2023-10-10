@@ -85,6 +85,6 @@ testpaths = [
 ]
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 filterwarnings = [
-    "ignore:Deprecated NumPy 1.24:DeprecationWarning",
+    "ignore::DeprecationWarning",
     "ignore:parse_obj:pydantic.PydanticDeprecatedSince20"
 ]
