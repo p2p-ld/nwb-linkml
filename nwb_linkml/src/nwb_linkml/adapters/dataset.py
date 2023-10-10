@@ -21,12 +21,12 @@ class DatasetMap(Map):
     @classmethod
     @abstractmethod
     def check(c, cls:Dataset) -> bool:
-        pass
+        pass # pragma: no cover
 
     @classmethod
     @abstractmethod
     def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
-        pass
+        pass # pragma: no cover
 
 class MapScalar(DatasetMap):
     """
@@ -355,7 +355,7 @@ class DatasetAdapter(ClassAdapter):
         # find a map to use
         matches = [m for m in DatasetMap.__subclasses__() if m.check(self.cls)]
 
-        if len(matches) > 1:
+        if len(matches) > 1: # pragma: no cover
             raise RuntimeError(f"Only one map should apply to a dataset, you need to refactor the maps! Got maps: {matches}")
 
         # apply matching maps
