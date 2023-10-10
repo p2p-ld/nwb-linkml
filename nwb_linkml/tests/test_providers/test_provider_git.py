@@ -72,14 +72,13 @@ def test_gitrepo_check(source, commit):
     repo.clone()
     assert repo.check()
 
-    # check should fail when repo is at wrong commit
+    # check should not warn but get us to the correct commit
     assert repo.active_commit == commit
     repo._git_call('checkout', 'HEAD~10')
-    with pytest.warns(UserWarning, match=".*wrong commit.*"):
-        assert not repo.check()
-    repo.commit = commit
-    assert repo.active_commit == commit
+    assert repo.active_commit != commit
+    # check should pass but switch to proper commit
     assert repo.check()
+    assert repo.active_commit == commit
 
     # check should fail on repo namespace mismatch
     old_repo = repo.namespace.repository
