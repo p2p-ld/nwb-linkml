@@ -4,6 +4,7 @@ Extension of nptyping NDArray for pydantic that allows for JSON-Schema serializa
 * Order to store data in (row first)
 """
 import base64
+import pdb
 from pathlib import Path
 from typing import (
     Any,
@@ -119,6 +120,8 @@ class NDArray(_NDArray):
         def array_to_list(instance: np.ndarray | DaskArray) -> list|dict:
             if isinstance(instance, DaskArray):
                 arr = instance.__array__()
+            elif isinstance(instance, NDArrayProxy):
+                arr = instance[:]
             else:
                 arr = instance
 
