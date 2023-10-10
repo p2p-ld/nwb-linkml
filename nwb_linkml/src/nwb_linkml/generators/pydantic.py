@@ -74,11 +74,11 @@ def default_template(pydantic_ver: str = "2", extra_classes:Optional[List[Type[B
 from __future__ import annotations
 from datetime import datetime, date
 from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
+from typing import Dict, Optional, Any, Union, ClassVar, Annotated, TypeVar, List
 from pydantic import BaseModel as BaseModel, Field"""
     if pydantic_ver == '2':
         template += """
-from pydantic import ConfigDict
+from pydantic import ConfigDict, BeforeValidator
         """
     template +="""
 from nptyping import Shape, Float, Float32, Double, Float64, LongLong, Int64, Int, Int32, Int16, Short, Int8, UInt, UInt32, UInt16, UInt8, UInt64, Number, String, Unicode, Unicode, Unicode, String, Bool, Datetime64
@@ -101,6 +101,8 @@ version = "{{version if version else None}}"
     ### BASE MODEL ###
     if pydantic_ver == "1":  # pragma: no cover
         template += """
+List = BaseList
+        
 class WeakRefShimBaseModel(BaseModel):
    __slots__ = '__weakref__'
 
@@ -741,7 +743,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                     else:  # pragma: no cover
                         collection_key = None
                     if s.inlined is False or collection_key is None or s.inlined_as_list is True:  # pragma: no cover
-                        pyrange = f"List[{pyrange}]"
+                        pyrange = f"List[{pyrange}] | {pyrange}"
                     else:
                         pyrange = f"Dict[{collection_key}, {pyrange}]"
                 if not s.required and not s.designates_type:
