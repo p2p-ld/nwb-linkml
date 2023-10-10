@@ -294,4 +294,4 @@ def nwb_schema() -> NWBSchemaTest:
             )
         ]
     )
-    return NWBSchemaTest(datasets=[image], groups=[images])
+    return NWBSchemaTest(datasets={'image':image}, groups={'images':images})
