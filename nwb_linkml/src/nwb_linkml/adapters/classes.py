@@ -10,8 +10,6 @@ from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
 
 
-
-
 class ClassAdapter(Adapter):
     """
     Abstract adapter to class-like things in linkml, holds methods common to
@@ -33,10 +31,24 @@ class ClassAdapter(Adapter):
         """
         Build the basic class and attributes before adding any specific
         modifications for groups or datasets.
+
+        The main distinction in behavior for this method is whether this class has a parent class -
+        ie this is one of the anonymous nested child datasets or groups within another group.
+
+        If the class has no parent, then...
+
+        * Its name is inferred from its `neurodata_type_def`,  fixed name, or `neurodata_type_inc` in that order
+        * It is just built as normal class!
+        * It will be indicated as a ``tree_root`` (which will primarily be used to invert the translation for write operations)
+
+        If the class has a parent, then...
+
+        * If it has a `neurodata_type_def` or `inc`,  that will be used as its name, otherwise concatenate `parent__child`,
+          eg. ``TimeSeries__TimeSeriesData``
+        * A slot will also be made and returned with the BuildResult, which the parent will then have as one of its attributes.
         """
 
         # Build this class
-        #name = self._get_full_name()
         kwargs = {}
         if self.parent is not None:
             kwargs['name'] = self._get_full_name()
@@ -105,7 +117,6 @@ class ClassAdapter(Adapter):
         else:
             raise ValueError('Not sure what our name is!')
 
-
         return name
 
     def _get_attr_name(self) -> str:
@@ -113,19 +124,13 @@ class ClassAdapter(Adapter):
         Get the name to use as the attribute name,
         again distinct from the actual name of the instantiated object
         """
-        # return self._get_full_name()
-        name = None
-        if self.cls.neurodata_type_def:
-            # name = camel_to_snake(self.cls.neurodata_type_def)
+        if self.cls.neurodata_type_def is not None:
             name = self.cls.neurodata_type_def
         elif self.cls.name is not None:
-            # we do have a unique name
             name = self.cls.name
-        elif self.cls.neurodata_type_inc:
-            # name = camel_to_snake(self.cls.neurodata_type_inc)
+        elif self.cls.neurodata_type_inc is not None:
             name = self.cls.neurodata_type_inc
-
-        if name is None:
+        else:
             raise ValueError(f'Class has no name!: {self.cls}')
 
         return name
@@ -136,19 +141,13 @@ class ClassAdapter(Adapter):
         used to dodge name overlaps by snake-casing!
         again distinct from the actual name of the instantiated object
         """
-        # return self._get_full_name()
-        name = None
         if self.cls.neurodata_type_def:
             name = camel_to_snake(self.cls.neurodata_type_def)
-            # name = self.cls.neurodata_type_def
         elif self.cls.name is not None:
-            # we do have a unique name
             name = self.cls.name
         elif self.cls.neurodata_type_inc:
             name = camel_to_snake(self.cls.neurodata_type_inc)
-            # name = self.cls.neurodata_type_inc
-
-        if name is None:
+        else:
             raise ValueError(f'Class has no name!: {self.cls}')
 
         return name
@@ -167,7 +166,6 @@ class ClassAdapter(Adapter):
             # so we'll... uh... treat them as slots.
              # TODO
             return 'AnyType'
-            #raise NotImplementedError('got distracted, need to implement')
 
         else:
             # flat dtype
