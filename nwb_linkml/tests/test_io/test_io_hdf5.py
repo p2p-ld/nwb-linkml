@@ -18,8 +18,6 @@ def test_hdf_read(data_dir, dset):
     # the test for now is just whether we can read it lol
     model = io.read()
 
-
-@pytest.mark.skip()
 def test_truncate_file(tmp_output_dir):
     source = tmp_output_dir / 'truncate_source.hdf5'
 
