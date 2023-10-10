@@ -1,11 +1,13 @@
 import pytest
 import os
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, List, Dict
+from dataclasses import dataclass, field
 
 from linkml_runtime.dumpers import yaml_dumper
 
 from nwb_linkml.io import schema as io
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_schema_language import Schema, Group, Dataset, Attribute
 from linkml_runtime.linkml_model import SchemaDefinition, ClassDefinition, SlotDefinition, Prefix, TypeDefinition
 import shutil
 from pathlib import Path
@@ -65,7 +67,9 @@ def data_dir() -> Path:
     path = Path(__file__).parent.resolve() / 'data'
     return path
 
-class TestSchemas(NamedTuple):
+@dataclass
+class TestSchemas():
+    __test__ = False
     core: SchemaDefinition
     imported: SchemaDefinition
     namespace: SchemaDefinition
@@ -243,12 +247,51 @@ def linkml_schema(tmp_output_dir_mod, linkml_schema_bare) -> TestSchemas:
     imported_path = test_schema_path / 'imported.yaml'
     namespace_path = test_schema_path / 'namespace.yaml'
 
-    schema.core_path = core_path,
-    schema.imported_path = imported_path,
-    schema.namespace_path = namespace_path,
+    schema.core_path = core_path
+    schema.imported_path = imported_path
+    schema.namespace_path = namespace_path
 
     yaml_dumper.dump(schema.core, schema.core_path)
     yaml_dumper.dump(schema.imported, schema.imported_path)
     yaml_dumper.dump(schema.namespace, schema.namespace_path)
     return schema
 
+
+@dataclass
+class NWBSchemaTest():
+    datasets: Dict[str, Dataset] = field(default_factory=dict)
+    groups: Dict[str, Group] = field(default_factory=dict)
+
+@pytest.fixture()
+def nwb_schema() -> NWBSchemaTest:
+    """Minimal NWB schema for testing"""
+    image = Dataset(
+        neurodata_type_def="Image",
+        dtype="numeric",
+        neurodata_type_inc="NWBData",
+        dims=[['x', 'y'], ['x', 'y', 'r, g, b'], ['x', 'y', 'r, g, b, a']],
+        shape=[[None, None], [None, None, 3], [None, None, 4]],
+        doc="An image!",
+        attributes = [
+            Attribute(dtype="float32", name="resolution", doc="resolution!"),
+            Attribute(dtype="text", name="description", doc='Description!')
+        ]
+    )
+    images = Group(
+        neurodata_type_def='Images',
+        neurodata_type_inc='NWBDataInterface',
+        default_name="Images",
+        doc='Images!',
+        attributes=[
+            Attribute(dtype="text", name='description', doc="description!")
+        ],
+        datasets=[
+            Dataset(neurodata_type_inc='Image', quantity="+", doc="images!"),
+            Dataset(neurodata_type_inc='ImageReferences',
+                    name='order_of_images',
+                    doc="Image references!",
+                    quantity='?'
+            )
+        ]
+    )
+    return NWBSchemaTest(datasets=[image], groups=[images])

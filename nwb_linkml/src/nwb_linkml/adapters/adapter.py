@@ -61,7 +61,7 @@ class BuildResult:
 
         return out_str
 
-T = TypeVar('T', Dataset, Attribute, Schema, Group)
+T = TypeVar('T', Dataset, Attribute, Schema, Group, BaseModel)
 Ts = TypeVarTuple('Ts')
 
 class Adapter(BaseModel):

@@ -27,6 +27,7 @@ class TestModules(TypedDict):
     namespace: ModuleType
     split: bool
 
+TestModules.__test__ = False
 
 def generate_and_import(linkml_schema:TestSchemas, split:bool, generator_kwargs:Optional[dict]=None) -> TestModules:
     if generator_kwargs is None:

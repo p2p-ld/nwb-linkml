@@ -209,8 +209,7 @@ class GitRepo:
         try:
             # check our commit, this also checks if we're a git repo
             if self.active_commit != self.commit and self.commit is not None:
-                warnings.warn('At wrong commit')
-                return False
+                self.commit = self.commit
 
         except GitError:
             return False

@@ -21,7 +21,7 @@ from nwb_schema_language import Namespaces
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
-from nwb_linkml.providers.git import DEFAULT_REPOS
+
 
 from nwb_linkml.ui import AdapterProgress
 
@@ -47,6 +47,7 @@ class NamespacesAdapter(Adapter):
         with hdmf-common)
         """
         from nwb_linkml.io import schema as schema_io
+        from nwb_linkml.providers.git import DEFAULT_REPOS
         ns_adapter = schema_io.load_namespace_adapter(path)
 
         # try and find imported schema

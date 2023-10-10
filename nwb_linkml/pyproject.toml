@@ -76,9 +76,15 @@ addopts = [
     "--cov=nwb_linkml",
     "--cov-append",
     "--cov-config=.coveragerc",
-    "--doctest-modules"
+    "--doctest-modules",
+    "--ignore=tests/__tmp__"
 ]
 testpaths = [
     "tests",
     'nwb_linkml/tests'
+]
+doctest_optionflags = "NORMALIZE_WHITESPACE"
+filterwarnings = [
+    "ignore:Deprecated NumPy 1.24:DeprecationWarning",
+    "ignore:parse_obj:pydantic.PydanticDeprecatedSince20"
 ]
