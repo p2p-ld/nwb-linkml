@@ -18,7 +18,7 @@ packages = [
 python = ">=3.11,<3.13"
 pyyaml = "^6.0"
 linkml-runtime = "^1.5.6"
-nwb_schema_language = "^0.1.1"
+nwb_schema_language = "^0.1.3"
 rich = "^13.5.2"
 linkml = "^1.5.7"
 nptyping = "^2.5.0"

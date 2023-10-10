@@ -66,6 +66,20 @@ patch_dtype_single_multiple = Patch(
     replacement=r'\1Union[List[CompoundDtype], \2',
 )
 
+patch_author_single_multiple = Patch(
+    phase=Phases.post_generation_pydantic,
+    path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
+    match=r"author: List\[str\]",
+    replacement="author: List[str] | str"
+)
+
+patch_contact_single_multiple = Patch(
+    phase=Phases.post_generation_pydantic,
+    path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
+    match=r"contact: List\[str\]",
+    replacement="contact: List[str] | str"
+)
+
 def run_patches(phase:Phases, verbose:bool=False):
     patches = [p for p in Patch.instances if p.phase == phase]
     for patch in patches:
