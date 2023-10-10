@@ -9,6 +9,7 @@ import pdb
 from abc import abstractmethod
 from pathlib import Path
 from typing import Literal, List, Dict, Optional, Type, Union, Tuple
+import inspect
 
 import h5py
 from enum import StrEnum
@@ -20,6 +21,7 @@ from nwb_linkml.maps import Map
 from nwb_linkml.maps.hdmf import dynamictable_to_model
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArrayProxy
+from nwb_linkml.annotations import unwrap_optional
 
 
 class ReadPhases(StrEnum):
@@ -529,6 +531,16 @@ class CompleteModelGroups(HDF5Map):
         res = {k:v for k,v in src.result.items() if not isinstance(v, HDF5_Path)}
         unpacked_results, errors, completes = resolve_references(src.result, completed)
         res.update(unpacked_results)
+
+        # now that we have the model in hand, we can solve any datasets that had an array
+        # but whose attributes are fixed (and thus should just be an array, rather than a subclass)
+        for k, v in src.model.model_fields.items():
+            annotation = unwrap_optional(v.annotation)
+            if inspect.isclass(annotation) and not issubclass(annotation, BaseModel):
+                if isinstance(res, dict) and k in res and isinstance(res[k], dict) and 'array' in res[k]:
+                    res[k] = res[k]['array']
+
+
 
         instance = src.model(**res)
         return H5ReadResult(

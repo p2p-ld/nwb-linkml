@@ -10,7 +10,6 @@ from ..fixtures import tmp_output_dir, set_config_vars, data_dir
 from nwb_linkml.io.hdf5 import HDF5IO
 from nwb_linkml.io.hdf5 import truncate_file
 
-@pytest.mark.skip()
 @pytest.mark.parametrize('dset', ['aibs.nwb'])
 def test_hdf_read(data_dir, dset):
     NWBFILE = data_dir / dset

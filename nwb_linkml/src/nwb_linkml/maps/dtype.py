@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Any
+from datetime import datetime
 
 flat_to_linkml = {
     "float" : "float",
@@ -67,6 +68,7 @@ np_to_python = {
     np.integer: int,
     np.byte: bytes,
     np.bytes_: bytes,
+    np.datetime64: datetime,
     **{n:int for n in (np.int8, np.int16, np.int32, np.int64, np.short, np.uint8, np.uint16, np.uint32, np.uint64, np.uint)},
     **{n:float for n in (np.float16, np.float32, np.floating, np.float32, np.float64, np.single, np.double, np.float_)},
     **{n:str for n in (np.character, np.str_, np.string_, np.unicode_)}
@@ -83,7 +85,8 @@ allowed_precisions = {
     'float16': ['float16', 'float32', 'float64'],
     'float32': ['float32', 'float64'],
     'utf': ['ascii'],
-    'number': ['short', 'int', 'long', 'int16', 'int32', 'int64', 'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'float', 'float16', 'float32', 'float64']
+    'number': ['short', 'int', 'long', 'int16', 'int32', 'int64', 'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'float', 'float16', 'float32', 'float64'],
+    'datetime64': ['object']
 }
 """
 Following HDMF, it turns out that specifying precision actually specifies minimum precision
