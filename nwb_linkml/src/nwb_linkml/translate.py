@@ -16,7 +16,7 @@ from linkml_runtime.dumpers import yaml_dumper
 from nwb_schema_language import Namespaces
 from nwb_linkml.io.schema import load_schema_file
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
-from nwb_linkml.map import apply_preload
+from nwb_linkml.maps.postload import apply_preload
 from nwb_linkml.adapters import SchemaAdapter, NamespacesAdapter
 #from nwb_linkml.models import core, hdmf_common
 

@@ -10,7 +10,7 @@ import yaml
 
 from nwb_schema_language import Namespaces,  Group, Dataset
 from nwb_linkml.providers.git import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
-from nwb_linkml.map import PHASES, Map
+from nwb_linkml.maps.postload import PHASES, KeyMap, apply_postload
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
 
@@ -18,11 +18,7 @@ from nwb_linkml.adapters.schema import SchemaAdapter
 def load_yaml(path:Path) -> dict:
     with open(path, 'r') as file:
         ns_dict = yaml.safe_load(file)
-
-    # apply maps
-    maps = [m for m in Map.instances if m.phase == PHASES.postload]
-    for amap in maps:
-        ns_dict = amap.apply(ns_dict)
+    ns_dict = apply_postload(ns_dict)
     return ns_dict
 
 def _load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
@@ -38,10 +34,7 @@ def _load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
 def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
     if yaml is not None:
         source = yaml
-        # apply maps
-        maps = [m for m in Map.instances if m.phase == PHASES.postload]
-        for amap in maps:
-            source = amap.apply(source)
+        source = apply_postload(source)
     else:
         source = load_yaml(path)
 

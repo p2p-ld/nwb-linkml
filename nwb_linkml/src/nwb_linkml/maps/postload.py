@@ -1,24 +1,26 @@
+"""
+Maps to change the loaded .yaml from nwb schema before it's given to the nwb_schema_language models
+"""
 from dataclasses import dataclass
-from typing import ClassVar, List, Optional
 from enum import StrEnum
-import ast
+from typing import Optional, ClassVar, List
 import re
+import ast
 
-class MAP_TYPES(StrEnum):
-    key = 'key'
-    """Mapping the name of one key to another key"""
+from nwb_linkml.maps import Map
+
 
 class SCOPE_TYPES(StrEnum):
     namespace = 'namespace'
+
 
 class PHASES(StrEnum):
     postload = "postload"
     """After the YAML for a model has been loaded"""
 
 
-
 @dataclass
-class Map:
+class KeyMap():
     scope: str
     """The namespace that the map is relevant to"""
     scope_type: SCOPE_TYPES
@@ -36,24 +38,11 @@ class Map:
     phase: Optional[PHASES] = None
 
 
-    instances: ClassVar[List['Map']] = []
+    instances: ClassVar[List['KeyMap']] = []
     """
     Maps that get defined!!!
     """
 
-    def apply(self):
-        raise NotImplementedError('do this in a subclass')
-
-    def __post_init__(self):
-        self.instances.append(self)
-
-
-
-# def replace_keys(input: dict, source: str, target: str) -> dict:
-#     """Recursively change keys in a dictionary"""
-
-
-class KeyMap(Map):
     def apply(self, input: dict) -> dict:
         """
         Change all keys from source to target in a super naive way.
@@ -65,9 +54,34 @@ class KeyMap(Map):
         out = ast.literal_eval(input_str)
         return out
 
+    def __post_init__(self):
+        self.instances.append(self)
 
-def apply_preload(ns_dict) -> dict:
-    maps = [m for m in Map.instances if m.phase == PHASES.postload]
+
+MAP_HDMF_DATATYPE_DEF = KeyMap(
+    source="\'data_type_def\'",
+    target="\'neurodata_type_def\'",
+    scope='hdmf-common',
+    scope_type=SCOPE_TYPES.namespace,
+    phase=PHASES.postload
+)
+
+MAP_HDMF_DATATYPE_INC = KeyMap(
+    source="\'data_type_inc\'",
+    target="\'neurodata_type_inc\'",
+    scope='hdmf-common',
+    scope_type=SCOPE_TYPES.namespace,
+    phase=PHASES.postload
+)
+
+
+class MAP_TYPES(StrEnum):
+    key = 'key'
+    """Mapping the name of one key to another key"""
+
+
+def apply_postload(ns_dict) -> dict:
+    maps = [m for m in KeyMap.instances if m.phase == PHASES.postload]
     for amap in maps:
         ns_dict = amap.apply(ns_dict)
     return ns_dict

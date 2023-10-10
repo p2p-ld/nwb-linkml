@@ -6,7 +6,7 @@ so we will make our own mapping class here and re-evaluate whether they should b
 """
 import datetime
 import pdb
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from pathlib import Path
 from typing import Literal, List, Dict, Optional, Type, Union, Tuple
 
@@ -16,6 +16,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, ConfigDict
 
 from nwb_linkml.providers.schema import SchemaProvider
+from nwb_linkml.maps import Map
 from nwb_linkml.maps.hdmf import dynamictable_to_model
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArrayProxy
@@ -115,7 +116,7 @@ class H5ReadResult(BaseModel):
 FlatH5 = Dict[str, H5SourceItem]
 
 
-class HDF5Map(ABC):
+class HDF5Map(Map):
     phase: ReadPhases
     priority: int = 0
     """

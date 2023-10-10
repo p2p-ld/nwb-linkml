@@ -152,7 +152,8 @@ class ClassAdapter(Adapter):
 
         return name
 
-    def handle_dtype(self, dtype: DTypeType | None) -> str:
+    @classmethod
+    def handle_dtype(cls, dtype: DTypeType | None) -> str:
         if isinstance(dtype, ReferenceDtype):
             return dtype.target_type
         elif dtype is None or dtype == []:

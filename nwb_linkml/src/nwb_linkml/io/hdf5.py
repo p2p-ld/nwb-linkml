@@ -35,7 +35,6 @@ from tqdm import tqdm
 import numpy as np
 
 from nwb_linkml.maps.hdf5 import H5SourceItem, flatten_hdf, ReadPhases, ReadQueue
-from nwb_linkml.translate import generate_from_nwbfile
 #from nwb_linkml.models.core_nwb_file import NWBFile
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
@@ -49,12 +48,6 @@ class HDF5IO():
     def __init__(self, path:Path):
         self.path = Path(path)
         self._modules: Dict[str, ModuleType] = {}
-
-    @property
-    def modules(self) -> Dict[str, ModuleType]:
-        if len(self._modules) == 0:
-            self._modules = generate_from_nwbfile(self.path)
-        return self._modules
 
     @overload
     def read(self, path:None) -> 'NWBFile': ...
