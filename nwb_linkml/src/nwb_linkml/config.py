@@ -2,8 +2,9 @@
 Manage the operation of nwb_linkml from environmental variables
 """
 import tempfile
+from typing import Any
 from pathlib import Path
-from pydantic import Field, DirectoryPath, computed_field, field_validator, FieldValidationInfo
+from pydantic import Field, DirectoryPath, computed_field, field_validator, model_validator, FieldValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Config(BaseSettings):
@@ -47,6 +48,15 @@ class Config(BaseSettings):
         v.mkdir(exist_ok=True)
         assert v.exists()
         return v
+
+    @model_validator(mode='after')
+    def folder_exists(self) -> 'Config':
+        for field, path in self.model_dump().items():
+            if isinstance(path, Path):
+                path.mkdir(exist_ok=True, parents=True)
+                assert path.exists()
+        return self
+
 
     def __post_init__(self):
         self.cache_dir.mkdir(exist_ok=True)

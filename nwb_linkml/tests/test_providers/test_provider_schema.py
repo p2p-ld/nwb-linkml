@@ -4,6 +4,8 @@ import os
 import sys
 import warnings
 from pathlib import Path
+import yaml
+from pprint import pformat
 
 from typing import Optional, Union, List
 from ..fixtures import tmp_output_dir
@@ -13,6 +15,7 @@ import pytest
 from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
 import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
+from nwb_linkml.providers.git import DEFAULT_REPOS
 
 
 CORE_MODULES = (
@@ -40,9 +43,9 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
 
     provider = LinkMLProvider(path=tmp_output_dir, allow_repo=False)
     # clear any prior output
-    shutil.rmtree(provider.path, ignore_errors=True)
+    shutil.rmtree(provider.path)
     assert not provider.path.exists()
-    assert not provider.namespace_path('core', repo_version).exists()
+    assert not (provider.namespace_path('core', repo_version) / 'namespace.yaml').exists()
 
     # end to end, check that we can get the 'core' repo at the latest version
     # in the gitrepo
@@ -51,6 +54,30 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
     assert core.schema.version == schema_version
     assert all([mod in core.schema.imports for mod in CORE_MODULES])
     assert schema_dir in [path.name for path in (provider.path / 'core').iterdir()]
+
+def test_linkml_build_from_yaml(tmp_output_dir):
+    core = DEFAULT_REPOS['core']
+    git_dir = nwb_linkml.Config().git_dir / 'core'
+    if git_dir.exists():
+        shutil.rmtree(str(git_dir))
+    ns_file = core.provide_from_git('2.6.0')
+    assert git_dir.exists()
+    assert ns_file.exists()
+
+    # for the sake of debugging CI...
+    with open(ns_file) as nfile:
+        ns_yaml = yaml.safe_load(nfile)
+    warnings.warn(pformat(ns_yaml))
+    files = [str(f) for f in list(ns_file.parent.glob('*.yaml'))]
+    warnings.warn('\n'.join(files))
+
+    provider = LinkMLProvider(path=tmp_output_dir, allow_repo=False)
+
+    res = provider.build_from_yaml(ns_file)
+    warnings.warn(pformat(res))
+
+
+
 
 
 @pytest.mark.skip()

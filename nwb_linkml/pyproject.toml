@@ -12,6 +12,9 @@ packages = [
     {include = "nwb_linkml", from="src"},
     #{include = "nwb_schema_language", from="../nwb_schema_language/src"}
 ]
+include = [
+    'src/nwb_linkml/schema/**/*'
+]
 
 
 [tool.poetry.dependencies]
