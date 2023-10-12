@@ -17,6 +17,8 @@ import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
 from nwb_linkml.providers.git import DEFAULT_REPOS
 from nwb_linkml.adapters import NamespacesAdapter
+from nwb_linkml.types.ndarray import NDArray
+from nptyping import Shape, UByte
 
 
 CORE_MODULES = (
@@ -71,7 +73,6 @@ def test_linkml_build_from_yaml(tmp_output_dir):
     res = provider.build_from_yaml(ns_file)
 
 
-@pytest.mark.skip()
 @pytest.mark.depends(on=['test_linkml_provider'])
 @pytest.mark.parametrize(
     ['class_name', 'test_fields'],
@@ -82,7 +83,7 @@ def test_linkml_build_from_yaml(tmp_output_dir):
             'comments': Optional[str],
             'data': 'TimeSeriesData',
             'timestamps': 'Optional', # __name__ just gets the first part of Optional[TimeSeriesTimestamps]
-            'control': Optional[List[int]],
+            'control': Optional[NDArray[Shape['* num_times'], UByte]],
         })
     ]
 )

@@ -24,6 +24,7 @@ The `serialize` method
 
 """
 import pdb
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Dict, Set, Tuple, Optional, TypedDict, Type
@@ -407,8 +408,15 @@ class NWBPydanticGenerator(PydanticGenerator):
                 shape_part = str(attr.maximum_cardinality)
             else:
                 shape_part = "*"
-            # do this cheaply instead of using regex because i want to see if this works at all first...
-            name_part = attr.name.replace(',', '_').replace(' ', '_').replace('__', '_').replace('|','_')
+
+            # do this with the most heinous chain of string replacements rather than regex
+            # because i am still figuring out what needs to be subbed lol
+            name_part = attr.name.replace(',', '_'
+                ).replace(' ', '_'
+                ).replace('__', '_'
+                ).replace('|','_'
+                ).replace('-','_'
+                ).replace('+','plus')
 
             dim_pieces.append(' '.join([shape_part, name_part]))
 
