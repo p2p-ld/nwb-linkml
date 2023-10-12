@@ -97,10 +97,10 @@ class NamespacesAdapter(Adapter):
 
             # add in monkeypatch nwb types
             nwb_lang = copy(NwbLangSchema)
-            nwb_lang.annotations = {
+            nwb_lang.annotations.update({
                 'is_namespace': Annotation(tag='is_namespace', value= 'False'),
                 'namespace': Annotation(tag='namespace', value= ns.name)
-            }
+            })
             lang_schema_name = '.'.join([ns.name, 'nwb.language'])
             nwb_lang.name = lang_schema_name
             sch_result.schemas.append(nwb_lang)

@@ -67,6 +67,7 @@ NwbLangSchema = SchemaDefinition(
     classes=[Arraylike, AnyType],
     types=DTypeTypes,
     imports=['linkml:types'],
-    prefixes={'linkml': Prefix('linkml','https://w3id.org/linkml')}
+    prefixes={'linkml': Prefix('linkml','https://w3id.org/linkml')},
+    annotations=[{'tag': 'is_namespace', 'value': False}, {'tag': 'namespace', 'value': ''}]
 )
 
