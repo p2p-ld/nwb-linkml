@@ -1,5 +1,5 @@
 """
-Since NWB doesn't necessarily have a term for a single nwb schema file, we're going
+I don't know if NWB necessarily has a term for a single nwb schema file, so we're going
 to call them "schema" objects
 """
 from typing import Optional, List, TYPE_CHECKING, Type
@@ -9,8 +9,6 @@ from pydantic import Field, PrivateAttr
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.adapters.group import GroupAdapter
-if TYPE_CHECKING:
-    pass
 
 from nwb_schema_language import Group, Dataset
 from typing import NamedTuple
@@ -36,10 +34,6 @@ class SchemaAdapter(Adapter):
     version: Optional[str] = Field(
         None,
         description="Version of schema, populated by NamespacesAdapter since individual schema files dont know their version in NWB Schema Lang"
-    )
-    split: bool = Field(
-        False,
-        description="Split anonymous subclasses into a separate schema file"
     )
     _created_classes: List[Type[Group | Dataset]] = PrivateAttr(default_factory=list)
 
@@ -81,78 +75,18 @@ class SchemaAdapter(Adapter):
         if len(res.slots) > 0:
             raise RuntimeError('Generated schema in this translation can only have classes, all slots should be attributes within a class')
 
-        if self.split:
-            sch_split = self.split_subclasses(res)
-            return sch_split
-
-        else:
-
-            sch = SchemaDefinition(
-                name = self.name,
-                id = self.name,
-                imports = [i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ],
-                classes=res.classes,
-                slots=res.slots,
-                types=res.types,
-                version=self.version
-            )
-            # every schema needs the language elements
-            sch.imports.append('.'.join([self.namespace, 'nwb.language']))
-            return BuildResult(schemas=[sch])
-
-    def split_subclasses(self, classes: BuildResult) -> BuildResult:
-        """
-        Split the generated classes into top-level "main" classes and
-        nested/anonymous "split" classes.
-
-        Args:
-            classes (BuildResult): A Build result object containing the classes
-                for the schema
-
-        Returns:
-            :class:`.SplitSchema`
-        """
-        # just split by the presence or absence of __
-        main_classes = [c for c in classes.classes if '__' not in c.name]
-        split_classes = [c for c in classes.classes if '__' in c.name]
-        split_sch_name = '.'.join([self.name, 'include'])
-
-
-        imports = [i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ]
-        imports.append('nwb.language')
-        # need to mutually import the two schemas because the subclasses
-        # could refer to the main classes
-        main_imports = imports
-        if len(split_classes)>0:
-            main_imports.append(split_sch_name)
-        imports.append(self.name)
-        main_sch = SchemaDefinition(
-            name=self.name,
-            id=self.name,
-            imports=main_imports,
-            classes=main_classes,
-            slots=classes.slots,
-            types=classes.types
+        sch = SchemaDefinition(
+            name = self.name,
+            id = self.name,
+            imports = [i.name if isinstance(i, SchemaAdapter) else i for i in self.imports ],
+            classes=res.classes,
+            slots=res.slots,
+            types=res.types,
+            version=self.version
         )
-
-        split_sch = SchemaDefinition(
-            name=split_sch_name,
-            id=split_sch_name,
-            imports=imports,
-            classes=split_classes,
-            slots=classes.slots,
-            types=classes.types
-        )
-        if len(split_classes) > 0:
-            res = BuildResult(
-                schemas=[main_sch, split_sch]
-            )
-        else:
-            res = BuildResult(
-                schemas=[main_sch]
-            )
-        return res
-
+        # every schema needs the language elements
+        sch.imports.append('.'.join([self.namespace, 'nwb.language']))
+        return BuildResult(schemas=[sch])
 
 
     @property

@@ -31,12 +31,10 @@ class NamespacesAdapter(Adapter):
     imported: List['NamespacesAdapter'] = Field(default_factory=list)
 
     _imports_populated: bool = PrivateAttr(False)
-    _split: bool = PrivateAttr(False)
 
     def __init__(self, **kwargs):
         super(NamespacesAdapter, self).__init__(**kwargs)
         self._populate_schema_namespaces()
-        self.split = self._split
 
     @classmethod
     def from_yaml(cls, path:Path) -> 'NamespacesAdapter':
@@ -120,29 +118,6 @@ class NamespacesAdapter(Adapter):
             sch_result.schemas.append(ns_schema)
 
         return sch_result
-
-    @property
-    def split(self) -> bool:
-        """
-        Sets the :attr:`.SchemaAdapter.split` attribute for all contained and imported schema
-
-        Args:
-            split (bool): Set the generated schema to be split or not
-
-        Returns:
-            bool: whether the schema are set to be split!
-        """
-        return self._split
-
-    @split.setter
-    def split(self, split):
-        for sch in self.schemas:
-            sch.split = split
-        for ns in self.imported:
-            for sch in ns.schemas:
-                sch.split = split
-
-        self._split = split
 
     def _populate_schema_namespaces(self):
         # annotate for each schema which namespace imports it
