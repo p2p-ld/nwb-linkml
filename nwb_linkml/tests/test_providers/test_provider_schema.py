@@ -38,10 +38,11 @@ CORE_MODULES = (
 )
 def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_dir):
 
-    provider = LinkMLProvider(path=tmp_output_dir)
+    provider = LinkMLProvider(path=tmp_output_dir, allow_repo=False)
     # clear any prior output
     shutil.rmtree(provider.path, ignore_errors=True)
     assert not provider.path.exists()
+    assert not provider.namespace_path('core', repo_version).exists()
 
     # end to end, check that we can get the 'core' repo at the latest version
     # in the gitrepo

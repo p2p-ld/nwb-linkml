@@ -164,7 +164,7 @@ class MapArrayLikeAttributes(DatasetMap):
         if all([cls.dims, cls.shape]) and \
             cls.neurodata_type_inc != 'VectorData' and \
             has_attrs(cls) and \
-            (dtype is 'AnyType' or dtype in flat_to_linkml):
+            (dtype == 'AnyType' or dtype in flat_to_linkml):
             return True
 
         else:

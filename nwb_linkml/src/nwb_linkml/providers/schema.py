@@ -82,6 +82,11 @@ class Provider(ABC):
     Attributes:
         config (:class:`.Config`): Configuration for the directories used by this
             provider, unless overridden by ``path``
+        allow_repo (bool): Allow the pathfinder to return the installed repository/package,
+            useful to enforce building into temporary directories, decoupling finding a path
+            during loading vs. building. Building into the repo is still possible if both
+            namespace and version are provided (ie. the path is fully qualified) and
+            :attr:`.config`'s path is the repository path.
         cache_dir (:class:`pathlib.Path`): The main cache directory under which the other
             providers will store the things they provide
     """
@@ -90,6 +95,7 @@ class Provider(ABC):
 
     def __init__(self,
                  path: Optional[Path] = None,
+                 allow_repo: bool = True,
                  verbose: bool = True):
         if path is not None:
             config = Config(cache_dir=path)
@@ -97,6 +103,7 @@ class Provider(ABC):
             config = Config()
         self.config = config
         self.cache_dir = config.cache_dir
+        self.allow_repo = allow_repo
         self.verbose = verbose
 
     @property
@@ -124,7 +131,7 @@ class Provider(ABC):
             self,
             namespace: str,
             version: Optional[str] = None,
-            allow_repo: bool = True
+            allow_repo: Optional[bool] = None
     ) -> Path:
         """
         Get the location for a given namespace of this type.
@@ -141,12 +148,11 @@ class Provider(ABC):
                 recent *version*, but the most recently *generated* version
                 because it's assumed that's the one you want if you're just
                 gesturally reaching for one.
-            allow_repo (bool): Allow the pathfinder to return the installed repository/package,
-                useful to enforce building into temporary directories, decoupling finding a path
-                during loading vs. building. Building into the repo is still possible if both
-                namespace and version are provided (ie. the path is fully qualified) and
-                :attr:`.config`'s path is the repository path.
+            allow_repo (bool): Optional - override instance-level ``allow_repo`` attr
         """
+        if allow_repo is None:
+            allow_repo = self.allow_repo
+
         namespace_module = module_case(namespace)
         namespace_path = self.path / namespace_module
         if not namespace_path.exists() and namespace in ('core', 'hdmf-common') and allow_repo:
