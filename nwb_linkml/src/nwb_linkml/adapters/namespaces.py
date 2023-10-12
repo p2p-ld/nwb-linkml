@@ -73,14 +73,14 @@ class NamespacesAdapter(Adapter):
             if progress is not None:
                 try:
                     progress.update(sch.namespace, action=sch.name)
-                except KeyError:
-                    # happens when we skip builds due to cachine
+                except KeyError: # pragma: no cover
+                    # happens when we skip builds due to caching
                     pass
             sch_result += sch.build()
             if progress is not None:
                 try:
                     progress.update(sch.namespace, advance=1)
-                except KeyError:
+                except KeyError: # pragma: no cover
                     # happens when we skip builds due to caching
                     pass
 
@@ -113,7 +113,7 @@ class NamespacesAdapter(Adapter):
                 description = ns.doc,
                 version = ns.version,
                 imports=ns_schemas,
-                annotations=[{'tag': 'namespace', 'value': True}]
+                annotations=[{'tag': 'is_namespace', 'value': True}, {'tag': 'namespace', 'value': ns.name}]
             )
             sch_result.schemas.append(ns_schema)
 

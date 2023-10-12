@@ -220,7 +220,7 @@ def linkml_schema_bare() -> TestSchemas:
             id="namespace",
             version="1.1.1",
             default_prefix="namespace",
-            annotations={'namespace': {'tag': 'namespace', 'value': 'True'}},
+            annotations=[{'tag': 'is_namespace', 'value': 'True'}, {'tag': 'namespace', 'value': 'core'}],
             description="A namespace package that should import all other classes",
             imports=['core', 'imported']
         )

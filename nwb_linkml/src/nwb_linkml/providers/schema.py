@@ -384,7 +384,7 @@ class LinkMLProvider(Provider):
         # write schemas to yaml files
         build_result = {}
 
-        namespace_sch = [sch for sch in built.schemas if 'namespace' in sch.annotations.keys()]
+        namespace_sch = [sch for sch in built.schemas if sch.annotations.get('is_namespace', False) and sch.annotations['is_namespace'].value == 'True']
         for ns_linkml in namespace_sch:
             version = ns_adapter.versions[ns_linkml.name]
             version_path = self.namespace_path(ns_linkml.name, version, allow_repo=False)

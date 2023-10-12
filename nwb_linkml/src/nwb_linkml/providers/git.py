@@ -135,18 +135,16 @@ class GitRepo:
 
     @commit.setter
     def commit(self, commit:str|None):
-        # first get out of a potential detached head state
-        # that would cause a call to "HEAD" to fail in unexpected ways
-        if self.detached_head:
-            self._git_call('checkout', self.default_branch)
+        # setting commit as None should do nothing if we have already cloned,
+        # and if we are just cloning we will always be at the most recent commit anyway
+        if commit is not None:
+            # first get out of a potential detached head state
+            # that would cause a call to "HEAD" to fail in unexpected ways
+            if self.detached_head:
+                self._git_call('checkout', self.default_branch)
 
-        if commit is None:
-            if len(self.namespace.versions) > 0:
-                self._git_call('checkout', self.namespace.versions[-1])
-            else:
-                self._git_call('checkout', "HEAD")
-        else:
             self._git_call('checkout', commit)
+
         self._git_call('submodule', 'update', '--init', '--recursive')
         self._commit = commit
 
@@ -277,7 +275,6 @@ class GitRepo:
                     self.cleanup()
                 else:
                     # already have it, just ensure commit and return
-
                     self.commit = self.commit
                     return
         elif self.temp_directory.exists():

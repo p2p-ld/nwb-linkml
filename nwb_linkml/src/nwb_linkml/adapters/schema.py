@@ -72,7 +72,7 @@ class SchemaAdapter(Adapter):
         for group in self.groups:
             res += GroupAdapter(cls=group).build()
 
-        if len(res.slots) > 0:
+        if len(res.slots) > 0: # pragma: no cover - hard to induce this error because the child classes don't fuck up like this
             raise RuntimeError('Generated schema in this translation can only have classes, all slots should be attributes within a class')
 
         sch = SchemaDefinition(
@@ -82,7 +82,8 @@ class SchemaAdapter(Adapter):
             classes=res.classes,
             slots=res.slots,
             types=res.types,
-            version=self.version
+            version=self.version,
+            annotations=[{'tag': 'is_namespace', 'value': False}, {'tag': 'namespace', 'value': self.namespace}]
         )
         # every schema needs the language elements
         sch.imports.append('.'.join([self.namespace, 'nwb.language']))

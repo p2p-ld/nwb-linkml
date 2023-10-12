@@ -1,3 +1,5 @@
+import pdb
+
 import pytest
 from ..fixtures import nwb_core_fixture
 from nwb_schema_language import Dataset, Group
@@ -33,3 +35,13 @@ def test_populate_imports(nwb_core_fixture):
 
 def test_build(nwb_core_fixture):
     pass
+
+def test_skip_imports(nwb_core_fixture):
+    """
+    We can build just the namespace in question without also building the other namespaces that it imports
+    """
+    res = nwb_core_fixture.build(skip_imports=True)
+
+    # we shouldn't have any of the hdmf-common schema in with us
+    namespaces = [sch.annotations['namespace'].value for sch in res.schemas]
+    assert all([ns == 'core' for ns in namespaces])
