@@ -40,6 +40,7 @@ so eg. for the linkML and pydantic providers:
 """
 import pdb
 import shutil
+from pprint import pformat
 from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict, Type, Callable
 from types import ModuleType
 from pathlib import Path
@@ -391,6 +392,10 @@ class LinkMLProvider(Provider):
         build_result = {}
 
         namespace_sch = [sch for sch in built.schemas if 'is_namespace' in sch.annotations and sch.annotations['is_namespace'].value == 'True']
+        warnings.warn('WITHIN SCHEMA PROVIDER BUILD')
+        warnings.warn(pformat(namespace_sch))
+        warnings.warn('-------')
+        warnings.warn(pformat(built))
         for ns_linkml in namespace_sch:
             version = ns_adapter.versions[ns_linkml.name]
             version_path = self.namespace_path(ns_linkml.name, version, allow_repo=False)
@@ -402,7 +407,7 @@ class LinkMLProvider(Provider):
             other_schema = [sch for sch in built.schemas if
                             sch.name.split('.')[0] == ns_linkml.name and sch not in namespace_sch]
 
-            if force or (not force and not ns_file.exists()):
+            if force or not ns_file.exists():
                 ns_linkml = self._fix_schema_imports(ns_linkml, ns_adapter, ns_file)
                 yaml_dumper.dump(ns_linkml, ns_file)
 
