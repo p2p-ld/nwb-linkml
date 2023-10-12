@@ -5,7 +5,7 @@ import pytest
 from pathlib import Path
 import numpy as np
 
-from ..fixtures import tmp_output_dir, set_config_vars, data_dir
+from ..fixtures import tmp_output_dir, data_dir
 
 from nwb_linkml.io.hdf5 import HDF5IO
 from nwb_linkml.io.hdf5 import truncate_file

@@ -87,7 +87,7 @@ def load_namespace_adapter(
         namespaces = _load_namespaces(path)
     elif isinstance(namespace, NamespaceRepo):
         path = namespace.provide_from_git(commit=version)
-        namespaces = _load_namespaces(namespace)
+        namespaces = _load_namespaces(path)
 
     elif isinstance(namespace, Namespaces):
         namespaces = namespace

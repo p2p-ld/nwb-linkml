@@ -6,7 +6,7 @@ import warnings
 from pathlib import Path
 
 from typing import Optional, Union, List
-from ..fixtures import tmp_output_dir, set_config_vars
+from ..fixtures import tmp_output_dir
 
 import pytest
 

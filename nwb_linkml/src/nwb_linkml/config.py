@@ -33,6 +33,12 @@ class Config(BaseSettings):
         """Directory to store generated pydantic models"""
         return self.cache_dir / 'pydantic'
 
+    @computed_field
+    @property
+    def git_dir(self) -> Path:
+        """Directory for :class:`nwb_linkml.providers.git.GitRepo` to clone to"""
+        return self.cache_dir / 'git'
+
 
     @field_validator('cache_dir', mode='before')
     @classmethod
@@ -46,5 +52,6 @@ class Config(BaseSettings):
         self.cache_dir.mkdir(exist_ok=True)
         self.linkml_dir.mkdir(exist_ok=True)
         self.pydantic_dir.mkdir(exist_ok=True)
+        self.git_dir.mkdir(exist_ok=True)
 
 

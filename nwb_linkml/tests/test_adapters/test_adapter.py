@@ -16,14 +16,19 @@ def test_walk(nwb_core_fixture):
     Not sure exactly what should be tested here, for now just testing that we get an expected value
     """
     everything = nwb_core_fixture.walk(nwb_core_fixture)
-    assert len(list(everything)) == 9959
+
+    # number of items obviously changes based on what version we're talking about
+    # this is configured as a test matrix on the nwb_core_fixture, currently only testing the latest version
+    if nwb_core_fixture.versions['core'] == '2.6.0-alpha' and nwb_core_fixture.versions['hdmf-common'] == '1.5.0':
+
+        assert len(list(everything)) == 9908
 
 @pytest.mark.parametrize(
     ['walk_class', 'known_number'],
     [
-        (Dataset, 211),
+        (Dataset, 210),
         (Group, 144),
-        ((Dataset, Group), 355),
+        ((Dataset, Group), 354),
         (Schema, 19)
     ]
 )
@@ -48,7 +53,7 @@ def test_walk_field_values(nwb_core_fixture):
     text_models = list(nwb_core_fixture.walk_field_values(nwb_core_fixture, 'dtype', value='text'))
     assert all([d.dtype == 'text' for d in text_models])
     # 135 known value from regex search
-    assert len(text_models) == len([d for d in dtype_models if d.dtype == 'text']) == 135
+    assert len(text_models) == len([d for d in dtype_models if d.dtype == 'text']) == 134
 
 
 def test_build_result(linkml_schema_bare):

@@ -11,6 +11,8 @@ import shutil
 
 from pydantic import BaseModel, HttpUrl, FilePath, DirectoryPath, Field
 
+from nwb_linkml.config import Config
+
 class NamespaceRepo(BaseModel):
     """
     Definition of one NWB namespaces file to import from a git repository
@@ -55,10 +57,23 @@ class GitRepo:
     """
     Manage a temporary git repository that provides the NWB yaml files
     """
-    def __init__(self, namespace:NamespaceRepo, commit:str|None=None):
-        self._temp_directory = None
+    def __init__(
+            self,
+            namespace:NamespaceRepo,
+            commit:str|None=None,
+            path: Optional[Path] = None
+    ):
+        """
+        Args:
+            namespace (:class:`.NamespaceRepo`): The namespace repository to clone!
+            commit (str): A specific commit or tag to check out
+            path (:class:`pathlib.Path`): A directory to clone to - if ``None``, use :attr:`~.Config.git_dir` / :attr:`.NamespaceRepo.name`
+        """
+        self._temp_directory = path
         self.namespace = namespace
         self._commit = commit
+
+
 
     def _git_call(self, *args) -> subprocess.CompletedProcess:
         res = subprocess.run(
@@ -75,7 +90,8 @@ class GitRepo:
         Temporary directory where this repository will be cloned to
         """
         if self._temp_directory is None:
-            self._temp_directory = Path(tempfile.gettempdir()) / f'nwb_linkml__{self.namespace.name}'
+            git_dir = Config().git_dir
+            self._temp_directory = git_dir / self.namespace.name
             if not self._temp_directory.exists():
                 self._temp_directory.mkdir(parents=True)
 
@@ -222,12 +238,20 @@ class GitRepo:
         # otherwise we're good
         return True
 
-    def cleanup(self):
+    def cleanup(self, force: bool=False):
         """
         Delete contents of temporary directory
+
+        If the temp_directory is outside the system temporary directory or
+
+        Args:
+            force (bool): If ``True``, remove git directory no matter where it is
         """
-        if not str(self.temp_directory).startswith(tempfile.gettempdir()):
-            warnings.warn('Temp directory is outside of the system temp dir, not deleting in case this has been changed by mistake')
+        if not force and not (
+                str(self.temp_directory).startswith(tempfile.gettempdir()) or
+                str(self.temp_directory).startswith(str(Config().git_dir))
+        ):
+            warnings.warn('Temp directory is outside of the system temp dir or git directory set by environmental variables, not deleting in case this has been changed by mistake')
             self._temp_directory = None
             return
 

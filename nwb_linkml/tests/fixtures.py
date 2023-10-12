@@ -45,9 +45,6 @@ def tmp_output_dir_mod(tmp_output_dir) -> Path:
     subpath.mkdir()
     return subpath
 
-@pytest.fixture(autouse=True, scope='session')
-def set_config_vars(tmp_output_dir):
-    os.environ['NWB_LINKML_CACHE_DIR'] = str(tmp_output_dir)
 
 
 
@@ -59,6 +56,9 @@ def set_config_vars(tmp_output_dir):
 def nwb_core_fixture(request) -> NamespacesAdapter:
     nwb_core = io.load_nwb_core(**request.param)
     nwb_core.populate_imports()
+    assert request.param['core_version'] in nwb_core.versions['core'] # 2.6.0 is actually 2.6.0-alpha
+    assert nwb_core.versions['hdmf-common'] == request.param['hdmf_version']
+
     return nwb_core
 
 
