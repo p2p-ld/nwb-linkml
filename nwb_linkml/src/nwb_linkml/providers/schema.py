@@ -392,10 +392,6 @@ class LinkMLProvider(Provider):
         build_result = {}
 
         namespace_sch = [sch for sch in built.schemas if 'is_namespace' in sch.annotations and sch.annotations['is_namespace'].value in  ('True', True)]
-        warnings.warn('WITHIN SCHEMA PROVIDER BUILD')
-        warnings.warn(pformat(namespace_sch))
-        warnings.warn('-------')
-        #warnings.warn(pformat(built.schemas))
         for ns_linkml in namespace_sch:
             version = ns_adapter.versions[ns_linkml.name]
             version_path = self.namespace_path(ns_linkml.name, version, allow_repo=False)

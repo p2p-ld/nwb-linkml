@@ -185,7 +185,7 @@ class {{ c.name }}
         {{ ' ' }}= {{ attr.annotations['fixed_field'].value }}
         {%- else -%}
         {{ ' ' }}= Field(
-    {%- if predefined_slot_values[c.name][attr.name] -%}
+    {%- if predefined_slot_values[c.name][attr.name] is string -%}
         {{ predefined_slot_values[c.name][attr.name] }}
     {%- elif attr.required -%}
         ...

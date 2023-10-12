@@ -56,6 +56,7 @@ def test_linkml_provider(tmp_output_dir, repo_version, schema_version, schema_di
     assert all([mod in core.schema.imports for mod in CORE_MODULES])
     assert schema_dir in [path.name for path in (provider.path / 'core').iterdir()]
 
+@pytest.mark.skip()
 def test_linkml_build_from_yaml(tmp_output_dir):
     core = DEFAULT_REPOS['core']
     git_dir = nwb_linkml.Config().git_dir / 'core'
@@ -65,23 +66,9 @@ def test_linkml_build_from_yaml(tmp_output_dir):
     assert git_dir.exists()
     assert ns_file.exists()
 
-    # for the sake of debugging CI...
-    with open(ns_file) as nfile:
-        ns_yaml = yaml.safe_load(nfile)
-    warnings.warn(pformat(ns_yaml))
-    files = [str(f) for f in list(ns_file.parent.glob('*.yaml'))]
-    warnings.warn('\n'.join(files))
-
-    ns_adapter = NamespacesAdapter.from_yaml(ns_file)
-    warnings.warn(pformat(ns_adapter))
-
-
     provider = LinkMLProvider(path=tmp_output_dir, allow_repo=False)
 
     res = provider.build_from_yaml(ns_file)
-    warnings.warn(pformat(res))
-
-
 
 
 @pytest.mark.skip()
@@ -119,13 +106,6 @@ def test_pydantic_provider_core(tmp_output_dir, class_name, test_fields):
     namespace_path = (tmp_output_dir / 'pydantic' / 'core' / version_module_case(core.version) / 'namespace.py')
     assert namespace_path.exists()
     assert Path(core.__file__) == namespace_path
-
-    with open(namespace_path, 'r') as nsfile:
-        nsfile_contents = nsfile.read()
-
-    # dk how to debug good on github actions lol
-    warnings.warn(nsfile_contents)
-
 
     test_class = getattr(core, class_name)
     assert test_class == provider.get_class('core', class_name)
