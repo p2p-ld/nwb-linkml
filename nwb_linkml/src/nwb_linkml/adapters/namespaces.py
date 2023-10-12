@@ -10,7 +10,7 @@ from typing import List, Optional, Dict
 from pathlib import Path
 from pydantic import BaseModel, Field, validator, PrivateAttr
 from pprint import pformat
-from linkml_runtime.linkml_model import SchemaDefinition
+from linkml_runtime.linkml_model import SchemaDefinition, Annotation
 from linkml_runtime.dumpers import yaml_dumper
 from time import sleep
 from copy import copy
@@ -97,6 +97,10 @@ class NamespacesAdapter(Adapter):
 
             # add in monkeypatch nwb types
             nwb_lang = copy(NwbLangSchema)
+            nwb_lang.annotations = {
+                'is_namespace': Annotation(tag='is_namespace', value= 'False'),
+                'namespace': Annotation(tag='namespace', value= ns.name)
+            }
             lang_schema_name = '.'.join([ns.name, 'nwb.language'])
             nwb_lang.name = lang_schema_name
             sch_result.schemas.append(nwb_lang)
