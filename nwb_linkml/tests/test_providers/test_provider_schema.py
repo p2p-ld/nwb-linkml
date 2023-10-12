@@ -16,6 +16,7 @@ from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
 import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
 from nwb_linkml.providers.git import DEFAULT_REPOS
+from nwb_linkml.adapters import NamespacesAdapter
 
 
 CORE_MODULES = (
@@ -70,6 +71,10 @@ def test_linkml_build_from_yaml(tmp_output_dir):
     warnings.warn(pformat(ns_yaml))
     files = [str(f) for f in list(ns_file.parent.glob('*.yaml'))]
     warnings.warn('\n'.join(files))
+
+    ns_adapter = NamespacesAdapter.from_yaml(ns_file)
+    warnings.warn(pformat(ns_adapter))
+
 
     provider = LinkMLProvider(path=tmp_output_dir, allow_repo=False)
 

@@ -50,7 +50,7 @@ class Config(BaseSettings):
         return v
 
     @model_validator(mode='after')
-    def folder_exists(self) -> 'Config':
+    def folders_exist(self) -> 'Config':
         for field, path in self.model_dump().items():
             if isinstance(path, Path):
                 path.mkdir(exist_ok=True, parents=True)
