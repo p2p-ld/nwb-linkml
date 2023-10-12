@@ -328,7 +328,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         if not self.split:
             # we are compiling this whole thing in one big file so we don't import anything
             return {}
-        if 'is_namespace' in sv.schema.annotations.keys() and sv.schema.annotations['is_namespace']['value'] == 'True':
+        if 'is_namespace' in sv.schema.annotations.keys() and sv.schema.annotations['is_namespace']['value'] in ('True', True):
             return self._get_namespace_imports(sv)
 
         all_classes = sv.all_classes(imports=True)

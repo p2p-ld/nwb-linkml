@@ -703,7 +703,7 @@ class PydanticProvider(Provider):
 
     def get(self, namespace: str,
             version: Optional[str] = None,
-            allow_repo: bool = True) -> ModuleType:
+            allow_repo: Optional[bool] = None) -> ModuleType:
         """
         Get the imported module for a given namespace and version.
 
@@ -735,6 +735,8 @@ class PydanticProvider(Provider):
             The imported :class:`types.ModuleType` object that has all the built classes at the root level.
 
         """
+        if allow_repo is None:
+            allow_repo = self.allow_repo
 
         if version is None:
             version = self.available_versions[namespace][-1]
