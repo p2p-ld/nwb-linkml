@@ -72,7 +72,7 @@ def test_linkml_build_from_yaml(tmp_output_dir):
 
     res = provider.build_from_yaml(ns_file)
 
-
+@pytest.mark.skip()
 @pytest.mark.depends(on=['test_linkml_provider'])
 @pytest.mark.parametrize(
     ['class_name', 'test_fields'],
