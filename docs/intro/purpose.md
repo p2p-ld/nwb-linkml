@@ -3,6 +3,10 @@
 If [pynwb](https://pynwb.readthedocs.io/en/stable/) already exists,
 why `nwb_linkml`?
 
+## A Stepping Stone...
+
+(word on how and why we are focusing on NWB as part of a larger project)
+
 ## Interoperable Schema Language
 
 **We want to make NWB a seed format in an interoperable, peer-to-peer
