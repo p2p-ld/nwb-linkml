@@ -1,9 +1,8 @@
 # Providers
 
-## Schema
+```{toctree}
+:maxdepth: 2
 
-```{eval-rst}
-.. automodule:: nwb_linkml.providers.schema
-   :members:
-   :undoc-members:
+git
+schema
 ```

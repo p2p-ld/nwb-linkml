@@ -5,15 +5,22 @@ description = "Dependency management to build nwb-linkml docs, see individual pa
 authors = ["sneakers-the-rat <JLSaunders987@gmail.com>"]
 license = "AGPL-3.0"
 readme = "README.md"
-packages = [{include = "nwb_linkml_docs"}]
+packages = [
+    {include = "nwb_linkml", from="nwb_linkml/src"},
+    {include = "nwb_schema_language", from="nwb_schema_language/src"}
+]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 sphinx = "^7.2.5"
 furo = "^2023.8.19"
 myst-parser = "^2.0.0"
 autodoc-pydantic = "^2.0.1"
 nptyping = "^2.5.0"
+sphinx-autobuild = "^2021.3.14"
+nwb-linkml = { path = './nwb_linkml', develop = true }
+nwb_schema_language = { path = './nwb_schema_language', develop = true }
+sphinx-design = "^0.5.0"
 
 
 [build-system]

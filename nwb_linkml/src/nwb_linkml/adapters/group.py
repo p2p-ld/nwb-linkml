@@ -51,14 +51,17 @@ class GroupAdapter(ClassAdapter):
         have any number of the objects that are of `neurodata_type_inc` class
 
         Examples:
-            - name: templates
-              groups:
-              - neurodata_type_inc: TimeSeries
-                doc: TimeSeries objects containing template data of presented stimuli.
-                quantity: '*'
-              - neurodata_type_inc: Images
-                doc: Images objects containing images of presented stimuli.
-                quantity: '*'
+
+            .. code-block:: yaml
+
+                - name: templates
+                  groups:
+                  - neurodata_type_inc: TimeSeries
+                    doc: TimeSeries objects containing template data of presented stimuli.
+                    quantity: '*'
+                  - neurodata_type_inc: Images
+                    doc: Images objects containing images of presented stimuli.
+                    quantity: '*'
 
         Args:
             children (List[:class:`.Group`]): Child groups

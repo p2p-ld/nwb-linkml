@@ -21,10 +21,12 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.autodoc_pydantic',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.doctest'
+    'sphinx.ext.doctest',
+    "sphinx_design"
 ]
 
 templates_path = ['_templates']
+# exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**/models']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 
@@ -68,7 +70,17 @@ graphviz_output_format = "svg"
 
 autodoc_pydantic_model_show_json_error_strategy = 'coerce'
 autodoc_pydantic_model_show_json = False
-autodoc_mock_imports = ['nptyping']
+autodoc_mock_imports = []
+autoclass_content = "both"
+autodoc_member_order='bysource'
+add_module_names = False
+
+autodoc_default_options = {
+    'exclude-members': 'NDArray,Shape',
+
+}
+
+
 
 # doctest
 doctest_global_setup = """

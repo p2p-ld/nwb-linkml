@@ -7,9 +7,8 @@ adapters/index
 generators/index
 io/index
 maps/index
-models/index
 providers/index
-schema
+types/index
 config
 lang_elements
 monkeypatch

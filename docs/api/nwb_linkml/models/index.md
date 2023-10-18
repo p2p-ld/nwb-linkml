@@ -1,6 +1,6 @@
 # Models
 
 ```{toctree}
-core
-hdmf
+core/index
+hdmf-common/index
 ```

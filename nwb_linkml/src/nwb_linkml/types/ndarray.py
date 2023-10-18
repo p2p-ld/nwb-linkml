@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Tuple
 )
 import sys
 from copy import copy
@@ -28,23 +29,30 @@ from dask.array.core import Array as DaskArray
 import blosc2
 
 from nptyping import NDArray as _NDArray
-from nptyping.ndarray import NDArrayMeta
+from nptyping.ndarray import NDArrayMeta as _NDArrayMeta
 from nptyping import Shape, Number
+from nptyping.nptyping_type import NPTypingType
 from nptyping.shape_expression import check_shape
 
 from nwb_linkml.maps.dtype import np_to_python, allowed_precisions
 
 
+class NDArrayMeta(_NDArrayMeta, implementation="NDArray"):
+    """
+    Kept here to allow for hooking into metaclass, which has
+    been necessary on and off as we work this class into a stable
+    state"""
 
-class NDArray(_NDArray):
+class NDArray(NPTypingType, metaclass=NDArrayMeta):
     """
     Following the example here: https://docs.pydantic.dev/latest/usage/types/custom/#handling-third-party-types
     """
+    __args__ = (Any, Any)
 
     @classmethod
     def __get_pydantic_core_schema__(
         cls,
-        _source_type: _NDArray,
+        _source_type: 'NDArray',
         _handler: Callable[[Any], core_schema.CoreSchema],
 
     ) -> core_schema.CoreSchema:

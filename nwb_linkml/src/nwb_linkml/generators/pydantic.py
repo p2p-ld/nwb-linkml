@@ -9,7 +9,8 @@ The default `__main__` method
 - Instantiates the class
 - Calls :meth:`~linkml.generators.PydanticGenerator.serialize`
 
-The `serialize` method
+The `serialize` method:
+
 - Accepts an optional jinja-style template, otherwise it uses the default template
 - Uses :class:`linkml_runtime.utils.schemaview.SchemaView` to interact with the schema
 - Generates linkML Classes

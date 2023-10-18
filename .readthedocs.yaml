@@ -19,8 +19,6 @@ build:
      - poetry config virtualenvs.create false
    post_install:
      - poetry install --no-root
-     - pip install ./nwb_linkml
-     - pip install ./nwb_schema_language
 
 # Optionally build your docs in additional formats such as PDF and ePub
 # formats:
