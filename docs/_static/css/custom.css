@@ -5,3 +5,18 @@
   font-style: italic;
   border-radius: 4px;
 }
+
+/* make cell outputs brighter */
+.cell_output.docutils.container {
+  filter: brightness(0.4) invert() saturate(5);
+  z-index: 999;
+  position:relative;
+}
+
+pre {
+  font-size: 0.8em;
+}
+
+.hide.below-input span {
+  color: var(--color-background-secondary);
+}

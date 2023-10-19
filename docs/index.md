@@ -7,9 +7,10 @@ A translation of the [Neurodata Without Borders](https://www.nwb.org/) standard
 to [LinkML](https://linkml.io/).
 
 ```{admonition} Quick Links
-* [Purpose](purpose) - Why this package exists
-* [Overview](overview) - Overview of how it works
-* [API Docs](api) - Ok *really* how it works
+* [Quickstart](guide/quickstart) - Some stuff this package does
+* [Purpose](intro/purpose) - Why this package exists
+* [Overview](guide/overview) - Overview of how it works
+* [API Docs](api/nwb_linkml/index) - Ok *really* how it works
 ```
 
 `nwb-linkml` is an independent implementation of the standard capable of:
@@ -22,31 +23,10 @@ to [LinkML](https://linkml.io/).
 * {feature}`Coming Soon` Export NWB to a Relational Database
 * {feature}`Coming Soon` Export NWB to a Triple Store
 
-## Samples
-
-### Reading
-
-```python
-from pathlib import Path
-from rich import print
-from nwb_linkml.io import HDF5IO
-
-# find sample data file and read
-nwb_file = Path('../nwb_linkml/tests/data/aibs.nwb')
-data = HDF5IO(nwb_file).read()
-print(data)
-```
-
-````{admonition} Model Print Output
-:class: dropdown
-
-```{literalinclude} read_output.txt
-:language: python
-```
-````
+## Example Translation
 
 
-### TimeSeries
+## TimeSeries
 
 (Abbreviated for clarity)
 
@@ -254,10 +234,7 @@ class TimeSeriesData(ConfiguredBaseModel):
 
 ```
 ````
-
 `````
-
-
 
 ```{toctree}
 :caption: Intro
@@ -274,6 +251,7 @@ intro/translation
 :maxdepth: 1
 :hidden:
 
+guide/quickstart
 guide/overview
 ```
 
@@ -299,6 +277,19 @@ api/nwb_linkml/index
 api/nwb_schema_language/index
 api/models/nwb_linkml.models
 api/nwb_linkml/schema/index
+```
+````
+
+````{only} minimal
+```{toctree}
+:caption: Notes
+:maxdepth: 3
+:hidden:
+
+_notes/linkml
+_notes/pynwb
+_notes/schema
+_notes/translation
 ```
 ````
 

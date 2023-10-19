@@ -27,7 +27,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
     "sphinx_design",
-    'myst_parser',
+    #'myst_parser',
+    "myst_nb",
     'sphinx_togglebutton'
 ]
 
@@ -59,8 +60,10 @@ intersphinx_mapping = {
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'pydantic': ('https://docs.pydantic.dev/latest/', None),
     'h5py': ('https://docs.h5py.org/en/stable/', None),
-    'dask': ('https://docs.dask.org/en/stable/', None)
-
+    'dask': ('https://docs.dask.org/en/stable/', None),
+    'linkml': ('https://linkml.io/linkml/', None),
+    'linkml_runtime': ('https://linkml.io/linkml/', None),
+    'linkml-runtime': ('https://linkml.io/linkml/', None)
 }
 
 
@@ -92,9 +95,12 @@ add_module_names = False
 
 autodoc_default_options = {
     'exclude-members': 'NDArray,Shape',
-
 }
 
+# --------------------------------------------------
+# myst-nb
+nb_render_markdown_format = 'myst'
+nb_append_css = False
 
 
 # doctest

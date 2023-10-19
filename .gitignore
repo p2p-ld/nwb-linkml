@@ -162,3 +162,4 @@ cython_debug/
 nwb.schema.json
 __tmp__
 prof
+jupyter_execute

@@ -21,7 +21,7 @@ def load_yaml(path:Path) -> dict:
     ns_dict = apply_postload(ns_dict)
     return ns_dict
 
-def _load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
+def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
     """Loads the NWB SCHEMA LANGUAGE namespaces (not the namespacesadapter)"""
     if isinstance(path, NamespaceRepo):
         path = path.provide_from_git()
@@ -32,6 +32,17 @@ def _load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
     return namespaces
 
 def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
+    """
+    Load a single schema file within an NWB namespace.
+
+    .. note::
+
+        This needs to be a separate function from loading a namespace because NWB
+        doesn't define a schema file per se in its spec, aside from having
+        a ``datasets`` and ``groups`` dictionary. We wanted to be as faithful to
+        the spec as possible in that package, and so that's picked up here.
+
+    """
     if yaml is not None:
         source = yaml
         source = apply_postload(source)
@@ -81,19 +92,20 @@ def load_namespace_adapter(
     """
     if path is None:
         path = Path('..')
+    elif isinstance(path, str):
+        path = Path(path)
 
     if isinstance(namespace, Path):
         path = namespace
-        namespaces = _load_namespaces(path)
+        namespaces = load_namespaces(path)
     elif isinstance(namespace, NamespaceRepo):
         path = namespace.provide_from_git(commit=version)
-        namespaces = _load_namespaces(path)
+        namespaces = load_namespaces(path)
 
     elif isinstance(namespace, Namespaces):
         namespaces = namespace
     else:
         raise ValueError(f"Namespace must be a path, namespace repo, or already loaded namespaces")
-
 
     if path.is_file():
         # given the namespace file itself, so find paths relative to its directory

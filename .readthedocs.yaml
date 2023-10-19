@@ -16,9 +16,11 @@ build:
  jobs:
    post_create_environment:
      - pip install poetry
+     - pip install poetry-kernel
      - poetry config virtualenvs.create false
    post_install:
      - poetry install --no-root
+     - poetry run python -m ipykernel install --name nwb-linkml_docs
 
 # Optionally build your docs in additional formats such as PDF and ePub
 # formats:
