@@ -265,6 +265,17 @@ api/nwb_linkml/index
 api/nwb_schema_language/index
 api/nwb_linkml/schema/index
 ```
+
+```{toctree}
+:caption: Notes
+:maxdepth: 3
+:hidden:
+
+_notes/linkml
+_notes/pynwb
+_notes/schema
+_notes/translation
+```
 ````
 
 ````{only} full
@@ -277,19 +288,6 @@ api/nwb_linkml/index
 api/nwb_schema_language/index
 api/models/nwb_linkml.models
 api/nwb_linkml/schema/index
-```
-````
-
-````{only} minimal
-```{toctree}
-:caption: Notes
-:maxdepth: 3
-:hidden:
-
-_notes/linkml
-_notes/pynwb
-_notes/schema
-_notes/translation
 ```
 ````
 
