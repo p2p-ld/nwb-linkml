@@ -270,3 +270,17 @@ def test_namespace(imported_schema):
         assert hasattr(ns, classname)
         if imported_schema['split']:
             assert getattr(ns, classname).__module__ == modname
+
+def test_get_set_item(imported_schema):
+    """We can get and set without explicitly addressing array"""
+    cls = imported_schema['core'].MainTopLevel(
+        array=np.array([[1,2,3],[4,5,6]])
+    )
+    cls[0] = 50
+    assert (cls[0] == 50).all()
+    assert (cls.array[0] == 50).all()
+
+    cls[1,1] = 100
+    assert cls[1,1] == 100
+    assert cls.array[1,1] == 100
+

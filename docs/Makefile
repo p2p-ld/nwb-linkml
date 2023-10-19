@@ -15,7 +15,8 @@ help:
 .PHONY: help Makefile
 
 serve:
-	sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) --watch ../nwb_linkml/src/nwb_linkml --watch ../nwb_schema_language/src/nwb_schema_language
+	# env variable that makes it so we don't build all the models while in dev mode
+	SPHINX_MINIMAL="True" sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) --watch ../nwb_linkml/src/nwb_linkml --watch ../nwb_schema_language/src/nwb_schema_language
 
 serve_fast:
 	sphinx-autobuild -a "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O) --watch ../nwb_linkml/src/nwb_linkml --watch ../nwb_schema_language/src/nwb_schema_language

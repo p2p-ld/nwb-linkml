@@ -3,8 +3,14 @@
 If [pynwb](https://pynwb.readthedocs.io/en/stable/) already exists,
 why `nwb_linkml`?
 
+Two kinds of reasons: 
+
+- using NWB as a test case for a larger infrastructure project, and
+- potentially improving the state of NWB itself.
+
 ## A Stepping Stone...
 
+In the 
 (word on how and why we are focusing on NWB as part of a larger project)
 
 ## Interoperable Schema Language

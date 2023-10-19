@@ -1,4 +1,4 @@
-# NWB Schema Language
+# nwb_schema_language
 
 ```{toctree}
 :maxdepth: 1

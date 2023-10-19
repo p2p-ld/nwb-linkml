@@ -21,6 +21,7 @@ sphinx-autobuild = "^2021.3.14"
 nwb-linkml = { path = './nwb_linkml', develop = true }
 nwb_schema_language = { path = './nwb_schema_language', develop = true }
 sphinx-design = "^0.5.0"
+sphinx-togglebutton = "^0.3.2"
 
 
 [build-system]

@@ -2,6 +2,7 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+import pdb
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -11,23 +12,34 @@ copyright = '2023, Jonny Saunders'
 author = 'Jonny Saunders'
 release = 'v0.1.0'
 
+import os
+from sphinx.util.tags import Tags
+tags: Tags
+
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     'sphinx.ext.graphviz',
-    "myst_parser",
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinxcontrib.autodoc_pydantic',
     'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
-    "sphinx_design"
+    "sphinx_design",
+    'myst_parser',
+    'sphinx_togglebutton'
 ]
 
+
 templates_path = ['_templates']
-# exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**/models']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+if os.environ.get('SPHINX_MINIMAL', None) == 'True':
+    exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**/models']
+    tags.add('minimal')
+else:
+    exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+    tags.add('full')
 
 
 
@@ -36,6 +48,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'furo'
 html_static_path = ['_static']
+html_css_files = [
+    'css/custom.css'
+]
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),

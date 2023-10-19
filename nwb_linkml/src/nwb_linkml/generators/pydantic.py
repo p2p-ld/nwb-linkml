@@ -76,7 +76,7 @@ def default_template(pydantic_ver: str = "2", extra_classes:Optional[List[Type[B
 from __future__ import annotations
 from datetime import datetime, date
 from enum import Enum
-from typing import Dict, Optional, Any, Union, ClassVar, Annotated, TypeVar, List
+from typing import Dict, Optional, Any, Union, ClassVar, Annotated, TypeVar, List, TYPE_CHECKING
 from pydantic import BaseModel as BaseModel, Field"""
     if pydantic_ver == '2':
         template += """
@@ -90,6 +90,8 @@ if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+if TYPE_CHECKING:
+    import numpy as np
 
 {% for import_module, import_classes in imports.items() %}
 from {{ import_module }} import (
@@ -137,6 +139,22 @@ class ConfiguredBaseModel(BaseModel):
     pass
 {%- endif -%}
     """
+    ### Getitem
+    template += """
+    
+    def __getitem__(self, i: slice|int) -> 'np.ndarray':
+        if hasattr(self, 'array'):
+            return self.array[i]
+        else:
+            return super().__getitem__(i)
+            
+    def __setitem__(self, i: slice|int, value: Any):
+        if hasattr(self, 'array'):
+            self.array[i] = value
+        else:
+            super().__setitem__(i, value)
+    """
+
     ### Extra classes
     if extra_classes is not None:
         template += """{{ '\n\n' }}"""
