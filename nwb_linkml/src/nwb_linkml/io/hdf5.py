@@ -91,7 +91,6 @@ class HDF5IO():
         else:
             return queue.completed[path].result
 
-
     def make_provider(self) -> SchemaProvider:
         """
         Create a :class:`~.providers.schema.SchemaProvider` by
@@ -120,56 +119,6 @@ class HDF5IO():
         return provider
 
 
-    def process_group(self, group:h5py.Group|h5py.File) -> dict | list:
-        attrs = dict(group.attrs)
-
-        # how to process the group?
-        # --------------------------------------------------
-        # list-like
-        # --------------------------------------------------
-        # a list of data classes
-        if 'neurodata_type' not in attrs and \
-            all([isinstance(v, h5py.Group) for v in group.values()]) and \
-            all(['neurodata_type' in v.attrs for v in group.values()]):
-
-            return [self.process_group(v) for v in group.values()]
-
-        # --------------------------------------------------
-        # dict-like
-        # --------------------------------------------------
-
-        res = {}
-
-
-        for key, val in group.items():
-            if isinstance(val, h5py.Group):
-                res[key] = self.process_group(val)
-            elif isinstance(val, h5py.Dataset):
-                res[key] = self.process_dataset(val)
-        return res
-
-    def process_dataset(self, data: h5py.Dataset) -> dict | list:
-        if len(data.shape) == 1:
-            return list(data[:])
-
-
-def finish_root_hackily(queue: ReadQueue) -> dict:
-    root = {'name': 'root'}
-    for k, v in queue.queue.items():
-        if isinstance(v.result, dict):
-            res_dict = {}
-            for inner_k, inner_v in v.result.items():
-                if isinstance(inner_v, HDF5_Path):
-                     inner_res = queue.completed.get(inner_v)
-                     if inner_res is not None:
-                        res_dict[inner_k] = inner_res.result
-                else:
-                    res_dict[inner_k] = inner_v
-            root[res_dict['name']] = res_dict
-        else:
-            root[v.path.split('/')[-1]] = v.result
-    return root
-
 def read_specs_as_dicts(group: h5py.Group) -> dict:
     """
     Utility function to iterate through the `/specifications` group and
@@ -196,18 +145,6 @@ def read_specs_as_dicts(group: h5py.Group) -> dict:
     group.visititems(_read_spec)
     return spec_dict
 
-
-def get_model(cls: h5py.Group | h5py.Dataset) -> Type[BaseModel]:
-    attrs = cls.attrs
-    ns = attrs.get('namespace')
-    model_name = attrs.get('neurodata_type')
-
-    try:
-        return SchemaProvider().get_class(ns, model_name)
-    except:
-        # try to get parent class
-        mod = get_model(cls.parent)
-        return mod.model_fields[cls.name.split('/')[-1]].annotation
 
 def find_references(h5f: h5py.File, path: str) -> List[str]:
     """
@@ -262,8 +199,6 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     finally:
         pbar.close()
     return references
-
-
 
 
 def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path:
@@ -348,14 +283,5 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
     target_tmp.rename(target)
 
     return target
-
-
-def submodel_by_path(model: BaseModel, path:str) -> Type[BaseModel | dict | list]:
-    """
-    Given a pydantic model and an absolute HDF5 path, get the type annotation
-    """
-    parts = path.split('/')
-    for part in parts:
-        ann = model.model_fields[part].annotation
 
 
