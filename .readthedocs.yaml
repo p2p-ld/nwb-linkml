@@ -20,7 +20,7 @@ build:
      - poetry config virtualenvs.create false
    post_install:
      - poetry install --no-root
-     - poetry run python -m ipykernel install --name nwb-linkml_docs
+     #- poetry run python -m ipykernel install --name nwb-linkml_docs
 
 # Optionally build your docs in additional formats such as PDF and ePub
 # formats:

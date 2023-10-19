@@ -1,7 +1,7 @@
 ---
 file_format: mystnb
-kernelspec:
-  name: nwb-linkml_docs
+#kernelspec:
+#  name: nwb-linkml_docs
 mystnb:
     output_stderr: 'remove-warn'
 ---

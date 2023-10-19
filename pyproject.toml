@@ -23,6 +23,7 @@ nwb_schema_language = { path = './nwb_schema_language', develop = true }
 sphinx-design = "^0.5.0"
 sphinx-togglebutton = "^0.3.2"
 myst-nb = { git = "https://github.com/executablebooks/MyST-NB.git" }
+ipykernel = "^6.25.2"
 
 
 [build-system]
