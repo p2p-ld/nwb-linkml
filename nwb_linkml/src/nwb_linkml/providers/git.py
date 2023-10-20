@@ -128,8 +128,8 @@ class GitRepo:
 
         If ``None``: if :attr:`NamespaceRepo.versions`, use the last version. Otherwise use ``HEAD``
 
-        Should match :prop:`.active_commit`, differs semantically in that it is used to
-        set the active_commit, while :prop:`.active_commit` reads what commit is actually checked out
+        Should match :attr:`.active_commit`, differs semantically in that it is used to
+        set the active_commit, while :attr:`.active_commit` reads what commit is actually checked out
         """
         return self._commit
 

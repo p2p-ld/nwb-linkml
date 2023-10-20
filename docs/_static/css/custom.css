@@ -18,5 +18,22 @@ pre {
 }
 
 .hide.below-input span {
-  color: var(--color-background-secondary);
+  color: var(--color-highlighted-text);
+}
+
+div.cell details.below-input > summary {
+  background-color: var(--color-background-primary);
+}
+
+.cell_output pre {
+  border: 1px solid var(--color-code-foreground);
+  padding: 1em;
+  border-radius: 5px;
+}
+div.cell div.cell_input, div.cell details.above-input > summary {
+  border-left-color: unset;
+}
+
+div.cell details.below-input > summary {
+  border-left-color: unset;
 }

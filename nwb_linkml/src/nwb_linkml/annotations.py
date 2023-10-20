@@ -25,7 +25,3 @@ def get_inner_types(annotation) -> List[Any]:
             types.extend(get_inner_types(arg))
     return types
 
-def take_outer_type(annotation):
-    if typing.get_origin(annotation) is list:
-        return list
-    return annotation

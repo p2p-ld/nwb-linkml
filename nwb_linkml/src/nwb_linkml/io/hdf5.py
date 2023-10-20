@@ -56,6 +56,38 @@ class HDF5IO():
     def read(self, path:str) -> BaseModel | Dict[str, BaseModel]: ...
 
     def read(self, path:Optional[str] = None) -> Union['NWBFile', BaseModel, Dict[str, BaseModel]]:
+        """
+        Read data into models from an NWB File.
+
+        The read process is in several stages:
+
+        * Use :meth:`.make_provider` to generate any needed LinkML Schema or Pydantic Classes using a :class:`.SchemaProvider`
+        * :func:`flatten_hdf` file into a :class:`.ReadQueue` of nodes.
+        * Apply the queue's :class:`ReadPhases` :
+
+            * ``plan`` - trim any blank nodes, sort nodes to read, etc.
+            * ``read`` - load the actual data into temporary holding objects
+            * ``construct`` - cast the read data into models.
+
+        Read is split into stages like this to handle references between objects, where the read result of one node
+        might depend on another having already been completed. It also allows us to parallelize the operations
+        since each mapping operation is independent of the results of all the others in that pass.
+
+        .. todo::
+
+            Implement reading, skipping arrays - they are fast to read with the ArrayProxy class
+            and dask, but there are times when we might want to leave them out of the read entirely.
+            This might be better implemented as a filter on ``model_dump`` , but to investigate further
+            how best to support reading just metadata, or even some specific field value, or if
+            we should leave that to other implementations like eg. after we do SQL export then
+            not rig up a whole query system ourselves.
+
+        Args:
+            path (Optional[str]): If ``None`` (default), read whole file. Otherwise, read from specific (hdf5) path and its children
+
+        Returns:
+            ``NWBFile`` if ``path`` is ``None``, otherwise whatever Model or dictionary of models applies to the requested ``path``
+        """
 
         provider = self.make_provider()
 
@@ -91,6 +123,31 @@ class HDF5IO():
         else:
             return queue.completed[path].result
 
+    def write(self, path: Path):
+        """
+        Write to NWB file
+
+        .. todo::
+
+            Implement HDF5 writing.
+
+            Need to create inverse mappings that can take pydantic models to
+            hdf5 groups and datasets. If more metadata about the generation process
+            needs to be preserved (eg. explicitly notating that something is an attribute,
+            dataset, group, then we can make use of the :class:`~nwb_linkml.generators.pydantic.LinkML_Meta`
+            model. If the model to edit has been loaded from an HDF5 file (rather than
+            freshly created), then the ``hdf5_path`` should be populated making
+            mapping straightforward, but we probably want to generalize that to deterministically
+            get hdf5_path from position in the NWBFile object -- I think that might
+            require us to explicitly annotate when something is supposed to be a reference
+            vs. the original in the model representation, or else it's ambiguous.
+
+            Otherwise, it should be a matter of detecting changes from file if it exists already,
+            and then write them.
+
+        """
+        raise NotImplementedError('Writing to HDF5 is not implemented yet!')
+
     def make_provider(self) -> SchemaProvider:
         """
         Create a :class:`~.providers.schema.SchemaProvider` by
@@ -122,13 +179,13 @@ class HDF5IO():
 def read_specs_as_dicts(group: h5py.Group) -> dict:
     """
     Utility function to iterate through the `/specifications` group and
-    load
+    load the schemas from it.
 
     Args:
-        group:
+        group ( :class:`h5py.Group` ): the ``/specifications`` group!
 
     Returns:
-
+        ``dict`` of schema.
     """
     spec_dict = {}
     def _read_spec(name, node):
@@ -157,6 +214,10 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     Notes:
         This is extremely slow because we collect all references first,
         rather than checking them as we go and quitting early. PR if you want to make this faster!
+
+    .. todo::
+
+        Test :func:`.find_references` !
 
     Args:
         h5f (:class:`h5py.File`): Open hdf5 file

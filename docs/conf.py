@@ -29,7 +29,8 @@ extensions = [
     "sphinx_design",
     #'myst_parser',
     "myst_nb",
-    'sphinx_togglebutton'
+    'sphinx_togglebutton',
+    'sphinx.ext.todo'
 ]
 
 
@@ -102,10 +103,23 @@ autodoc_default_options = {
 nb_render_markdown_format = 'myst'
 nb_append_css = False
 
-
+# --------------------------------------------------
 # doctest
 doctest_global_setup = """
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition, SchemaDefinition
+from nwb_schema_language import Namespaces, Namespace, Dataset, Group, Schema
+from linkml_runtime.dumpers import yaml_dumper
+import yaml
 from pydantic import BaseModel, Field
 import numpy as np
+
+from nwb_linkml.adapters import BuildResult
 """
+
+# --------------------------------------------------
+# Etc one-off settings
+
+# todo
+todo_include_todos = True
+todo_link_only = True
+

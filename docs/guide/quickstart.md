@@ -101,7 +101,16 @@ and `ClassDefinition` classes:
 print(core_linkml.schemas[0])
 ```
 
+## Generating Pydantic Models
 
+```{todo}
+Document Pydantic model generation
+```
 
+## Caching Output with Providers
+
+```{todo}
+Document provider usage
+```
 
 

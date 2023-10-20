@@ -27,6 +27,10 @@ linkml = "^1.6.1"
 nptyping = "^2.5.0"
 pydantic = "^2.3.0"
 h5py = "^3.9.0"
+pydantic-settings = "^2.0.3"
+dask = "^2023.9.2"
+blosc2 = "^2.2.7"
+tqdm = "^4.66.1"
 dash = {version="^2.12.1", optional=true}
 dash-cytoscape = {version="^0.3.0", optional=true}
 pytest = { version="^7.4.0", optional=true}
@@ -36,16 +40,13 @@ pytest-md = {version = "^0.2.0", optional = true}
 pytest-cov = {version = "^4.1.0", optional = true}
 coveralls = {version = "^3.3.1", optional = true}
 pytest-profiling = {version = "^1.7.0", optional = true}
-pydantic-settings = "^2.0.3"
-dask = "^2023.9.2"
-blosc2 = "^2.2.7"
-tqdm = "^4.66.1"
+sybil = {version = "^5.0.3", optional = true}
 
 
 [tool.poetry.extras]
 tests = [
-    "pytest",       "pytest-depends", "coverage",  "pytest-md",
-    "pytest-cov",   "coveralls",      "pytest-profiling"
+    "pytest",       "pytest-depends", "coverage",         "pytest-md",
+    "pytest-cov",   "coveralls",      "pytest-profiling", "sybil"
 ]
 plot = ["dash", "dash-cytoscape"]
 
@@ -61,6 +62,7 @@ pytest-md = "^0.2.0"
 pytest-cov = "^4.1.0"
 coveralls = "^3.3.1"
 pytest-profiling = "^1.7.0"
+sybil = "^5.0.3"
 
 [tool.poetry.group.plot]
 optional = true
@@ -79,12 +81,13 @@ addopts = [
     "--cov=nwb_linkml",
     "--cov-append",
     "--cov-config=.coveragerc",
-    "--doctest-modules",
+    "-p no:doctest",
     "--ignore=tests/__tmp__"
 ]
 testpaths = [
     "tests",
-    'nwb_linkml/tests'
+    'nwb_linkml/tests',
+    'src/nwb_linkml'
 ]
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 filterwarnings = [

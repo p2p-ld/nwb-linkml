@@ -14,6 +14,8 @@ Relationship to other modules:
 Providers create a set of directories with namespaces and versions,
 so eg. for the linkML and pydantic providers:
 
+.. code-block:: yaml
+
     cache_dir
       - linkml
         - nwb_core
@@ -280,6 +282,7 @@ class LinkMLProvider(Provider):
         >>> # Build a custom schema and then get it
         >>> # provider.build_from_yaml('myschema.yaml')
         >>> # my_schema = provider.get('myschema')
+
     """
     PROVIDES = 'linkml'
     PROVIDES_CLASS = SchemaDefinition
@@ -357,7 +360,7 @@ class LinkMLProvider(Provider):
                 to build
             versions (dict): Dict of specific versions to use
                 for cross-namespace imports. as ``{'namespace': 'version'}``
-                 If none is provided, use the most recent version
+                If none is provided, use the most recent version
                 available.
             dump (bool): If ``True`` (default), dump generated schema to YAML. otherwise just return
             force (bool): If ``False`` (default), don't build schema that already exist. If ``True`` , clear directory and rebuild

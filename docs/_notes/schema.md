@@ -54,7 +54,7 @@ dtypes can be
 
 eg: 
 
-```yml
+```yaml
 - neurodata_type_def: Image
   neurodata_type_inc: NWBData
   dtype: numeric
@@ -122,7 +122,7 @@ we need to map:
 - dims, shape, and dtypes: these should have been just attributes rather than put in the spec
   language, so we'll just make an Array class and use that.
   - dims and shape should probably be a dictionary so you don't need a zillion nulls, eg rather than 
-  ```yml
+  ```yaml
   dims:
   - - x
     - y
@@ -137,7 +137,7 @@ we need to map:
     - 3
   ```
   do
-  ```yml
+  ```yaml
   dims:
   - - name: x
     - name: y
@@ -147,7 +147,7 @@ we need to map:
       shape: 3
   ```
   or even
-  ```yml
+  ```yaml
   dims:
   - - x
     - y
@@ -160,7 +160,7 @@ we need to map:
 
   And also is there any case that would break where there is some odd dependency between dims where it wouldn't work to just use an `optional` param
 
-  ```yml
+  ```yaml
   dims:
   - name: x
     shape: null

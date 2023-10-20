@@ -11,6 +11,7 @@ to [LinkML](https://linkml.io/).
 * [Purpose](intro/purpose) - Why this package exists
 * [Overview](guide/overview) - Overview of how it works
 * [API Docs](api/nwb_linkml/index) - Ok *really* how it works
+* [TODO](meta/todo) - The work that remains to be done
 ```
 
 `nwb-linkml` is an independent implementation of the standard capable of:
@@ -24,9 +25,6 @@ to [LinkML](https://linkml.io/).
 * {feature}`Coming Soon` Export NWB to a Triple Store
 
 ## Example Translation
-
-
-## TimeSeries
 
 (Abbreviated for clarity)
 
@@ -264,17 +262,6 @@ guide/overview
 api/nwb_linkml/index
 api/nwb_schema_language/index
 api/nwb_linkml/schema/index
-```
-
-```{toctree}
-:caption: Notes
-:maxdepth: 3
-:hidden:
-
-_notes/linkml
-_notes/pynwb
-_notes/schema
-_notes/translation
 ```
 ````
 

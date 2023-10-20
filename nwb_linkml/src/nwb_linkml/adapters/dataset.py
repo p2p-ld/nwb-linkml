@@ -25,18 +25,73 @@ class DatasetMap(Map):
 
     @classmethod
     @abstractmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
         pass # pragma: no cover
 
 class MapScalar(DatasetMap):
     """
     Datasets that are just a single value should just be a scalar value, not an array with size 1
 
-    Replace the built class with
+    Replaces the built class with a slot.
+
+    Examples:
+
+        .. grid:: 2
+            :gutter: 1
+            :margin: 0
+            :padding: 0
+
+            .. grid-item-card::
+                :margin: 0
+
+                NWB Schema
+                ^^^
+                .. code-block:: yaml
+
+                    datasets:
+                    - name: MyScalar
+                      doc: A scalar
+                      dtype: int32
+                      quantity: '?'
+
+            .. grid-item-card::
+                :margin: 0
+
+                LinkML
+                ^^^
+                .. code-block:: yaml
+
+                    attributes:
+                    - name: MyScalar
+                      description: A scalar
+                      multivalued: false
+                      range: int32
+                      required: false
+
+
     """
 
     @classmethod
     def check(c, cls:Dataset) -> bool:
+        """
+        .. list-table::
+            :header-rows: 1
+            :align: left
+
+            * - Attr
+              - Value
+            * - ``neurodata_type_inc``
+              - ``None``
+            * - ``attributes``
+              - ``None``
+            * - ``dims``
+              - ``None``
+            * - ``shape``
+              - ``None``
+            * - ``name``
+              - ``str``
+
+        """
         if cls.neurodata_type_inc != 'VectorData' and \
                 not cls.neurodata_type_inc and \
                 not cls.attributes and \
@@ -48,7 +103,7 @@ class MapScalar(DatasetMap):
             return False
 
     @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,
@@ -65,6 +120,25 @@ class MapScalarAttributes(DatasetMap):
     """
     @classmethod
     def check(c, cls:Dataset) -> bool:
+        """
+        .. list-table::
+            :header-rows: 1
+            :align: left
+
+            * - Attr
+              - Value
+            * - ``neurodata_type_inc``
+              - ``None``
+            * - ``attributes``
+              - Truthy
+            * - ``dims``
+              - ``None``
+            * - ``shape``
+              - ``None``
+            * - ``name``
+              - ``str``
+
+        """
         if cls.neurodata_type_inc != 'VectorData' and \
              not cls.neurodata_type_inc and \
              cls.attributes and \
@@ -76,7 +150,7 @@ class MapScalarAttributes(DatasetMap):
             return False
 
     @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
         value_slot = SlotDefinition(
             name='value',
             range=ClassAdapter.handle_dtype(cls.dtype),
@@ -98,7 +172,7 @@ class MapListlike(DatasetMap):
             return False
 
     @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
         dtype = camel_to_snake(ClassAdapter.handle_dtype(cls.dtype))
         slot = SlotDefinition(
             name=dtype,
@@ -125,7 +199,7 @@ class MapArraylike(DatasetMap):
             return False
 
     @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
         array_class = make_arraylike(cls, name)
         name = camel_to_snake(cls.name)
         res = BuildResult(
@@ -171,7 +245,7 @@ class MapArrayLikeAttributes(DatasetMap):
             return False
 
     @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
         array_class = make_arraylike(cls, name)
         # make a slot for the arraylike class
         array_slot = SlotDefinition(
@@ -182,6 +256,90 @@ class MapArrayLikeAttributes(DatasetMap):
         res.classes.append(array_class)
         res.classes[0].attributes.update({'array': array_slot})
         return res
+
+# --------------------------------------------------
+# DynamicTable special cases
+# --------------------------------------------------
+
+class Map1DVector(DatasetMap):
+    """
+    ``VectorData`` is subclassed with a name but without dims or attributes, treat this as a normal 1D array
+    slot that replaces any class that would be built for this
+    """
+    @classmethod
+    def check(c, cls:Dataset) -> bool:
+        if cls.neurodata_type_inc == 'VectorData' and \
+                not cls.dims and \
+                not cls.shape and \
+                not cls.attributes \
+                and cls.name:
+            return True
+        else:
+            return False
+
+    @classmethod
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
+        this_slot = SlotDefinition(
+            name=cls.name,
+            description=cls.doc,
+            range=ClassAdapter.handle_dtype(cls.dtype),
+            multivalued=True
+        )
+        # No need to make a class for us, so we replace the existing build results
+        res = BuildResult(slots=[this_slot])
+        return res
+
+class MapNVectors(DatasetMap):
+    """
+    An unnamed container that indicates an arbitrary quantity of some other neurodata type.
+
+    Most commonly: ``VectorData`` is subclassed without a name and with a '*' quantity to indicate
+    arbitrary columns.
+    """
+    @classmethod
+    def check(c, cls:Dataset) -> bool:
+        if cls.name is None and \
+            cls.neurodata_type_def is None and \
+            cls.neurodata_type_inc and \
+            cls.quantity in ('*', '+'):
+            #cls.neurodata_type_inc in ('VectorIndex', 'VectorData') and \
+            return True
+        else:
+            return False
+
+    @classmethod
+    def apply(c, cls: Dataset, res: Optional[BuildResult] = None, name:Optional[str] = None) -> BuildResult:
+        this_slot = SlotDefinition(
+            name=camel_to_snake(cls.neurodata_type_inc),
+            description=cls.doc,
+            range=cls.neurodata_type_inc,
+            **QUANTITY_MAP[cls.quantity]
+        )
+        # No need to make a class for us, so we replace the existing build results
+        res = BuildResult(slots=[this_slot])
+        return res
+
+
+
+
+class DatasetAdapter(ClassAdapter):
+    cls: Dataset
+
+    def build(self) -> BuildResult:
+        res = self.build_base()
+
+        # find a map to use
+        matches = [m for m in DatasetMap.__subclasses__() if m.check(self.cls)]
+
+        if len(matches) > 1: # pragma: no cover
+            raise RuntimeError(f"Only one map should apply to a dataset, you need to refactor the maps! Got maps: {matches}")
+
+        # apply matching maps
+        for m in matches:
+            res = m.apply(self.cls, res, self._get_full_name())
+
+        return res
+
 
 def make_arraylike(cls:Dataset, name:Optional[str] = None) -> ClassDefinition:
     # The schema language doesn't have a way of specifying a dataset/group is "abstract"
@@ -252,7 +410,7 @@ def make_arraylike(cls:Dataset, name:Optional[str] = None) -> ClassDefinition:
     else:
         raise ValueError(f"Dataset has no name or type definition, what do call it?")
 
-    name = '__'.join([name, 'Array'])
+    name = '__'.join([name, 'Arraylike'])
 
     array_class = ClassDefinition(
         name=name,
@@ -280,87 +438,3 @@ def has_attrs(cls:Dataset) -> bool:
         return True
     else:
         return False
-
-# --------------------------------------------------
-# DynamicTable special cases
-# --------------------------------------------------
-
-class Map1DVector(DatasetMap):
-    """
-    ``VectorData`` is subclassed with a name but without dims or attributes, treat this as a normal 1D array
-    slot that replaces any class that would be built for this
-    """
-    @classmethod
-    def check(c, cls:Dataset) -> bool:
-        if cls.neurodata_type_inc == 'VectorData' and \
-                not cls.dims and \
-                not cls.shape and \
-                not cls.attributes \
-                and cls.name:
-            return True
-        else:
-            return False
-
-    @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
-        this_slot = SlotDefinition(
-            name=cls.name,
-            description=cls.doc,
-            range=ClassAdapter.handle_dtype(cls.dtype),
-            multivalued=True
-        )
-        # No need to make a class for us, so we replace the existing build results
-        res = BuildResult(slots=[this_slot])
-        return res
-
-class MapNVectors(DatasetMap):
-    """
-    An unnamed container that indicates an arbitrary quantity of some other neurodata type.
-
-    Most commonly: ``VectorData`` is subclassed without a name and with a '*' quantity to indicate
-    arbitrary columns.
-    """
-    @classmethod
-    def check(c, cls:Dataset) -> bool:
-        if cls.name is None and \
-            cls.neurodata_type_def is None and \
-            cls.neurodata_type_inc and \
-            cls.quantity in ('*', '+'):
-            #cls.neurodata_type_inc in ('VectorIndex', 'VectorData') and \
-            return True
-        else:
-            return False
-
-    @classmethod
-    def apply(c, res: BuildResult, cls:Dataset, name:Optional[str] = None) -> BuildResult:
-        this_slot = SlotDefinition(
-            name=camel_to_snake(cls.neurodata_type_inc),
-            description=cls.doc,
-            range=cls.neurodata_type_inc,
-            **QUANTITY_MAP[cls.quantity]
-        )
-        # No need to make a class for us, so we replace the existing build results
-        res = BuildResult(slots=[this_slot])
-        return res
-
-
-
-
-class DatasetAdapter(ClassAdapter):
-    cls: Dataset
-
-    def build(self) -> BuildResult:
-        res = self.build_base()
-
-        # find a map to use
-        matches = [m for m in DatasetMap.__subclasses__() if m.check(self.cls)]
-
-        if len(matches) > 1: # pragma: no cover
-            raise RuntimeError(f"Only one map should apply to a dataset, you need to refactor the maps! Got maps: {matches}")
-
-        # apply matching maps
-        for m in matches:
-            res = m.apply(res, self.cls, self._get_full_name())
-
-        return res
-

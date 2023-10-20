@@ -15,9 +15,12 @@ from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
 
 
-def load_yaml(path:Path) -> dict:
-    with open(path, 'r') as file:
-        ns_dict = yaml.safe_load(file)
+def load_yaml(path:Path|str) -> dict:
+    if isinstance(path, str) and not Path(path).exists():
+        ns_dict = yaml.safe_load(path)
+    else:
+        with open(path, 'r') as file:
+            ns_dict = yaml.safe_load(file)
     ns_dict = apply_postload(ns_dict)
     return ns_dict
 

@@ -2412,6 +2412,21 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
+name = "sybil"
+version = "5.0.3"
+description = "Automated testing for the examples in your code and documentation."
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "sybil-5.0.3-py3-none-any.whl", hash = "sha256:6f3c30822169895c4fb34c8366bdb132cf62bb68fb1d03d2ebb05282eab08c95"},
+    {file = "sybil-5.0.3.tar.gz", hash = "sha256:20dfe3a35a8d1ffcb4311434d1abf38c030c91064d75ff6b56ddd1060e08e758"},
+]
+
+[package.extras]
+build = ["furo", "sphinx", "twine", "urllib3 (<2)", "wheel"]
+test = ["myst-parser", "pytest (>=7.1.0)", "pytest-cov", "seedir", "testfixtures"]
+
+[[package]]
 name = "tenacity"
 version = "8.2.3"
 description = "Retry code until it succeeds"
@@ -2686,4 +2701,4 @@ tests = ["coverage", "coveralls", "pytest", "pytest-cov", "pytest-depends", "pyt
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "a3ce11b1eb6ecff528a0a7bce0695368a24218766d6eb0385002fb4e8d3ea8b4"
+content-hash = "673c81c4d38d7d0014804459ac152837e6f19bee122a5ea632c3499e86eaed9f"
