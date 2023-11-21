@@ -165,11 +165,11 @@ class GitRepo:
             >>> # Check out a tag specifically
             >>> repo.tag = "2.6.0"
             >>> repo.tag
-            "2.6.0"
+            '2.6.0'
             >>> # Now check out a commit some number after the tag.
-            >>> repo.commit = "gec0a879"
+            >>> repo.commit = "8abafcd"
             >>> repo.tag
-            "2.6.0-5-gec0a879"
+            '2.5.0-4-g8abafcd'
 
         """
         res =  self._git_call('describe', '--tags')
