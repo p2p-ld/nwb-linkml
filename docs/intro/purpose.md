@@ -72,7 +72,7 @@ is relatively complex, and so to use a schema extension one must also
 program the python classes or mappings to python class attributes
 needed to use them, configuration for getter and setter methods,
 i/o routines, etc. Since schema extensions are relatively hard to make,
-to accomodate heterogeneous data NWB uses `DynamicTable`s, which can be
+to accommodate heterogeneous data NWB uses `DynamicTable`s, which can be
 given arbitrary new columns.
 
 The loose coupling between schema and code has a few impacts:

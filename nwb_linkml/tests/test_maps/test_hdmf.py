@@ -24,7 +24,7 @@ def test_make_dynamictable(data_dir, dataset):
     model = model_from_dynamictable(group)
     data = dynamictable_to_model(group, model)
 
-    ser = data.model_dump_json()
+    _ = data.model_dump_json()
     end_time = time.time()
     total_time = end_time - start_time
 
