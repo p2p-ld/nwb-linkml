@@ -23,7 +23,7 @@ def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -
 
         nptype = group[col].dtype.type
         if nptype == np.void:
-            warnings.warn(f"Cant handle numpy void type for column {col} in {group.name}")
+            warnings.warn(f"Can't handle numpy void type for column {col} in {group.name}")
             continue
         type_ = Optional[NDArray[Any, nptype]]
 
@@ -64,7 +64,7 @@ def dynamictable_to_model(
                 #     # dask can't handle this, we just arrayproxy it
                 items[col] = NDArrayProxy(h5f_file=group.file.filename, path=group[col].name)
                 #else:
-                #    warnings.warn(f"Dask cant handle object type arrays like {col} in {group.name}. Skipping")
+                #    warnings.warn(f"Dask can't handle object type arrays like {col} in {group.name}. Skipping")
                 # pdb.set_trace()
                 # # can't auto-chunk with "object" type
                 # items[col] = da.from_array(group[col], chunks=-1)

@@ -11,7 +11,7 @@
 * the [register_container_type](https://github.com/hdmf-dev/hdmf/blob/dd39b3878523c4b03f5286fc740752befd192d8b/src/hdmf/build/manager.py#L727-L736) method in hdmf's TypeMap class seems to overwrite the loaded schema???
   * `__NS_CATALOG` seems to actually hold references to the schema but it doesn't seem to be used anywhere except within `__TYPE_MAP` ? 
 * [NWBHDF5IO](https://github.com/NeurodataWithoutBorders/pynwb/blob/dev/src/pynwb/__init__.py#L237-L238) uses `TypeMap` to greate a `BuildManager`
-  * Parent class [HDF5IO](https://github.com/hdmf-dev/hdmf/blob/dd39b3878523c4b03f5286fc740752befd192d8b/src/hdmf/backends/hdf5/h5tools.py#L37) then reimplements a lot of basic functionality from elsehwere
+  * Parent class [HDF5IO](https://github.com/hdmf-dev/hdmf/blob/dd39b3878523c4b03f5286fc740752befd192d8b/src/hdmf/backends/hdf5/h5tools.py#L37) then reimplements a lot of basic functionality from elsewhere
   * Parent-parent metaclass [HDMFIO](https://github.com/hdmf-dev/hdmf/blob/dev/src/hdmf/backends/io.py) appears to be the final writing class?
   * `BuildManager.build` then [calls `TypeMap.build`](https://github.com/hdmf-dev/hdmf/blob/dd39b3878523c4b03f5286fc740752befd192d8b/src/hdmf/build/manager.py#L171) ???
 * `TypeMap.build` ...

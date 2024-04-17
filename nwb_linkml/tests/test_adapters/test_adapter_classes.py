@@ -16,7 +16,7 @@ def test_build_base(nwb_schema):
     assert len(base.classes) == 1
     img = base.classes[0]
     assert img.name == "Image"
-    # no parent class, tree_root shoudl be true
+    # no parent class, tree_root should be true
     assert img.tree_root
     assert len(img.attributes) == 3
 

@@ -311,7 +311,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
         try:
             obj.resize(n, axis=0)
         except TypeError:
-            # contiguous arrays cant be trivially resized, so we have to copy and create a new dataset
+            # contiguous arrays can't be trivially resized, so we have to copy and create a new dataset
             tmp_name = obj.name + '__tmp'
             original_name = obj.name
             obj.parent.move(obj.name, tmp_name)
@@ -326,7 +326,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
 
     # use h5repack to actually remove the items from the dataset
     if shutil.which('h5repack') is None:
-        warnings.warn('Truncated file made, but since h5repack not found in path, file wont be any smaller')
+        warnings.warn('Truncated file made, but since h5repack not found in path, file won't be any smaller')
         return target
 
     print('Repacking hdf5...')

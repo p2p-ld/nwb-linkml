@@ -815,7 +815,7 @@ def resolve_references(src: dict, completed: Dict[str, H5ReadResult]) -> Tuple[d
         if isinstance(item, HDF5_Path):
             other_item = completed.get(item, None)
             if other_item is None:
-                errors.append(f"Couldnt find: {item}")
+                errors.append(f"Couldn't find: {item}")
             res[path] = other_item.result
             completes.append(item)
 
