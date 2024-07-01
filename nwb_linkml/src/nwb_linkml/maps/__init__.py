@@ -2,4 +2,4 @@
 from nwb_linkml.maps.map import Map
 from nwb_linkml.maps.postload import MAP_HDMF_DATATYPE_DEF, MAP_HDMF_DATATYPE_INC
 from nwb_linkml.maps.quantity import QUANTITY_MAP
-from nwb_linkml.maps.dtype import flat_to_linkml, flat_to_npytyping
+from nwb_linkml.maps.dtype import flat_to_linkml, flat_to_nptyping

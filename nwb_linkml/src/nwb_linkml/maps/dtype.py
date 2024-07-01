@@ -1,6 +1,7 @@
 import numpy as np
-from typing import Any
+from typing import Any, Type
 from datetime import datetime
+import nptyping
 
 flat_to_linkml = {
     "float" : "float",
@@ -32,7 +33,7 @@ flat_to_linkml = {
 Map between the flat data types and the simpler linkml base types
 """
 
-flat_to_npytyping = {
+flat_to_nptyping = {
     "float": "Float",
     "float32": "Float32",
     "double": "Double",
@@ -54,10 +55,13 @@ flat_to_npytyping = {
     "utf": "Unicode",
     "utf8": "Unicode",
     "utf_8": "Unicode",
+    "string": "Unicode",
+    "str": "Unicode",
     "ascii": "String",
     "bool": "Bool",
     "isodatetime": "Datetime64",
-    'AnyType': 'Any'
+    'AnyType': 'Any',
+    'object': 'Object'
 }
 
 np_to_python = {
@@ -93,3 +97,17 @@ Following HDMF, it turns out that specifying precision actually specifies minimu
 https://github.com/hdmf-dev/hdmf/blob/ddc842b5c81d96e0b957b96e88533b16c137e206/src/hdmf/validate/validator.py#L22
 https://github.com/hdmf-dev/hdmf/blob/ddc842b5c81d96e0b957b96e88533b16c137e206/src/hdmf/spec/spec.py#L694-L714
 """
+
+
+def struct_from_dtype(dtype: np.dtype) -> Type[nptyping.Structure]:
+    """
+    Create a nptyping Structure from a compound numpy dtype
+
+    nptyping structures have the form::
+
+        Structure["name: Str, age: Int"]
+
+    """
+    struct_pieces = [f'{k}: {flat_to_nptyping[v[0].name]}' for k, v in dtype.fields.items()]
+    struct_dtype = ', '.join(struct_pieces)
+    return nptyping.Structure[struct_dtype]

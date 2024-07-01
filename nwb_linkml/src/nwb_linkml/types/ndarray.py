@@ -13,7 +13,10 @@ from typing import (
 )
 import sys
 from copy import copy
+from functools import reduce
+from operator import or_
 
+import nptyping.structure
 from pydantic_core import core_schema
 from pydantic import (
     BaseModel,
@@ -36,6 +39,46 @@ from nptyping.shape_expression import check_shape
 
 from nwb_linkml.maps.dtype import np_to_python, allowed_precisions
 
+def _list_of_lists_schema(shape, array_type_handler):
+    """
+    Make a pydantic JSON schema for an array as a list of lists
+    """
+    shape_parts = shape.__args__[0].split(',')
+    split_parts = [p.split(' ')[1] if len(p.split(' ')) == 2 else None for p in shape_parts]
+
+    # Construct a list of list schema
+    # go in reverse order - construct list schemas such that
+    # the final schema is the one that checks the first dimension
+    shape_labels = reversed(split_parts)
+    shape_args = reversed(shape.prepared_args)
+    list_schema = None
+    for arg, label in zip(shape_args, shape_labels):
+        # which handler to use? for the first we use the actual type
+        # handler, everywhere else we use the prior list handler
+        if list_schema is None:
+            inner_schema = array_type_handler
+        else:
+            inner_schema = list_schema
+
+        # make a label annotation, if we have one
+        if label is not None:
+            metadata = {'name': label}
+        else:
+            metadata = None
+
+        # make the current level list schema, accounting for shape
+        if arg == '*':
+            list_schema = core_schema.list_schema(inner_schema,
+                                                  metadata=metadata)
+        else:
+            arg = int(arg)
+            list_schema = core_schema.list_schema(
+                inner_schema,
+                min_length=arg,
+                max_length=arg,
+                metadata=metadata
+            )
+    return list_schema
 
 class NDArrayMeta(_NDArrayMeta, implementation="NDArray"):
     """
@@ -59,8 +102,12 @@ class NDArray(NPTypingType, metaclass=NDArrayMeta):
 
         shape, dtype = _source_type.__args__
         # get pydantic core schema for the given specified type
-        array_type_handler = _handler.generate_schema(
-            np_to_python[dtype])
+        if isinstance(dtype, nptyping.structure.StructureMeta):
+            raise NotImplementedError('Jonny finish this')
+            # functools.reduce(operator.or_, [int, float, str])
+        else:
+            array_type_handler = _handler.generate_schema(
+                np_to_python[dtype])
 
         def validate_dtype(value: np.ndarray) -> np.ndarray:
             if dtype is Any:
@@ -82,42 +129,8 @@ class NDArray(NPTypingType, metaclass=NDArrayMeta):
         if shape is Any:
             list_schema = core_schema.list_schema(core_schema.any_schema())
         else:
-            shape_parts = shape.__args__[0].split(',')
-            split_parts = [p.split(' ')[1] if len(p.split(' ')) == 2 else None for p in shape_parts]
+            list_schema = _list_of_lists_schema(shape, array_type_handler)
 
-
-            # Construct a list of list schema
-            # go in reverse order - construct list schemas such that
-            # the final schema is the one that checks the first dimension
-            shape_labels = reversed(split_parts)
-            shape_args = reversed(shape.prepared_args)
-            list_schema = None
-            for arg, label in zip(shape_args, shape_labels):
-                # which handler to use? for the first we use the actual type
-                # handler, everywhere else we use the prior list handler
-                if list_schema is None:
-                    inner_schema = array_type_handler
-                else:
-                    inner_schema = list_schema
-
-                # make a label annotation, if we have one
-                if label is not None:
-                    metadata = {'name': label}
-                else:
-                    metadata = None
-
-                # make the current level list schema, accounting for shape
-                if arg == '*':
-                    list_schema = core_schema.list_schema(inner_schema,
-                                                          metadata=metadata)
-                else:
-                    arg = int(arg)
-                    list_schema = core_schema.list_schema(
-                        inner_schema,
-                        min_length=arg,
-                        max_length=arg,
-                        metadata=metadata
-                    )
 
 
         def array_to_list(instance: np.ndarray | DaskArray) -> list|dict:

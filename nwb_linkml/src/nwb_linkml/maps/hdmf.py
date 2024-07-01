@@ -1,17 +1,19 @@
 """
 Mapping functions for handling HDMF classes like DynamicTables
 """
+import pdb
 from typing import List, Type, Optional, Any
 import warnings
 
-
 import h5py
+import nptyping
 from pydantic import create_model, BaseModel
 import numpy as np
-from nwb_linkml.types.hdf5 import HDF5_Path
-from nwb_linkml.types.ndarray import NDArray, NDArrayProxy
 import dask.array as da
 
+from nwb_linkml.types.hdf5 import HDF5_Path
+from nwb_linkml.types.ndarray import NDArray, NDArrayProxy
+from nwb_linkml.maps.dtype import flat_to_nptyping, struct_from_dtype
 
 def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -> Type[BaseModel]:
     """
@@ -21,10 +23,13 @@ def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -
     types = {}
     for col in colnames:
 
-        nptype = group[col].dtype.type
-        if nptype == np.void:
-            warnings.warn(f"Cant handle numpy void type for column {col} in {group.name}")
-            continue
+        nptype = group[col].dtype
+        if nptype.type == np.void:
+            #pdb.set_trace()
+            nptype = struct_from_dtype(nptype)
+        else:
+            nptype = nptype.type
+
         type_ = Optional[NDArray[Any, nptype]]
 
         # FIXME: handling nested column types that appear only in some versions?

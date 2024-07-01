@@ -35,7 +35,7 @@ from copy import deepcopy, copy
 import warnings
 import inspect
 
-from nwb_linkml.maps import flat_to_npytyping
+from nwb_linkml.maps import flat_to_nptyping
 from linkml.generators import PydanticGenerator
 from linkml_runtime.linkml_model.meta import (
     Annotation,
@@ -160,6 +160,7 @@ class ConfiguredBaseModel(BaseModel):
         template += """{{ '\n\n' }}"""
         for cls in extra_classes:
             template += inspect.getsource(cls) + '\n\n'
+
     ### ENUMS ###
     template += """
 {% for e in enums.values() %}
@@ -445,7 +446,7 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         # all dimensions should be the same dtype
         try:
-            dtype = flat_to_npytyping[list(attrs.values())[0].range]
+            dtype = flat_to_nptyping[list(attrs.values())[0].range]
         except KeyError as e: # pragma: no cover
             warnings.warn(str(e))
             range = list(attrs.values())[0].range
