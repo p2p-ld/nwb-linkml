@@ -123,7 +123,7 @@ class HDF5Map(Map):
     priority: int = 0
     """
     Within a phase, sort mapping operations from low to high priority
-    (maybe this should be renamed because highest priority last doesnt make a lot of sense)
+    (maybe this should be renamed because highest priority last doesn't make a lot of sense)
     """
 
     @classmethod
@@ -815,7 +815,7 @@ def resolve_references(src: dict, completed: Dict[str, H5ReadResult]) -> Tuple[d
         if isinstance(item, HDF5_Path):
             other_item = completed.get(item, None)
             if other_item is None:
-                errors.append(f"Couldnt find: {item}")
+                errors.append(f"Couldn't find: {item}")
             res[path] = other_item.result
             completes.append(item)
 

@@ -30,3 +30,10 @@ ipywidgets = "^8.1.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git*,*.lock,*.css,./nwb_linkml/src/nwb_linkml/models,./nwb_linkml/src/nwb_linkml/schema'
+check-hidden = true
+# ignore-regex = ''
+# ignore-words-list = ''

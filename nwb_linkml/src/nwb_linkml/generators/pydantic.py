@@ -461,7 +461,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         if all([s.required for s in cls.attributes.values()]): # pragma: no cover
             return self._make_npytyping_range(cls.attributes)
         # otherwise we need to make permutations
-        # but not all permutations, because we typically just want to be able to exlude the last possible dimensions
+        # but not all permutations, because we typically just want to be able to exclude the last possible dimensions
         # the array classes should always be well-defined where the optional dimensions are at the end, so
         requireds = {k:v for k,v in cls.attributes.items() if v.required}
         optionals = [(k,v) for k, v in cls.attributes.items() if not v.required]

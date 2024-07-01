@@ -243,7 +243,7 @@ class NamespacesAdapter(Adapter):
                     ns = ns[0]
                     break
             else:
-                raise NameError(f"Couldnt find namespace {name}")
+                raise NameError(f"Couldn't find namespace {name}")
         else:
             ns = ns[0]
 

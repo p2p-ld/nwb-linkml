@@ -1,9 +1,9 @@
 """
 Mapping functions for handling HDMF classes like DynamicTables
 """
-import pdb
 from typing import List, Type, Optional, Any
 import warnings
+
 
 import h5py
 import nptyping
@@ -25,7 +25,6 @@ def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -
 
         nptype = group[col].dtype
         if nptype.type == np.void:
-            #pdb.set_trace()
             nptype = struct_from_dtype(nptype)
         else:
             nptype = nptype.type
@@ -69,7 +68,7 @@ def dynamictable_to_model(
                 #     # dask can't handle this, we just arrayproxy it
                 items[col] = NDArrayProxy(h5f_file=group.file.filename, path=group[col].name)
                 #else:
-                #    warnings.warn(f"Dask cant handle object type arrays like {col} in {group.name}. Skipping")
+                #    warnings.warn(f"Dask can't handle object type arrays like {col} in {group.name}. Skipping")
                 # pdb.set_trace()
                 # # can't auto-chunk with "object" type
                 # items[col] = da.from_array(group[col], chunks=-1)
