@@ -4,9 +4,17 @@ Maps to change the loaded .yaml from nwb schema before it's given to the nwb_sch
 
 import ast
 import re
+import sys
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import ClassVar, List, Optional
+
+if sys.version_info.minor < 11:
+    from enum import StrEnum
+else:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        """StrEnum-ish class for python 3.10"""
 
 
 class SCOPE_TYPES(StrEnum):
