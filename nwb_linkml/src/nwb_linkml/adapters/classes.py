@@ -1,13 +1,16 @@
 """
 Adapters to linkML classes
 """
+
 from abc import abstractmethod
 from typing import List, Optional
-from nwb_schema_language import Dataset, Group, ReferenceDtype, CompoundDtype, DTypeType
-from nwb_linkml.adapters.adapter import Adapter, BuildResult
+
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+
+from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
+from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype
 
 
 class ClassAdapter(Adapter):
@@ -15,8 +18,9 @@ class ClassAdapter(Adapter):
     Abstract adapter to class-like things in linkml, holds methods common to
     both DatasetAdapter and GroupAdapter
     """
+
     cls: Dataset | Group
-    parent: Optional['ClassAdapter'] = None
+    parent: Optional["ClassAdapter"] = None
 
     @abstractmethod
     def build(self) -> BuildResult:
@@ -26,8 +30,7 @@ class ClassAdapter(Adapter):
         Subclasses call :meth:`.build_base` to get the basics true of both groups and datasets
         """
 
-
-    def build_base(self, extra_attrs: Optional[List[SlotDefinition]]=None) -> BuildResult:
+    def build_base(self, extra_attrs: Optional[List[SlotDefinition]] = None) -> BuildResult:
         """
         Build the basic class and attributes before adding any specific
         modifications for groups or datasets.
@@ -37,60 +40,69 @@ class ClassAdapter(Adapter):
 
         If the class has no parent, then...
 
-        * Its name is inferred from its `neurodata_type_def`,  fixed name, or `neurodata_type_inc` in that order
+        * Its name is inferred from its `neurodata_type_def`,  fixed name, or
+          `neurodata_type_inc` in that order
         * It is just built as normal class!
-        * It will be indicated as a ``tree_root`` (which will primarily be used to invert the translation for write operations)
+        * It will be indicated as a ``tree_root`` (which will primarily be used to invert the
+          translation for write operations)
 
         If the class has a parent, then...
 
-        * If it has a `neurodata_type_def` or `inc`,  that will be used as its name, otherwise concatenate `parent__child`,
+        * If it has a `neurodata_type_def` or `inc`,  that will be used as its name,
+          otherwise concatenate `parent__child`,
           eg. ``TimeSeries__TimeSeriesData``
-        * A slot will also be made and returned with the BuildResult, which the parent will then have as one of its attributes.
+        * A slot will also be made and returned with the BuildResult,
+          which the parent will then have as one of its attributes.
         """
 
         # Build this class
         kwargs = {}
         if self.parent is not None:
-            kwargs['name'] = self._get_full_name()
+            kwargs["name"] = self._get_full_name()
         else:
-            kwargs['name'] = self._get_attr_name()
-            kwargs['tree_root'] = True
+            kwargs["name"] = self._get_attr_name()
+            kwargs["tree_root"] = True
 
         # Attributes
         name_slot = self.build_name_slot()
-        kwargs['attributes'] = [name_slot]
+        kwargs["attributes"] = [name_slot]
         # Get vanilla top-level attributes
-        kwargs['attributes'].extend(self.build_attrs(self.cls))
+        kwargs["attributes"].extend(self.build_attrs(self.cls))
 
         if extra_attrs is not None:
             if isinstance(extra_attrs, SlotDefinition):
                 extra_attrs = [extra_attrs]
-            kwargs['attributes'].extend(extra_attrs)
-        kwargs['description'] = self.cls.doc
-        kwargs['is_a'] = self.cls.neurodata_type_inc
+            kwargs["attributes"].extend(extra_attrs)
+        kwargs["description"] = self.cls.doc
+        kwargs["is_a"] = self.cls.neurodata_type_inc
 
-        cls = ClassDefinition(
-            **kwargs
-        )
+        cls = ClassDefinition(**kwargs)
 
         slots = []
         if self.parent is not None:
             slots.append(self.build_self_slot())
 
-        res = BuildResult(
-            classes = [cls],
-            slots = slots
-        )
+        res = BuildResult(classes=[cls], slots=slots)
 
         return res
 
     def build_attrs(self, cls: Dataset | Group) -> List[SlotDefinition]:
+        """
+        Pack the class attributes into a list of SlotDefinitions
+
+        Args:
+            cls: (:class:`.Dataset` | :class:`.Group`): Class to pack
+
+        Returns:
+            list[:class:`.SlotDefinition`]
+        """
         attrs = [
             SlotDefinition(
                 name=attr.name,
                 description=attr.doc,
                 range=self.handle_dtype(attr.dtype),
-            ) for attr in cls.attributes
+            )
+            for attr in cls.attributes
         ]
 
         return attrs
@@ -110,12 +122,12 @@ class ClassAdapter(Adapter):
                 name_parts.append(self.parent._get_full_name())
 
             name_parts.append(self.cls.name)
-            name = '__'.join(name_parts)
+            name = "__".join(name_parts)
         elif self.cls.neurodata_type_inc is not None:
             # again, this is against the schema, but is common
             name = self.cls.neurodata_type_inc
         else:
-            raise ValueError('Not sure what our name is!')
+            raise ValueError("Not sure what our name is!")
 
         return name
 
@@ -131,7 +143,7 @@ class ClassAdapter(Adapter):
         elif self.cls.neurodata_type_inc is not None:
             name = self.cls.neurodata_type_inc
         else:
-            raise ValueError(f'Class has no name!: {self.cls}')
+            raise ValueError(f"Class has no name!: {self.cls}")
 
         return name
 
@@ -148,25 +160,34 @@ class ClassAdapter(Adapter):
         elif self.cls.neurodata_type_inc:
             name = camel_to_snake(self.cls.neurodata_type_inc)
         else:
-            raise ValueError(f'Class has no name!: {self.cls}')
+            raise ValueError(f"Class has no name!: {self.cls}")
 
         return name
 
     @classmethod
     def handle_dtype(cls, dtype: DTypeType | None) -> str:
+        """
+        Get the string form of a dtype
+
+        Args:
+            dtype (:class:`.DTypeType`): Dtype to stringify
+
+        Returns:
+            str
+        """
         if isinstance(dtype, ReferenceDtype):
             return dtype.target_type
         elif dtype is None or dtype == []:
             # Some ill-defined datasets are "abstract" despite that not being in the schema language
-            return 'AnyType'
+            return "AnyType"
         elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
             # there is precisely one class that uses compound dtypes:
             # TimeSeriesReferenceVectorData
             # compoundDtypes are able to define a ragged table according to the schema
             # but are used in this single case equivalently to attributes.
             # so we'll... uh... treat them as slots.
-             # TODO
-            return 'AnyType'
+            # TODO
+            return "AnyType"
 
         else:
             # flat dtype
@@ -187,20 +208,15 @@ class ClassAdapter(Adapter):
         """
         if self.cls.name:
             name_slot = SlotDefinition(
-                name='name',
+                name="name",
                 required=True,
-                ifabsent=f'string({self.cls.name})',
+                ifabsent=f"string({self.cls.name})",
                 equals_string=self.cls.name,
-                range='string',
-                identifier=True
+                range="string",
+                identifier=True,
             )
         else:
-            name_slot = SlotDefinition(
-                name='name',
-                required=True,
-                range='string',
-                identifier=True
-            )
+            name_slot = SlotDefinition(name="name", required=True, range="string", identifier=True)
         return name_slot
 
     def build_self_slot(self) -> SlotDefinition:
@@ -211,12 +227,5 @@ class ClassAdapter(Adapter):
             name=self._get_slot_name(),
             description=self.cls.doc,
             range=self._get_full_name(),
-            **QUANTITY_MAP[self.cls.quantity]
+            **QUANTITY_MAP[self.cls.quantity],
         )
-
-
-
-
-
-
-

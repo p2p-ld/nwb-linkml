@@ -8,6 +8,8 @@ dev = [
     '-e nwb-linkml @ file:///${PROJECT_ROOT}/nwb_linkml',
     '-e nwb-schema-language @ file:///${PROJECT_ROOT}/nwb_schema_language',
     '-e docs @ file:///${PROJECT_ROOT}/docs',
+    "ruff>=0.5.0",
+    "black>=24.4.2",
 ]
 
 [tool.codespell]
@@ -16,3 +18,79 @@ skip = '.git*,*.lock,*.css,./nwb_linkml/src/nwb_linkml/models,./nwb_linkml/src/n
 check-hidden = true
 # ignore-regex = ''
 # ignore-words-list = ''
+
+[tool.ruff]
+target-version = "py311"
+include = ["nwb_linkml/**/*.py", "nwb_schema_language/src/**/*.py", "pyproject.toml"]
+exclude = [
+    "docs",
+    "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_language.py",
+    "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_pydantic.py",
+    "nwb_linkml/src/nwb_linkml/models/**/*.py"
+]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # annotations
+    "ANN",
+    ## ----------
+    # pydocstyle
+    # undocumented public objects
+    "D100", "D101", "D102", "D103", "D104", "D106",
+    # indentation
+    "D207", "D208", "D209",
+    # whitespace
+    "D210", "D211",
+    # emptiness
+    "D419",
+]
+ignore = [
+    # annotations for *args and **kwargs
+    "ANN002", "ANN003",
+    # annoying annotation rules
+    "ANN101", "ANN102", "ANN401", "ANN204",
+    # explicit strict arg for zip
+    "B905",
+    # builtin type annotations
+    "UP006", "UP035",
+    # | for Union types (only supported >=3.10
+    "UP007", "UP038",
+]
+
+fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**.py" = ["D", "ANN", "E501", "F841", "F722"]
+
+[tool.mypy]
+plugins = [
+    "pydantic.mypy"
+]
+packages = [
+    "miniscope_io"
+]
+exclude = [
+    '.*vendor.*'
+]
+follow_imports = "silent"
+warn_unreachable = true
+
+[tool.black]
+target-version = ['py38', 'py39', 'py310', 'py311']
+enable-unstable-feature = ["string_processing"]
+preview = true
+include = "nwb_linkml/.*\\.py$|nwb_schema_language/.*\\.py$"
+line-length = 100

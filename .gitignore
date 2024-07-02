@@ -165,3 +165,4 @@ prof
 jupyter_execute
 
 .pdm-python
+.venv*

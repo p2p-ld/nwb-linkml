@@ -21,6 +21,7 @@ dependencies = [
     "dask>=2023.9.2",
     "blosc2>=2.2.7",
     "tqdm>=4.66.1",
+    'typing-extensions>=4.12.2;python_version<"3.11"',
 ]
 
 [project.urls]
@@ -42,6 +43,12 @@ tests = [
     "coveralls<4.0.0,>=3.3.1",
     "pytest-profiling<2.0.0,>=1.7.0",
     "sybil<6.0.0,>=5.0.3",
+    "requests-cache>=1.2.1",
+]
+dev = [
+    "nwb-linkml[tests]",
+    "ruff>=0.5.0",
+    "black>=24.4.2",
 ]
 
 [tool.pdm]

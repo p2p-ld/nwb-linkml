@@ -1,48 +1,76 @@
 """
 Define and manage NWB namespaces in external repositories
 """
-import pdb
-from typing import Optional, Dict, List
+
+import shutil
+import subprocess
+import tempfile
 import warnings
 from pathlib import Path
-import tempfile
-import subprocess
-import shutil
+from typing import List, Optional
 
-from pydantic import BaseModel, HttpUrl, FilePath, DirectoryPath, Field
+from pydantic import BaseModel, DirectoryPath, Field, HttpUrl
 
 from nwb_linkml.config import Config
+
 
 class NamespaceRepo(BaseModel):
     """
     Definition of one NWB namespaces file to import from a git repository
     """
-    name: str = Field(description="Short name used to refer to this namespace (usually equivalent to the name field within a namespaces NWB list)")
-    repository: HttpUrl | DirectoryPath = Field(description="URL or local absolute path to the root repository")
+
+    name: str = Field(
+        description=(
+            "Short name used to refer to this namespace (usually equivalent to the name field"
+            " within a namespaces NWB list)"
+        )
+    )
+    repository: HttpUrl | DirectoryPath = Field(
+        description="URL or local absolute path to the root repository"
+    )
     path: Path = Field(description="Relative path from the repository root to the namespace file")
     versions: List[str] = Field(
-        description="Known versions for this namespace repository, correspond to commit hashes or git tags that can be checked out by :class:`.GitRepo`",
-        default_factory=list
+        description=(
+            "Known versions for this namespace repository, correspond to commit hashes or git tags"
+            " that can be checked out by :class:`.GitRepo`"
+        ),
+        default_factory=list,
     )
 
-    def provide_from_git(self, commit:str|None=None) -> Path:
+    def provide_from_git(self, commit: str | None = None) -> Path:
+        """Provide a namespace file from a git repo"""
         git = GitRepo(self, commit)
         git.clone()
         return git.namespace_file
+
 
 # Constant namespaces
 NWB_CORE_REPO = NamespaceRepo(
     name="core",
     repository="https://github.com/NeurodataWithoutBorders/nwb-schema",
     path=Path("core/nwb.namespace.yaml"),
-    versions=["2.2.0", "2.2.1", "2.2.2", "2.2.4", "2.2.5", "2.3.0", "2.4.0", "2.5.0", "2.6.0"]
+    versions=["2.2.0", "2.2.1", "2.2.2", "2.2.4", "2.2.5", "2.3.0", "2.4.0", "2.5.0", "2.6.0"],
 )
 
 HDMF_COMMON_REPO = NamespaceRepo(
     name="hdmf-common",
     repository="https://github.com/hdmf-dev/hdmf-common-schema",
     path=Path("common/namespace.yaml"),
-    versions=["1.1.0", "1.1.1", "1.1.2", "1.1.3", "1.2.0", "1.2.1", "1.3.0", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.7.0", "1.8.0"]
+    versions=[
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.4.0",
+        "1.5.0",
+        "1.5.1",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+    ],
 )
 
 DEFAULT_REPOS = {
@@ -51,37 +79,34 @@ DEFAULT_REPOS = {
 
 
 class GitError(OSError):
-    pass
+    """Exceptions caused by git!"""
+
 
 class GitRepo:
     """
     Manage a temporary git repository that provides the NWB yaml files
     """
+
     def __init__(
-            self,
-            namespace:NamespaceRepo,
-            commit:str|None=None,
-            path: Optional[Path] = None
+        self, namespace: NamespaceRepo, commit: str | None = None, path: Optional[Path] = None
     ):
         """
         Args:
             namespace (:class:`.NamespaceRepo`): The namespace repository to clone!
             commit (str): A specific commit or tag to check out
-            path (:class:`pathlib.Path`): A directory to clone to - if ``None``, use :attr:`~.Config.git_dir` / :attr:`.NamespaceRepo.name`
+            path (:class:`pathlib.Path`): A directory to clone to -
+                if ``None``, use :attr:`~.Config.git_dir` / :attr:`.NamespaceRepo.name`
         """
         self._temp_directory = path
         self.namespace = namespace
         self._commit = commit
 
-
-
-    def _git_call(self, *args) -> subprocess.CompletedProcess:
-        res = subprocess.run(
-            ['git', '-C', self.temp_directory, *args],
-            capture_output=True
-        )
+    def _git_call(self, *args: List[str]) -> subprocess.CompletedProcess:
+        res = subprocess.run(["git", "-C", self.temp_directory, *args], capture_output=True)
         if res.returncode != 0:
-            raise GitError(f'Git call did not complete successfully.\n---\nCall: {args}\nResult: {res.stderr}')
+            raise GitError(
+                f"Git call did not complete successfully.\n---\nCall: {args}\nResult: {res.stderr}"
+            )
         return res
 
     @property
@@ -102,16 +127,16 @@ class GitRepo:
         """
         URL for "origin" remote
         """
-        res = self._git_call('remote', 'get-url', 'origin')
-        return res.stdout.decode('utf-8').strip()
+        res = self._git_call("remote", "get-url", "origin")
+        return res.stdout.decode("utf-8").strip()
 
     @property
     def active_commit(self) -> str:
         """
         Currently checked out commit
         """
-        res = self._git_call('rev-parse', 'HEAD')
-        commit = res.stdout.decode('utf-8').strip()
+        res = self._git_call("rev-parse", "HEAD")
+        commit = res.stdout.decode("utf-8").strip()
         return commit
 
     @property
@@ -129,23 +154,24 @@ class GitRepo:
         If ``None``: if :attr:`NamespaceRepo.versions`, use the last version. Otherwise use ``HEAD``
 
         Should match :attr:`.active_commit`, differs semantically in that it is used to
-        set the active_commit, while :attr:`.active_commit` reads what commit is actually checked out
+        set the active_commit, while :attr:`.active_commit`
+        reads what commit is actually checked out
         """
         return self._commit
 
     @commit.setter
-    def commit(self, commit:str|None):
+    def commit(self, commit: str | None) -> None:
         # setting commit as None should do nothing if we have already cloned,
         # and if we are just cloning we will always be at the most recent commit anyway
         if commit is not None:
             # first get out of a potential detached head state
             # that would cause a call to "HEAD" to fail in unexpected ways
             if self.detached_head:
-                self._git_call('checkout', self.default_branch)
+                self._git_call("checkout", self.default_branch)
 
-            self._git_call('checkout', commit)
+            self._git_call("checkout", commit)
 
-        self._git_call('submodule', 'update', '--init', '--recursive')
+        self._git_call("submodule", "update", "--init", "--recursive")
         self._commit = commit
 
     @property
@@ -172,16 +198,16 @@ class GitRepo:
             '2.6.0-5-gec0a879'
 
         """
-        res =  self._git_call('describe', '--tags')
-        return res.stdout.decode('utf-8').strip()
+        res = self._git_call("describe", "--tags")
+        return res.stdout.decode("utf-8").strip()
 
     @tag.setter
-    def tag(self, tag:str):
+    def tag(self, tag: str) -> None:
         # first check that we have the most recent tags
-        self._git_call('fetch', '--all', '--tags')
-        self._git_call('checkout', f'tags/{tag}')
+        self._git_call("fetch", "--all", "--tags")
+        self._git_call("checkout", f"tags/{tag}")
         # error will be raised by _git_call if tag not found
-        self._git_call('submodule', 'update', '--init', '--recursive')
+        self._git_call("submodule", "update", "--init", "--recursive")
 
     @property
     def default_branch(self) -> str:
@@ -190,8 +216,8 @@ class GitRepo:
 
         Gotten from ``git symbolic-ref``
         """
-        res = self._git_call('symbolic-ref', 'refs/remotes/origin/HEAD')
-        return res.stdout.decode('utf-8').strip().split('/')[-1]
+        res = self._git_call("symbolic-ref", "refs/remotes/origin/HEAD")
+        return res.stdout.decode("utf-8").strip().split("/")[-1]
 
     @property
     def detached_head(self) -> bool:
@@ -202,12 +228,9 @@ class GitRepo:
         Returns:
             bool: ``True`` if in detached head mode, ``False`` otherwise
         """
-        res = self._git_call('branch', '--show-current')
-        branch = res.stdout.decode('utf-8').strip()
-        if not branch:
-            return True
-        else:
-            return False
+        res = self._git_call("branch", "--show-current")
+        branch = res.stdout.decode("utf-8").strip()
+        return not branch
 
     def check(self) -> bool:
         """
@@ -230,13 +253,17 @@ class GitRepo:
 
         # Check that the remote matches
         if self.remote != str(self.namespace.repository):
-            warnings.warn(f'Repository exists, but has the wrong remote URL.\nExpected: {self.namespace.repository}\nGot:{self.remote.strip(".git")}')
+            warnings.warn(
+                "Repository exists, but has the wrong remote URL.\nExpected:"
+                f" {self.namespace.repository}\nGot:{self.remote.strip('.git')}",
+                stacklevel=2,
+            )
             return False
 
         # otherwise we're good
         return True
 
-    def cleanup(self, force: bool=False):
+    def cleanup(self, force: bool = False) -> None:
         """
         Delete contents of temporary directory
 
@@ -246,17 +273,21 @@ class GitRepo:
             force (bool): If ``True``, remove git directory no matter where it is
         """
         if not force and not (
-                str(self.temp_directory).startswith(tempfile.gettempdir()) or
-                str(self.temp_directory).startswith(str(Config().git_dir))
+            str(self.temp_directory).startswith(tempfile.gettempdir())
+            or str(self.temp_directory).startswith(str(Config().git_dir))
         ):
-            warnings.warn('Temp directory is outside of the system temp dir or git directory set by environmental variables, not deleting in case this has been changed by mistake')
+            warnings.warn(
+                "Temp directory is outside of the system temp dir or git directory set by"
+                " environmental variables, not deleting in case this has been changed by mistake",
+                stacklevel=2,
+            )
             self._temp_directory = None
             return
 
         shutil.rmtree(str(self.temp_directory))
         self._temp_directory = None
 
-    def clone(self, force:bool=False):
+    def clone(self, force: bool = False) -> None:
         """
         Clone the repository into the temporary directory
 
@@ -271,7 +302,11 @@ class GitRepo:
                 self.cleanup()
             else:
                 if not self.check():
-                    warnings.warn('Destination directory is not empty and does not pass checks for correctness! cleaning up')
+                    warnings.warn(
+                        "Destination directory is not empty and does not pass checks for"
+                        " correctness! cleaning up",
+                        stacklevel=2,
+                    )
                     self.cleanup()
                 else:
                     # already have it, just ensure commit and return
@@ -281,17 +316,9 @@ class GitRepo:
             # exists but empty
             self.cleanup()
 
-        res = subprocess.run(['git', 'clone', str(self.namespace.repository), str(self.temp_directory)])
+        res = subprocess.run(
+            ["git", "clone", str(self.namespace.repository), str(self.temp_directory)]
+        )
         self.commit = self.commit
         if res.returncode != 0:
-            raise GitError(f'Could not clone repository:\n{res.stderr}')
-
-
-
-
-
-
-
-
-
-
+            raise GitError(f"Could not clone repository:\n{res.stderr}")

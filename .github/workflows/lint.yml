@@ -1,17 +1,29 @@
-# Codespell configuration is within pyproject.toml
----
-name: Codespell
+name: Lint
 
 on:
   push:
-    branches: [main]
   pull_request:
     branches: [main]
+
 
 permissions:
   contents: read
 
 jobs:
+  ruff:
+    name: Ruff Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: chartboost/ruff-action@v1
+
+  black:
+    name: Black Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+
   codespell:
     name: Check for spelling errors
     runs-on: ubuntu-latest

@@ -2,7 +2,10 @@
 Monkeypatches to external modules
 """
 
-def patch_npytyping_perf():
+# ruff: noqa: ANN001 - not well defined types for this module
+
+
+def patch_npytyping_perf() -> None:
     """
     npytyping makes an expensive call to inspect.stack()
     that makes imports of pydantic models take ~200x longer than
@@ -11,26 +14,29 @@ def patch_npytyping_perf():
     References:
         - https://github.com/ramonhagenaars/nptyping/issues/110
     """
-    from nptyping import ndarray
-    from nptyping.pandas_ import dataframe
-    from nptyping import recarray
-    from nptyping import base_meta_classes
     import inspect
     from types import FrameType
 
+    from nptyping import base_meta_classes, ndarray, recarray
+    from nptyping.pandas_ import dataframe
+
     # make a new __module__ methods for the affected classes
     def new_module_ndarray(cls) -> str:
-        return cls._get_module(inspect.currentframe(), 'nptyping.ndarray')
+        return cls._get_module(inspect.currentframe(), "nptyping.ndarray")
 
     def new_module_recarray(cls) -> str:
-        return cls._get_module(inspect.currentframe(), 'nptyping.recarray')
+        return cls._get_module(inspect.currentframe(), "nptyping.recarray")
 
     def new_module_dataframe(cls) -> str:
-        return cls._get_module(inspect.currentframe(), 'nptyping.pandas_.dataframe')
+        return cls._get_module(inspect.currentframe(), "nptyping.pandas_.dataframe")
 
     # and a new _get_module method for the parent class
     def new_get_module(cls, stack: FrameType, module: str) -> str:
-        return "typing" if inspect.getframeinfo(stack.f_back).function == "formatannotation" else module
+        return (
+            "typing"
+            if inspect.getframeinfo(stack.f_back).function == "formatannotation"
+            else module
+        )
 
     # now apply the patches
     ndarray.NDArrayMeta.__module__ = property(new_module_ndarray)
@@ -38,20 +44,18 @@ def patch_npytyping_perf():
     dataframe.DataFrameMeta.__module__ = property(new_module_dataframe)
     base_meta_classes.SubscriptableMeta._get_module = new_get_module
 
-def patch_nptyping_warnings():
+
+def patch_nptyping_warnings() -> None:
     """
     nptyping shits out a bunch of numpy deprecation warnings from using
     olde aliases
     """
     import warnings
-    warnings.filterwarnings(
-        'ignore',
-        category=DeprecationWarning,
-        module='nptyping.*'
-    )
+
+    warnings.filterwarnings("ignore", category=DeprecationWarning, module="nptyping.*")
 
 
-def patch_schemaview():
+def patch_schemaview() -> None:
     """
     Patch schemaview to correctly resolve multiple layers of relative imports.
 
@@ -60,13 +64,16 @@ def patch_schemaview():
     Returns:
 
     """
-    from typing import List
     from functools import lru_cache
-    from linkml_runtime.utils.schemaview import SchemaView
+    from typing import List
 
     from linkml_runtime.linkml_model import SchemaDefinitionName
-    @lru_cache()
-    def imports_closure(self, imports: bool = True, traverse=True, inject_metadata=True) -> List[SchemaDefinitionName]:
+    from linkml_runtime.utils.schemaview import SchemaView
+
+    @lru_cache
+    def imports_closure(
+        self, imports: bool = True, traverse=True, inject_metadata=True
+    ) -> List[SchemaDefinitionName]:
         """
         Return all imports
 
@@ -92,9 +99,9 @@ def patch_schemaview():
             if sn not in closure:
                 closure.append(sn)
             for i in s.imports:
-                if sn.startswith('.') and ':' not in i:
+                if sn.startswith(".") and ":" not in i:
                     # prepend the relative part
-                    i = '/'.join(sn.split('/')[:-1]) + '/' + i
+                    i = "/".join(sn.split("/")[:-1]) + "/" + i
                 if i not in visited:
                     todo.append(i)
         if inject_metadata:
@@ -108,7 +115,9 @@ def patch_schemaview():
 
     SchemaView.imports_closure = imports_closure
 
-def apply_patches():
+
+def apply_patches() -> None:
+    """Apply all monkeypatches"""
     patch_npytyping_perf()
     patch_nptyping_warnings()
     patch_schemaview()

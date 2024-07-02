@@ -1,48 +1,45 @@
 """
 Mapping functions for handling HDMF classes like DynamicTables
 """
-from typing import List, Type, Optional, Any
-import warnings
 
+from typing import Any, List, Optional, Type
 
-import h5py
-import nptyping
-from pydantic import create_model, BaseModel
-import numpy as np
 import dask.array as da
+import h5py
+import numpy as np
+from pydantic import BaseModel, create_model
 
+from nwb_linkml.maps.dtype import struct_from_dtype
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArray, NDArrayProxy
-from nwb_linkml.maps.dtype import flat_to_nptyping, struct_from_dtype
 
-def model_from_dynamictable(group:h5py.Group, base:Optional[BaseModel] = None) -> Type[BaseModel]:
+
+def model_from_dynamictable(group: h5py.Group, base: Optional[BaseModel] = None) -> Type[BaseModel]:
     """
     Create a pydantic model from a dynamic table
     """
-    colnames = group.attrs['colnames']
+    colnames = group.attrs["colnames"]
     types = {}
     for col in colnames:
 
         nptype = group[col].dtype
-        if nptype.type == np.void:
-            nptype = struct_from_dtype(nptype)
-        else:
-            nptype = nptype.type
+        nptype = struct_from_dtype(nptype) if nptype.type == np.void else nptype.type
 
         type_ = Optional[NDArray[Any, nptype]]
 
         # FIXME: handling nested column types that appear only in some versions?
-        #types[col] = (List[type_ | None], ...)
+        # types[col] = (List[type_ | None], ...)
         types[col] = (type_, None)
 
-    model = create_model(group.name.split('/')[-1], **types, __base__=base)
+    model = create_model(group.name.split("/")[-1], **types, __base__=base)
     return model
 
 
 def dynamictable_to_model(
-    group:h5py.Group,
-    model:Optional[Type[BaseModel]]=None,
-    base:Optional[Type[BaseModel]] = None) -> BaseModel:
+    group: h5py.Group,
+    model: Optional[Type[BaseModel]] = None,
+    base: Optional[Type[BaseModel]] = None,
+) -> BaseModel:
     """
     Instantiate a dynamictable model
 
@@ -53,7 +50,7 @@ def dynamictable_to_model(
 
     items = {}
     for col, col_type in model.model_fields.items():
-        if col not in group.keys():
+        if col not in group:
             if col in group.attrs:
                 items[col] = group.attrs[col]
             continue
@@ -64,21 +61,12 @@ def dynamictable_to_model(
             try:
                 items[col] = da.from_array(group[col])
             except NotImplementedError:
-                # if str in get_inner_types(col_type.annotation):
-                #     # dask can't handle this, we just arrayproxy it
                 items[col] = NDArrayProxy(h5f_file=group.file.filename, path=group[col].name)
-                #else:
-                #    warnings.warn(f"Dask can't handle object type arrays like {col} in {group.name}. Skipping")
-                # pdb.set_trace()
-                # # can't auto-chunk with "object" type
-                # items[col] = da.from_array(group[col], chunks=-1)
 
-    return model.model_construct(hdf5_path = group.name,
-                 name = group.name.split('/')[-1],
-                 **items)
+    return model.model_construct(hdf5_path=group.name, name=group.name.split("/")[-1], **items)
 
 
-def dereference_reference_vector(dset: h5py.Dataset, data:Optional[List[Any]]) -> List:
+def dereference_reference_vector(dset: h5py.Dataset, data: Optional[List[Any]]) -> List:
     """
     Given a compound dataset with indices, counts, and object references, dereference to values
 
@@ -91,6 +79,5 @@ def dereference_reference_vector(dset: h5py.Dataset, data:Optional[List[Any]]) -
         data = dset[:]
 
     target = dset.parent.get(data[0][-1])
-    res = [target[d[0]:d[0]+d[1]] for d in data]
+    res = [target[d[0] : d[0] + d[1]] for d in data]
     return res
-
