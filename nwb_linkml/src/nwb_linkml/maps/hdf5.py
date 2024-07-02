@@ -12,8 +12,8 @@ so we will make our own mapping class here and re-evaluate whether they should b
 import contextlib
 import datetime
 import inspect
+import sys
 from abc import abstractmethod
-from enum import StrEnum
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple, Type, Union
 
@@ -26,6 +26,14 @@ from nwb_linkml.maps.hdmf import dynamictable_to_model
 from nwb_linkml.providers.schema import SchemaProvider
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArrayProxy
+
+if sys.version_info.minor >= 11:
+    from enum import StrEnum
+else:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        """StrEnum-ish class for python 3.10"""
 
 
 class ReadPhases(StrEnum):

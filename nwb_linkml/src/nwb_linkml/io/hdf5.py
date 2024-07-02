@@ -24,10 +24,11 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import warnings
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Dict, List, Never, Optional, Union, overload
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, overload
 
 import h5py
 import numpy as np
@@ -40,6 +41,11 @@ from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
 from nwb_linkml.providers.schema import SchemaProvider
+
+if sys.version_info.minor >= 11:
+    from typing import Never
+else:
+    from typing_extensions import Never
 
 
 class HDF5IO:
