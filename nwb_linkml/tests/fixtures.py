@@ -17,6 +17,19 @@ from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.io import schema as io
 from nwb_schema_language import Attribute, Dataset, Group
 
+__all__ = [
+    "NWBSchemaTest",
+    "TestSchemas",
+    "data_dir",
+    "linkml_schema",
+    "linkml_schema_bare",
+    "nwb_core_fixture",
+    "nwb_schema",
+    "tmp_output_dir",
+    "tmp_output_dir_func",
+    "tmp_output_dir_mod",
+]
+
 
 @pytest.fixture(scope="session")
 def tmp_output_dir() -> Path:
