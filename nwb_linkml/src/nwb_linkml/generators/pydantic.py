@@ -785,7 +785,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             underscore=underscore,
             enums=enums,
             predefined_slot_values=predefined_slot_values,
-            allow_extra=self.allow_extra,
+            allow_extra=self.extra_fields,
             metamodel_version=self.schema.metamodel_version,
             version=self.schema.version,
             class_isa_plus_mixins=self.get_class_isa_plus_mixins(sorted_classes),

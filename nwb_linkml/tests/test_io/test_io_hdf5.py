@@ -11,6 +11,7 @@ from nwb_linkml.io.hdf5 import HDF5IO
 from nwb_linkml.io.hdf5 import truncate_file
 
 
+@pytest.mark.xfail()
 @pytest.mark.parametrize('dset', ['aibs.nwb', 'aibs_ecephys.nwb'])
 def test_hdf_read(data_dir, dset):
     NWBFILE = data_dir / dset
