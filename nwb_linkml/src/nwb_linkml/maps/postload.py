@@ -8,7 +8,7 @@ import sys
 from dataclasses import dataclass
 from typing import ClassVar, List, Optional
 
-if sys.version_info.minor < 11:
+if sys.version_info.minor >= 11:
     from enum import StrEnum
 else:
     from enum import Enum
