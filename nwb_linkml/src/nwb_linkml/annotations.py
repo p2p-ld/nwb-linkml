@@ -3,10 +3,15 @@ Utility functions for introspection on python annotations
 """
 
 import typing
-from typing import Any, List
+from typing import Any, List, Optional, Type, TypeVar
+
+T = TypeVar('T')
 
 
-def unwrap_optional(annotation):
+def unwrap_optional(annotation: Type[Optional[T]]) -> Type[T]:
+    """
+    Get the inner type of an `Optional[T]` type
+    """
     if typing.get_origin(annotation) == typing.Union:
         args = typing.get_args(annotation)
 
@@ -15,7 +20,10 @@ def unwrap_optional(annotation):
     return annotation
 
 
-def get_inner_types(annotation) -> List[Any]:
+def get_inner_types(annotation: Type) -> List[Any]:
+    """
+    Get the inner types in some nested type, recursively
+    """
     types = []
     args = typing.get_args(annotation)
     for arg in args:

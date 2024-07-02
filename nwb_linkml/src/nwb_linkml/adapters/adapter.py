@@ -135,12 +135,15 @@ class Adapter(BaseModel):
             # do nothing, is a string or whatever
             pass
 
-    def walk_fields(self, input: BaseModel | list | dict, field: str | Tuple[str, ...]):
+    def walk_fields(
+        self, input: BaseModel | list | dict, field: str | Tuple[str, ...]
+    ) -> Generator[Any, None, None]:
         """
         Recursively walk input for fields that match ``field``
 
         Args:
-            input (:class:`pydantic.BaseModel`) : Model to walk (or a list or dictionary to walk too)
+            input (:class:`pydantic.BaseModel`) : Model to walk (or a list or dictionary
+                to walk too)
             field (str, Tuple[str, ...]):
 
         Returns:
@@ -156,28 +159,36 @@ class Adapter(BaseModel):
         self, input: BaseModel | list | dict, field: str, value: Optional[Any] = None
     ) -> Generator[BaseModel, None, None]:
         """
-        Recursively walk input for **models** that contain a ``field`` as a direct child with a value matching ``value``
+        Recursively walk input for **models** that contain a ``field`` as a direct child
+        with a value matching ``value``
 
         Args:
             input (:class:`pydantic.BaseModel`): Model to walk
             field (str): Name of field - unlike :meth:`.walk_fields`, only one field can be given
-            value (Any): Value to match for given field. If ``None`` , return models that have the field
+            value (Any): Value to match for given field. If ``None`` ,
+                return models that have the field
 
         Returns:
             :class:`pydantic.BaseModel` the matching model
         """
         for item in self.walk(input):
-            if isinstance(item, BaseModel):
-                if field in item.model_fields:
-                    if value is None:
-                        yield item
-                    field_value = item.model_dump().get(field, None)
-                    if value == field_value:
-                        yield item
+            if isinstance(item, BaseModel) and field in item.model_fields:
+                if value is None:
+                    yield item
+                field_value = item.model_dump().get(field, None)
+                if value == field_value:
+                    yield item
 
     def walk_types(
         self, input: BaseModel | list | dict, get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]
     ) -> Generator[T | Ts, None, None]:
+        """
+        Walk a model, yielding items that are the same type as the given type
+
+        Args:
+            input (:class:`pydantic.BaseModel`, list, dict): Object to yield from
+            get_type (:class:`~typing.Type`, tuple[:class:`~typing.Type`]): Type to match
+        """
         if not isinstance(get_type, (list, tuple)):
             get_type = [get_type]
 

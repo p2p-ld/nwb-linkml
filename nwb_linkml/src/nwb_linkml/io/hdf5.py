@@ -1,5 +1,6 @@
 """
-This is a sandbox file that should be split out to its own pydantic-hdf5 package, but just experimenting here to get our bearings
+This is a sandbox file that should be split out to its own pydantic-hdf5 package,
+but just experimenting here to get our bearings
 
 Notes:
 
@@ -42,6 +43,9 @@ from nwb_linkml.providers.schema import SchemaProvider
 
 
 class HDF5IO:
+    """
+    Read (and eventually write) from an NWB HDF5 file.
+    """
 
     def __init__(self, path: Path):
         self.path = Path(path)
@@ -59,7 +63,8 @@ class HDF5IO:
 
         The read process is in several stages:
 
-        * Use :meth:`.make_provider` to generate any needed LinkML Schema or Pydantic Classes using a :class:`.SchemaProvider`
+        * Use :meth:`.make_provider` to generate any needed LinkML Schema or Pydantic Classes
+          using a :class:`.SchemaProvider`
         * :func:`flatten_hdf` file into a :class:`.ReadQueue` of nodes.
         * Apply the queue's :class:`ReadPhases` :
 
@@ -67,24 +72,29 @@ class HDF5IO:
             * ``read`` - load the actual data into temporary holding objects
             * ``construct`` - cast the read data into models.
 
-        Read is split into stages like this to handle references between objects, where the read result of one node
-        might depend on another having already been completed. It also allows us to parallelize the operations
+        Read is split into stages like this to handle references between objects,
+        where the read result of one node
+        might depend on another having already been completed.
+        It also allows us to parallelize the operations
         since each mapping operation is independent of the results of all the others in that pass.
 
         .. todo::
 
             Implement reading, skipping arrays - they are fast to read with the ArrayProxy class
             and dask, but there are times when we might want to leave them out of the read entirely.
-            This might be better implemented as a filter on ``model_dump`` , but to investigate further
-            how best to support reading just metadata, or even some specific field value, or if
+            This might be better implemented as a filter on ``model_dump`` ,
+            but to investigate further how best to support reading just metadata,
+            or even some specific field value, or if
             we should leave that to other implementations like eg. after we do SQL export then
             not rig up a whole query system ourselves.
 
         Args:
-            path (Optional[str]): If ``None`` (default), read whole file. Otherwise, read from specific (hdf5) path and its children
+            path (Optional[str]): If ``None`` (default), read whole file.
+                Otherwise, read from specific (hdf5) path and its children
 
         Returns:
-            ``NWBFile`` if ``path`` is ``None``, otherwise whatever Model or dictionary of models applies to the requested ``path``
+            ``NWBFile`` if ``path`` is ``None``,
+            otherwise whatever Model or dictionary of models applies to the requested ``path``
         """
 
         provider = self.make_provider()

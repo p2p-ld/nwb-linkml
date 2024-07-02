@@ -13,9 +13,15 @@ from nwb_schema_language import Group
 
 
 class GroupAdapter(ClassAdapter):
+    """
+    Adapt NWB Groups to LinkML Classes
+    """
     cls: Group
 
     def build(self) -> BuildResult:
+        """
+        Do the translation, yielding the BuildResult
+        """
         # Handle container groups with only * quantity unnamed groups
         if len(self.cls.groups) > 0 and all(
             [self._check_if_container(g) for g in self.cls.groups]
@@ -80,12 +86,7 @@ class GroupAdapter(ClassAdapter):
 
         # don't build subgroups as their own classes, just make a slot
         # that can contain them
-        if self.cls.name:
-            name = cls.name
-        # elif len(cls.groups) == 1:
-        #     name = camel_to_snake(cls.groups[0].neurodata_type_inc)
-        else:
-            name = "children"
+        name = cls.name if self.cls.name else "children"
 
         slot = SlotDefinition(
             name=name,
@@ -126,10 +127,7 @@ class GroupAdapter(ClassAdapter):
               doc: Optional additional table(s) for describing other experimental time intervals.
               quantity: '*'
         """
-        if not self.cls.name:
-            name = camel_to_snake(self.cls.neurodata_type_inc)
-        else:
-            name = cls.name
+        name = camel_to_snake(self.cls.neurodata_type_inc) if not self.cls.name else cls.name
 
         return BuildResult(
             slots=[
@@ -163,7 +161,8 @@ class GroupAdapter(ClassAdapter):
 
         # Groups are a bit more complicated because they can also behave like
         # range declarations:
-        # eg. a group can have multiple groups with `neurodata_type_inc`, no name, and quantity of *,
+        # eg. a group can have multiple groups with `neurodata_type_inc`, no name,
+        # and quantity of *,
         # the group can then contain any number of groups of those included types as direct children
 
         group_res = BuildResult()
@@ -191,7 +190,4 @@ class GroupAdapter(ClassAdapter):
             doc: Images objects containing images of presented stimuli.
             quantity: '*'
         """
-        if not group.name and group.quantity in ("*", "+") and group.neurodata_type_inc:
-            return True
-        else:
-            return False
+        return not group.name and group.quantity in ("*", "+") and group.neurodata_type_inc

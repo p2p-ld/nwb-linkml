@@ -4,7 +4,7 @@ to call them "schema" objects
 """
 
 from pathlib import Path
-from typing import List, NamedTuple, Optional, Type
+from typing import List, Optional, Type
 
 from linkml_runtime.linkml_model import SchemaDefinition
 from pydantic import Field, PrivateAttr
@@ -13,11 +13,6 @@ from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.adapters.group import GroupAdapter
 from nwb_schema_language import Dataset, Group
-
-
-class SplitSchema(NamedTuple):
-    main: BuildResult
-    split: Optional[BuildResult]
 
 
 class SchemaAdapter(Adapter):
@@ -43,6 +38,9 @@ class SchemaAdapter(Adapter):
 
     @property
     def name(self) -> str:
+        """
+        The namespace.schema name for a single schema
+        """
         return ".".join([self.namespace, self.path.with_suffix("").name])
 
     def __repr__(self):
@@ -82,7 +80,7 @@ class SchemaAdapter(Adapter):
 
         if (
             len(res.slots) > 0
-        ):  # pragma: no cover - hard to induce this error because the child classes don't fuck up like this
+        ):  # pragma: no cover - hard to induce this because child classes don't fuck up like this
             raise RuntimeError(
                 "Generated schema in this translation can only have classes, all slots should be"
                 " attributes within a class"
@@ -107,6 +105,9 @@ class SchemaAdapter(Adapter):
 
     @property
     def created_classes(self) -> List[Type[Group | Dataset]]:
+        """
+        All the group and datasets created in this schema
+        """
         if len(self._created_classes) == 0:
             self._created_classes = [
                 t

@@ -25,6 +25,9 @@ The `serialize` method:
 
 """
 
+# FIXME: Remove this after we refactor this generator
+# ruff: noqa
+
 import inspect
 import sys
 import warnings

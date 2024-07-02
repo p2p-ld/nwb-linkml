@@ -54,6 +54,9 @@ class Config(BaseSettings):
     @field_validator("cache_dir", mode="before")
     @classmethod
     def folder_exists(cls, v: Path, info: FieldValidationInfo) -> Path:
+        """
+        The base cache dir should exist before validating other paths
+        """
         v = Path(v)
         v.mkdir(exist_ok=True)
         assert v.exists()
@@ -61,7 +64,10 @@ class Config(BaseSettings):
 
     @model_validator(mode="after")
     def folders_exist(self) -> "Config":
-        for field, path in self.model_dump().items():
+        """
+        All folders, including computed folders, should exist.
+        """
+        for path in self.model_dump().values():
             if isinstance(path, Path):
                 path.mkdir(exist_ok=True, parents=True)
                 assert path.exists()

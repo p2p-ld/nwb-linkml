@@ -40,15 +40,19 @@ class ClassAdapter(Adapter):
 
         If the class has no parent, then...
 
-        * Its name is inferred from its `neurodata_type_def`,  fixed name, or `neurodata_type_inc` in that order
+        * Its name is inferred from its `neurodata_type_def`,  fixed name, or
+          `neurodata_type_inc` in that order
         * It is just built as normal class!
-        * It will be indicated as a ``tree_root`` (which will primarily be used to invert the translation for write operations)
+        * It will be indicated as a ``tree_root`` (which will primarily be used to invert the
+          translation for write operations)
 
         If the class has a parent, then...
 
-        * If it has a `neurodata_type_def` or `inc`,  that will be used as its name, otherwise concatenate `parent__child`,
+        * If it has a `neurodata_type_def` or `inc`,  that will be used as its name,
+          otherwise concatenate `parent__child`,
           eg. ``TimeSeries__TimeSeriesData``
-        * A slot will also be made and returned with the BuildResult, which the parent will then have as one of its attributes.
+        * A slot will also be made and returned with the BuildResult,
+          which the parent will then have as one of its attributes.
         """
 
         # Build this class
@@ -83,6 +87,15 @@ class ClassAdapter(Adapter):
         return res
 
     def build_attrs(self, cls: Dataset | Group) -> List[SlotDefinition]:
+        """
+        Pack the class attributes into a list of SlotDefinitions
+
+        Args:
+            cls: (:class:`.Dataset` | :class:`.Group`): Class to pack
+
+        Returns:
+            list[:class:`.SlotDefinition`]
+        """
         attrs = [
             SlotDefinition(
                 name=attr.name,
@@ -153,6 +166,15 @@ class ClassAdapter(Adapter):
 
     @classmethod
     def handle_dtype(cls, dtype: DTypeType | None) -> str:
+        """
+        Get the string form of a dtype
+
+        Args:
+            dtype (:class:`.DTypeType`): Dtype to stringify
+
+        Returns:
+            str
+        """
         if isinstance(dtype, ReferenceDtype):
             return dtype.target_type
         elif dtype is None or dtype == []:

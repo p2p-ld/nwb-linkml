@@ -4,7 +4,7 @@ Namespaces adapter
 Wraps the :class:`nwb_schema_language.Namespaces` and other objects with convenience methods
 for extracting information and generating translated schema
 """
-
+import contextlib
 from copy import copy
 from pathlib import Path
 from pprint import pformat
@@ -22,14 +22,17 @@ from nwb_schema_language import Namespaces
 
 
 class NamespacesAdapter(Adapter):
+    """
+    Translate a NWB Namespace to a LinkML Schema
+    """
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
     imported: List["NamespacesAdapter"] = Field(default_factory=list)
 
     _imports_populated: bool = PrivateAttr(False)
 
-    def __init__(self, **kwargs):
-        super(NamespacesAdapter, self).__init__(**kwargs)
+    def __init__(self, **kwargs: dict):
+        super().__init__(**kwargs)
         self._populate_schema_namespaces()
 
     @classmethod
@@ -37,8 +40,8 @@ class NamespacesAdapter(Adapter):
         """
         Create a NamespacesAdapter from a nwb schema language namespaces yaml file.
 
-        Also attempts to provide imported implicitly imported schema (using the namespace key, rather than source, eg.
-        with hdmf-common)
+        Also attempts to provide imported implicitly imported schema (using the namespace key,
+        rather than source, eg. with hdmf-common)
         """
         from nwb_linkml.io import schema as schema_io
         from nwb_linkml.providers.git import DEFAULT_REPOS
@@ -49,10 +52,10 @@ class NamespacesAdapter(Adapter):
 
         need_imports = []
         for needed in ns_adapter.needed_imports.values():
-            need_imports.extend([n for n in needed if n not in ns_adapter.needed_imports.keys()])
+            need_imports.extend([n for n in needed if n not in ns_adapter.needed_imports])
 
         for needed in need_imports:
-            if needed in DEFAULT_REPOS.keys():
+            if needed in DEFAULT_REPOS:
                 needed_source_ns = DEFAULT_REPOS[needed].provide_from_git()
                 needed_adapter = NamespacesAdapter.from_yaml(needed_source_ns)
                 ns_adapter.imported.append(needed_adapter)
@@ -62,24 +65,23 @@ class NamespacesAdapter(Adapter):
     def build(
         self, skip_imports: bool = False, progress: Optional[AdapterProgress] = None
     ) -> BuildResult:
+        """
+        Build the NWB namespace to the LinkML Schema
+        """
         if not self._imports_populated and not skip_imports:
             self.populate_imports()
 
         sch_result = BuildResult()
         for sch in self.schemas:
             if progress is not None:
-                try:
-                    progress.update(sch.namespace, action=sch.name)
-                except KeyError:  # pragma: no cover
+                with contextlib.suppress(KeyError):
                     # happens when we skip builds due to caching
-                    pass
+                    progress.update(sch.namespace, action=sch.name)
             sch_result += sch.build()
             if progress is not None:
-                try:
-                    progress.update(sch.namespace, advance=1)
-                except KeyError:  # pragma: no cover
+                with contextlib.suppress(KeyError):
                     # happens when we skip builds due to caching
-                    pass
+                    progress.update(sch.namespace, advance=1)
 
         # recursive step
         if not skip_imports:
@@ -125,8 +127,10 @@ class NamespacesAdapter(Adapter):
 
         return sch_result
 
-    def _populate_schema_namespaces(self):
-        # annotate for each schema which namespace imports it
+    def _populate_schema_namespaces(self) -> None:
+        """
+        annotate for each schema which namespace imports it
+        """
         for sch in self.schemas:
             # imports seem to always be from same folder, so we can just use name part
             sch_name = sch.path.name
@@ -154,7 +158,7 @@ class NamespacesAdapter(Adapter):
         if len(internal_matches) > 1:
             raise KeyError(
                 f"Found multiple schemas in namespace that define {name}:\ninternal:"
-                f" {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
+                f" {pformat(internal_matches)}\nimported:{pformat(internal_matches)}"
             )
         elif len(internal_matches) == 1:
             return internal_matches[0]
@@ -176,7 +180,7 @@ class NamespacesAdapter(Adapter):
         else:
             raise KeyError(f"No schema found that define {name}")
 
-    def populate_imports(self):
+    def populate_imports(self) -> None:
         """
         Populate the imports that are needed for each schema file
 
@@ -199,7 +203,14 @@ class NamespacesAdapter(Adapter):
 
         self._imports_populated = True
 
-    def to_yaml(self, base_dir: Path):
+    def to_yaml(self, base_dir: Path) -> None:
+        """
+        Build the schemas, saving them to ``yaml`` files according to
+        their ``name``
+
+        Args:
+            base_dir (:class:`.Path`): Directory to save ``yaml`` files
+        """
         schemas = self.build().schemas
         base_dir = Path(base_dir)
 

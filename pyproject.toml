@@ -70,7 +70,7 @@ ignore = [
 fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**.py" = ["D", "ANN"]
+"**/tests/**.py" = ["D", "ANN", "E501", "F841", "F722"]
 
 [tool.mypy]
 plugins = [

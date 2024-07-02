@@ -16,10 +16,16 @@ from nwb_schema_language import Dataset
 
 
 class DatasetMap(Map):
+    """
+    Abstract builder class for dataset elements
+    """
 
     @classmethod
     @abstractmethod
     def check(c, cls: Dataset) -> bool:
+        """
+        Check if this map applies
+        """
         pass  # pragma: no cover
 
     @classmethod
@@ -27,6 +33,9 @@ class DatasetMap(Map):
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Apply this mapping
+        """
         pass  # pragma: no cover
 
 
@@ -94,22 +103,22 @@ class MapScalar(DatasetMap):
               - ``str``
 
         """
-        if (
+        return (
             cls.neurodata_type_inc != "VectorData"
             and not cls.neurodata_type_inc
             and not cls.attributes
             and not cls.dims
             and not cls.shape
             and cls.name
-        ):
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Map to a scalar value
+        """
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,
@@ -147,22 +156,22 @@ class MapScalarAttributes(DatasetMap):
               - ``str``
 
         """
-        if (
+        return (
             cls.neurodata_type_inc != "VectorData"
             and not cls.neurodata_type_inc
             and cls.attributes
             and not cls.dims
             and not cls.shape
             and cls.name
-        ):
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Map to a scalar attribute with an adjoining "value" slot
+        """
         value_slot = SlotDefinition(
             name="value", range=ClassAdapter.handle_dtype(cls.dtype), required=True
         )
@@ -177,23 +186,26 @@ class MapListlike(DatasetMap):
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
+        """
+        Check if we are a 1D dataset that isn't a normal datatype
+        """
         dtype = ClassAdapter.handle_dtype(cls.dtype)
-        if is_1d(cls) and dtype != "AnyType" and dtype not in flat_to_linkml.keys():
-            return True
-        else:
-            return False
+        return is_1d(cls) and dtype != "AnyType" and dtype not in flat_to_linkml
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Map to a list of the given class
+        """
         dtype = camel_to_snake(ClassAdapter.handle_dtype(cls.dtype))
         slot = SlotDefinition(
             name=dtype,
             multivalued=True,
             range=ClassAdapter.handle_dtype(cls.dtype),
             description=cls.doc,
-            required=False if cls.quantity in ("*", "?") else True,
+            required=cls.quantity not in ("*", "?"),
         )
         res.classes[0].attributes[dtype] = slot
         return res
@@ -209,15 +221,18 @@ class MapArraylike(DatasetMap):
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
-        if cls.name and all([cls.dims, cls.shape]) and not has_attrs(cls):
-            return True
-        else:
-            return False
+        """
+        Check if we're a plain array
+        """
+        return cls.name and all([cls.dims, cls.shape]) and not has_attrs(cls)
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Map to an array class and the adjoining slot
+        """
         array_class = make_arraylike(cls, name)
         name = camel_to_snake(cls.name)
         res = BuildResult(
@@ -227,7 +242,7 @@ class MapArraylike(DatasetMap):
                     multivalued=False,
                     range=array_class.name,
                     description=cls.doc,
-                    required=False if cls.quantity in ("*", "?") else True,
+                    required=cls.quantity not in ("*", "?"),
                 )
             ],
             classes=[array_class],
@@ -254,22 +269,24 @@ class MapArrayLikeAttributes(DatasetMap):
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
+        """
+        Check that we're an array with some additional metadata
+        """
         dtype = ClassAdapter.handle_dtype(cls.dtype)
-        if (
+        return (
             all([cls.dims, cls.shape])
             and cls.neurodata_type_inc != "VectorData"
             and has_attrs(cls)
             and (dtype == "AnyType" or dtype in flat_to_linkml)
-        ):
-            return True
-
-        else:
-            return False
+        )
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Map to an arraylike class
+        """
         array_class = make_arraylike(cls, name)
         # make a slot for the arraylike class
         array_slot = SlotDefinition(name="array", range=array_class.name)
@@ -286,27 +303,30 @@ class MapArrayLikeAttributes(DatasetMap):
 
 class Map1DVector(DatasetMap):
     """
-    ``VectorData`` is subclassed with a name but without dims or attributes, treat this as a normal 1D array
-    slot that replaces any class that would be built for this
+    ``VectorData`` is subclassed with a name but without dims or attributes,
+    treat this as a normal 1D array slot that replaces any class that would be built for this
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
-        if (
+        """
+        Check that we're a 1d VectorData class
+        """
+        return (
             cls.neurodata_type_inc == "VectorData"
             and not cls.dims
             and not cls.shape
             and not cls.attributes
             and cls.name
-        ):
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Return a simple multivalued slot
+        """
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,
@@ -328,21 +348,23 @@ class MapNVectors(DatasetMap):
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
-        if (
+        """
+        Check for being an unnamed multivalued vector class
+        """
+        return (
             cls.name is None
             and cls.neurodata_type_def is None
             and cls.neurodata_type_inc
             and cls.quantity in ("*", "+")
-        ):
-            # cls.neurodata_type_inc in ('VectorIndex', 'VectorData') and \
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Return a slot mapping to multiple values of the type
+        """
         this_slot = SlotDefinition(
             name=camel_to_snake(cls.neurodata_type_inc),
             description=cls.doc,
@@ -355,9 +377,15 @@ class MapNVectors(DatasetMap):
 
 
 class DatasetAdapter(ClassAdapter):
+    """
+    Orchestrator class for datasets - calls the set of applicable mapping classes
+    """
     cls: Dataset
 
     def build(self) -> BuildResult:
+        """
+        Build the base result, and then apply the applicable mappings.
+        """
         res = self.build_base()
 
         # find a map to use
@@ -377,6 +405,11 @@ class DatasetAdapter(ClassAdapter):
 
 
 def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
+    """
+    Create a containing arraylike class
+
+    This is likely deprecated so this docstring is a placeholder to satisfy the linter...
+    """
     # The schema language doesn't have a way of specifying a dataset/group is "abstract"
     # and yet hdmf-common says you don't need a dtype if the dataset is "abstract"
     # so....
@@ -421,10 +454,7 @@ def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
             required = False
 
         # use cardinality to do shape
-        if shape == "null":
-            cardinality = None
-        else:
-            cardinality = shape
+        cardinality = None if shape == "null" else shape
 
         slots.append(
             SlotDefinition(
@@ -436,7 +466,8 @@ def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
             )
         )
 
-    # and then the class is just a subclass of `Arraylist` (which is imported by default from `nwb.language.yaml`)
+    # and then the class is just a subclass of `Arraylist`
+    # (which is imported by default from `nwb.language.yaml`)
     if name:
         pass
     elif cls.neurodata_type_def:
@@ -453,20 +484,20 @@ def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
 
 
 def is_1d(cls: Dataset) -> bool:
-    if (
+    """
+    Check if the values of a dataset are 1-dimensional
+    """
+    return (
         not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1
     ) or (  # nested list
         all([isinstance(dim, list) for dim in cls.dims])
         and len(cls.dims) == 1
         and len(cls.dims[0]) == 1
-    ):
-        return True
-    else:
-        return False
+    )
 
 
 def has_attrs(cls: Dataset) -> bool:
-    if len(cls.attributes) > 0 and all([not a.value for a in cls.attributes]):
-        return True
-    else:
-        return False
+    """
+    Check if a dataset has any attributes at all without defaults
+    """
+    return len(cls.attributes) > 0 and all([not a.value for a in cls.attributes])
