@@ -1,0 +1,37 @@
+[project]
+name = "nwb-linkml-docs"
+version = "0.1.0"
+description = "Dependency management to build nwb-linkml docs, see individual packages for actual package deps"
+authors = [
+    {name = "sneakers-the-rat", email = "JLSaunders987@gmail.com"},
+]
+license = {text = "AGPL-3.0"}
+requires-python = "<3.13,>=3.10"
+dependencies = [
+    "nwb-linkml @ file:///${PROJECT_ROOT}/../nwb_linkml",
+    "nwb-schema-language @ file:///${PROJECT_ROOT}/../nwb_schema_language",
+    "sphinx<8.0.0,>=7.2.5",
+    "furo>=2023.8.19",
+    "myst-parser>=2.0.0",
+    "autodoc-pydantic>=2.0.1",
+    "nptyping>=2.5.0",
+    "sphinx-autobuild>=2021.3.14",
+    "sphinx-design>=0.5.0",
+    "sphinx-togglebutton>=0.3.2",
+    "myst-nb @ git+https://github.com/executablebooks/MyST-NB.git",
+    "ipykernel>=6.25.2",
+    "ipywidgets>=8.1.1",
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git*,*.lock,*.css,./nwb_linkml/src/nwb_linkml/models,./nwb_linkml/src/nwb_linkml/schema'
+check-hidden = true
+# ignore-regex = ''
+# ignore-words-list = ''
+
+

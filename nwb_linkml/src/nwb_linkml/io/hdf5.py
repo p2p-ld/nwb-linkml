@@ -326,7 +326,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
 
     # use h5repack to actually remove the items from the dataset
     if shutil.which('h5repack') is None:
-        warnings.warn('Truncated file made, but since h5repack not found in path, file won't be any smaller')
+        warnings.warn("Truncated file made, but since h5repack not found in path, file won't be any smaller")
         return target
 
     print('Repacking hdf5...')

@@ -1,80 +1,57 @@
-[tool.poetry]
+[project]
 name = "nwb-linkml"
-version = "0.1.0"
 description = "Translating NWB schema language to LinkML"
-authors = ["sneakers-the-rat <JLSaunders987@gmail.com>"]
-license = "GPL-3.0"
+version = "0.2.0"
+authors = [
+    {name = "sneakers-the-rat", email = "sneakers-the-rat@protonmail.me"},
+]
+license = {text = "AGPL-3.0"}
 readme = "README.md"
+requires-python = "<3.13,>=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "linkml-runtime>=1.7.7",
+    "nwb-schema-language>=0.1.3",
+    "rich>=13.5.2",
+    "linkml>=1.7.10",
+    "nptyping>=2.5.0",
+    "pydantic>=2.3.0",
+    "h5py>=3.9.0",
+    "pydantic-settings>=2.0.3",
+    "dask>=2023.9.2",
+    "blosc2>=2.2.7",
+    "tqdm>=4.66.1",
+]
+
+[project.urls]
 homepage = "https://nwb-linkml.readthedocs.io"
 repository = "https://github.com/p2p-ld/nwb-linkml/"
 documentation = "https://nwb-linkml.readthedocs.io"
-packages = [
-    {include = "nwb_linkml", from="src"},
-    #{include = "nwb_schema_language", from="../nwb_schema_language/src"}
+
+[project.optional-dependencies]
+plot = [
+    "dash<3.0.0,>=2.12.1",
+    "dash-cytoscape<1.0.0,>=0.3.0",
 ]
-include = [
-    'src/nwb_linkml/schema/**/*'
-]
-
-
-[tool.poetry.dependencies]
-python = ">=3.11,<3.13"
-pyyaml = "^6.0"
-linkml-runtime = "^1.6.0"
-nwb_schema_language = "^0.1.3"
-rich = "^13.5.2"
-linkml = "^1.6.1"
-nptyping = "^2.5.0"
-pydantic = "^2.3.0"
-h5py = "^3.9.0"
-pydantic-settings = "^2.0.3"
-dask = "^2023.9.2"
-blosc2 = "^2.2.7"
-tqdm = "^4.66.1"
-dash = {version="^2.12.1", optional=true}
-dash-cytoscape = {version="^0.3.0", optional=true}
-pytest = { version="^7.4.0", optional=true}
-pytest-depends = {version="^1.0.1", optional=true}
-coverage = {version = "^6.1.1", optional = true}
-pytest-md = {version = "^0.2.0", optional = true}
-pytest-cov = {version = "^4.1.0", optional = true}
-coveralls = {version = "^3.3.1", optional = true}
-pytest-profiling = {version = "^1.7.0", optional = true}
-sybil = {version = "^5.0.3", optional = true}
-
-
-[tool.poetry.extras]
 tests = [
-    "pytest",       "pytest-depends", "coverage",         "pytest-md",
-    "pytest-cov",   "coveralls",      "pytest-profiling", "sybil"
+    "pytest<8.0.0,>=7.4.0",
+    "pytest-depends<2.0.0,>=1.0.1",
+    "coverage<7.0.0,>=6.1.1",
+    "pytest-md<1.0.0,>=0.2.0",
+    "pytest-cov<5.0.0,>=4.1.0",
+    "coveralls<4.0.0,>=3.3.1",
+    "pytest-profiling<2.0.0,>=1.7.0",
+    "sybil<6.0.0,>=5.0.3",
 ]
-plot = ["dash", "dash-cytoscape"]
 
+[tool.pdm]
+distribution = true
 
-[tool.poetry.group.tests]
-optional = true
-
-[tool.poetry.group.tests.dependencies]
-pytest = "^7.4.0"
-pytest-depends = "^1.0.1"
-coverage = "^6.1.1"
-pytest-md = "^0.2.0"
-pytest-cov = "^4.1.0"
-coveralls = "^3.3.1"
-pytest-profiling = "^1.7.0"
-sybil = "^5.0.3"
-
-[tool.poetry.group.plot]
-optional = true
-
-[tool.poetry.group.plot.dependencies]
-dash = "^2.12.1"
-dash-cytoscape = "^0.3.0"
-
+[tool.pdm.build]
+includes = ["src/nwb_linkml", "src/nwb_linkml/schema/**/*"]
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool.pytest.ini_options]
 addopts = [
