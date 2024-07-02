@@ -157,7 +157,7 @@ class GitRepo:
         return self._commit
 
     @commit.setter
-    def commit(self, commit: str | None):
+    def commit(self, commit: str | None) -> None:
         # setting commit as None should do nothing if we have already cloned,
         # and if we are just cloning we will always be at the most recent commit anyway
         if commit is not None:
@@ -199,7 +199,7 @@ class GitRepo:
         return res.stdout.decode("utf-8").strip()
 
     @tag.setter
-    def tag(self, tag: str):
+    def tag(self, tag: str) -> None:
         # first check that we have the most recent tags
         self._git_call("fetch", "--all", "--tags")
         self._git_call("checkout", f"tags/{tag}")
@@ -227,10 +227,7 @@ class GitRepo:
         """
         res = self._git_call("branch", "--show-current")
         branch = res.stdout.decode("utf-8").strip()
-        if not branch:
-            return True
-        else:
-            return False
+        return not branch
 
     def check(self) -> bool:
         """
@@ -262,7 +259,7 @@ class GitRepo:
         # otherwise we're good
         return True
 
-    def cleanup(self, force: bool = False):
+    def cleanup(self, force: bool = False) -> None:
         """
         Delete contents of temporary directory
 
@@ -285,7 +282,7 @@ class GitRepo:
         shutil.rmtree(str(self.temp_directory))
         self._temp_directory = None
 
-    def clone(self, force: bool = False):
+    def clone(self, force: bool = False) -> None:
         """
         Clone the repository into the temporary directory
 

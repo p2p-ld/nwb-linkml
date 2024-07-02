@@ -84,10 +84,7 @@ def imported_schema(linkml_schema, request) -> TestModules:
     Convenience fixture for testing non-core generator features without needing to re-generate and
     import every time.
     """
-    if request.param == "split":
-        split = True
-    else:
-        split = False
+    split = request.param == "split"
 
     yield generate_and_import(linkml_schema, split)
 
@@ -188,7 +185,7 @@ def test_arraylike(imported_schema):
     # check that we have gotten an NDArray annotation and its shape is correct
     array = imported_schema["core"].MainTopLevel.model_fields["array"].annotation
     args = typing.get_args(array)
-    for i, shape in enumerate(("* x, * y", "* x, * y, 3 z", "* x, * y, 3 z, 4 a")):
+    for i, _ in enumerate(("* x, * y", "* x, * y, 3 z", "* x, * y, 3 z, 4 a")):
         assert isinstance(args[i], NDArrayMeta)
         assert args[i].__args__[0].__args__
         assert args[i].__args__[1] == np.number
@@ -213,8 +210,8 @@ def test_linkml_meta(imported_schema):
     """
     meta = imported_schema["core"].LinkML_Meta
     assert "tree_root" in meta.model_fields
-    assert imported_schema["core"].MainTopLevel.linkml_meta.default.tree_root == True
-    assert imported_schema["core"].OtherClass.linkml_meta.default.tree_root == False
+    assert imported_schema["core"].MainTopLevel.linkml_meta.default.tree_root
+    assert not imported_schema["core"].OtherClass.linkml_meta.default.tree_root
 
 
 def test_skip(linkml_schema):

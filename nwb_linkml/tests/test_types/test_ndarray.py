@@ -88,7 +88,7 @@ def test_ndarray_serialize():
     mod_str = mod.model_dump_json()
     mod_json = json.loads(mod_str)
     for a in ("array", "shape", "dtype", "unpack_fns"):
-        assert a in mod_json["large_array"].keys()
+        assert a in mod_json["large_array"]
     assert isinstance(mod_json["large_array"]["array"], str)
     assert isinstance(mod_json["small_array"], list)
 

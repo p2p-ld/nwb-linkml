@@ -17,7 +17,7 @@ from nwb_schema_language.datamodel.nwb_schema_pydantic import FlatDtype as FlatD
 
 FlatDType = EnumDefinition(
     name="FlatDType",
-    permissible_values=[PermissibleValue(p) for p in FlatDtype_source.__members__.keys()],
+    permissible_values=[PermissibleValue(p) for p in FlatDtype_source.__members__],
 )
 
 DTypeTypes = []

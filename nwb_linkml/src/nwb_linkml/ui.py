@@ -45,13 +45,13 @@ class AdapterProgress:
             self.progress, title="Building Namespaces", border_style="green", padding=(2, 2)
         )
 
-    def update(self, namespace: str, **kwargs):
+    def update(self, namespace: str, **kwargs) -> None:
         self.progress.update(self.task_ids[namespace], **kwargs)
 
-    def start(self):
+    def start(self) -> None:
         self.progress.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.progress.stop()
 
     def __enter__(self) -> Live:

@@ -26,11 +26,11 @@ def test_preload_maps():
         yaml.dump(hdmf_style_naming, temp_f, Dumper=Dumper)
     loaded = load_yaml(Path(temp_name))
 
-    assert "neurodata_type_def" in loaded["groups"][0].keys()
-    assert "data_type_def" not in loaded["groups"][0].keys()
-    assert "neurodata_type_inc" in loaded["groups"][0].keys()
-    assert "data_type_inc" not in loaded["groups"][0].keys()
-    assert "neurodata_type_inc" in loaded["groups"][0]["datasets"][0].keys()
-    assert "data_type_inc" not in loaded["groups"][0]["datasets"][0].keys()
+    assert "neurodata_type_def" in loaded["groups"][0]
+    assert "data_type_def" not in loaded["groups"][0]
+    assert "neurodata_type_inc" in loaded["groups"][0]
+    assert "data_type_inc" not in loaded["groups"][0]
+    assert "neurodata_type_inc" in loaded["groups"][0]["datasets"][0]
+    assert "data_type_inc" not in loaded["groups"][0]["datasets"][0]
 
     os.remove(temp_name)

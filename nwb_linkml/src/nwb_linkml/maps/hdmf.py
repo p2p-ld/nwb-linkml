@@ -23,10 +23,7 @@ def model_from_dynamictable(group: h5py.Group, base: Optional[BaseModel] = None)
     for col in colnames:
 
         nptype = group[col].dtype
-        if nptype.type == np.void:
-            nptype = struct_from_dtype(nptype)
-        else:
-            nptype = nptype.type
+        nptype = struct_from_dtype(nptype) if nptype.type == np.void else nptype.type
 
         type_ = Optional[NDArray[Any, nptype]]
 
@@ -53,7 +50,7 @@ def dynamictable_to_model(
 
     items = {}
     for col, col_type in model.model_fields.items():
-        if col not in group.keys():
+        if col not in group:
             if col in group.attrs:
                 items[col] = group.attrs[col]
             continue

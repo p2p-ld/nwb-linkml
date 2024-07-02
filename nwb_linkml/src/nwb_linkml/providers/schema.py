@@ -94,10 +94,7 @@ class Provider(ABC):
     PROVIDES_CLASS: P = None
 
     def __init__(self, path: Optional[Path] = None, allow_repo: bool = True, verbose: bool = True):
-        if path is not None:
-            config = Config(cache_dir=path)
-        else:
-            config = Config()
+        config = Config(cache_dir=path) if path is not None else Config()
         self.config = config
         self.cache_dir = config.cache_dir
         self.allow_repo = allow_repo
@@ -352,22 +349,21 @@ class LinkMLProvider(Provider):
             of the build. If ``force == False`` and the schema already exist, it will be ``None``
         """
 
-        if not force:
-            if all(
-                [
-                    (self.namespace_path(ns, version) / "namespace.yaml").exists()
-                    for ns, version in ns_adapter.versions.items()
-                ]
-            ):
-                return {
-                    k: LinkMLSchemaBuild(
-                        name=k,
-                        result=None,
-                        namespace=self.namespace_path(k, v) / "namespace.yaml",
-                        version=v,
-                    )
-                    for k, v in ns_adapter.versions.items()
-                }
+        if not force and all(
+            [
+                (self.namespace_path(ns, version) / "namespace.yaml").exists()
+                for ns, version in ns_adapter.versions.items()
+            ]
+        ):
+            return {
+                k: LinkMLSchemaBuild(
+                    name=k,
+                    result=None,
+                    namespace=self.namespace_path(k, v) / "namespace.yaml",
+                    version=v,
+                )
+                for k, v in ns_adapter.versions.items()
+            }
 
         # self._find_imports(ns_adapter, versions, populate=True)
         if self.verbose:
@@ -427,7 +423,7 @@ class LinkMLProvider(Provider):
         self, sch: SchemaDefinition, ns_adapter: adapters.NamespacesAdapter, output_file: Path
     ) -> SchemaDefinition:
         for animport in sch.imports:
-            if animport.split(".")[0] in ns_adapter.versions.keys():
+            if animport.split(".")[0] in ns_adapter.versions:
                 imported_path = (
                     self.namespace_path(
                         animport.split(".")[0], ns_adapter.versions[animport.split(".")[0]]
@@ -485,7 +481,7 @@ class PydanticProvider(Provider):
     PROVIDES = "pydantic"
 
     def __init__(self, path: Optional[Path] = None, verbose: bool = True):
-        super(PydanticProvider, self).__init__(path, verbose)
+        super().__init__(path, verbose)
         # create a metapathfinder to find module we might create
         pathfinder = EctopicModelFinder(self.path)
         sys.meta_path.append(pathfinder)
@@ -771,7 +767,7 @@ class PydanticProvider(Provider):
         return module
 
     @staticmethod
-    def _clear_package_imports():
+    def _clear_package_imports() -> None:
         """
         When using allow_repo=False, delete any already-imported
         namespaces from sys.modules that are within the nwb_linkml package
@@ -826,7 +822,7 @@ class EctopicModelFinder(MetaPathFinder):
     MODEL_STEM = "nwb_linkml.models.pydantic"
 
     def __init__(self, path: Path, *args, **kwargs):
-        super(EctopicModelFinder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.path = path
 
     def find_spec(self, fullname, path, target=None):
@@ -883,7 +879,7 @@ class SchemaProvider(Provider):
             **kwargs: passed to superclass __init__ (see :class:`.Provider` )
         """
         self.versions = versions
-        super(SchemaProvider, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def path(self) -> Path:

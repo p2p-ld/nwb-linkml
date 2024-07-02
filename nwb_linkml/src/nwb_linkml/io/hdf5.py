@@ -27,7 +27,7 @@ import subprocess
 import warnings
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, overload
+from typing import TYPE_CHECKING, Dict, List, Never, Optional, Union, overload
 
 import h5py
 import numpy as np
@@ -100,10 +100,7 @@ class HDF5IO:
         provider = self.make_provider()
 
         h5f = h5py.File(str(self.path))
-        if path:
-            src = h5f.get(path)
-        else:
-            src = h5f
+        src = h5f.get(path) if path else h5f
 
         # get all children of selected item
         if isinstance(src, (h5py.File, h5py.Group)):
@@ -127,7 +124,7 @@ class HDF5IO:
         else:
             return queue.completed[path].result
 
-    def write(self, path: Path):
+    def write(self, path: Path) -> Never:
         """
         Write to NWB file
 
@@ -193,7 +190,7 @@ def read_specs_as_dicts(group: h5py.Group) -> dict:
     """
     spec_dict = {}
 
-    def _read_spec(name, node):
+    def _read_spec(name, node) -> None:
 
         if isinstance(node, h5py.Dataset):
             # make containing dict if they dont exist
@@ -233,7 +230,7 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     """
     references = []
 
-    def _find_references(name, obj: h5py.Group | h5py.Dataset):
+    def _find_references(name, obj: h5py.Group | h5py.Dataset) -> None:
         pbar.update()
         refs = []
         for attr in obj.attrs.values():
@@ -254,7 +251,6 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
 
         for ref in refs:
             assert isinstance(ref, h5py.h5r.Reference)
-            refname = h5f[ref].name
             if name == path:
                 references.append(name)
                 return
@@ -281,10 +277,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     Returns:
         :class:`pathlib.Path` path of the truncated file
     """
-    if target is None:
-        target = source.parent / (source.stem + "_truncated.hdf5")
-    else:
-        target = Path(target)
+    target = source.parent / (source.stem + "_truncated.hdf5") if target is None else Path(target)
 
     source = Path(source)
 
@@ -300,10 +293,9 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
 
     to_resize = []
 
-    def _need_resizing(name: str, obj: h5py.Dataset | h5py.Group):
-        if isinstance(obj, h5py.Dataset):
-            if obj.size > n:
-                to_resize.append(name)
+    def _need_resizing(name: str, obj: h5py.Dataset | h5py.Group) -> None:
+        if isinstance(obj, h5py.Dataset) and obj.size > n:
+            to_resize.append(name)
 
     print("Resizing datasets...")
     # first we get the items that need to be resized and then resize them below

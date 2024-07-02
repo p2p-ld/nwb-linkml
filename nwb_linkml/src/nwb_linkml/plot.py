@@ -55,10 +55,7 @@ class Node:
 def make_node(element: Group | Dataset, parent=None, recurse: bool = True) -> List[Node]:
     if element.neurodata_type_def is None:
         if element.name is None:
-            if element.neurodata_type_inc is None:
-                name = "anonymous"
-            else:
-                name = element.neurodata_type_inc
+            name = "anonymous" if element.neurodata_type_inc is None else element.neurodata_type_inc
         else:
             name = element.name
         id = name + "-" + str(random.randint(0, 1000))
@@ -88,7 +85,6 @@ def make_graph(namespaces: "NamespacesAdapter", recurse: bool = True) -> List[Cy
     nodes = []
     element: Namespace | Group | Dataset
     print("walking graph")
-    i = 0
     for element in namespaces.walk_types(namespaces, (Group, Dataset)):
         if element.neurodata_type_def is None:
             # skip child nodes at top level, we'll get them in recursion

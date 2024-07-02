@@ -5,6 +5,7 @@ We have sort of diverged from the initial idea of a generalized map as in :class
 so we will make our own mapping class here and re-evaluate whether they should be unified later
 """
 
+import contextlib
 import datetime
 import inspect
 from abc import abstractmethod
@@ -187,10 +188,7 @@ def check_empty(obj: h5py.Group) -> bool:
         children_empty = True
 
     # if we have no attrs and we are a leaf OR our children are empty, remove us
-    if no_attrs and (no_children or children_empty):
-        return True
-    else:
-        return False
+    return bool(no_attrs and (no_children or children_empty))
 
 
 class PruneEmpty(HDF5Map):
@@ -244,10 +242,7 @@ class ResolveDynamicTable(HDF5Map):
             # we might replace DynamicTable in the future, and there isn't a stable DynamicTable
             # class to inherit from anyway because of the whole multiple versions thing
             parents = [parent.__name__ for parent in model.__mro__]
-            if "DynamicTable" in parents:
-                return True
-            else:
-                return False
+            return "DynamicTable" in parents
         else:
             return False
 
@@ -322,10 +317,7 @@ class ResolveModelGroup(HDF5Map):
     def check(
         cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        if "neurodata_type" in src.attrs and src.h5_type == "group":
-            return True
-        else:
-            return False
+        return bool("neurodata_type" in src.attrs and src.h5_type == "group")
 
     @classmethod
     def apply(
@@ -336,14 +328,14 @@ class ResolveModelGroup(HDF5Map):
         depends = []
         with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
-            for key, type in model.model_fields.items():
+            for key in model.model_fields.keys():
                 if key == "children":
                     res[key] = {name: resolve_hardlink(child) for name, child in obj.items()}
                     depends.extend([resolve_hardlink(child) for child in obj.values()])
                 elif key in obj.attrs:
                     res[key] = obj.attrs[key]
                     continue
-                elif key in obj.keys():
+                elif key in obj:
                     # make sure it's not empty
                     if check_empty(obj[key]):
                         continue
@@ -386,10 +378,7 @@ class ResolveDatasetAsDict(HDF5Map):
         if src.h5_type == "dataset" and "neurodata_type" not in src.attrs:
             with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
-                if obj.shape != ():
-                    return True
-                else:
-                    return False
+                return obj.shape != ()
         else:
             return False
 
@@ -420,10 +409,7 @@ class ResolveScalars(HDF5Map):
         if src.h5_type == "dataset" and "neurodata_type" not in src.attrs:
             with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
-                if obj.shape == ():
-                    return True
-                else:
-                    return False
+                return obj.shape == ()
         else:
             return False
 
@@ -456,10 +442,7 @@ class ResolveContainerGroups(HDF5Map):
         if src.h5_type == "group" and "neurodata_type" not in src.attrs and len(src.attrs) == 0:
             with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
-                if len(obj.keys()) > 0:
-                    return True
-                else:
-                    return False
+                return len(obj.keys()) > 0
         else:
             return False
 
@@ -515,10 +498,7 @@ class CompletePassThrough(HDF5Map):
     ) -> bool:
         passthrough_ops = ("ResolveDynamicTable", "ResolveDatasetAsDict", "ResolveScalars")
 
-        for op in passthrough_ops:
-            if hasattr(src, "applied") and op in src.applied:
-                return True
-        return False
+        return any(hasattr(src, "applied") and op in src.applied for op in passthrough_ops)
 
     @classmethod
     def apply(
@@ -542,15 +522,7 @@ class CompleteContainerGroups(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        if (
-            src.model is None
-            and src.neurodata_type is None
-            and src.source.h5_type == "group"
-            and all([depend in completed for depend in src.depends])
-        ):
-            return True
-        else:
-            return False
+        return (src.model is None and src.neurodata_type is None and src.source.h5_type == "group" and all([depend in completed for depend in src.depends]))
 
     @classmethod
     def apply(
@@ -574,15 +546,7 @@ class CompleteModelGroups(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        if (
-            src.model is not None
-            and src.source.h5_type == "group"
-            and src.neurodata_type != "NWBFile"
-            and all([depend in completed for depend in src.depends])
-        ):
-            return True
-        else:
-            return False
+        return (src.model is not None and src.source.h5_type == "group" and src.neurodata_type != "NWBFile" and all([depend in completed for depend in src.depends]))
 
     @classmethod
     def apply(
@@ -639,10 +603,7 @@ class CompleteNWBFile(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        if src.neurodata_type == "NWBFile" and all([depend in completed for depend in src.depends]):
-            return True
-        else:
-            return False
+        return (src.neurodata_type == "NWBFile" and all([depend in completed for depend in src.depends]))
 
     @classmethod
     def apply(
@@ -724,14 +685,14 @@ class ReadQueue(BaseModel):
         default_factory=list, description="Phases that have already been completed"
     )
 
-    def apply_phase(self, phase: ReadPhases, max_passes=5):
+    def apply_phase(self, phase: ReadPhases, max_passes=5) -> None:
         phase_maps = [m for m in HDF5Map.__subclasses__() if m.phase == phase]
         phase_maps = sorted(phase_maps, key=lambda x: x.priority)
 
         results = []
 
         # TODO: Thread/multiprocess this
-        for name, item in self.queue.items():
+        for item in self.queue.values():
             for op in phase_maps:
                 if op.check(item, self.provider, self.completed):
                     # Formerly there was an "exclusive" property in the maps which let potentially multiple
@@ -768,10 +729,8 @@ class ReadQueue(BaseModel):
         # delete the ones that were already completed but might have been
         # incorrectly added back in the pile
         for c in completes:
-            try:
+            with contextlib.suppress(KeyError):
                 del self.queue[c]
-            except KeyError:
-                pass
 
         # if we have nothing left in our queue, we have completed this phase
         # and prepare only ever has one pass
@@ -798,7 +757,7 @@ def flatten_hdf(h5f: h5py.File | h5py.Group, skip="specifications") -> Dict[str,
     """
     items = {}
 
-    def _itemize(name: str, obj: h5py.Dataset | h5py.Group):
+    def _itemize(name: str, obj: h5py.Dataset | h5py.Group) -> None:
         if skip in name:
             return
 

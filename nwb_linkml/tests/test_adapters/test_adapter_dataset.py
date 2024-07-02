@@ -10,7 +10,7 @@ def test_nothing(nwb_core_fixture):
 
 def _compare_dicts(dict1, dict2) -> bool:
     """just in one direction - that all the entries in dict1 are in dict2"""
-    assert all([dict1[k] == dict2[k] for k in dict1.keys()])
+    assert all([dict1[k] == dict2[k] for k in dict1])
     # assert all([dict1[k] == dict2[k] for k in dict2.keys()])
 
 

@@ -85,7 +85,7 @@ class DataFrame(BaseModel, pd.DataFrame):
         df = df.fillna(np.nan).replace([np.nan], [None])
         return df
 
-    def update_df(self):
+    def update_df(self) -> None:
         """
         Update the internal dataframe in the case that the model values are changed
         in a way that we can't detect, like appending to one of the lists.
@@ -99,7 +99,7 @@ class DataFrame(BaseModel, pd.DataFrame):
         """
         if item in ("df", "_df"):
             return self.__pydantic_private__["_df"]
-        elif item in self.model_fields.keys():
+        elif item in self.model_fields:
             return self._df[item]
         else:
             try:
@@ -108,7 +108,7 @@ class DataFrame(BaseModel, pd.DataFrame):
                 return object.__getattribute__(self, item)
 
     @model_validator(mode="after")
-    def recreate_df(self):
+    def recreate_df(self) -> None:
         """
         Remake DF when validating (eg. when updating values on assignment)
         """
@@ -137,11 +137,11 @@ def dynamictable_to_df(
         model = model_from_dynamictable(group, base)
 
     items = {}
-    for col, col_type in model.model_fields.items():
-        if col not in group.keys():
+    for col, _col_type in model.model_fields.items():
+        if col not in group:
             continue
         idxname = col + "_index"
-        if idxname in group.keys():
+        if idxname in group:
             idx = group.get(idxname)[:]
             data = group.get(col)[idx - 1]
         else:

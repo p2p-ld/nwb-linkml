@@ -40,16 +40,10 @@ def _list_of_lists_schema(shape, array_type_handler):
     for arg, label in zip(shape_args, shape_labels):
         # which handler to use? for the first we use the actual type
         # handler, everywhere else we use the prior list handler
-        if list_schema is None:
-            inner_schema = array_type_handler
-        else:
-            inner_schema = list_schema
+        inner_schema = array_type_handler if list_schema is None else list_schema
 
         # make a label annotation, if we have one
-        if label is not None:
-            metadata = {"name": label}
-        else:
-            metadata = None
+        metadata = {"name": label} if label is not None else None
 
         # make the current level list schema, accounting for shape
         if arg == "*":
@@ -66,7 +60,8 @@ class NDArrayMeta(_NDArrayMeta, implementation="NDArray"):
     """
     Kept here to allow for hooking into metaclass, which has
     been necessary on and off as we work this class into a stable
-    state"""
+    state
+    """
 
 
 class NDArray(NPTypingType, metaclass=NDArrayMeta):

@@ -83,7 +83,7 @@ patch_contact_single_multiple = Patch(
 )
 
 
-def run_patches(phase: Phases, verbose: bool = False):
+def run_patches(phase: Phases, verbose: bool = False) -> None:
     patches = [p for p in Patch.instances if p.phase == phase]
     for patch in patches:
         if verbose:
@@ -96,7 +96,7 @@ def run_patches(phase: Phases, verbose: bool = False):
             pfile.write(string)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Run patches for a given phase of code generation")
     parser.add_argument("--phase", choices=list(Phases.__members__.keys()), type=Phases)
     args = parser.parse_args()
