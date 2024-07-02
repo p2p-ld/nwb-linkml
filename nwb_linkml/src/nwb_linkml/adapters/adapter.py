@@ -14,7 +14,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    Unpack,
 )
 
 from linkml_runtime.linkml_model import (
@@ -29,9 +28,9 @@ from pydantic import BaseModel
 from nwb_schema_language import Attribute, Dataset, Group, Schema
 
 if sys.version_info.minor >= 11:
-    from typing import TypeVarTuple
+    from typing import TypeVarTuple, Unpack
 else:
-    from typing_extensions import TypeVarTuple
+    from typing_extensions import TypeVarTuple, Unpack
 
 T = TypeVar("T", Dataset, Attribute, Schema, Group, BaseModel)
 Ts = TypeVarTuple("Ts")
