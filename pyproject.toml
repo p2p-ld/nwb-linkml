@@ -49,9 +49,9 @@ select = [
     ## ----------
     # pydocstyle
     # undocumented public objects
-    "D100", "D101", "D102", "D103", "D104", "D106", "D107",
+    "D100", "D101", "D102", "D103", "D104", "D106",
     # indentation
-    "D207", "D208",
+    "D207", "D208", "D209",
     # whitespace
     "D210", "D211",
     # emptiness
@@ -65,11 +65,12 @@ ignore = [
     "UP006", "UP035",
     # | for Union types (only supported >=3.10
     "UP007", "UP038",
-    # docstrings for __init__
-    "D107",
 ]
 
 fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**.py" = ["D", "ANN"]
 
 [tool.mypy]
 plugins = [
@@ -86,5 +87,6 @@ warn_unreachable = true
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310', 'py311']
+enable-unstable-feature = ["string_processing"]
 include = "nwb_linkml/.*\\.py$|nwb_schema_language/.*\\.py$"
 line-length = 100

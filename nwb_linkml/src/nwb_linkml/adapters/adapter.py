@@ -13,11 +13,13 @@ from typing import (
     Type,
     TypeVar,
     TypeVarTuple,
+    Union,
     Unpack,
 )
 
 from linkml_runtime.linkml_model import (
     ClassDefinition,
+    Definition,
     SchemaDefinition,
     SlotDefinition,
     TypeDefinition,
@@ -26,11 +28,15 @@ from pydantic import BaseModel
 
 from nwb_schema_language import Attribute, Dataset, Group, Schema
 
-# SchemaDefClass = dataclass(SchemaDefinition).__pydantic_model__
-
+T = TypeVar("T", Dataset, Attribute, Schema, Group, BaseModel)
+Ts = TypeVarTuple("Ts")
+Td = TypeVar('Td', bound=Union[Definition,SchemaDefinition,TypeDefinition])
 
 @dataclass
 class BuildResult:
+    """
+    Container class for propagating nested build results back up to caller
+    """
     # pass
     schemas: List[SchemaDefinition] = field(default_factory=list)
     classes: List[ClassDefinition] = field(default_factory=list)
@@ -38,12 +44,12 @@ class BuildResult:
     types: List[TypeDefinition] = field(default_factory=list)
 
     def __post_init__(self):
-        for field in ("schemas", "classes", "slots", "types"):
-            attr = getattr(self, field)
+        for a_field in ("schemas", "classes", "slots", "types"):
+            attr = getattr(self, a_field)
             if not isinstance(attr, list):
-                setattr(self, field, [attr])
+                setattr(self, a_field, [attr])
 
-    def _dedupe(self, ours, others):
+    def _dedupe(self, ours: List[Td], others: List[Td]) -> List[Td]:
         existing_names = [c.name for c in ours]
         others_dedupe = [o for o in others if o.name not in existing_names]
         return others_dedupe
@@ -80,11 +86,9 @@ class BuildResult:
         return out_str
 
 
-T = TypeVar("T", Dataset, Attribute, Schema, Group, BaseModel)
-Ts = TypeVarTuple("Ts")
-
-
 class Adapter(BaseModel):
+    """Abstract base class for adapters"""
+
     @abstractmethod
     def build(self) -> "BuildResult":
         """
@@ -101,7 +105,7 @@ class Adapter(BaseModel):
         yield input
         if isinstance(input, BaseModel):
 
-            for key in input.model_fields.keys():
+            for key in input.model_fields:
                 # Special case where SchemaAdapter Imports are themselves
                 # SchemaAdapters that should be located under the same
                 # NamespacesAdapter when it's important to query across SchemaAdapters,
