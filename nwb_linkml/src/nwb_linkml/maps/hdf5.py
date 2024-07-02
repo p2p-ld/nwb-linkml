@@ -639,9 +639,7 @@ class CompleteNWBFile(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        if src.neurodata_type == "NWBFile" and all(
-            [depend in completed for depend in src.depends]
-        ):
+        if src.neurodata_type == "NWBFile" and all([depend in completed for depend in src.depends]):
             return True
         else:
             return False

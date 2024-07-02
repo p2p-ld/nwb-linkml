@@ -253,7 +253,10 @@ class NWBPydanticGenerator(PydanticGenerator):
     SKIP_SLOTS: Tuple[str] = ("",)
     SKIP_CLASSES: Tuple[str] = ("",)
     INJECTED_FIELDS: Tuple[str] = (
-        'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")',
+        (
+            'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object'
+            ' is stored in an NWB file")'
+        ),
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
     )
     # SKIP_CLASSES=('VectorData','VectorIndex')

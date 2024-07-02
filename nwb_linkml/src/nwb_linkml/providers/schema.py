@@ -467,7 +467,8 @@ class LinkMLProvider(Provider):
         ns_repo = DEFAULT_REPOS.get(namespace, None)
         if ns_repo is None:
             raise KeyError(
-                f"Namespace {namespace} could not be found, and no git repository source has been configured!"
+                f"Namespace {namespace} could not be found, and no git repository source has been"
+                " configured!"
             )
         ns_file = ns_repo.provide_from_git(commit=version)
         res = self.build_from_yaml(ns_file)

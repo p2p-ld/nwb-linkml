@@ -1,4 +1,3 @@
-
 import pytest
 
 from nwb_linkml.adapters import SchemaAdapter

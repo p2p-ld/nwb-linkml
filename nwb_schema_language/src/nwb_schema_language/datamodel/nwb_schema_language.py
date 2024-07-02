@@ -510,7 +510,9 @@ class ReftypeOptions(EnumDefinitionImpl):
     )
     region = PermissibleValue(
         text="region",
-        description="Reference to a region (i.e. subset) of another dataset of the given target_type",
+        description=(
+            "Reference to a region (i.e. subset) of another dataset of the given target_type"
+        ),
     )
 
     _defn = EnumDefinition(

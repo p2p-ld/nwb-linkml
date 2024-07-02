@@ -20,14 +20,20 @@ class NamespaceRepo(BaseModel):
     """
 
     name: str = Field(
-        description="Short name used to refer to this namespace (usually equivalent to the name field within a namespaces NWB list)"
+        description=(
+            "Short name used to refer to this namespace (usually equivalent to the name field"
+            " within a namespaces NWB list)"
+        )
     )
     repository: HttpUrl | DirectoryPath = Field(
         description="URL or local absolute path to the root repository"
     )
     path: Path = Field(description="Relative path from the repository root to the namespace file")
     versions: List[str] = Field(
-        description="Known versions for this namespace repository, correspond to commit hashes or git tags that can be checked out by :class:`.GitRepo`",
+        description=(
+            "Known versions for this namespace repository, correspond to commit hashes or git tags"
+            " that can be checked out by :class:`.GitRepo`"
+        ),
         default_factory=list,
     )
 
@@ -248,7 +254,8 @@ class GitRepo:
         # Check that the remote matches
         if self.remote != str(self.namespace.repository):
             warnings.warn(
-                f'Repository exists, but has the wrong remote URL.\nExpected: {self.namespace.repository}\nGot:{self.remote.strip(".git")}'
+                "Repository exists, but has the wrong remote URL.\nExpected:"
+                f" {self.namespace.repository}\nGot:{self.remote.strip('.git')}"
             )
             return False
 
@@ -269,7 +276,8 @@ class GitRepo:
             or str(self.temp_directory).startswith(str(Config().git_dir))
         ):
             warnings.warn(
-                "Temp directory is outside of the system temp dir or git directory set by environmental variables, not deleting in case this has been changed by mistake"
+                "Temp directory is outside of the system temp dir or git directory set by"
+                " environmental variables, not deleting in case this has been changed by mistake"
             )
             self._temp_directory = None
             return
@@ -293,7 +301,8 @@ class GitRepo:
             else:
                 if not self.check():
                     warnings.warn(
-                        "Destination directory is not empty and does not pass checks for correctness! cleaning up"
+                        "Destination directory is not empty and does not pass checks for"
+                        " correctness! cleaning up"
                     )
                     self.cleanup()
                 else:

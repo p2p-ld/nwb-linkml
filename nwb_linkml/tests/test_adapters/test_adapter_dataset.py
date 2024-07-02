@@ -1,7 +1,3 @@
-
-
-
-
 from nwb_linkml.adapters.dataset import (
     MapScalar,
 )

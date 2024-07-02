@@ -34,7 +34,10 @@ class SchemaAdapter(Adapter):
     )
     version: Optional[str] = Field(
         None,
-        description="Version of schema, populated by NamespacesAdapter since individual schema files dont know their version in NWB Schema Lang",
+        description=(
+            "Version of schema, populated by NamespacesAdapter since individual schema files dont"
+            " know their version in NWB Schema Lang"
+        ),
     )
     _created_classes: List[Type[Group | Dataset]] = PrivateAttr(default_factory=list)
 
@@ -81,7 +84,8 @@ class SchemaAdapter(Adapter):
             len(res.slots) > 0
         ):  # pragma: no cover - hard to induce this error because the child classes don't fuck up like this
             raise RuntimeError(
-                "Generated schema in this translation can only have classes, all slots should be attributes within a class"
+                "Generated schema in this translation can only have classes, all slots should be"
+                " attributes within a class"
             )
 
         sch = SchemaDefinition(

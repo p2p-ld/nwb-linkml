@@ -365,7 +365,8 @@ class DatasetAdapter(ClassAdapter):
 
         if len(matches) > 1:  # pragma: no cover
             raise RuntimeError(
-                f"Only one map should apply to a dataset, you need to refactor the maps! Got maps: {matches}"
+                "Only one map should apply to a dataset, you need to refactor the maps! Got maps:"
+                f" {matches}"
             )
 
         # apply matching maps
@@ -412,7 +413,9 @@ def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
     slots = []
     for dims, shape in dims_shape:
         # if there is just a single list of possible dimensions, it's required
-        if not any([isinstance(inner_dim, list) for inner_dim in cls.dims]) or all([dims in inner_dim for inner_dim in cls.dims]):
+        if not any([isinstance(inner_dim, list) for inner_dim in cls.dims]) or all(
+            [dims in inner_dim for inner_dim in cls.dims]
+        ):
             required = True
         else:
             required = False

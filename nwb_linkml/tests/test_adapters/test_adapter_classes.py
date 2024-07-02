@@ -1,4 +1,3 @@
-
 import pytest
 from linkml_runtime.linkml_model import SlotDefinition
 

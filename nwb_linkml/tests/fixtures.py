@@ -117,7 +117,10 @@ def linkml_schema_bare() -> TestSchemas:
                         ),
                         SlotDefinition(
                             name="inline_dict",
-                            description="This should be inlined as a dictionary despite this class having an identifier",
+                            description=(
+                                "This should be inlined as a dictionary despite this class having"
+                                " an identifier"
+                            ),
                             multivalued=True,
                             inlined=True,
                             inlined_as_list=False,

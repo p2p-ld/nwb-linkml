@@ -30,14 +30,15 @@ from nwb_schema_language import Attribute, Dataset, Group, Schema
 
 T = TypeVar("T", Dataset, Attribute, Schema, Group, BaseModel)
 Ts = TypeVarTuple("Ts")
-Td = TypeVar('Td', bound=Union[Definition,SchemaDefinition,TypeDefinition])
+Td = TypeVar("Td", bound=Union[Definition, SchemaDefinition, TypeDefinition])
+
 
 @dataclass
 class BuildResult:
     """
     Container class for propagating nested build results back up to caller
     """
-    # pass
+
     schemas: List[SchemaDefinition] = field(default_factory=list)
     classes: List[ClassDefinition] = field(default_factory=list)
     slots: List[SlotDefinition] = field(default_factory=list)

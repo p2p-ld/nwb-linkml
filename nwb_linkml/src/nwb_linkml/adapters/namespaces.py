@@ -5,7 +5,6 @@ Wraps the :class:`nwb_schema_language.Namespaces` and other objects with conveni
 for extracting information and generating translated schema
 """
 
-
 from copy import copy
 from pathlib import Path
 from pprint import pformat
@@ -154,7 +153,8 @@ class NamespacesAdapter(Adapter):
 
         if len(internal_matches) > 1:
             raise KeyError(
-                f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
+                f"Found multiple schemas in namespace that define {name}:\ninternal:"
+                f" {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
             )
         elif len(internal_matches) == 1:
             return internal_matches[0]
@@ -168,7 +168,8 @@ class NamespacesAdapter(Adapter):
 
         if len(import_matches) > 1:
             raise KeyError(
-                f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
+                f"Found multiple schemas in namespace that define {name}:\ninternal:"
+                f" {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
             )
         elif len(import_matches) == 1:
             return import_matches[0]
