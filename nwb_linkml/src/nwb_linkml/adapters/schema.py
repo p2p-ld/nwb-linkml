@@ -3,18 +3,16 @@ I don't know if NWB necessarily has a term for a single nwb schema file, so we'r
 to call them "schema" objects
 """
 
-from typing import Optional, List, TYPE_CHECKING, Type
 from pathlib import Path
+from typing import List, NamedTuple, Optional, Type
+
+from linkml_runtime.linkml_model import SchemaDefinition
 from pydantic import Field, PrivateAttr
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.adapters.group import GroupAdapter
-
-from nwb_schema_language import Group, Dataset
-from typing import NamedTuple
-
-from linkml_runtime.linkml_model import SchemaDefinition
+from nwb_schema_language import Dataset, Group
 
 
 class SplitSchema(NamedTuple):

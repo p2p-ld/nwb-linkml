@@ -1,14 +1,10 @@
 import pdb
+
 import h5py
-
-import pytest
-from pathlib import Path
 import numpy as np
+import pytest
 
-from ..fixtures import tmp_output_dir, data_dir
-
-from nwb_linkml.io.hdf5 import HDF5IO
-from nwb_linkml.io.hdf5 import truncate_file
+from nwb_linkml.io.hdf5 import HDF5IO, truncate_file
 
 
 @pytest.mark.xfail()
@@ -92,7 +88,6 @@ def test_truncate_file(tmp_output_dir):
 
 @pytest.mark.skip()
 def test_flatten_hdf():
-    from nwb_linkml.io.hdf5 import HDF5IO
     from nwb_linkml.maps.hdf5 import flatten_hdf
 
     path = "/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773.nwb"

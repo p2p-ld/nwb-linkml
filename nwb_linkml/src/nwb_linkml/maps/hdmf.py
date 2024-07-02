@@ -2,19 +2,16 @@
 Mapping functions for handling HDMF classes like DynamicTables
 """
 
-from typing import List, Type, Optional, Any
-import warnings
+from typing import Any, List, Optional, Type
 
-
-import h5py
-import nptyping
-from pydantic import create_model, BaseModel
-import numpy as np
 import dask.array as da
+import h5py
+import numpy as np
+from pydantic import BaseModel, create_model
 
+from nwb_linkml.maps.dtype import struct_from_dtype
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArray, NDArrayProxy
-from nwb_linkml.maps.dtype import flat_to_nptyping, struct_from_dtype
 
 
 def model_from_dynamictable(group: h5py.Group, base: Optional[BaseModel] = None) -> Type[BaseModel]:

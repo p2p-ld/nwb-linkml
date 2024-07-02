@@ -12,12 +12,11 @@ def patch_npytyping_perf():
     References:
         - https://github.com/ramonhagenaars/nptyping/issues/110
     """
-    from nptyping import ndarray
-    from nptyping.pandas_ import dataframe
-    from nptyping import recarray
-    from nptyping import base_meta_classes
     import inspect
     from types import FrameType
+
+    from nptyping import base_meta_classes, ndarray, recarray
+    from nptyping.pandas_ import dataframe
 
     # make a new __module__ methods for the affected classes
     def new_module_ndarray(cls) -> str:
@@ -63,13 +62,13 @@ def patch_schemaview():
     Returns:
 
     """
-    from typing import List
     from functools import lru_cache
-    from linkml_runtime.utils.schemaview import SchemaView
+    from typing import List
 
     from linkml_runtime.linkml_model import SchemaDefinitionName
+    from linkml_runtime.utils.schemaview import SchemaView
 
-    @lru_cache()
+    @lru_cache
     def imports_closure(
         self, imports: bool = True, traverse=True, inject_metadata=True
     ) -> List[SchemaDefinitionName]:

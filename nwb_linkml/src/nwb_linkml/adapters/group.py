@@ -2,16 +2,14 @@
 Adapter for NWB groups to linkml Classes
 """
 
-import pdb
-from typing import List
-from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+from linkml_runtime.linkml_model import SlotDefinition
 
-from nwb_schema_language import Dataset, Group, ReferenceDtype, CompoundDtype, DTypeType
-from nwb_linkml.adapters.classes import ClassAdapter
-from nwb_linkml.maps.naming import camel_to_snake
-from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.classes import ClassAdapter
+from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.maps import QUANTITY_MAP
+from nwb_linkml.maps.naming import camel_to_snake
+from nwb_schema_language import Group
 
 
 class GroupAdapter(ClassAdapter):

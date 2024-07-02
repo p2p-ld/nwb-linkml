@@ -19,29 +19,26 @@ Other TODO:
 
 """
 
-import pdb
+import json
+import os
+import shutil
+import subprocess
 import warnings
-from typing import Optional, Dict, overload, Type, Union, List
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, NamedTuple
-import json
-import subprocess
-import shutil
-import os
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, overload
 
 import h5py
+import numpy as np
 from pydantic import BaseModel
 from tqdm import tqdm
-import numpy as np
 
-from nwb_linkml.maps.hdf5 import H5SourceItem, flatten_hdf, ReadPhases, ReadQueue
+from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf
 
 # from nwb_linkml.models.core_nwb_file import NWBFile
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
 from nwb_linkml.providers.schema import SchemaProvider
-from nwb_linkml.types.hdf5 import HDF5_Path
 
 
 class HDF5IO:
@@ -191,7 +188,7 @@ def read_specs_as_dicts(group: h5py.Group) -> dict:
         if isinstance(node, h5py.Dataset):
             # make containing dict if they dont exist
             pieces = node.name.split("/")
-            if pieces[-3] not in spec_dict.keys():
+            if pieces[-3] not in spec_dict:
                 spec_dict[pieces[-3]] = {}
 
             spec = json.loads(node[()])

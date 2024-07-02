@@ -3,18 +3,17 @@ Language elements in nwb schema language that have a fixed, alternative represen
 in LinkML. These are exported as an nwb.language.yml file along with every generated namespace
 """
 
-from nwb_schema_language.datamodel.nwb_schema_pydantic import FlatDtype as FlatDtype_source
 from linkml_runtime.linkml_model import (
     ClassDefinition,
     EnumDefinition,
-    SchemaDefinition,
-    SlotDefinition,
-    TypeDefinition,
-    Prefix,
     PermissibleValue,
+    Prefix,
+    SchemaDefinition,
+    TypeDefinition,
 )
-from nwb_linkml.maps import flat_to_linkml
 
+from nwb_linkml.maps import flat_to_linkml
+from nwb_schema_language.datamodel.nwb_schema_pydantic import FlatDtype as FlatDtype_source
 
 FlatDType = EnumDefinition(
     name="FlatDType",

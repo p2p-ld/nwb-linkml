@@ -2,13 +2,13 @@
 Patching the source code at different stages of the code generation process
 """
 
+import argparse
+import pprint
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import ClassVar, List
-import re
-import argparse
-import pprint
 
 
 class Phases(StrEnum):
@@ -89,7 +89,7 @@ def run_patches(phase: Phases, verbose: bool = False):
         if verbose:
             print("Patching:")
             pprint.pprint(patch)
-        with open(patch.path, "r") as pfile:
+        with open(patch.path) as pfile:
             string = pfile.read()
         string = re.sub(patch.match, patch.replacement, string)
         with open(patch.path, "w") as pfile:

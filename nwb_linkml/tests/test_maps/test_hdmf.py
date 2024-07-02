@@ -1,11 +1,10 @@
-import pdb
 
-import pytest
-import h5py
 import time
 
-from nwb_linkml.maps.hdmf import model_from_dynamictable, dynamictable_to_model
-from ..fixtures import data_dir
+import h5py
+import pytest
+
+from nwb_linkml.maps.hdmf import dynamictable_to_model, model_from_dynamictable
 
 NWBFILE = "/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773.nwb"
 

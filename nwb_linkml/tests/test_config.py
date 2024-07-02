@@ -1,8 +1,7 @@
-import pytest
-import tempfile
-from pathlib import Path
 import os
 import shutil
+import tempfile
+from pathlib import Path
 
 from nwb_linkml.config import Config
 

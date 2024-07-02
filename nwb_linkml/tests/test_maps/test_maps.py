@@ -1,9 +1,10 @@
-import pytest
 import os
 import tempfile
+from pathlib import Path
+
 import yaml
 from yaml import CDumper as Dumper
-from pathlib import Path
+
 from nwb_linkml.io.schema import load_yaml
 
 

@@ -5,31 +5,23 @@ Extension of nptyping NDArray for pydantic that allows for JSON-Schema serializa
 """
 
 import base64
-import pdb
-from pathlib import Path
-from typing import Any, Callable, Tuple
 import sys
 from copy import copy
-from functools import reduce
-from operator import or_
+from pathlib import Path
+from typing import Any, Callable
 
-import nptyping.structure
-from pydantic_core import core_schema
-from pydantic import BaseModel, GetJsonSchemaHandler, ValidationError, GetCoreSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
-
-import numpy as np
-import h5py
-from dask.array.core import Array as DaskArray
 import blosc2
-
+import h5py
+import nptyping.structure
+import numpy as np
+from dask.array.core import Array as DaskArray
 from nptyping import NDArray as _NDArray
 from nptyping.ndarray import NDArrayMeta as _NDArrayMeta
-from nptyping import Shape, Number
 from nptyping.nptyping_type import NPTypingType
 from nptyping.shape_expression import check_shape
+from pydantic_core import core_schema
 
-from nwb_linkml.maps.dtype import np_to_python, allowed_precisions
+from nwb_linkml.maps.dtype import allowed_precisions, np_to_python
 
 
 def _list_of_lists_schema(shape, array_type_handler):
@@ -196,7 +188,7 @@ class NDArrayProxy:
             return obj[slice]
 
     def __setitem__(self, slice, value):
-        raise NotImplementedError(f"Can't write into an arrayproxy yet!")
+        raise NotImplementedError("Can't write into an arrayproxy yet!")
 
     @classmethod
     def __get_pydantic_core_schema__(

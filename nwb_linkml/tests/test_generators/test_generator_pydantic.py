@@ -5,28 +5,22 @@ Note that since this is largely a subclass, we don't test all of the functionali
 because it's tested in the base linkml package.
 """
 
-import pdb
+import re
 import sys
 import typing
-
-import pytest
-from typing import TypedDict, Optional
 from types import ModuleType
-import re
+from typing import Optional, TypedDict
+
 import numpy as np
-
+import pytest
 from pydantic import BaseModel
-
-from ..fixtures import (
-    tmp_output_dir,
-    tmp_output_dir_mod,
-    linkml_schema,
-    TestSchemas,
-    linkml_schema_bare,
-)
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator, compile_python
 from nwb_linkml.types.ndarray import NDArrayMeta
+
+from ..fixtures import (
+    TestSchemas,
+)
 
 
 class TestModules(TypedDict):

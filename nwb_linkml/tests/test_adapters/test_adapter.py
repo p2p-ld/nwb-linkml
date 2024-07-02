@@ -1,20 +1,15 @@
-import pdb
 
 import numpy as np
 import pytest
-from ..fixtures import nwb_core_fixture
-
 from linkml_runtime.linkml_model import (
-    SchemaDefinition,
     ClassDefinition,
+    SchemaDefinition,
     SlotDefinition,
     TypeDefinition,
 )
-from nwb_schema_language import Dataset, Group, Schema, CompoundDtype, Attribute
 
 from nwb_linkml.adapters import BuildResult
-
-from ..fixtures import linkml_schema_bare
+from nwb_schema_language import Attribute, Dataset, Group, Schema
 
 
 def test_walk(nwb_core_fixture):

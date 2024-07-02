@@ -1,7 +1,8 @@
-import numpy as np
-from typing import Any, Type
 from datetime import datetime
+from typing import Any, Type
+
 import nptyping
+import numpy as np
 
 flat_to_linkml = {
     "float": "float",

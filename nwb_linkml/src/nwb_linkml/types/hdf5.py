@@ -1,6 +1,7 @@
 from typing import Any
-from pydantic_core import CoreSchema, core_schema
+
 from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
 
 
 class HDF5_Path(str):

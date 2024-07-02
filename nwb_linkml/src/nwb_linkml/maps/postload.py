@@ -2,13 +2,11 @@
 Maps to change the loaded .yaml from nwb schema before it's given to the nwb_schema_language models
 """
 
+import ast
+import re
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Optional, ClassVar, List
-import re
-import ast
-
-from nwb_linkml.maps import Map
+from typing import ClassVar, List, Optional
 
 
 class SCOPE_TYPES(StrEnum):

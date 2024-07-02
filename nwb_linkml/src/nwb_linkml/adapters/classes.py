@@ -4,11 +4,13 @@ Adapters to linkML classes
 
 from abc import abstractmethod
 from typing import List, Optional
-from nwb_schema_language import Dataset, Group, ReferenceDtype, CompoundDtype, DTypeType
-from nwb_linkml.adapters.adapter import Adapter, BuildResult
+
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+
+from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
+from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype
 
 
 class ClassAdapter(Adapter):

@@ -1,17 +1,13 @@
-import pdb
-from typing import Union, Optional, Any
 import json
+from typing import Any, Optional, Union
 
-import pytest
-
-import numpy as np
 import h5py
+import numpy as np
+import pytest
+from nptyping import Number, Shape
+from pydantic import BaseModel, Field, ValidationError
 
-from pydantic import BaseModel, ValidationError, Field
 from nwb_linkml.types.ndarray import NDArray, NDArrayProxy
-from nptyping import Shape, Number
-
-from ..fixtures import data_dir, tmp_output_dir, tmp_output_dir_func
 
 
 def test_ndarray_type():

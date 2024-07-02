@@ -2,15 +2,14 @@
 Define and manage NWB namespaces in external repositories
 """
 
-import pdb
-from typing import Optional, Dict, List
+import shutil
+import subprocess
+import tempfile
 import warnings
 from pathlib import Path
-import tempfile
-import subprocess
-import shutil
+from typing import List, Optional
 
-from pydantic import BaseModel, HttpUrl, FilePath, DirectoryPath, Field
+from pydantic import BaseModel, DirectoryPath, Field, HttpUrl
 
 from nwb_linkml.config import Config
 

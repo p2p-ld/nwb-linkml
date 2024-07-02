@@ -5,26 +5,21 @@ Wraps the :class:`nwb_schema_language.Namespaces` and other objects with conveni
 for extracting information and generating translated schema
 """
 
-import pdb
 
-from typing import List, Optional, Dict
-from pathlib import Path
-from pydantic import BaseModel, Field, validator, PrivateAttr
-from pprint import pformat
-from linkml_runtime.linkml_model import SchemaDefinition, Annotation
-from linkml_runtime.dumpers import yaml_dumper
-from time import sleep
 from copy import copy
+from pathlib import Path
+from pprint import pformat
+from typing import Dict, List, Optional
 
-
-from nwb_schema_language import Namespaces
+from linkml_runtime.dumpers import yaml_dumper
+from linkml_runtime.linkml_model import Annotation, SchemaDefinition
+from pydantic import Field, PrivateAttr
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
-
-
 from nwb_linkml.ui import AdapterProgress
+from nwb_schema_language import Namespaces
 
 
 class NamespacesAdapter(Adapter):

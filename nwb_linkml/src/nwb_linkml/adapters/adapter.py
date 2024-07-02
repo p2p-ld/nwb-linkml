@@ -2,32 +2,29 @@
 Base class for adapters
 """
 
-import pdb
 from abc import abstractmethod
-import warnings
 from dataclasses import dataclass, field
 from typing import (
-    List,
-    Dict,
-    Type,
-    Generator,
     Any,
-    Tuple,
+    Generator,
+    List,
     Optional,
+    Tuple,
+    Type,
     TypeVar,
     TypeVarTuple,
     Unpack,
-    Literal,
 )
-from pydantic import BaseModel, Field, validator
+
 from linkml_runtime.linkml_model import (
-    Element,
-    SchemaDefinition,
     ClassDefinition,
+    SchemaDefinition,
     SlotDefinition,
     TypeDefinition,
 )
-from nwb_schema_language import Dataset, Attribute, Schema, Group
+from pydantic import BaseModel
+
+from nwb_schema_language import Attribute, Dataset, Group, Schema
 
 # SchemaDefClass = dataclass(SchemaDefinition).__pydantic_model__
 

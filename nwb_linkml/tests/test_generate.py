@@ -6,19 +6,15 @@ to ensure that the basics of the whole thing operate -- not doing any actual dat
 here.
 """
 
-import pdb
 from pathlib import Path
 from typing import Dict
 
 import pytest
-import warnings
-
-from .fixtures import nwb_core_fixture, tmp_output_dir
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
-from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from linkml_runtime.loaders.yaml_loader import YAMLLoader
 
+from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.lang_elements import NwbLangSchema
 
 

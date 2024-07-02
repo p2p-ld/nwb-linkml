@@ -25,42 +25,37 @@ The `serialize` method:
 
 """
 
-import pdb
-import re
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import List, Dict, Set, Tuple, Optional, TypedDict, Type
-import os, sys
-from types import ModuleType
-from copy import deepcopy, copy
-import warnings
 import inspect
+import sys
+import warnings
+from copy import copy
+from dataclasses import dataclass
+from pathlib import Path
+from types import ModuleType
+from typing import Dict, List, Optional, Tuple, Type
 
-from nwb_linkml.maps import flat_to_nptyping
+from jinja2 import Template
 from linkml.generators import PydanticGenerator
+from linkml.generators.common.type_designators import (
+    get_type_designator_value,
+)
+from linkml.utils.ifabsent_functions import ifabsent_value_declaration
 from linkml_runtime.linkml_model.meta import (
     Annotation,
     ClassDefinition,
     ClassDefinitionName,
+    ElementName,
     SchemaDefinition,
     SlotDefinition,
     SlotDefinitionName,
-    TypeDefinition,
-    ElementName,
 )
-from linkml.generators.common.type_designators import (
-    get_accepted_type_designator_values,
-    get_type_designator_value,
-)
+from linkml_runtime.utils.compile_python import file_text
 from linkml_runtime.utils.formatutils import camelcase, underscore
 from linkml_runtime.utils.schemaview import SchemaView
-from linkml_runtime.utils.compile_python import file_text
-from linkml.utils.ifabsent_functions import ifabsent_value_declaration
-
-from nwb_linkml.maps.naming import module_case, version_module_case
-
-from jinja2 import Template
 from pydantic import BaseModel
+
+from nwb_linkml.maps import flat_to_nptyping
+from nwb_linkml.maps.naming import module_case, version_module_case
 
 
 class LinkML_Meta(BaseModel):

@@ -1,5 +1,6 @@
-import numpy as np
 import nptyping
+import numpy as np
+
 from nwb_linkml.maps.dtype import struct_from_dtype
 
 

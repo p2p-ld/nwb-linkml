@@ -3,24 +3,24 @@ Loading/saving NWB Schema yaml files
 """
 
 from pathlib import Path
-from typing import Optional
 from pprint import pprint
+from typing import Optional
 
-from linkml_runtime.loaders import yaml_loader
 import yaml
+from linkml_runtime.loaders import yaml_loader
 
-from nwb_schema_language import Namespaces, Group, Dataset
-from nwb_linkml.providers.git import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
-from nwb_linkml.maps.postload import PHASES, KeyMap, apply_postload
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
+from nwb_linkml.maps.postload import apply_postload
+from nwb_linkml.providers.git import HDMF_COMMON_REPO, NWB_CORE_REPO, NamespaceRepo
+from nwb_schema_language import Dataset, Group, Namespaces
 
 
 def load_yaml(path: Path | str) -> dict:
     if isinstance(path, str) and not Path(path).exists():
         ns_dict = yaml.safe_load(path)
     else:
-        with open(path, "r") as file:
+        with open(path) as file:
             ns_dict = yaml.safe_load(file)
     ns_dict = apply_postload(ns_dict)
     return ns_dict
@@ -108,7 +108,7 @@ def load_namespace_adapter(
     elif isinstance(namespace, Namespaces):
         namespaces = namespace
     else:
-        raise ValueError(f"Namespace must be a path, namespace repo, or already loaded namespaces")
+        raise ValueError("Namespace must be a path, namespace repo, or already loaded namespaces")
 
     if path.is_file():
         # given the namespace file itself, so find paths relative to its directory

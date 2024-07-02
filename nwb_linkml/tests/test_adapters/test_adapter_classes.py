@@ -1,12 +1,9 @@
-import pdb
 
 import pytest
-
-from ..fixtures import linkml_schema_bare, linkml_schema, nwb_schema
-
 from linkml_runtime.linkml_model import SlotDefinition
-from nwb_linkml.adapters import DatasetAdapter, ClassAdapter, GroupAdapter
-from nwb_schema_language import Group, Dataset, ReferenceDtype, CompoundDtype
+
+from nwb_linkml.adapters import DatasetAdapter, GroupAdapter
+from nwb_schema_language import CompoundDtype, Dataset, Group, ReferenceDtype
 
 
 def test_build_base(nwb_schema):

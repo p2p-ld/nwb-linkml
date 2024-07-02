@@ -13,22 +13,20 @@ Pydantic models that behave like pandas dataframes
 """
 
 import ast
-import pdb
-from typing import List, Any, get_origin, get_args, Union, Optional, Dict, Type
-from types import NoneType
+from typing import Any, Dict, Optional, Type
 
 import h5py
 import numpy as np
 import pandas as pd
 from pydantic import (
     BaseModel,
-    model_serializer,
-    SerializerFunctionWrapHandler,
     ConfigDict,
+    SerializerFunctionWrapHandler,
+    model_serializer,
     model_validator,
 )
 
-from nwb_linkml.maps.hdmf import model_from_dynamictable, dereference_reference_vector
+from nwb_linkml.maps.hdmf import dereference_reference_vector, model_from_dynamictable
 from nwb_linkml.types.hdf5 import HDF5_Path
 
 

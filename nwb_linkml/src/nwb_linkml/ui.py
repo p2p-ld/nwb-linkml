@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from rich.live import Live
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, Column
+from rich.progress import BarColumn, Column, Progress, SpinnerColumn, TextColumn
 
 if TYPE_CHECKING:
     from nwb_linkml.adapters.namespaces import NamespacesAdapter
@@ -42,7 +42,7 @@ class AdapterProgress:
                 )
 
         self.panel = Panel(
-            self.progress, title=f"Building Namespaces", border_style="green", padding=(2, 2)
+            self.progress, title="Building Namespaces", border_style="green", padding=(2, 2)
         )
 
     def update(self, namespace: str, **kwargs):

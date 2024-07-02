@@ -6,23 +6,21 @@ so we will make our own mapping class here and re-evaluate whether they should b
 """
 
 import datetime
-import pdb
-from abc import abstractmethod
-from pathlib import Path
-from typing import Literal, List, Dict, Optional, Type, Union, Tuple
 import inspect
+from abc import abstractmethod
+from enum import StrEnum
+from pathlib import Path
+from typing import Dict, List, Literal, Optional, Tuple, Type, Union
 
 import h5py
-from enum import StrEnum
+from pydantic import BaseModel, ConfigDict, Field
 
-from pydantic import BaseModel, Field, ConfigDict
-
-from nwb_linkml.providers.schema import SchemaProvider
+from nwb_linkml.annotations import unwrap_optional
 from nwb_linkml.maps import Map
 from nwb_linkml.maps.hdmf import dynamictable_to_model
+from nwb_linkml.providers.schema import SchemaProvider
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArrayProxy
-from nwb_linkml.annotations import unwrap_optional
 
 
 class ReadPhases(StrEnum):
@@ -548,7 +546,7 @@ class CompleteContainerGroups(HDF5Map):
             src.model is None
             and src.neurodata_type is None
             and src.source.h5_type == "group"
-            and all([depend in completed.keys() for depend in src.depends])
+            and all([depend in completed for depend in src.depends])
         ):
             return True
         else:
@@ -580,7 +578,7 @@ class CompleteModelGroups(HDF5Map):
             src.model is not None
             and src.source.h5_type == "group"
             and src.neurodata_type != "NWBFile"
-            and all([depend in completed.keys() for depend in src.depends])
+            and all([depend in completed for depend in src.depends])
         ):
             return True
         else:
@@ -642,7 +640,7 @@ class CompleteNWBFile(HDF5Map):
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
         if src.neurodata_type == "NWBFile" and all(
-            [depend in completed.keys() for depend in src.depends]
+            [depend in completed for depend in src.depends]
         ):
             return True
         else:
@@ -661,7 +659,7 @@ class CompleteNWBFile(HDF5Map):
             datetime.datetime.fromisoformat(ts.decode("utf-8"))
             for ts in res["file_create_date"]["array"][:]
         ]
-        if "stimulus" not in res.keys():
+        if "stimulus" not in res:
             res["stimulus"] = provider.get_class("core", "NWBFileStimulus")()
         electrode_groups = []
         egroup_keys = list(res["general"].get("extracellular_ephys", {}).keys())
@@ -830,8 +828,8 @@ def flatten_hdf(h5f: h5py.File | h5py.Group, skip="specifications") -> Dict[str,
             # depends = depends,
             h5_type=h5_type,
             attrs=attrs,
-            namespace=attrs.get("namespace", None),
-            neurodata_type=attrs.get("neurodata_type", None),
+            namespace=attrs.get("namespace"),
+            neurodata_type=attrs.get("neurodata_type"),
         )
 
     h5f.visititems(_itemize)
@@ -895,7 +893,7 @@ def resolve_references(
     res = {}
     for path, item in src.items():
         if isinstance(item, HDF5_Path):
-            other_item = completed.get(item, None)
+            other_item = completed.get(item)
             if other_item is None:
                 errors.append(f"Couldn't find: {item}")
             res[path] = other_item.result

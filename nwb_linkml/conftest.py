@@ -1,9 +1,7 @@
 import os
-import pytest
 from doctest import ELLIPSIS, NORMALIZE_WHITESPACE
 
-from tests.fixtures import tmp_output_dir
-
+import pytest
 from sybil import Sybil
 from sybil.parsers.rest import DocTestParser, PythonCodeBlockParser
 

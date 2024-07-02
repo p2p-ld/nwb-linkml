@@ -1,7 +1,8 @@
+from types import NoneType
+from typing import List
+
 import pytest
 
-from typing import List, Optional, Union
-from types import NoneType
 from nwb_linkml.annotations import get_inner_types
 
 

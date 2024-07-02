@@ -1,22 +1,11 @@
-import pdb
 
-import pytest
 
-from ..fixtures import nwb_core_fixture
 
-from nwb_schema_language import Namespaces, Namespace, Dataset, Group, Schema
-from linkml_runtime.dumpers import yaml_dumper
-import yaml
-from nwb_linkml.adapters import DatasetAdapter
+
 from nwb_linkml.adapters.dataset import (
     MapScalar,
-    MapListlike,
-    MapArraylike,
-    MapNVectors,
-    Map1DVector,
-    MapScalarAttributes,
-    MapArrayLikeAttributes,
 )
+from nwb_schema_language import Dataset
 
 
 def test_nothing(nwb_core_fixture):

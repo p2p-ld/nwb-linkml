@@ -2,20 +2,17 @@
 Adapter for NWB datasets to linkml Classes
 """
 
-import pdb
-from typing import Optional, List
-import warnings
 from abc import abstractmethod
+from typing import Optional
 
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
-from pydantic import PrivateAttr
 
-from nwb_schema_language import Dataset, ReferenceDtype, CompoundDtype, DTypeType
-from nwb_linkml.adapters.classes import ClassAdapter
-from nwb_linkml.maps.naming import camel_to_snake
-from nwb_linkml.maps.dtype import flat_to_linkml
 from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
+from nwb_linkml.maps.dtype import flat_to_linkml
+from nwb_linkml.maps.naming import camel_to_snake
+from nwb_schema_language import Dataset
 
 
 class DatasetMap(Map):
@@ -415,10 +412,7 @@ def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
     slots = []
     for dims, shape in dims_shape:
         # if there is just a single list of possible dimensions, it's required
-        if not any([isinstance(inner_dim, list) for inner_dim in cls.dims]):
-            required = True
-        # if a dim is present in all possible combinations of dims, make it required
-        elif all([dims in inner_dim for inner_dim in cls.dims]):
+        if not any([isinstance(inner_dim, list) for inner_dim in cls.dims]) or all([dims in inner_dim for inner_dim in cls.dims]):
             required = True
         else:
             required = False
@@ -447,7 +441,7 @@ def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
     elif cls.name:
         name = cls.name
     else:
-        raise ValueError(f"Dataset has no name or type definition, what do call it?")
+        raise ValueError("Dataset has no name or type definition, what do call it?")
 
     name = "__".join([name, "Arraylike"])
 

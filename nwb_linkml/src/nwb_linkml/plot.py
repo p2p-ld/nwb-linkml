@@ -2,17 +2,17 @@
 Various visualization routines, mostly to help development for now
 """
 
-from typing import TYPE_CHECKING, Optional, List, TypedDict
-from rich import print
 import random
+from typing import TYPE_CHECKING, List, Optional, TypedDict
 
-from dash import Dash, html
 import dash_cytoscape as cyto
+from dash import Dash, html
+from rich import print
 
 cyto.load_extra_layouts()
 
-from nwb_schema_language import Namespace, Group, Dataset
 from nwb_linkml.io import load_nwb_core
+from nwb_schema_language import Dataset, Group, Namespace
 
 if TYPE_CHECKING:
     from nwb_linkml.adapters import NamespacesAdapter

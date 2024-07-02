@@ -1,8 +1,9 @@
-import pytest
 import shutil
 
+import pytest
 import yaml
-from nwb_linkml.providers.git import GitRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
+
+from nwb_linkml.providers.git import HDMF_COMMON_REPO, NWB_CORE_REPO, GitRepo
 from nwb_schema_language import Namespaces
 
 
@@ -34,7 +35,7 @@ def test_gitrepo(source, commit):
     repo.clone()
     # check that the namespace file exists and has some expected fields
     assert repo.namespace_file.exists()
-    with open(repo.namespace_file, "r") as nsfile:
+    with open(repo.namespace_file) as nsfile:
         ns = yaml.safe_load(nsfile)
     # correct model instantiation confirms the repo was cloned successfully
     ns_model = Namespaces(**ns)

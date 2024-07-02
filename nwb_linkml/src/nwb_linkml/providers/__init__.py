@@ -1,1 +1,1 @@
-from nwb_linkml.providers.schema import LinkMLProvider, SchemaProvider, PydanticProvider
+from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider, SchemaProvider

@@ -1,4 +1,3 @@
-import pdb
 import re
 from pathlib import Path
 
@@ -53,14 +52,14 @@ def relative_path(target: Path, origin: Path):
     def _relative_path(target: Path, origin: Path):
         try:
             return Path(target).resolve().relative_to(Path(origin).resolve())
-        except ValueError as e:  # target does not start with origin
+        except ValueError:  # target does not start with origin
             # recursion with origin (eventually origin is root so try will succeed)
             return Path("..").joinpath(_relative_path(target, Path(origin).parent))
 
     try:
         successful = Path(target).resolve().relative_to(Path(origin).resolve())
         return successful
-    except ValueError as e:  # target does not start with origin
+    except ValueError:  # target does not start with origin
         # recursion with origin (eventually origin is root so try will succeed)
         relative = Path("..").joinpath(_relative_path(target, Path(origin).parent))
         # remove the first '..' because this thing freaking double counts

@@ -1,22 +1,21 @@
-import pytest
-import os
-from typing import NamedTuple, Optional, List, Dict
+import shutil
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, Optional
 
+import pytest
 from linkml_runtime.dumpers import yaml_dumper
-
-from nwb_linkml.io import schema as io
-from nwb_linkml.adapters.namespaces import NamespacesAdapter
-from nwb_schema_language import Schema, Group, Dataset, Attribute
 from linkml_runtime.linkml_model import (
-    SchemaDefinition,
     ClassDefinition,
-    SlotDefinition,
     Prefix,
+    SchemaDefinition,
+    SlotDefinition,
     TypeDefinition,
 )
-import shutil
-from pathlib import Path
+
+from nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_linkml.io import schema as io
+from nwb_schema_language import Attribute, Dataset, Group
 
 
 @pytest.fixture(scope="session")

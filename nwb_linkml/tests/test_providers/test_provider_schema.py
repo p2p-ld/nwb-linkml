@@ -1,25 +1,16 @@
-import pdb
 import shutil
-import os
 import sys
-import warnings
 from pathlib import Path
-import yaml
-from pprint import pformat
-
-from typing import Optional, Union, List
-from ..fixtures import tmp_output_dir
+from typing import Optional
 
 import pytest
+from nptyping import Shape, UByte
 
-from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
 import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
 from nwb_linkml.providers.git import DEFAULT_REPOS
-from nwb_linkml.adapters import NamespacesAdapter
+from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
 from nwb_linkml.types.ndarray import NDArray
-from nptyping import Shape, UByte
-
 
 CORE_MODULES = (
     "core.nwb.base",

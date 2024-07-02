@@ -41,35 +41,29 @@ so eg. for the linkML and pydantic providers:
 
 """
 
-import pdb
-import shutil
-from pprint import pformat
-from typing import Dict, TypedDict, List, Optional, Literal, TypeVar, Any, Dict, Type, Callable
-from types import ModuleType
-from pathlib import Path
-import os
-from abc import abstractmethod, ABC
-from importlib.abc import MetaPathFinder
-import warnings
 import importlib
+import os
+import shutil
 import sys
+from abc import ABC, abstractmethod
+from importlib.abc import MetaPathFinder
+from pathlib import Path
+from types import ModuleType
+from typing import Any, Dict, List, Optional, Type, TypedDict, TypeVar
 
+from linkml_runtime import SchemaView
+from linkml_runtime.dumpers import yaml_dumper
+from linkml_runtime.linkml_model import SchemaDefinition, SchemaDefinitionName
 from pydantic import BaseModel
 
-from linkml_runtime.linkml_model import SchemaDefinition, SchemaDefinitionName
-from linkml_runtime.dumpers import yaml_dumper
-from linkml_runtime import SchemaView
-
-from nwb_linkml.config import Config
-from nwb_linkml import io
-from nwb_linkml import adapters
+from nwb_linkml import adapters, io
 from nwb_linkml.adapters.adapter import BuildResult
-from nwb_linkml.maps.naming import module_case, version_module_case, relative_path
-from nwb_schema_language import Namespaces
+from nwb_linkml.config import Config
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
+from nwb_linkml.maps.naming import module_case, relative_path, version_module_case
 from nwb_linkml.providers.git import DEFAULT_REPOS
 from nwb_linkml.ui import AdapterProgress
-
+from nwb_schema_language import Namespaces
 
 P = TypeVar("P")
 
@@ -212,7 +206,7 @@ class Provider(ABC):
         for ns_dir in builtin_namespaces + tmp_paths:
             if not ns_dir.is_dir():
                 continue
-            if ns_dir.name not in versions.keys():
+            if ns_dir.name not in versions:
                 versions[ns_dir.name] = []
 
             versions[ns_dir.name].extend([v for v in ns_dir.iterdir() if v.is_dir()])
@@ -589,7 +583,7 @@ class PydanticProvider(Provider):
 
     def _build_unsplit(self, path, versions, default_kwargs, dump, out_file, force):
         if out_file.exists() and not force:
-            with open(out_file, "r") as ofile:
+            with open(out_file) as ofile:
                 serialized = ofile.read()
             return serialized
 
