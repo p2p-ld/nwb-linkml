@@ -1,3 +1,7 @@
+"""
+String manipulation methods for names
+"""
+
 import re
 from pathlib import Path
 
@@ -40,7 +44,7 @@ def version_module_case(name: str) -> str:
     return name
 
 
-def relative_path(target: Path, origin: Path):
+def relative_path(target: Path, origin: Path) -> Path:
     """
     return path of target relative to origin, even if they're
     not in the same subpath
@@ -49,7 +53,7 @@ def relative_path(target: Path, origin: Path):
         - https://stackoverflow.com/a/71874881
     """
 
-    def _relative_path(target: Path, origin: Path):
+    def _relative_path(target: Path, origin: Path) -> Path:
         try:
             return Path(target).resolve().relative_to(Path(origin).resolve())
         except ValueError:  # target does not start with origin

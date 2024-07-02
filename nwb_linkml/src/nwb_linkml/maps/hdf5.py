@@ -5,6 +5,10 @@ We have sort of diverged from the initial idea of a generalized map as in :class
 so we will make our own mapping class here and re-evaluate whether they should be unified later
 """
 
+# FIXME: return and document whatever is left of this godforsaken module after refactoring
+# ruff: noqa: D102
+# ruff: noqa: D101
+
 import contextlib
 import datetime
 import inspect
@@ -45,11 +49,17 @@ class H5SourceItem(BaseModel):
     h5f_path: str
     """Path to the source hdf5 file"""
     leaf: bool
-    """If ``True``, this item has no children (and thus we should start instantiating it before ascending to parent classes)"""
+    """
+    If ``True``, this item has no children 
+    (and thus we should start instantiating it before ascending to parent classes)
+    """
     h5_type: Literal["group", "dataset"]
     """What kind of hdf5 element this is"""
     depends: List[str] = Field(default_factory=list)
-    """Paths of other source items that this item depends on before it can be instantiated. eg. from softlinks"""
+    """
+    Paths of other source items that this item depends on before it can be instantiated. 
+    eg. from softlinks
+    """
     attrs: dict = Field(default_factory=dict)
     """Any static attrs that can be had from the element"""
     namespace: Optional[str] = None
@@ -159,7 +169,8 @@ class HDF5Map(Map):
 
 def check_empty(obj: h5py.Group) -> bool:
     """
-    Check if a group has no attrs or children OR has no attrs and all its children also have no attrs and no children
+    Check if a group has no attrs or children OR has no attrs and all its children
+    also have no attrs and no children
 
     Returns:
         bool
@@ -216,12 +227,14 @@ class ResolveDynamicTable(HDF5Map):
     """
     Handle loading a dynamic table!
 
-    Dynamic tables are sort of odd in that their models don't include their fields (except as a list of
-    strings in ``colnames`` ), so we need to create a new model that includes fields for each column,
-    and then we include the datasets as :class:`~.nwb_linkml.types.ndarray.NDArrayProxy` objects which
-    lazy load the arrays in a thread/process safe way.
+    Dynamic tables are sort of odd in that their models don't include their fields
+    (except as a list of strings in ``colnames`` ),
+    so we need to create a new model that includes fields for each column,
+    and then we include the datasets as :class:`~.nwb_linkml.types.ndarray.NDArrayProxy`
+    objects which lazy load the arrays in a thread/process safe way.
 
-    This map also resolves the child elements, indicating so by the ``completes`` field in the :class:`.ReadResult`
+    This map also resolves the child elements,
+    indicating so by the ``completes`` field in the :class:`.ReadResult`
     """
 
     phase = ReadPhases.read
@@ -272,8 +285,8 @@ class ResolveDynamicTable(HDF5Map):
 class ResolveModelGroup(HDF5Map):
     """
     HDF5 Groups that have a model, as indicated by ``neurodata_type`` in their attrs.
-    We use the model to determine what fields we should get, and then stash references to the children to
-    process later as :class:`.HDF5_Path`
+    We use the model to determine what fields we should get, and then stash references
+    to the children to process later as :class:`.HDF5_Path`
 
     **Special Case:** Some groups like ``ProcessingGroup`` and others that have an arbitrary
     number of named children have a special ``children`` field that is a dictionary mapping
@@ -305,9 +318,9 @@ class ResolveModelGroup(HDF5Map):
             }
         }
 
-    We will do some nice things in the model metaclass to make it possible to access the children like
-    ``nwbfile.processing.cr_ellipse_fits.center_x`` rather than having to switch between indexing and
-    attribute access :)
+    We will do some nice things in the model metaclass to make it possible to access the children
+    like ``nwbfile.processing.cr_ellipse_fits.center_x``
+    rather than having to switch between indexing and attribute access :)
     """
 
     phase = ReadPhases.read
@@ -328,7 +341,7 @@ class ResolveModelGroup(HDF5Map):
         depends = []
         with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
-            for key in model.model_fields.keys():
+            for key in model.model_fields:
                 if key == "children":
                     res[key] = {name: resolve_hardlink(child) for name, child in obj.items()}
                     depends.extend([resolve_hardlink(child) for child in obj.values()])
@@ -361,7 +374,8 @@ class ResolveModelGroup(HDF5Map):
 class ResolveDatasetAsDict(HDF5Map):
     """
     Resolve datasets that do not have a ``neurodata_type`` of their own as a dictionary
-    that will be packaged into a model in the next step. Grabs the array in an :class:`~nwb_linkml.types.ndarray.NDArrayProxy`
+    that will be packaged into a model in the next step. Grabs the array in an
+    :class:`~nwb_linkml.types.ndarray.NDArrayProxy`
     under an ``array`` key, and then grabs any additional ``attrs`` as well.
 
     Mutually exclusive with :class:`.ResolveScalars` - this only applies to datasets that are larger
@@ -522,7 +536,12 @@ class CompleteContainerGroups(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        return (src.model is None and src.neurodata_type is None and src.source.h5_type == "group" and all([depend in completed for depend in src.depends]))
+        return (
+            src.model is None
+            and src.neurodata_type is None
+            and src.source.h5_type == "group"
+            and all([depend in completed for depend in src.depends])
+        )
 
     @classmethod
     def apply(
@@ -546,7 +565,12 @@ class CompleteModelGroups(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        return (src.model is not None and src.source.h5_type == "group" and src.neurodata_type != "NWBFile" and all([depend in completed for depend in src.depends]))
+        return (
+            src.model is not None
+            and src.source.h5_type == "group"
+            and src.neurodata_type != "NWBFile"
+            and all([depend in completed for depend in src.depends])
+        )
 
     @classmethod
     def apply(
@@ -562,14 +586,15 @@ class CompleteModelGroups(HDF5Map):
         # but whose attributes are fixed (and thus should just be an array, rather than a subclass)
         for k, v in src.model.model_fields.items():
             annotation = unwrap_optional(v.annotation)
-            if inspect.isclass(annotation) and not issubclass(annotation, BaseModel):
-                if (
-                    isinstance(res, dict)
-                    and k in res
-                    and isinstance(res[k], dict)
-                    and "array" in res[k]
-                ):
-                    res[k] = res[k]["array"]
+            if (
+                inspect.isclass(annotation)
+                and not issubclass(annotation, BaseModel)
+                and isinstance(res, dict)
+                and k in res
+                and isinstance(res[k], dict)
+                and "array" in res[k]
+            ):
+                res[k] = res[k]["array"]
 
         instance = src.model(**res)
         return H5ReadResult(
@@ -592,7 +617,8 @@ class CompleteNWBFile(HDF5Map):
 
     .. todo::
 
-        This is truly hideous, just meant as a way to get to the finish line on a late night, will be cleaned up later
+        This is truly hideous, just meant as a way to get to the finish line on a late night,
+        will be cleaned up later
 
     """
 
@@ -603,7 +629,9 @@ class CompleteNWBFile(HDF5Map):
     def check(
         cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
     ) -> bool:
-        return (src.neurodata_type == "NWBFile" and all([depend in completed for depend in src.depends]))
+        return src.neurodata_type == "NWBFile" and all(
+            [depend in completed for depend in src.depends]
+        )
 
     @classmethod
     def apply(
@@ -637,12 +665,6 @@ class CompleteNWBFile(HDF5Map):
         trodes_original = res["general"]["extracellular_ephys"]["electrodes"]
         trodes = trode_type.model_construct(trodes_original.model_dump())
         res["general"]["extracellular_ephys"]["electrodes"] = trodes
-
-        # type(res['general']['extracellular_ephys']['electrodes']).__mro__ = tuple(anmro)
-        # electrodes_dict = res['general']['extracellular_ephys']['electrodes'].model_dump()
-        # with h5py.File(src.source.h5f_path, 'r') as h5f:
-        #      electrodes_dict['group'] = [egroup_dict[h5f[e].name] for e in electrodes_dict['group'][:]]
-        # res['general']['extracellular_ephys']['electrodes'] = electrodes_dict
 
         instance = src.model(**res)
         return H5ReadResult(
@@ -685,7 +707,7 @@ class ReadQueue(BaseModel):
         default_factory=list, description="Phases that have already been completed"
     )
 
-    def apply_phase(self, phase: ReadPhases, max_passes=5) -> None:
+    def apply_phase(self, phase: ReadPhases, max_passes: int = 5) -> None:
         phase_maps = [m for m in HDF5Map.__subclasses__() if m.phase == phase]
         phase_maps = sorted(phase_maps, key=lambda x: x.priority)
 
@@ -695,11 +717,13 @@ class ReadQueue(BaseModel):
         for item in self.queue.values():
             for op in phase_maps:
                 if op.check(item, self.provider, self.completed):
-                    # Formerly there was an "exclusive" property in the maps which let potentially multiple
-                    # operations be applied per stage, except if an operation was `exclusive` which would break
-                    # iteration over the operations. This was removed because it was badly implemented, but
-                    # if there is ever a need to do that, then we would need to decide what to do with the
-                    # multiple results.
+                    # Formerly there was an "exclusive" property in the maps which let
+                    # potentially multiple operations be applied per stage,
+                    # except if an operation was `exclusive` which would break
+                    # iteration over the operations.
+                    # This was removed because it was badly implemented,
+                    # but  if there is ever a need to do that,
+                    # then we would need to decide what to do with the multiple results.
                     results.append(op.apply(item, self.provider, self.completed))
                     break  # out of inner iteration
 
@@ -748,9 +772,12 @@ class ReadQueue(BaseModel):
             self.apply_phase(phase, max_passes=max_passes - 1)
 
 
-def flatten_hdf(h5f: h5py.File | h5py.Group, skip="specifications") -> Dict[str, H5SourceItem]:
+def flatten_hdf(
+    h5f: h5py.File | h5py.Group, skip: str = "specifications"
+) -> Dict[str, H5SourceItem]:
     """
-    Flatten all child elements of hdf element into a dict of :class:`.H5SourceItem` s keyed by their path
+    Flatten all child elements of hdf element into a dict of :class:`.H5SourceItem` s
+    keyed by their path
 
     Args:
         h5f (:class:`h5py.File` | :class:`h5py.Group`): HDF file or group to flatten!

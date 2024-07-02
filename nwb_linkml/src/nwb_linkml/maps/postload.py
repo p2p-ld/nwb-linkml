@@ -10,16 +10,39 @@ from typing import ClassVar, List, Optional
 
 
 class SCOPE_TYPES(StrEnum):
+    """When a mapping should be applied
+
+    .. todo::
+
+        This is likely deprecated, check usage.
+
+    """
+
     namespace = "namespace"
 
 
 class PHASES(StrEnum):
+    """The times that a mapping can happen
+
+    .. todo::
+
+        This is likely deprecated, check usage.
+    """
+
     postload = "postload"
     """After the YAML for a model has been loaded"""
 
 
 @dataclass
 class KeyMap:
+    """
+    Map for renaming keys used in schemas according to some rule
+
+    .. todo::
+
+        This is likely deprecated, check usage.
+    """
+
     scope: str
     """The namespace that the map is relevant to"""
     scope_type: SCOPE_TYPES
@@ -74,11 +97,20 @@ MAP_HDMF_DATATYPE_INC = KeyMap(
 
 
 class MAP_TYPES(StrEnum):
+    """
+    Types of mapping that can exist
+
+    .. todo::
+
+        This is likely deprecated, check usage.
+    """
+
     key = "key"
     """Mapping the name of one key to another key"""
 
 
-def apply_postload(ns_dict) -> dict:
+def apply_postload(ns_dict: dict) -> dict:
+    """Apply all post-load maps to a YAML schema"""
     maps = [m for m in KeyMap.instances if m.phase == PHASES.postload]
     for amap in maps:
         ns_dict = amap.apply(ns_dict)

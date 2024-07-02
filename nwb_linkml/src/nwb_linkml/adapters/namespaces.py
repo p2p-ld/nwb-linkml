@@ -4,6 +4,7 @@ Namespaces adapter
 Wraps the :class:`nwb_schema_language.Namespaces` and other objects with convenience methods
 for extracting information and generating translated schema
 """
+
 import contextlib
 from copy import copy
 from pathlib import Path
@@ -25,6 +26,7 @@ class NamespacesAdapter(Adapter):
     """
     Translate a NWB Namespace to a LinkML Schema
     """
+
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
     imported: List["NamespacesAdapter"] = Field(default_factory=list)

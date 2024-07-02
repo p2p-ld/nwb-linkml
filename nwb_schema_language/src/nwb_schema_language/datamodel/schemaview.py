@@ -1,3 +1,7 @@
+"""
+Shorthand instantiated schemaview from the linkml schema
+"""
+
 from pathlib import Path
 
 from linkml_runtime.utils.schemaview import SchemaView

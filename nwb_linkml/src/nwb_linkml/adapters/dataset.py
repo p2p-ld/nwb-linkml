@@ -380,6 +380,7 @@ class DatasetAdapter(ClassAdapter):
     """
     Orchestrator class for datasets - calls the set of applicable mapping classes
     """
+
     cls: Dataset
 
     def build(self) -> BuildResult:

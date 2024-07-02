@@ -17,6 +17,9 @@ from nwb_schema_language import Dataset, Group, Namespaces
 
 
 def load_yaml(path: Path | str) -> dict:
+    """
+    Load yaml file from file, applying postload modifications
+    """
     if isinstance(path, str) and not Path(path).exists():
         ns_dict = yaml.safe_load(path)
     else:
@@ -86,8 +89,10 @@ def load_namespace_adapter(
 
     Args:
         namespace (:class:`:class:`.Namespace`):
-        path (:class:`pathlib.Path`): Optional: Location of the namespace file - all relative paths are interpreted relative to this
-        version (str): Optional: tag or commit to check out namespace is a :class:`.NamespaceRepo`. If ``None``, use ``HEAD`` if not already checked out,
+        path (:class:`pathlib.Path`): Optional: Location of the namespace file -
+            all relative paths are interpreted relative to this
+        version (str): Optional: tag or commit to check out namespace is a
+            :class:`.NamespaceRepo`. If ``None``, use ``HEAD`` if not already checked out,
             or otherwise use whatever version is already checked out.
 
     Returns:
@@ -128,16 +133,18 @@ def load_namespace_adapter(
     return adapter
 
 
-def load_nwb_core(core_version="2.6.0", hdmf_version="1.5.0") -> NamespacesAdapter:
+def load_nwb_core(core_version: str = "2.6.0", hdmf_version: str = "1.5.0") -> NamespacesAdapter:
     """
     Convenience function for loading the NWB core schema + hdmf-common as a namespace adapter.
 
     .. note::
 
-        NWB Core schema are implicitly linked to a specific version of HDMF common by virtue of which version
+        NWB Core schema are implicitly linked to a specific version of HDMF common by
+        virtue of which version
         of `hdmf-common-schema` is checked out as a submodule in the repository. We don't
         attempt to resolve that linkage here because it's not in the schema, but the defaults
-        are for the latest nwb core ( ``'2.6.0'`` ) and its linked hdmf-common version ( ``'1.5.0'`` )
+        are for the latest nwb core ( ``'2.6.0'`` ) and its linked hdmf-common version
+        ( ``'1.5.0'`` )
 
     Args:
         core_version (str): an entry in :attr:`.NWB_CORE_REPO.versions`

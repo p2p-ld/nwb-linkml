@@ -3,8 +3,10 @@ Pydantic models that behave like pandas dataframes
 
 .. note::
 
-    This is currently unused but kept in place as a stub in case it is worth revisiting in the future.
-    It turned out to be too momentarily difficult to make lazy-loading work with dask arrays per column
+    This is currently unused but kept in place as a stub in case it is worth
+    revisiting in the future.
+    It turned out to be too momentarily difficult to make lazy-loading work with
+    dask arrays per column
     while still keeping pandas-like API intact. In the future we should investigate modifying the
     :func:`dask.dataframe.read_hdf` function to treat individual hdf5 datasets like columns
 
@@ -133,6 +135,7 @@ class DataFrame(BaseModel, pd.DataFrame):
 def dynamictable_to_df(
     group: h5py.Group, model: Optional[Type[DataFrame]] = None, base: Optional[BaseModel] = None
 ) -> DataFrame:
+    """Generate a dataframe from an NDB DynamicTable"""
     if model is None:
         model = model_from_dynamictable(group, base)
 

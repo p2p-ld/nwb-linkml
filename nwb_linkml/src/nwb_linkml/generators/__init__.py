@@ -7,6 +7,4 @@ changes that are unlikely to be useful upstream
 
 from nwb_linkml.generators.pydantic import PydanticGenerator
 
-__all__ = [
-    'PydanticGenerator'
-]
+__all__ = ["PydanticGenerator"]

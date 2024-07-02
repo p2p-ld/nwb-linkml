@@ -61,14 +61,7 @@ def dynamictable_to_model(
             try:
                 items[col] = da.from_array(group[col])
             except NotImplementedError:
-                # if str in get_inner_types(col_type.annotation):
-                #     # dask can't handle this, we just arrayproxy it
                 items[col] = NDArrayProxy(h5f_file=group.file.filename, path=group[col].name)
-                # else:
-                #    warnings.warn(f"Dask can't handle object type arrays like {col} in {group.name}. Skipping")
-                # pdb.set_trace()
-                # # can't auto-chunk with "object" type
-                # items[col] = da.from_array(group[col], chunks=-1)
 
     return model.model_construct(hdf5_path=group.name, name=group.name.split("/")[-1], **items)
 

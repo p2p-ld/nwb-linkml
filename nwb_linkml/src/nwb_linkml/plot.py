@@ -9,15 +9,17 @@ import dash_cytoscape as cyto
 from dash import Dash, html
 from rich import print
 
-cyto.load_extra_layouts()
-
-from nwb_linkml.io import load_nwb_core
+from nwb_linkml.io.schema import load_nwb_core
 from nwb_schema_language import Dataset, Group, Namespace
 
 if TYPE_CHECKING:
     from nwb_linkml.adapters import NamespacesAdapter
 
-    # from nwb_schema_language.datamodel import Namespaces
+# ruff: noqa: D101
+# ruff: noqa: D102
+# ruff: noqa: D103
+
+cyto.load_extra_layouts()
 
 
 class _CytoNode(TypedDict):
@@ -52,7 +54,9 @@ class Node:
         return node
 
 
-def make_node(element: Group | Dataset, parent=None, recurse: bool = True) -> List[Node]:
+def make_node(
+    element: Group | Dataset, parent: Optional[str] = None, recurse: bool = True
+) -> List[Node]:
     if element.neurodata_type_def is None:
         if element.name is None:
             name = "anonymous" if element.neurodata_type_inc is None else element.neurodata_type_inc

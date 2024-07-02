@@ -12,6 +12,8 @@ from typing import ClassVar, List
 
 
 class Phases(StrEnum):
+    """Phases of the loading and generation process"""
+
     post_generation_pydantic = "post_generation_pydantic"
     post_load_yaml = "post_load_yaml"
     """After the yaml of the nwb schema classes is loaded"""
@@ -19,6 +21,10 @@ class Phases(StrEnum):
 
 @dataclass
 class Patch:
+    """
+    Structured change to make to generated models
+    """
+
     phase: Phases
     path: Path
     """Path relative to repository root"""
@@ -47,20 +53,6 @@ patch_schema_slot = Patch(
     replacement=r'\n    schema_:\2alias="schema", \3',
 )
 
-# patch_neurodata_type_def_alias = Patch(
-#     phase=Phases.post_generation_pydantic,
-#     path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
-#     match=r"(\n\s*neurodata_type_def.*Field\(None, )(.*)",
-#     replacement=r'\1alias="data_type_def", \2',
-# )
-#
-# patch_neurodata_type_inc_alias = Patch(
-#     phase=Phases.post_generation_pydantic,
-#     path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
-#     match=r"(\n\s*neurodata_type_inc.*Field\(None, )(.*)",
-#     replacement=r'\1alias="data_type_inc", \2',
-# )
-
 patch_dtype_single_multiple = Patch(
     phase=Phases.post_generation_pydantic,
     path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
@@ -84,6 +76,9 @@ patch_contact_single_multiple = Patch(
 
 
 def run_patches(phase: Phases, verbose: bool = False) -> None:
+    """
+    Apply all declared :class:`.Path` instances
+    """
     patches = [p for p in Patch.instances if p.phase == phase]
     for patch in patches:
         if verbose:
@@ -97,6 +92,9 @@ def run_patches(phase: Phases, verbose: bool = False) -> None:
 
 
 def main() -> None:
+    """
+    Run patches from the command line
+    """
     parser = argparse.ArgumentParser(description="Run patches for a given phase of code generation")
     parser.add_argument("--phase", choices=list(Phases.__members__.keys()), type=Phases)
     args = parser.parse_args()

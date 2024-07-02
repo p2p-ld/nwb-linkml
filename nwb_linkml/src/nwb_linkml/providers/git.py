@@ -38,6 +38,7 @@ class NamespaceRepo(BaseModel):
     )
 
     def provide_from_git(self, commit: str | None = None) -> Path:
+        """Provide a namespace file from a git repo"""
         git = GitRepo(self, commit)
         git.clone()
         return git.namespace_file
@@ -78,7 +79,7 @@ DEFAULT_REPOS = {
 
 
 class GitError(OSError):
-    pass
+    """Exceptions caused by git!"""
 
 
 class GitRepo:
@@ -93,13 +94,14 @@ class GitRepo:
         Args:
             namespace (:class:`.NamespaceRepo`): The namespace repository to clone!
             commit (str): A specific commit or tag to check out
-            path (:class:`pathlib.Path`): A directory to clone to - if ``None``, use :attr:`~.Config.git_dir` / :attr:`.NamespaceRepo.name`
+            path (:class:`pathlib.Path`): A directory to clone to -
+                if ``None``, use :attr:`~.Config.git_dir` / :attr:`.NamespaceRepo.name`
         """
         self._temp_directory = path
         self.namespace = namespace
         self._commit = commit
 
-    def _git_call(self, *args) -> subprocess.CompletedProcess:
+    def _git_call(self, *args: List[str]) -> subprocess.CompletedProcess:
         res = subprocess.run(["git", "-C", self.temp_directory, *args], capture_output=True)
         if res.returncode != 0:
             raise GitError(
@@ -152,7 +154,8 @@ class GitRepo:
         If ``None``: if :attr:`NamespaceRepo.versions`, use the last version. Otherwise use ``HEAD``
 
         Should match :attr:`.active_commit`, differs semantically in that it is used to
-        set the active_commit, while :attr:`.active_commit` reads what commit is actually checked out
+        set the active_commit, while :attr:`.active_commit`
+        reads what commit is actually checked out
         """
         return self._commit
 
@@ -252,7 +255,8 @@ class GitRepo:
         if self.remote != str(self.namespace.repository):
             warnings.warn(
                 "Repository exists, but has the wrong remote URL.\nExpected:"
-                f" {self.namespace.repository}\nGot:{self.remote.strip('.git')}"
+                f" {self.namespace.repository}\nGot:{self.remote.strip('.git')}",
+                stacklevel=2,
             )
             return False
 
@@ -274,7 +278,8 @@ class GitRepo:
         ):
             warnings.warn(
                 "Temp directory is outside of the system temp dir or git directory set by"
-                " environmental variables, not deleting in case this has been changed by mistake"
+                " environmental variables, not deleting in case this has been changed by mistake",
+                stacklevel=2,
             )
             self._temp_directory = None
             return
@@ -299,7 +304,8 @@ class GitRepo:
                 if not self.check():
                     warnings.warn(
                         "Destination directory is not empty and does not pass checks for"
-                        " correctness! cleaning up"
+                        " correctness! cleaning up",
+                        stacklevel=2,
                     )
                     self.cleanup()
                 else:

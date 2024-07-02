@@ -4,6 +4,10 @@ Extension of nptyping NDArray for pydantic that allows for JSON-Schema serializa
 * Order to store data in (row first)
 """
 
+# ruff: noqa: ANN001
+# ruff: noqa: ANN202
+# FIXME: this has been moved to numpydantic, remove.
+
 import base64
 import sys
 from copy import copy
@@ -191,11 +195,5 @@ class NDArrayProxy:
         _source_type: _NDArray,
         _handler: Callable[[Any], core_schema.CoreSchema],
     ) -> core_schema.CoreSchema:
-        # return core_schema.no_info_after_validator_function(
-        #     serialization=core_schema.plain_serializer_function_ser_schema(
-        #         lambda instance: instance.tolist(),
-        #         when_used='json'
-        #     )
-        # )
 
-        return NDArray_.__get_pydantic_core_schema__(cls, _source_type, _handler)
+        return NDArray.__get_pydantic_core_schema__(cls, _source_type, _handler)

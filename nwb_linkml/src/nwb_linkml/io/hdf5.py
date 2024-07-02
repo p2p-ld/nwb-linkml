@@ -135,7 +135,8 @@ class HDF5IO:
             Need to create inverse mappings that can take pydantic models to
             hdf5 groups and datasets. If more metadata about the generation process
             needs to be preserved (eg. explicitly notating that something is an attribute,
-            dataset, group, then we can make use of the :class:`~nwb_linkml.generators.pydantic.LinkML_Meta`
+            dataset, group, then we can make use of the
+            :class:`~nwb_linkml.generators.pydantic.LinkML_Meta`
             model. If the model to edit has been loaded from an HDF5 file (rather than
             freshly created), then the ``hdf5_path`` should be populated making
             mapping straightforward, but we probably want to generalize that to deterministically
@@ -165,7 +166,8 @@ class HDF5IO:
         # get versions for each namespace
         versions = {}
         for ns_schema in schema.values():
-            # each "namespace" can actually contain multiple namespaces which actually contain the version info
+            # each "namespace" can actually contain multiple namespaces
+            # which actually contain the version info
             for inner_ns in ns_schema["namespace"]["namespaces"]:
                 versions[inner_ns["name"]] = inner_ns["version"]
 
@@ -190,10 +192,10 @@ def read_specs_as_dicts(group: h5py.Group) -> dict:
     """
     spec_dict = {}
 
-    def _read_spec(name, node) -> None:
+    def _read_spec(name: str, node: h5py.Dataset) -> None:
 
         if isinstance(node, h5py.Dataset):
-            # make containing dict if they dont exist
+            # make containing dict if they don't exist
             pieces = node.name.split("/")
             if pieces[-3] not in spec_dict:
                 spec_dict[pieces[-3]] = {}
@@ -230,7 +232,7 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     """
     references = []
 
-    def _find_references(name, obj: h5py.Group | h5py.Dataset) -> None:
+    def _find_references(name: str, obj: h5py.Group | h5py.Dataset) -> None:
         pbar.update()
         refs = []
         for attr in obj.attrs.values():
@@ -271,8 +273,10 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
 
     Args:
         source (:class:`pathlib.Path`): Source hdf5 file
-        target (:class:`pathlib.Path`): Optional - target hdf5 file to write to. If ``None``, use ``{source}_truncated.hdf5``
-        n (int): The number of items from datasets (samples along the 0th dimension of a dataset) to include
+        target (:class:`pathlib.Path`): Optional - target hdf5 file to write to.
+            If ``None``, use ``{source}_truncated.hdf5``
+        n (int): The number of items from datasets
+            (samples along the 0th dimension of a dataset) to include
 
     Returns:
         :class:`pathlib.Path` path of the truncated file
@@ -308,7 +312,8 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
         try:
             obj.resize(n, axis=0)
         except TypeError:
-            # contiguous arrays can't be trivially resized, so we have to copy and create a new dataset
+            # contiguous arrays can't be trivially resized,
+            # so we have to copy and create a new dataset
             tmp_name = obj.name + "__tmp"
             original_name = obj.name
             obj.parent.move(obj.name, tmp_name)
@@ -324,7 +329,8 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     # use h5repack to actually remove the items from the dataset
     if shutil.which("h5repack") is None:
         warnings.warn(
-            "Truncated file made, but since h5repack not found in path, file won't be any smaller"
+            "Truncated file made, but since h5repack not found in path, file won't be any smaller",
+            stacklevel=2,
         )
         return target
 
@@ -333,7 +339,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
         ["h5repack", "-f", "GZIP=9", str(target), str(target_tmp)], capture_output=True
     )
     if res.returncode != 0:
-        warnings.warn(f"h5repack did not return 0: {res.stderr} {res.stdout}")
+        warnings.warn(f"h5repack did not return 0: {res.stderr} {res.stdout}", stacklevel=2)
         # remove the attempt at the repack
         target_tmp.unlink()
         return target

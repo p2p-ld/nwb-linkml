@@ -58,6 +58,9 @@ select = [
     "D419",
 ]
 ignore = [
+    # annotations for *args and **kwargs
+    "ANN002", "ANN003",
+    # annoying annotation rules
     "ANN101", "ANN102", "ANN401", "ANN204",
     # explicit strict arg for zip
     "B905",

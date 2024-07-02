@@ -16,6 +16,7 @@ class GroupAdapter(ClassAdapter):
     """
     Adapt NWB Groups to LinkML Classes
     """
+
     cls: Group
 
     def build(self) -> BuildResult:

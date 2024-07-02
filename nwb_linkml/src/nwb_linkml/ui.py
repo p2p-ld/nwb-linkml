@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class AdapterProgress:
+    """Progress bar built with rich"""
+
     def __init__(self, ns: "NamespacesAdapter"):
         self.ns = ns
         self.task_ids = {}
@@ -46,12 +48,15 @@ class AdapterProgress:
         )
 
     def update(self, namespace: str, **kwargs) -> None:
+        """Update the progressbar with a given namespace"""
         self.progress.update(self.task_ids[namespace], **kwargs)
 
     def start(self) -> None:
+        """Start displaying progress"""
         self.progress.start()
 
     def stop(self) -> None:
+        """Stop displaying progress"""
         self.progress.stop()
 
     def __enter__(self) -> Live:

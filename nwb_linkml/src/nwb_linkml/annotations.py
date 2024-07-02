@@ -5,7 +5,7 @@ Utility functions for introspection on python annotations
 import typing
 from typing import Any, List, Optional, Type, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def unwrap_optional(annotation: Type[Optional[T]]) -> Type[T]:

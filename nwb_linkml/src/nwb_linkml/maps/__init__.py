@@ -13,6 +13,5 @@ __all__ = [
     "QUANTITY_MAP",
     "Map",
     "flat_to_linkml",
-    "flat_to_nptyping"
+    "flat_to_nptyping",
 ]
-

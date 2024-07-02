@@ -9,7 +9,8 @@ pydantic models on the fly.
 Relationship to other modules:
 * :mod:`.adapters` manage the conversion from NWB schema language to linkML.
 * :mod:`.generators` create models like pydantic models from the linkML schema
-* :mod:`.providers` then use ``adapters`` and ``generators`` to provide models from generated schema!
+* :mod:`.providers` then use ``adapters`` and ``generators``
+  to provide models from generated schema!
 
 Providers create a set of directories with namespaces and versions,
 so eg. for the linkML and pydantic providers:
@@ -47,6 +48,7 @@ import shutil
 import sys
 from abc import ABC, abstractmethod
 from importlib.abc import MetaPathFinder
+from importlib.machinery import ModuleSpec
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, List, Optional, Type, TypedDict, TypeVar
@@ -108,7 +110,7 @@ class Provider(ABC):
         """
 
     @abstractmethod
-    def build(self, *args: Any):
+    def build(self, *args: Any) -> P:
         """
         Whatever needs to be done to build this thing, if applicable
         """
@@ -247,7 +249,8 @@ class LinkMLProvider(Provider):
 
     All of which feed into...
 
-    * :class:`~.adapters.NamespacesAdapter` used throughout the rest of ``nwb_linkml`` - :meth:`.build`
+    * :class:`~.adapters.NamespacesAdapter` used throughout the rest of ``nwb_linkml`` -
+      :meth:`.build`
 
     After a namespace is built, it can be accessed using :meth:`.LinkMLProvider.get`, which
     can also be consumed by other providers, so a given namespace and version should only need
@@ -277,9 +280,12 @@ class LinkMLProvider(Provider):
 
     @property
     def path(self) -> Path:
+        """``linkml_dir`` provided by :class:`.Config`"""
         return self.config.linkml_dir
 
-    def build_from_yaml(self, path: Path, **kwargs):
+    def build_from_yaml(
+        self, path: Path, **kwargs: dict
+    ) -> Dict[str | SchemaDefinitionName, LinkMLSchemaBuild]:
         """
         Build a namespace's schema
 
@@ -291,7 +297,7 @@ class LinkMLProvider(Provider):
         return self.build(ns_adapter, **kwargs)
 
     def build_from_dicts(
-        self, schemas: Dict[str, dict], **kwargs
+        self, schemas: Dict[str, dict], **kwargs: dict
     ) -> Dict[str | SchemaDefinitionName, LinkMLSchemaBuild]:
         """
         Build from schema dictionaries, eg. as come from nwb files
@@ -314,14 +320,14 @@ class LinkMLProvider(Provider):
             ns_adapters[ns_name] = ns_adapter
 
         # get the correct imports
-        for ns_name, adapter in ns_adapters.items():
+        for adapter in ns_adapters.values():
             for schema_needs in adapter.needed_imports.values():
                 for needed in schema_needs:
                     adapter.imported.append(ns_adapters[needed])
 
         # then do the build
         res = {}
-        for ns_name, adapter in ns_adapters.items():
+        for adapter in ns_adapters.values():
             res.update(self.build(adapter, **kwargs))
 
         return res
@@ -335,17 +341,19 @@ class LinkMLProvider(Provider):
     ) -> Dict[str | SchemaDefinitionName, LinkMLSchemaBuild]:
         """
         Arguments:
-            namespaces (:class:`.NamespacesAdapter`): Adapter (populated with any necessary imported namespaces)
-                to build
+            namespaces (:class:`.NamespacesAdapter`): Adapter
+                (populated with any necessary imported namespaces) to build
             versions (dict): Dict of specific versions to use
                 for cross-namespace imports. as ``{'namespace': 'version'}``
                 If none is provided, use the most recent version
                 available.
             dump (bool): If ``True`` (default), dump generated schema to YAML. otherwise just return
-            force (bool): If ``False`` (default), don't build schema that already exist. If ``True`` , clear directory and rebuild
+            force (bool): If ``False`` (default), don't build schema that already exist.
+                If ``True`` , clear directory and rebuild
 
         Returns:
-            Dict[str, LinkMLSchemaBuild]. For normal builds, :attr:`.LinkMLSchemaBuild.result` will be populated with results
+            Dict[str, LinkMLSchemaBuild]. For normal builds,
+            :attr:`.LinkMLSchemaBuild.result` will be populated with results
             of the build. If ``force == False`` and the schema already exist, it will be ``None``
         """
 
@@ -473,9 +481,8 @@ class LinkMLProvider(Provider):
 
 class PydanticProvider(Provider):
     """
-    Provider for pydantic models built from linkml-style nwb schema (ie. as provided by :class:`.LinkMLProvider`)
-
-
+    Provider for pydantic models built from linkml-style nwb schema
+    (ie. as provided by :class:`.LinkMLProvider`)
     """
 
     PROVIDES = "pydantic"
@@ -488,6 +495,7 @@ class PydanticProvider(Provider):
 
     @property
     def path(self) -> Path:
+        """``pydantic_dir`` provided by :class:`.Config`"""
         return self.config.pydantic_dir
 
     def build(
@@ -499,7 +507,7 @@ class PydanticProvider(Provider):
         split: bool = True,
         dump: bool = True,
         force: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> str | List[str]:
         """
 
@@ -515,18 +523,25 @@ class PydanticProvider(Provider):
                 :class:`.LinkMLProvider` to get the converted schema. If a path,
                 assume we have been given an explicit ``namespace.yaml`` from a converted
                 NWB -> LinkML schema to load from.
-            out_file (Optional[Path]): Optionally override the output file. If ``None``, generate from namespace and version
+            out_file (Optional[Path]): Optionally override the output file. If ``None``,
+                generate from namespace and version
             version (Optional[str]): The version of the schema to build, if present.
-                Works similarly to ``version`` in :class:`.LinkMLProvider`. Ignored if ``namespace`` is a Path.
+                Works similarly to ``version`` in :class:`.LinkMLProvider`.
+                Ignored if ``namespace`` is a Path.
             versions (Optional[dict]): An explicit mapping of namespaces and versions to use when
-                building the combined pydantic `namespace.py` file. Since NWB doesn't have an explicit
-                version dependency system between schema, there is intrinsic ambiguity between which version
-                of which schema should be used when imported from another. This mapping allows those ambiguities to be resolved.
+                building the combined pydantic `namespace.py` file.
+                Since NWB doesn't have an explicit version dependency system between schema,
+                there is intrinsic ambiguity between which version
+                of which schema should be used when imported from another.
+                This mapping allows those ambiguities to be resolved.
                 See :class:`.NWBPydanticGenerator` 's ``versions`` argument for more information.
-            split (bool): If ``False`` (default), generate a single ``namespace.py`` file, otherwise generate a python file for each schema in the namespace
+            split (bool): If ``False`` (default), generate a single ``namespace.py`` file,
+                otherwise generate a python file for each schema in the namespace
                 in addition to a ``namespace.py`` that imports from them
-            dump (bool): If ``True`` (default), dump the model to the cache, otherwise just return the serialized string of built pydantic model
-            force (bool): If ``False`` (default), don't build the model if it already exists, if ``True`` , delete and rebuild any model
+            dump (bool): If ``True`` (default), dump the model to the cache,
+                otherwise just return the serialized string of built pydantic model
+            force (bool): If ``False`` (default), don't build the model if it already exists,
+                if ``True`` , delete and rebuild any model
             **kwargs: Passed to :class:`.NWBPydanticGenerator`
 
         Returns:
@@ -549,7 +564,8 @@ class PydanticProvider(Provider):
         else:
             # given a path to a namespace linkml yaml file
             path = Path(namespace)
-            # FIXME: this is extremely fragile, but get the details from the path. this is faster than reading yaml for now
+            # FIXME: this is extremely fragile, but get the details from the path.
+            # this is faster than reading yaml for now
             name = path.parts[-3]
             version = path.parts[-2]
             fn = path.parts[-1]
@@ -578,7 +594,15 @@ class PydanticProvider(Provider):
         else:
             return self._build_unsplit(path, versions, default_kwargs, dump, out_file, force)
 
-    def _build_unsplit(self, path, versions, default_kwargs, dump, out_file, force):
+    def _build_unsplit(
+        self,
+        path: Path,
+        versions: dict,
+        default_kwargs: dict,
+        dump: bool,
+        out_file: Path,
+        force: bool,
+    ) -> Optional[str]:
         if out_file.exists() and not force:
             with open(out_file) as ofile:
                 serialized = ofile.read()
@@ -602,7 +626,13 @@ class PydanticProvider(Provider):
         return serialized
 
     def _build_split(
-        self, path: Path, versions, default_kwargs, dump, out_file, force
+        self,
+        path: Path,
+        versions: dict,
+        default_kwargs: dict,
+        dump: bool,
+        out_file: Path,
+        force: bool,
     ) -> List[str]:
         serialized = []
         for schema_file in path.parent.glob("*.yaml"):
@@ -654,6 +684,12 @@ class PydanticProvider(Provider):
 
     @classmethod
     def module_name(self, namespace: str, version: str) -> str:
+        """Module name for the built module
+
+        e.g.::
+
+            nwb_linkml.models.pydantic.{namespace}.{version}
+        """
         name_pieces = [
             "nwb_linkml",
             "models",
@@ -674,7 +710,8 @@ class PydanticProvider(Provider):
 
         Args:
             namespace (str): Name of namespace
-            version (Optional[str]): Version to import, if None, try and get the most recently built version.
+            version (Optional[str]): Version to import, if None,
+                try and get the most recently built version.
 
         Returns:
             :class:`types.ModuleType`
@@ -712,7 +749,8 @@ class PydanticProvider(Provider):
         """
         Get the imported module for a given namespace and version.
 
-        A given namespace will be stored in :data:`sys.modules` as ``nwb_linkml.models.{namespace}``,
+        A given namespace will be stored in :data:`sys.modules` as
+        ``nwb_linkml.models.{namespace}``,
         so first check if there is any already-imported module, and return that if so.
 
         Then we check in the temporary directory for an already-built ``namespace.py`` file
@@ -722,8 +760,10 @@ class PydanticProvider(Provider):
 
         Notes:
             The imported modules shadow the "actual"
-            ``nwb_linkml.models`` module as would be imported from the usual location within the package directory.
-            This is intentional, as models can then be used as if they were integrated parts of the package,
+            ``nwb_linkml.models`` module as would be imported from the usual location
+            within the package directory.
+            This is intentional, as models can then be used as if they were
+            integrated parts of the package,
             and also so the active version of a namespace can be cleanly accessed
             (ie. without ``from nwb_linkml.models.core import v2_2_0 as core`` ).
             Accordingly, we assume that people will only be using a single version of NWB in a given
@@ -731,13 +771,18 @@ class PydanticProvider(Provider):
 
 
         Args:
-            namespace (str): Name of namespace to import. Must have either been previously built with :meth:`.PydanticProvider.build` or
-                a matching namespace/version combo must be available to the :class:`.LinkMLProvider`
-            version (Optional[str]): Version to import. If ``None``, get the most recently build module
-            allow_repo (bool): Allow getting modules provided within :mod:`nwb_linkml.models.pydantic`
+            namespace (str): Name of namespace to import. Must have either been previously built
+                with :meth:`.PydanticProvider.build` or
+                a matching namespace/version combo must be available to the
+                :class:`.LinkMLProvider`
+            version (Optional[str]): Version to import. If ``None``,
+                get the most recently build module
+            allow_repo (bool): Allow getting modules provided within
+                :mod:`nwb_linkml.models.pydantic`
 
         Returns:
-            The imported :class:`types.ModuleType` object that has all the built classes at the root level.
+            The imported :class:`types.ModuleType` object that has all the built
+            classes at the root level.
 
         """
         if allow_repo is None:
@@ -795,8 +840,9 @@ class PydanticProvider(Provider):
         Get a class from a given namespace and version!
 
         Args:
-            namespace (str): Name of a namespace that has been previously built and cached, otherwise
-                we will attempt to build it from the :data:`.providers.git.DEFAULT_REPOS`
+            namespace (str): Name of a namespace that has been previously built and cached,
+                otherwise we will attempt to build it from the
+                :data:`.providers.git.DEFAULT_REPOS`
             class_ (str): Name of class to retrieve
             version (Optional[str]): Optional version of the schema to retrieve from
 
@@ -825,7 +871,10 @@ class EctopicModelFinder(MetaPathFinder):
         super().__init__(*args, **kwargs)
         self.path = path
 
-    def find_spec(self, fullname, path, target=None):
+    def find_spec(
+        self, fullname: str, path: Optional[str], target: Optional[ModuleType] = None
+    ) -> Optional[ModuleSpec]:
+        """If we are loading a generated pydantic module, return an importlib spec"""
         if not fullname.startswith(self.MODEL_STEM):
             return None
         else:
@@ -873,9 +922,10 @@ class SchemaProvider(Provider):
     def __init__(self, versions: Optional[Dict[str, str]] = None, **kwargs):
         """
         Args:
-            versions (dict): Dictionary like ``{'namespace': 'v1.0.0'}`` used to specify that this provider should always
-                return models from a specific version of a namespace (unless explicitly requested otherwise
-                in a call to :meth:`.get` ).
+            versions (dict): Dictionary like ``{'namespace': 'v1.0.0'}``
+                used to specify that this provider should always
+                return models from a specific version of a namespace
+                (unless explicitly requested otherwise in a call to :meth:`.get` ).
             **kwargs: passed to superclass __init__ (see :class:`.Provider` )
         """
         self.versions = versions
@@ -883,6 +933,7 @@ class SchemaProvider(Provider):
 
     @property
     def path(self) -> Path:
+        """``cache_dir`` provided by :class:`.Config`"""
         return self.config.cache_dir
 
     def build(
@@ -899,8 +950,10 @@ class SchemaProvider(Provider):
         Args:
             ns_adapter:
             verbose (bool): If ``True`` (default), show progress bars
-            linkml_kwargs (Optional[dict]): Dictionary of kwargs optionally passed to :meth:`.LinkMLProvider.build`
-            pydantic_kwargs (Optional[dict]): Dictionary of kwargs optionally passed to :meth:`.PydanticProvider.build`
+            linkml_kwargs (Optional[dict]): Dictionary of kwargs optionally passed to
+                :meth:`.LinkMLProvider.build`
+            pydantic_kwargs (Optional[dict]): Dictionary of kwargs optionally passed to
+                :meth:`.PydanticProvider.build`
             **kwargs: Common options added to both ``linkml_kwargs`` and ``pydantic_kwargs``
 
         Returns:

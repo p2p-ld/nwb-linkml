@@ -2,6 +2,8 @@
 Monkeypatches to external modules
 """
 
+# ruff: noqa: ANN001 - not well defined types for this module
+
 
 def patch_npytyping_perf() -> None:
     """
@@ -115,6 +117,7 @@ def patch_schemaview() -> None:
 
 
 def apply_patches() -> None:
+    """Apply all monkeypatches"""
     patch_npytyping_perf()
     patch_nptyping_warnings()
     patch_schemaview()

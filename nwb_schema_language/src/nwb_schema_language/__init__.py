@@ -1,3 +1,7 @@
+"""
+Pydantic representation of the NWB Schema Language specification
+"""
+
 import warnings
 from typing import List, Union
 
@@ -21,7 +25,8 @@ try:
 except (NameError, RecursionError):
     warnings.warn(
         "Error importing pydantic classes, passing because we might be in the process of patching"
-        " them, but it is likely they are broken and you will be unable to use them!"
+        " them, but it is likely they are broken and you will be unable to use them!",
+        stacklevel=1,
     )
 
 __all__ = [
