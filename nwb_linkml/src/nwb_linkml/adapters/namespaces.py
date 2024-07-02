@@ -4,6 +4,7 @@ Namespaces adapter
 Wraps the :class:`nwb_schema_language.Namespaces` and other objects with convenience methods
 for extracting information and generating translated schema
 """
+
 import pdb
 
 from typing import List, Optional, Dict
@@ -25,10 +26,11 @@ from nwb_linkml.lang_elements import NwbLangSchema
 
 from nwb_linkml.ui import AdapterProgress
 
+
 class NamespacesAdapter(Adapter):
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
-    imported: List['NamespacesAdapter'] = Field(default_factory=list)
+    imported: List["NamespacesAdapter"] = Field(default_factory=list)
 
     _imports_populated: bool = PrivateAttr(False)
 
@@ -37,7 +39,7 @@ class NamespacesAdapter(Adapter):
         self._populate_schema_namespaces()
 
     @classmethod
-    def from_yaml(cls, path:Path) -> 'NamespacesAdapter':
+    def from_yaml(cls, path: Path) -> "NamespacesAdapter":
         """
         Create a NamespacesAdapter from a nwb schema language namespaces yaml file.
 
@@ -46,6 +48,7 @@ class NamespacesAdapter(Adapter):
         """
         from nwb_linkml.io import schema as schema_io
         from nwb_linkml.providers.git import DEFAULT_REPOS
+
         ns_adapter = schema_io.load_namespace_adapter(path)
 
         # try and find imported schema
@@ -62,9 +65,9 @@ class NamespacesAdapter(Adapter):
 
         return ns_adapter
 
-
-
-    def build(self, skip_imports:bool=False, progress:Optional[AdapterProgress] = None) -> BuildResult:
+    def build(
+        self, skip_imports: bool = False, progress: Optional[AdapterProgress] = None
+    ) -> BuildResult:
         if not self._imports_populated and not skip_imports:
             self.populate_imports()
 
@@ -73,17 +76,16 @@ class NamespacesAdapter(Adapter):
             if progress is not None:
                 try:
                     progress.update(sch.namespace, action=sch.name)
-                except KeyError: # pragma: no cover
+                except KeyError:  # pragma: no cover
                     # happens when we skip builds due to caching
                     pass
             sch_result += sch.build()
             if progress is not None:
                 try:
                     progress.update(sch.namespace, advance=1)
-                except KeyError: # pragma: no cover
+                except KeyError:  # pragma: no cover
                     # happens when we skip builds due to caching
                     pass
-
 
         # recursive step
         if not skip_imports:
@@ -91,17 +93,18 @@ class NamespacesAdapter(Adapter):
                 imported_build = imported.build(progress=progress)
                 sch_result += imported_build
 
-
         # now generate the top-level namespaces that import everything
         for ns in self.namespaces.namespaces:
 
             # add in monkeypatch nwb types
             nwb_lang = copy(NwbLangSchema)
-            nwb_lang.annotations.update({
-                'is_namespace': Annotation(tag='is_namespace', value= 'False'),
-                'namespace': Annotation(tag='namespace', value= ns.name)
-            })
-            lang_schema_name = '.'.join([ns.name, 'nwb.language'])
+            nwb_lang.annotations.update(
+                {
+                    "is_namespace": Annotation(tag="is_namespace", value="False"),
+                    "namespace": Annotation(tag="namespace", value=ns.name),
+                }
+            )
+            lang_schema_name = ".".join([ns.name, "nwb.language"])
             nwb_lang.name = lang_schema_name
             sch_result.schemas.append(nwb_lang)
 
@@ -110,14 +113,19 @@ class NamespacesAdapter(Adapter):
 
             # also add imports bc, well, we need them
             if not skip_imports:
-                ns_schemas.extend([ns.name for imported in self.imported for ns in imported.namespaces.namespaces])
+                ns_schemas.extend(
+                    [ns.name for imported in self.imported for ns in imported.namespaces.namespaces]
+                )
             ns_schema = SchemaDefinition(
-                name = ns.name,
-                id = ns.name,
-                description = ns.doc,
-                version = ns.version,
+                name=ns.name,
+                id=ns.name,
+                description=ns.doc,
+                version=ns.version,
                 imports=ns_schemas,
-                annotations=[{'tag': 'is_namespace', 'value': True}, {'tag': 'namespace', 'value': ns.name}]
+                annotations=[
+                    {"tag": "is_namespace", "value": True},
+                    {"tag": "namespace", "value": ns.name},
+                ],
             )
             sch_result.schemas.append(ns_schema)
 
@@ -136,7 +144,7 @@ class NamespacesAdapter(Adapter):
                     sch.version = ns.version
                     break
 
-    def find_type_source(self, name:str) -> SchemaAdapter:
+    def find_type_source(self, name: str) -> SchemaAdapter:
         """
         Given some neurodata_type_inc, find the schema that it's defined in.
 
@@ -151,7 +159,8 @@ class NamespacesAdapter(Adapter):
 
         if len(internal_matches) > 1:
             raise KeyError(
-                f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}")
+                f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
+            )
         elif len(internal_matches) == 1:
             return internal_matches[0]
 
@@ -162,8 +171,10 @@ class NamespacesAdapter(Adapter):
                 if name in class_names:
                     import_matches.append(schema)
 
-        if len(import_matches)>1:
-            raise KeyError(f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}")
+        if len(import_matches) > 1:
+            raise KeyError(
+                f"Found multiple schemas in namespace that define {name}:\ninternal: {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
+            )
         elif len(import_matches) == 1:
             return import_matches[0]
         else:
@@ -192,14 +203,14 @@ class NamespacesAdapter(Adapter):
 
         self._imports_populated = True
 
-    def to_yaml(self, base_dir:Path):
+    def to_yaml(self, base_dir: Path):
         schemas = self.build().schemas
         base_dir = Path(base_dir)
 
         base_dir.mkdir(exist_ok=True)
 
         for schema in schemas:
-            output_file = base_dir / (schema.name + '.yaml')
+            output_file = base_dir / (schema.name + ".yaml")
             yaml_dumper.dump(schema, output_file)
 
     @property
@@ -225,13 +236,12 @@ class NamespacesAdapter(Adapter):
         """
         versions for each namespace
         """
-        versions = {ns.name:ns.version for ns in self.namespaces.namespaces}
+        versions = {ns.name: ns.version for ns in self.namespaces.namespaces}
         for imported in self.imported:
             versions.update(imported.versions)
         return versions
 
-
-    def namespace_schemas(self, name:str) -> List[str]:
+    def namespace_schemas(self, name: str) -> List[str]:
         """
         Get the schemas that are defined in a given namespace
         """
@@ -253,7 +263,7 @@ class NamespacesAdapter(Adapter):
                 schema_names.append(sch.source)
         return schema_names
 
-    def schema_namespace(self, name:str) -> Optional[str]:
+    def schema_namespace(self, name: str) -> Optional[str]:
         """
         Inverse of :meth:`.namespace_schemas` - given a schema name, get the namespace it's in
         """
@@ -262,6 +272,3 @@ class NamespacesAdapter(Adapter):
             if name in sources:
                 return ns.name
         return None
-
-
-

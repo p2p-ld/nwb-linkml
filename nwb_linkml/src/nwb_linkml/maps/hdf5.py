@@ -4,6 +4,7 @@ Maps for reading and writing from HDF5
 We have sort of diverged from the initial idea of a generalized map as in :class:`linkml.map.Map` ,
 so we will make our own mapping class here and re-evaluate whether they should be unified later
 """
+
 import datetime
 import pdb
 from abc import abstractmethod
@@ -25,12 +26,13 @@ from nwb_linkml.annotations import unwrap_optional
 
 
 class ReadPhases(StrEnum):
-    plan = 'plan'
+    plan = "plan"
     """Before reading starts, building an index of objects to read"""
-    read = 'read'
+    read = "read"
     """Main reading operation"""
-    construct = 'construct'
+    construct = "construct"
     """After reading, casting the results of the read into their models"""
+
 
 class H5SourceItem(BaseModel):
     """
@@ -38,13 +40,14 @@ class H5SourceItem(BaseModel):
 
     Consumed by :class:`.HDF5Map` classes, orchestrated by :class:`.ReadQueue`
     """
+
     path: str
     """Absolute hdf5 path of element"""
     h5f_path: str
     """Path to the source hdf5 file"""
     leaf: bool
     """If ``True``, this item has no children (and thus we should start instantiating it before ascending to parent classes)"""
-    h5_type: Literal['group', 'dataset']
+    h5_type: Literal["group", "dataset"]
     """What kind of hdf5 element this is"""
     depends: List[str] = Field(default_factory=list)
     """Paths of other source items that this item depends on before it can be instantiated. eg. from softlinks"""
@@ -56,10 +59,12 @@ class H5SourceItem(BaseModel):
     """Optional: the neurodata type for this dataset or group"""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
     @property
     def parts(self) -> List[str]:
         """path split by /"""
-        return self.path.split('/')
+        return self.path.split("/")
+
 
 class H5ReadResult(BaseModel):
     """
@@ -67,9 +72,10 @@ class H5ReadResult(BaseModel):
 
     Also used as the source for operations in the ``construct`` :class:`.ReadPhases`
     """
+
     path: str
     """absolute hdf5 path of element"""
-    source: Union[H5SourceItem, 'H5ReadResult']
+    source: Union[H5SourceItem, "H5ReadResult"]
     """
     Source that this result is based on. 
     The map can modify this item, so the container should update the source
@@ -128,18 +134,29 @@ class HDF5Map(Map):
 
     @classmethod
     @abstractmethod
-    def check(cls, src: H5SourceItem|H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
+    def check(
+        cls,
+        src: H5SourceItem | H5ReadResult,
+        provider: SchemaProvider,
+        completed: Dict[str, H5ReadResult],
+    ) -> bool:
         """Check if this map applies to the given item to read"""
 
     @classmethod
     @abstractmethod
-    def apply(cls, src: H5SourceItem|H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls,
+        src: H5SourceItem | H5ReadResult,
+        provider: SchemaProvider,
+        completed: Dict[str, H5ReadResult],
+    ) -> H5ReadResult:
         """Actually apply the map!"""
 
 
 # --------------------------------------------------
 # Planning maps
 # --------------------------------------------------
+
 
 def check_empty(obj: h5py.Group) -> bool:
     """
@@ -163,10 +180,12 @@ def check_empty(obj: h5py.Group) -> bool:
     # check if immediate children are empty
     # handles empty groups of empty groups
     children_empty = False
-    if all([isinstance(item, h5py.Group) and \
-            len(item.keys()) == 0 and \
-            len(item.attrs) == 0 \
-            for item in obj.values()]):
+    if all(
+        [
+            isinstance(item, h5py.Group) and len(item.keys()) == 0 and len(item.attrs) == 0
+            for item in obj.values()
+        ]
+    ):
         children_empty = True
 
     # if we have no attrs and we are a leaf OR our children are empty, remove us
@@ -175,23 +194,26 @@ def check_empty(obj: h5py.Group) -> bool:
     else:
         return False
 
+
 class PruneEmpty(HDF5Map):
-    """Remove groups with no attrs """
+    """Remove groups with no attrs"""
+
     phase = ReadPhases.plan
+
     @classmethod
-    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.h5_type == 'group':
-            with h5py.File(src.h5f_path, 'r') as h5f:
+    def check(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if src.h5_type == "group":
+            with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
                 return check_empty(obj)
 
     @classmethod
-    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
-        return H5ReadResult.model_construct(
-            path = src.path,
-            source=src,
-            completed=True
-        )
+    def apply(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
+        return H5ReadResult.model_construct(path=src.path, source=src, completed=True)
 
 
 class ResolveDynamicTable(HDF5Map):
@@ -205,22 +227,26 @@ class ResolveDynamicTable(HDF5Map):
 
     This map also resolves the child elements, indicating so by the ``completes`` field in the :class:`.ReadResult`
     """
+
     phase = ReadPhases.read
     priority = 1
+
     @classmethod
-    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.h5_type == 'dataset':
+    def check(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if src.h5_type == "dataset":
             return False
-        if 'neurodata_type' in src.attrs:
-            if src.attrs['neurodata_type'] == 'DynamicTable':
+        if "neurodata_type" in src.attrs:
+            if src.attrs["neurodata_type"] == "DynamicTable":
                 return True
             # otherwise, see if it's a subclass
-            model = provider.get_class(src.attrs['namespace'], src.attrs['neurodata_type'])
+            model = provider.get_class(src.attrs["namespace"], src.attrs["neurodata_type"])
             # just inspect the MRO as strings rather than trying to check subclasses because
             # we might replace DynamicTable in the future, and there isn't a stable DynamicTable
             # class to inherit from anyway because of the whole multiple versions thing
             parents = [parent.__name__ for parent in model.__mro__]
-            if 'DynamicTable' in parents:
+            if "DynamicTable" in parents:
                 return True
             else:
                 return False
@@ -228,8 +254,10 @@ class ResolveDynamicTable(HDF5Map):
             return False
 
     @classmethod
-    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
-        with h5py.File(src.h5f_path, 'r') as h5f:
+    def apply(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
+        with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
 
             # make a populated model :)
@@ -243,8 +271,8 @@ class ResolveDynamicTable(HDF5Map):
             source=src,
             result=model,
             completes=completes,
-            completed = True,
-            applied=['ResolveDynamicTable']
+            completed=True,
+            applied=["ResolveDynamicTable"],
         )
 
 
@@ -288,27 +316,32 @@ class ResolveModelGroup(HDF5Map):
     ``nwbfile.processing.cr_ellipse_fits.center_x`` rather than having to switch between indexing and
     attribute access :)
     """
+
     phase = ReadPhases.read
-    priority = 10 # do this generally last
+    priority = 10  # do this generally last
 
     @classmethod
-    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if 'neurodata_type' in src.attrs and src.h5_type == 'group':
+    def check(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if "neurodata_type" in src.attrs and src.h5_type == "group":
             return True
         else:
             return False
 
     @classmethod
-    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
         model = provider.get_class(src.namespace, src.neurodata_type)
         res = {}
         depends = []
-        with h5py.File(src.h5f_path, 'r') as h5f:
+        with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
             for key, type in model.model_fields.items():
-                if key == 'children':
+                if key == "children":
                     res[key] = {name: resolve_hardlink(child) for name, child in obj.items()}
-                    depends.extend([resolve_hardlink(child)for child in obj.values()])
+                    depends.extend([resolve_hardlink(child) for child in obj.values()])
                 elif key in obj.attrs:
                     res[key] = obj.attrs[key]
                     continue
@@ -320,20 +353,20 @@ class ResolveModelGroup(HDF5Map):
                     depends.append(resolve_hardlink(obj[key]))
                     res[key] = resolve_hardlink(obj[key])
 
-
-        res['hdf5_path'] = src.path
-        res['name'] = src.parts[-1]
+        res["hdf5_path"] = src.path
+        res["name"] = src.parts[-1]
         return H5ReadResult(
             path=src.path,
             source=src,
             completed=True,
-            result = res,
-            model = model,
+            result=res,
+            model=model,
             namespace=src.namespace,
             neurodata_type=src.neurodata_type,
-            applied=['ResolveModelGroup'],
-            depends=depends
+            applied=["ResolveModelGroup"],
+            depends=depends,
         )
+
 
 class ResolveDatasetAsDict(HDF5Map):
     """
@@ -344,45 +377,50 @@ class ResolveDatasetAsDict(HDF5Map):
     Mutually exclusive with :class:`.ResolveScalars` - this only applies to datasets that are larger
     than a single entry.
     """
+
     phase = ReadPhases.read
     priority = 11
 
     @classmethod
-    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.h5_type == 'dataset' and 'neurodata_type' not in src.attrs:
-            with h5py.File(src.h5f_path, 'r') as h5f:
+    def check(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if src.h5_type == "dataset" and "neurodata_type" not in src.attrs:
+            with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
                 if obj.shape != ():
                     return True
-                else: return False
+                else:
+                    return False
         else:
             return False
 
     @classmethod
-    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
 
         res = {
-            'array': NDArrayProxy(h5f_file=src.h5f_path, path=src.path),
-            'hdf5_path' : src.path,
-            'name': src.parts[-1],
-            **src.attrs
+            "array": NDArrayProxy(h5f_file=src.h5f_path, path=src.path),
+            "hdf5_path": src.path,
+            "name": src.parts[-1],
+            **src.attrs,
         }
         return H5ReadResult(
-            path = src.path,
-            source=src,
-            completed=True,
-            result=res,
-            applied=['ResolveDatasetAsDict']
+            path=src.path, source=src, completed=True, result=res, applied=["ResolveDatasetAsDict"]
         )
+
 
 class ResolveScalars(HDF5Map):
     phase = ReadPhases.read
-    priority = 11 #catchall
+    priority = 11  # catchall
 
     @classmethod
-    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.h5_type == 'dataset' and 'neurodata_type' not in src.attrs:
-            with h5py.File(src.h5f_path, 'r') as h5f:
+    def check(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if src.h5_type == "dataset" and "neurodata_type" not in src.attrs:
+            with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
                 if obj.shape == ():
                     return True
@@ -390,18 +428,18 @@ class ResolveScalars(HDF5Map):
                     return False
         else:
             return False
+
     @classmethod
-    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
-        with h5py.File(src.h5f_path, 'r') as h5f:
+    def apply(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
+        with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
             res = obj[()]
         return H5ReadResult(
-            path=src.path,
-            source = src,
-            completed=True,
-            result = res,
-            applied=['ResolveScalars']
+            path=src.path, source=src, completed=True, result=res, applied=["ResolveScalars"]
         )
+
 
 class ResolveContainerGroups(HDF5Map):
     """
@@ -409,13 +447,16 @@ class ResolveContainerGroups(HDF5Map):
     (and thus no model) are returned as a dictionary with :class:`.HDF5_Path` references to
     the children they contain
     """
+
     phase = ReadPhases.read
     priority = 9
 
     @classmethod
-    def check(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.h5_type == 'group' and 'neurodata_type' not in src.attrs and len(src.attrs) == 0:
-            with h5py.File(src.h5f_path, 'r') as h5f:
+    def check(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if src.h5_type == "group" and "neurodata_type" not in src.attrs and len(src.attrs) == 0:
+            with h5py.File(src.h5f_path, "r") as h5f:
                 obj = h5f.get(src.path)
                 if len(obj.keys()) > 0:
                     return True
@@ -425,10 +466,12 @@ class ResolveContainerGroups(HDF5Map):
             return False
 
     @classmethod
-    def apply(cls, src: H5SourceItem, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
         """Simple, just return a dict with references to its children"""
         depends = []
-        with h5py.File(src.h5f_path, 'r') as h5f:
+        with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
             children = {}
             for k, v in obj.items():
@@ -447,13 +490,14 @@ class ResolveContainerGroups(HDF5Map):
             completed=True,
             result=children,
             depends=depends,
-            applied=['ResolveContainerGroups']
+            applied=["ResolveContainerGroups"],
         )
 
 
 # --------------------------------------------------
 # Completion Steps
 # --------------------------------------------------
+
 
 class CompletePassThrough(HDF5Map):
     """
@@ -463,20 +507,27 @@ class CompletePassThrough(HDF5Map):
     - :class:`.ResolveDatasetAsDict`
     - :class:`.ResolveScalars`
     """
+
     phase = ReadPhases.construct
     priority = 1
+
     @classmethod
-    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        passthrough_ops = ('ResolveDynamicTable', 'ResolveDatasetAsDict', 'ResolveScalars')
+    def check(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        passthrough_ops = ("ResolveDynamicTable", "ResolveDatasetAsDict", "ResolveScalars")
 
         for op in passthrough_ops:
-            if hasattr(src, 'applied') and op in src.applied:
+            if hasattr(src, "applied") and op in src.applied:
                 return True
         return False
 
     @classmethod
-    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
         return src
+
 
 class CompleteContainerGroups(HDF5Map):
     """
@@ -485,28 +536,35 @@ class CompleteContainerGroups(HDF5Map):
     of values (that will then be given to their parent model)
 
     """
+
     phase = ReadPhases.construct
     priority = 3
 
     @classmethod
-    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.model is None and \
-            src.neurodata_type is None and \
-                src.source.h5_type == 'group' and \
-                all([depend in completed.keys() for depend in src.depends]):
+    def check(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if (
+            src.model is None
+            and src.neurodata_type is None
+            and src.source.h5_type == "group"
+            and all([depend in completed.keys() for depend in src.depends])
+        ):
             return True
         else:
             return False
 
     @classmethod
-    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
         res, errors, completes = resolve_references(src.result, completed)
 
         return H5ReadResult(
             result=res,
             errors=errors,
             completes=completes,
-            **src.model_dump(exclude={'result', 'errors', 'completes'})
+            **src.model_dump(exclude={"result", "errors", "completes"}),
         )
 
 
@@ -515,20 +573,26 @@ class CompleteModelGroups(HDF5Map):
     priority = 4
 
     @classmethod
-    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.model is not None and \
-                src.source.h5_type == 'group' and \
-                src.neurodata_type != 'NWBFile' and \
-                all([depend in completed.keys() for depend in src.depends]):
+    def check(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if (
+            src.model is not None
+            and src.source.h5_type == "group"
+            and src.neurodata_type != "NWBFile"
+            and all([depend in completed.keys() for depend in src.depends])
+        ):
             return True
         else:
             return False
 
     @classmethod
-    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
+    def apply(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
         # gather any results that were left for completion elsewhere
         # first get all already-completed items
-        res = {k:v for k,v in src.result.items() if not isinstance(v, HDF5_Path)}
+        res = {k: v for k, v in src.result.items() if not isinstance(v, HDF5_Path)}
         unpacked_results, errors, completes = resolve_references(src.result, completed)
         res.update(unpacked_results)
 
@@ -537,10 +601,13 @@ class CompleteModelGroups(HDF5Map):
         for k, v in src.model.model_fields.items():
             annotation = unwrap_optional(v.annotation)
             if inspect.isclass(annotation) and not issubclass(annotation, BaseModel):
-                if isinstance(res, dict) and k in res and isinstance(res[k], dict) and 'array' in res[k]:
-                    res[k] = res[k]['array']
-
-
+                if (
+                    isinstance(res, dict)
+                    and k in res
+                    and isinstance(res[k], dict)
+                    and "array" in res[k]
+                ):
+                    res[k] = res[k]["array"]
 
         instance = src.model(**res)
         return H5ReadResult(
@@ -552,9 +619,10 @@ class CompleteModelGroups(HDF5Map):
             completes=completes,
             neurodata_type=src.neurodata_type,
             namespace=src.namespace,
-            applied=src.applied + ['CompleteModelGroups'],
-            errors=errors
+            applied=src.applied + ["CompleteModelGroups"],
+            errors=errors,
         )
+
 
 class CompleteNWBFile(HDF5Map):
     """
@@ -565,46 +633,55 @@ class CompleteNWBFile(HDF5Map):
         This is truly hideous, just meant as a way to get to the finish line on a late night, will be cleaned up later
 
     """
+
     phase = ReadPhases.construct
     priority = 11
 
     @classmethod
-    def check(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> bool:
-        if src.neurodata_type == 'NWBFile' and \
-                all([depend in completed.keys() for depend in src.depends]):
+    def check(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> bool:
+        if src.neurodata_type == "NWBFile" and all(
+            [depend in completed.keys() for depend in src.depends]
+        ):
             return True
         else:
             return False
 
     @classmethod
-    def apply(cls, src: H5ReadResult, provider:SchemaProvider, completed: Dict[str, H5ReadResult]) -> H5ReadResult:
-        res = {k:v for k,v in src.result.items() if not isinstance(v, HDF5_Path)}
+    def apply(
+        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+    ) -> H5ReadResult:
+        res = {k: v for k, v in src.result.items() if not isinstance(v, HDF5_Path)}
         unpacked_results, errors, completes = resolve_references(src.result, completed)
         res.update(unpacked_results)
 
-        res['name'] = 'root'
-        res['file_create_date'] = [datetime.datetime.fromisoformat(ts.decode('utf-8')) for ts in  res['file_create_date']['array'][:]]
-        if 'stimulus' not in res.keys():
-            res['stimulus'] = provider.get_class('core', 'NWBFileStimulus')()
+        res["name"] = "root"
+        res["file_create_date"] = [
+            datetime.datetime.fromisoformat(ts.decode("utf-8"))
+            for ts in res["file_create_date"]["array"][:]
+        ]
+        if "stimulus" not in res.keys():
+            res["stimulus"] = provider.get_class("core", "NWBFileStimulus")()
         electrode_groups = []
-        egroup_keys = list(res['general'].get('extracellular_ephys', {}).keys())
+        egroup_keys = list(res["general"].get("extracellular_ephys", {}).keys())
         egroup_dict = {}
         for k in egroup_keys:
-            if k != 'electrodes':
-                egroup = res['general']['extracellular_ephys'][k]
+            if k != "electrodes":
+                egroup = res["general"]["extracellular_ephys"][k]
                 electrode_groups.append(egroup)
                 egroup_dict[egroup.hdf5_path] = egroup
-                del res['general']['extracellular_ephys'][k]
+                del res["general"]["extracellular_ephys"][k]
         if len(electrode_groups) > 0:
-            res['general']['extracellular_ephys']['electrode_group'] = electrode_groups
-        trode_type = provider.get_class('core', 'NWBFileGeneralExtracellularEphysElectrodes')
-        #anmro = list(type(res['general']['extracellular_ephys']['electrodes']).__mro__)
-        #anmro.insert(1, trode_type)
-        trodes_original = res['general']['extracellular_ephys']['electrodes']
+            res["general"]["extracellular_ephys"]["electrode_group"] = electrode_groups
+        trode_type = provider.get_class("core", "NWBFileGeneralExtracellularEphysElectrodes")
+        # anmro = list(type(res['general']['extracellular_ephys']['electrodes']).__mro__)
+        # anmro.insert(1, trode_type)
+        trodes_original = res["general"]["extracellular_ephys"]["electrodes"]
         trodes = trode_type.model_construct(trodes_original.model_dump())
-        res['general']['extracellular_ephys']['electrodes'] = trodes
+        res["general"]["extracellular_ephys"]["electrodes"] = trodes
 
-        #type(res['general']['extracellular_ephys']['electrodes']).__mro__ = tuple(anmro)
+        # type(res['general']['extracellular_ephys']['electrodes']).__mro__ = tuple(anmro)
         # electrodes_dict = res['general']['extracellular_ephys']['electrodes'].model_dump()
         # with h5py.File(src.source.h5f_path, 'r') as h5f:
         #      electrodes_dict['group'] = [egroup_dict[h5f[e].name] for e in electrodes_dict['group'][:]]
@@ -620,37 +697,38 @@ class CompleteNWBFile(HDF5Map):
             completes=completes,
             neurodata_type=src.neurodata_type,
             namespace=src.namespace,
-            applied=src.applied + ['CompleteModelGroups'],
-            errors=errors
+            applied=src.applied + ["CompleteModelGroups"],
+            errors=errors,
         )
 
 
-
-
 class ReadQueue(BaseModel):
-    """Container model to store items as they are built """
+    """Container model to store items as they are built"""
+
     h5f: Path = Field(
-        description=("Path to the source hdf5 file used when resolving the queue! "
-                     "Each translation step should handle opening and closing the file, "
-                     "rather than passing a handle around")
+        description=(
+            "Path to the source hdf5 file used when resolving the queue! "
+            "Each translation step should handle opening and closing the file, "
+            "rather than passing a handle around"
+        )
     )
     provider: SchemaProvider = Field(
         description="SchemaProvider used by each of the items in the read queue"
     )
-    queue: Dict[str,H5SourceItem|H5ReadResult] = Field(
+    queue: Dict[str, H5SourceItem | H5ReadResult] = Field(
         default_factory=dict,
         description="Items left to be instantiated, keyed by hdf5 path",
     )
     completed: Dict[str, H5ReadResult] = Field(
         default_factory=dict,
-        description="Items that have already been instantiated, keyed by hdf5 path"
+        description="Items that have already been instantiated, keyed by hdf5 path",
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)
     phases_completed: List[ReadPhases] = Field(
-        default_factory=list,
-        description="Phases that have already been completed")
+        default_factory=list, description="Phases that have already been completed"
+    )
 
-    def apply_phase(self, phase:ReadPhases, max_passes=5):
+    def apply_phase(self, phase: ReadPhases, max_passes=5):
         phase_maps = [m for m in HDF5Map.__subclasses__() if m.phase == phase]
         phase_maps = sorted(phase_maps, key=lambda x: x.priority)
 
@@ -666,7 +744,7 @@ class ReadQueue(BaseModel):
                     # if there is ever a need to do that, then we would need to decide what to do with the
                     # multiple results.
                     results.append(op.apply(item, self.provider, self.completed))
-                    break # out of inner iteration
+                    break  # out of inner iteration
 
         # remake the source queue and save results
         completes = []
@@ -711,11 +789,11 @@ class ReadQueue(BaseModel):
                 # if we're not in the last phase, move our completed to our queue
                 self.queue = self.completed
                 self.completed = {}
-        elif max_passes>0:
-            self.apply_phase(phase, max_passes=max_passes-1)
+        elif max_passes > 0:
+            self.apply_phase(phase, max_passes=max_passes - 1)
 
 
-def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, H5SourceItem]:
+def flatten_hdf(h5f: h5py.File | h5py.Group, skip="specifications") -> Dict[str, H5SourceItem]:
     """
     Flatten all child elements of hdf element into a dict of :class:`.H5SourceItem` s keyed by their path
 
@@ -723,6 +801,7 @@ def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, 
         h5f (:class:`h5py.File` | :class:`h5py.Group`): HDF file or group to flatten!
     """
     items = {}
+
     def _itemize(name: str, obj: h5py.Dataset | h5py.Group):
         if skip in name:
             return
@@ -730,29 +809,29 @@ def flatten_hdf(h5f:h5py.File | h5py.Group, skip='specifications') -> Dict[str, 
         leaf = isinstance(obj, h5py.Dataset) or len(obj.keys()) == 0
 
         if isinstance(obj, h5py.Dataset):
-            h5_type = 'dataset'
+            h5_type = "dataset"
         elif isinstance(obj, h5py.Group):
-            h5_type = 'group'
+            h5_type = "group"
         else:
-            raise ValueError(f'Object must be a dataset or group! {obj}')
+            raise ValueError(f"Object must be a dataset or group! {obj}")
 
         # get references in attrs and datasets to populate dependencies
-        #depends = get_references(obj)
+        # depends = get_references(obj)
 
-        if not name.startswith('/'):
-           name = '/' + name
+        if not name.startswith("/"):
+            name = "/" + name
 
         attrs = dict(obj.attrs.items())
 
         items[name] = H5SourceItem.model_construct(
-            path = name,
+            path=name,
             h5f_path=h5f.file.filename,
-            leaf = leaf,
-            #depends = depends,
+            leaf=leaf,
+            # depends = depends,
             h5_type=h5_type,
-            attrs = attrs,
-            namespace = attrs.get('namespace', None),
-            neurodata_type= attrs.get('neurodata_type', None)
+            attrs=attrs,
+            namespace=attrs.get("namespace", None),
+            neurodata_type=attrs.get("neurodata_type", None),
         )
 
     h5f.visititems(_itemize)
@@ -803,7 +882,10 @@ def get_references(obj: h5py.Dataset | h5py.Group) -> List[str]:
         depends = list(set([obj.get(i).name for i in refs]))
     return depends
 
-def resolve_references(src: dict, completed: Dict[str, H5ReadResult]) -> Tuple[dict, List[str], List[HDF5_Path]]:
+
+def resolve_references(
+    src: dict, completed: Dict[str, H5ReadResult]
+) -> Tuple[dict, List[str], List[HDF5_Path]]:
     """
     Recursively replace references to other completed items with their results
 
@@ -821,12 +903,13 @@ def resolve_references(src: dict, completed: Dict[str, H5ReadResult]) -> Tuple[d
 
         elif isinstance(item, dict):
             inner_res, inner_error, inner_completes = resolve_references(item, completed)
-            res[path] =  inner_res
+            res[path] = inner_res
             errors.extend(inner_error)
             completes.extend(inner_completes)
         else:
             res[path] = item
     return res, errors, completes
+
 
 def resolve_hardlink(obj: Union[h5py.Group, h5py.Dataset]) -> HDF5_Path:
     """
@@ -841,6 +924,3 @@ def resolve_hardlink(obj: Union[h5py.Group, h5py.Dataset]) -> HDF5_Path:
     given by the object's ``name``
     """
     return HDF5_Path(obj.file[obj.ref].name)
-
-
-

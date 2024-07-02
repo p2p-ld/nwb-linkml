@@ -9,26 +9,10 @@ We will handle cardinality of array dimensions elsewhere
 """
 
 QUANTITY_MAP = {
-    '*': {
-        'required': False,
-        'multivalued': True
-    },
-    '+': {
-        'required': True,
-        'multivalued': True
-    },
-    '?': {
-        'required': False,
-        'multivalued': False
-    },
-    1: {
-        'required': True,
-        'multivalued': False
-    },
+    "*": {"required": False, "multivalued": True},
+    "+": {"required": True, "multivalued": True},
+    "?": {"required": False, "multivalued": False},
+    1: {"required": True, "multivalued": False},
     # include the NoneType for indexing
-    None: {
-        'required': None,
-        'multivalued': None
-    }
+    None: {"required": None, "multivalued": None},
 }
-

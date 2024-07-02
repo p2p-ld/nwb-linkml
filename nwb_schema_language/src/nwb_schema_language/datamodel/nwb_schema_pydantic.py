@@ -4,6 +4,7 @@ from enum import Enum
 from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel as BaseModel, Field
 import sys
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
@@ -13,17 +14,20 @@ else:
 metamodel_version = "None"
 version = "None"
 
-class ConfiguredBaseModel(BaseModel,
-                validate_assignment = True,
-                validate_default = True,
-                extra = 'forbid',
-                arbitrary_types_allowed = True,
-                use_enum_values = True):
+
+class ConfiguredBaseModel(
+    BaseModel,
+    validate_assignment=True,
+    validate_default=True,
+    extra="forbid",
+    arbitrary_types_allowed=True,
+    use_enum_values=True,
+):
     pass
 
 
 class ReftypeOptions(str, Enum):
-    
+
     # Reference to another group or dataset of the given target_type
     ref = "ref"
     # Reference to another group or dataset of the given target_type
@@ -32,11 +36,10 @@ class ReftypeOptions(str, Enum):
     object = "object"
     # Reference to a region (i.e. subset) of another dataset of the given target_type
     region = "region"
-    
-    
+
 
 class QuantityEnum(str, Enum):
-    
+
     # Zero or more instances, equivalent to zero_or_many
     ASTERISK = "*"
     # Zero or one instances, equivalent to zero_or_one
@@ -49,11 +52,10 @@ class QuantityEnum(str, Enum):
     one_or_many = "one_or_many"
     # Zero or one instances, equivalent to ?
     zero_or_one = "zero_or_one"
-    
-    
+
 
 class FlatDtype(str, Enum):
-    
+
     # single precision floating point (32 bit)
     float = "float"
     # single precision floating point (32 bit)
@@ -102,39 +104,69 @@ class FlatDtype(str, Enum):
     bool = "bool"
     # ISO 8601 datetime string
     isodatetime = "isodatetime"
-    
-    
+
 
 class Namespace(ConfiguredBaseModel):
-    
+
     doc: str = Field(..., description="""Description of corresponding object.""")
     name: str = Field(...)
-    full_name: Optional[str] = Field(None, description="""Optional string with extended full name for the namespace.""")
+    full_name: Optional[str] = Field(
+        None, description="""Optional string with extended full name for the namespace."""
+    )
     version: str = Field(...)
-    date: Optional[datetime ] = Field(None, description="""Date that a namespace was last modified or released""")
-    author: List[str] | str = Field(default_factory=list, description="""List of strings with the names of the authors of the namespace.""")
-    contact: List[str] | str = Field(default_factory=list, description="""List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.""")
-    schema_: Optional[List[Schema]] = Field(alias="schema", default_factory=list, description="""List of the schema to be included in this namespace.""")
-    
+    date: Optional[datetime] = Field(
+        None, description="""Date that a namespace was last modified or released"""
+    )
+    author: List[str] | str = Field(
+        default_factory=list,
+        description="""List of strings with the names of the authors of the namespace.""",
+    )
+    contact: List[str] | str = Field(
+        default_factory=list,
+        description="""List of strings with the contact information for the authors. Ordering of the contacts should match the ordering of the authors.""",
+    )
+    schema_: Optional[List[Schema]] = Field(
+        alias="schema",
+        default_factory=list,
+        description="""List of the schema to be included in this namespace.""",
+    )
+
 
 class Namespaces(ConfiguredBaseModel):
-    
+
     namespaces: Optional[List[Namespace]] = Field(default_factory=list)
-    
+
 
 class Schema(ConfiguredBaseModel):
-    
-    source: Optional[str] = Field(None, description="""describes the name of the YAML (or JSON) file with the schema specification. The schema files should be located in the same folder as the namespace file.""")
-    namespace: Optional[str] = Field(None, description="""describes a named reference to another namespace. In contrast to source, this is a reference by name to a known namespace (i.e., the namespace is resolved during the build and must point to an already existing namespace). This mechanism is used to allow, e.g., extension of a core namespace (here the NWB core namespace) without requiring hard paths to the files describing the core namespace. Either source or namespace must be specified, but not both.""")
-    title: Optional[str] = Field(None, description="""a descriptive title for a file for documentation purposes.""")
-    neurodata_types: Optional[List[Union[Dataset, Group]]] = Field(default_factory=list, description="""an optional list of strings indicating which data types should be included from the given specification source or namespace. The default is null indicating that all data types should be included.""")
+
+    source: Optional[str] = Field(
+        None,
+        description="""describes the name of the YAML (or JSON) file with the schema specification. The schema files should be located in the same folder as the namespace file.""",
+    )
+    namespace: Optional[str] = Field(
+        None,
+        description="""describes a named reference to another namespace. In contrast to source, this is a reference by name to a known namespace (i.e., the namespace is resolved during the build and must point to an already existing namespace). This mechanism is used to allow, e.g., extension of a core namespace (here the NWB core namespace) without requiring hard paths to the files describing the core namespace. Either source or namespace must be specified, but not both.""",
+    )
+    title: Optional[str] = Field(
+        None, description="""a descriptive title for a file for documentation purposes."""
+    )
+    neurodata_types: Optional[List[Union[Dataset, Group]]] = Field(
+        default_factory=list,
+        description="""an optional list of strings indicating which data types should be included from the given specification source or namespace. The default is null indicating that all data types should be included.""",
+    )
     doc: Optional[str] = Field(None)
-    
+
 
 class Group(ConfiguredBaseModel):
-    
-    neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
-    neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
+
+    neurodata_type_def: Optional[str] = Field(
+        None,
+        description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""",
+    )
+    neurodata_type_inc: Optional[str] = Field(
+        None,
+        description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""",
+    )
     name: Optional[str] = Field(None)
     default_name: Optional[str] = Field(None)
     doc: str = Field(..., description="""Description of corresponding object.""")
@@ -144,72 +176,102 @@ class Group(ConfiguredBaseModel):
     datasets: Optional[List[Dataset]] = Field(default_factory=list)
     groups: Optional[List[Group]] = Field(default_factory=list)
     links: Optional[List[Link]] = Field(default_factory=list)
-    
+
 
 class Groups(ConfiguredBaseModel):
-    
+
     groups: Optional[List[Group]] = Field(default_factory=list)
-    
+
 
 class Link(ConfiguredBaseModel):
-    
+
     name: Optional[str] = Field(None)
     doc: str = Field(..., description="""Description of corresponding object.""")
-    target_type: str = Field(..., description="""Describes the neurodata_type of the target that the reference points to""")
+    target_type: str = Field(
+        ...,
+        description="""Describes the neurodata_type of the target that the reference points to""",
+    )
     quantity: Optional[Union[QuantityEnum, int]] = Field(1)
-    
+
 
 class Datasets(ConfiguredBaseModel):
-    
+
     datasets: Optional[List[Dataset]] = Field(default_factory=list)
-    
+
 
 class ReferenceDtype(ConfiguredBaseModel):
-    
-    target_type: str = Field(..., description="""Describes the neurodata_type of the target that the reference points to""")
-    reftype: Optional[ReftypeOptions] = Field(None, description="""describes the kind of reference""")
-    
+
+    target_type: str = Field(
+        ...,
+        description="""Describes the neurodata_type of the target that the reference points to""",
+    )
+    reftype: Optional[ReftypeOptions] = Field(
+        None, description="""describes the kind of reference"""
+    )
+
 
 class CompoundDtype(ConfiguredBaseModel):
-    
+
     name: str = Field(...)
     doc: str = Field(..., description="""Description of corresponding object.""")
     dtype: Union[FlatDtype, ReferenceDtype] = Field(...)
-    
+
 
 class DtypeMixin(ConfiguredBaseModel):
-    
-    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
-    
+
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
+        default_factory=list
+    )
+
 
 class Attribute(DtypeMixin):
-    
+
     name: str = Field(...)
     dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
     shape: Optional[List[Union[Any, int, str]]] = Field(default_factory=list)
-    value: Optional[Any] = Field(None, description="""Optional constant, fixed value for the attribute.""")
-    default_value: Optional[Any] = Field(None, description="""Optional default value for variable-valued attributes.""")
+    value: Optional[Any] = Field(
+        None, description="""Optional constant, fixed value for the attribute."""
+    )
+    default_value: Optional[Any] = Field(
+        None, description="""Optional default value for variable-valued attributes."""
+    )
     doc: str = Field(..., description="""Description of corresponding object.""")
-    required: Optional[bool] = Field(True, description="""Optional boolean key describing whether the attribute is required. Default value is True.""")
-    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
-    
+    required: Optional[bool] = Field(
+        True,
+        description="""Optional boolean key describing whether the attribute is required. Default value is True.""",
+    )
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
+        default_factory=list
+    )
+
 
 class Dataset(DtypeMixin):
-    
-    neurodata_type_def: Optional[str] = Field(None, description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""")
-    neurodata_type_inc: Optional[str] = Field(None, description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""")
+
+    neurodata_type_def: Optional[str] = Field(
+        None,
+        description="""Used alongside neurodata_type_inc to indicate inheritance, naming, and mixins""",
+    )
+    neurodata_type_inc: Optional[str] = Field(
+        None,
+        description="""Used alongside neurodata_type_def to indicate inheritance, naming, and mixins""",
+    )
     name: Optional[str] = Field(None)
     default_name: Optional[str] = Field(None)
     dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
     shape: Optional[List[Union[Any, int, str]]] = Field(default_factory=list)
-    value: Optional[Any] = Field(None, description="""Optional constant, fixed value for the attribute.""")
-    default_value: Optional[Any] = Field(None, description="""Optional default value for variable-valued attributes.""")
+    value: Optional[Any] = Field(
+        None, description="""Optional constant, fixed value for the attribute."""
+    )
+    default_value: Optional[Any] = Field(
+        None, description="""Optional default value for variable-valued attributes."""
+    )
     doc: str = Field(..., description="""Description of corresponding object.""")
     quantity: Optional[Union[QuantityEnum, int]] = Field(1)
     linkable: Optional[bool] = Field(None)
     attributes: Optional[List[Attribute]] = Field(default_factory=list)
-    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(default_factory=list)
-    
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
+        default_factory=list
+    )
 
 
 # Model rebuild
@@ -226,4 +288,3 @@ CompoundDtype.model_rebuild()
 DtypeMixin.model_rebuild()
 Attribute.model_rebuild()
 Dataset.model_rebuild()
-    

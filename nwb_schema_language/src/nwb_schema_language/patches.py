@@ -10,10 +10,12 @@ import re
 import argparse
 import pprint
 
+
 class Phases(StrEnum):
     post_generation_pydantic = "post_generation_pydantic"
     post_load_yaml = "post_load_yaml"
     """After the yaml of the nwb schema classes is loaded"""
+
 
 @dataclass
 class Patch:
@@ -25,7 +27,7 @@ class Patch:
     replacement: str
     """Regex to replace with (eg. can use capturing groups in match)"""
 
-    instances: ClassVar[List['Patch']] = []
+    instances: ClassVar[List["Patch"]] = []
     """
     List of patches!
     """
@@ -40,7 +42,7 @@ class Patch:
 
 patch_schema_slot = Patch(
     phase=Phases.post_generation_pydantic,
-    path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
     match=r"\n\s*(schema:)(.*Field\()(.*)",
     replacement=r'\n    schema_:\2alias="schema", \3',
 )
@@ -61,48 +63,41 @@ patch_schema_slot = Patch(
 
 patch_dtype_single_multiple = Patch(
     phase=Phases.post_generation_pydantic,
-    path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
     match=r"(\n\s*dtype: Optional\[)List\[Union\[CompoundDtype, (FlatDtype, ReferenceDtype\]\])\]",
-    replacement=r'\1Union[List[CompoundDtype], \2',
+    replacement=r"\1Union[List[CompoundDtype], \2",
 )
 
 patch_author_single_multiple = Patch(
     phase=Phases.post_generation_pydantic,
-    path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
     match=r"author: List\[str\]",
-    replacement="author: List[str] | str"
+    replacement="author: List[str] | str",
 )
 
 patch_contact_single_multiple = Patch(
     phase=Phases.post_generation_pydantic,
-    path=Path('src/nwb_schema_language/datamodel/nwb_schema_pydantic.py'),
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
     match=r"contact: List\[str\]",
-    replacement="contact: List[str] | str"
+    replacement="contact: List[str] | str",
 )
 
-def run_patches(phase:Phases, verbose:bool=False):
+
+def run_patches(phase: Phases, verbose: bool = False):
     patches = [p for p in Patch.instances if p.phase == phase]
     for patch in patches:
         if verbose:
-            print('Patching:')
+            print("Patching:")
             pprint.pprint(patch)
-        with open(patch.path, 'r') as pfile:
+        with open(patch.path, "r") as pfile:
             string = pfile.read()
         string = re.sub(patch.match, patch.replacement, string)
-        with open(patch.path, 'w') as pfile:
+        with open(patch.path, "w") as pfile:
             pfile.write(string)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Run patches for a given phase of code generation"
-    )
-    parser.add_argument("--phase",
-                        choices=list(Phases.__members__.keys()),
-                        type=Phases)
+    parser = argparse.ArgumentParser(description="Run patches for a given phase of code generation")
+    parser.add_argument("--phase", choices=list(Phases.__members__.keys()), type=Phases)
     args = parser.parse_args()
     run_patches(args.phase, verbose=True)
-
-
-
-

@@ -1,16 +1,36 @@
 """
 Base class for adapters
 """
+
 import pdb
 from abc import abstractmethod
 import warnings
 from dataclasses import dataclass, field
-from typing import List, Dict, Type, Generator, Any, Tuple, Optional, TypeVar, TypeVarTuple, Unpack, Literal
+from typing import (
+    List,
+    Dict,
+    Type,
+    Generator,
+    Any,
+    Tuple,
+    Optional,
+    TypeVar,
+    TypeVarTuple,
+    Unpack,
+    Literal,
+)
 from pydantic import BaseModel, Field, validator
-from linkml_runtime.linkml_model import Element, SchemaDefinition, ClassDefinition, SlotDefinition, TypeDefinition
+from linkml_runtime.linkml_model import (
+    Element,
+    SchemaDefinition,
+    ClassDefinition,
+    SlotDefinition,
+    TypeDefinition,
+)
 from nwb_schema_language import Dataset, Attribute, Schema, Group
 
 # SchemaDefClass = dataclass(SchemaDefinition).__pydantic_model__
+
 
 @dataclass
 class BuildResult:
@@ -21,7 +41,7 @@ class BuildResult:
     types: List[TypeDefinition] = field(default_factory=list)
 
     def __post_init__(self):
-        for field in ('schemas', 'classes', 'slots', 'types'):
+        for field in ("schemas", "classes", "slots", "types"):
             attr = getattr(self, field)
             if not isinstance(attr, list):
                 setattr(self, field, [attr])
@@ -31,7 +51,7 @@ class BuildResult:
         others_dedupe = [o for o in others if o.name not in existing_names]
         return others_dedupe
 
-    def __add__(self, other:'BuildResult') -> 'BuildResult':
+    def __add__(self, other: "BuildResult") -> "BuildResult":
         # if not isinstance(other, 'BuildResult'):
         #     raise TypeError('Can only add two build results together')
 
@@ -43,30 +63,33 @@ class BuildResult:
 
     def __repr__(self):  # pragma: no cover
         out_str = "\nBuild Result:\n"
-        out_str += '-'*len(out_str)
+        out_str += "-" * len(out_str)
 
         for label, alist in (
-                ('Schemas', self.schemas),
-                ('Classes', self.classes),
-                ('Slots', self.slots),
-                ('Types', self.types)):
+            ("Schemas", self.schemas),
+            ("Classes", self.classes),
+            ("Slots", self.slots),
+            ("Types", self.types),
+        ):
             if len(alist) == 0:
                 continue
 
-            name_str = "\n\n" + label + ':'
-            name_str += "\n" + '-'*len(name_str) + '\n'
+            name_str = "\n\n" + label + ":"
+            name_str += "\n" + "-" * len(name_str) + "\n"
             name_list = sorted([i.name for i in alist])
-            item_str = '\n '.join(name_list)
+            item_str = "\n ".join(name_list)
             out_str += name_str + item_str
 
         return out_str
 
-T = TypeVar('T', Dataset, Attribute, Schema, Group, BaseModel)
-Ts = TypeVarTuple('Ts')
+
+T = TypeVar("T", Dataset, Attribute, Schema, Group, BaseModel)
+Ts = TypeVarTuple("Ts")
+
 
 class Adapter(BaseModel):
     @abstractmethod
-    def build(self) -> 'BuildResult':
+    def build(self) -> "BuildResult":
         """
         Generate the corresponding linkML element for this adapter
         """
@@ -86,14 +109,16 @@ class Adapter(BaseModel):
                 # SchemaAdapters that should be located under the same
                 # NamespacesAdapter when it's important to query across SchemaAdapters,
                 # so skip to avoid combinatoric walking
-                if key == 'imports' and type(input).__name__ == "SchemaAdapter":
+                if key == "imports" and type(input).__name__ == "SchemaAdapter":
                     continue
                 val = getattr(input, key)
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):
                     yield from self.walk(val)
 
-        elif isinstance(input, dict): # pragma: no cover - not used in our adapters, but necessary for logical completeness
+        elif isinstance(
+            input, dict
+        ):  # pragma: no cover - not used in our adapters, but necessary for logical completeness
             for key, val in input.items():
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):
@@ -125,7 +150,9 @@ class Adapter(BaseModel):
             if isinstance(item, tuple) and item[0] in field and item[1] is not None:
                 yield item[1]
 
-    def walk_field_values(self, input: BaseModel | list | dict, field: str, value: Optional[Any] = None ) -> Generator[BaseModel, None, None]:
+    def walk_field_values(
+        self, input: BaseModel | list | dict, field: str, value: Optional[Any] = None
+    ) -> Generator[BaseModel, None, None]:
         """
         Recursively walk input for **models** that contain a ``field`` as a direct child with a value matching ``value``
 
@@ -146,10 +173,9 @@ class Adapter(BaseModel):
                     if value == field_value:
                         yield item
 
-
-
-
-    def walk_types(self, input: BaseModel | list | dict, get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]) -> Generator[T | Ts, None, None]:
+    def walk_types(
+        self, input: BaseModel | list | dict, get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]
+    ) -> Generator[T | Ts, None, None]:
         if not isinstance(get_type, (list, tuple)):
             get_type = [get_type]
 

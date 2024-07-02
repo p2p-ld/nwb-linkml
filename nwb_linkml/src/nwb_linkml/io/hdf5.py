@@ -18,6 +18,7 @@ Other TODO:
 * Write, obvi lol.
 
 """
+
 import pdb
 import warnings
 from typing import Optional, Dict, overload, Type, Union, List
@@ -35,27 +36,27 @@ from tqdm import tqdm
 import numpy as np
 
 from nwb_linkml.maps.hdf5 import H5SourceItem, flatten_hdf, ReadPhases, ReadQueue
-#from nwb_linkml.models.core_nwb_file import NWBFile
+
+# from nwb_linkml.models.core_nwb_file import NWBFile
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
 from nwb_linkml.providers.schema import SchemaProvider
 from nwb_linkml.types.hdf5 import HDF5_Path
 
 
+class HDF5IO:
 
-class HDF5IO():
-
-    def __init__(self, path:Path):
+    def __init__(self, path: Path):
         self.path = Path(path)
         self._modules: Dict[str, ModuleType] = {}
 
     @overload
-    def read(self, path:None) -> 'NWBFile': ...
+    def read(self, path: None) -> "NWBFile": ...
 
     @overload
-    def read(self, path:str) -> BaseModel | Dict[str, BaseModel]: ...
+    def read(self, path: str) -> BaseModel | Dict[str, BaseModel]: ...
 
-    def read(self, path:Optional[str] = None) -> Union['NWBFile', BaseModel, Dict[str, BaseModel]]:
+    def read(self, path: Optional[str] = None) -> Union["NWBFile", BaseModel, Dict[str, BaseModel]]:
         """
         Read data into models from an NWB File.
 
@@ -101,13 +102,9 @@ class HDF5IO():
         if isinstance(src, (h5py.File, h5py.Group)):
             children = flatten_hdf(src)
         else:
-            raise NotImplementedError('directly read individual datasets')
+            raise NotImplementedError("directly read individual datasets")
 
-        queue = ReadQueue(
-            h5f=self.path,
-            queue=children,
-            provider=provider
-        )
+        queue = ReadQueue(h5f=self.path, queue=children, provider=provider)
 
         # Apply initial planning phase of reading
         queue.apply_phase(ReadPhases.plan)
@@ -119,7 +116,7 @@ class HDF5IO():
         queue.apply_phase(ReadPhases.construct)
 
         if path is None:
-            return queue.completed['/'].result
+            return queue.completed["/"].result
         else:
             return queue.completed[path].result
 
@@ -146,7 +143,7 @@ class HDF5IO():
             and then write them.
 
         """
-        raise NotImplementedError('Writing to HDF5 is not implemented yet!')
+        raise NotImplementedError("Writing to HDF5 is not implemented yet!")
 
     def make_provider(self) -> SchemaProvider:
         """
@@ -159,14 +156,14 @@ class HDF5IO():
                 specified as defaults
         """
         h5f = h5py.File(str(self.path))
-        schema = read_specs_as_dicts(h5f.get('specifications'))
+        schema = read_specs_as_dicts(h5f.get("specifications"))
 
         # get versions for each namespace
         versions = {}
         for ns_schema in schema.values():
             # each "namespace" can actually contain multiple namespaces which actually contain the version info
-            for inner_ns in ns_schema['namespace']['namespaces']:
-                versions[inner_ns['name']] = inner_ns['version']
+            for inner_ns in ns_schema["namespace"]["namespaces"]:
+                versions[inner_ns["name"]] = inner_ns["version"]
 
         provider = SchemaProvider(versions=versions)
 
@@ -188,11 +185,12 @@ def read_specs_as_dicts(group: h5py.Group) -> dict:
         ``dict`` of schema.
     """
     spec_dict = {}
+
     def _read_spec(name, node):
 
         if isinstance(node, h5py.Dataset):
             # make containing dict if they dont exist
-            pieces = node.name.split('/')
+            pieces = node.name.split("/")
             if pieces[-3] not in spec_dict.keys():
                 spec_dict[pieces[-3]] = {}
 
@@ -235,17 +233,17 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
             if isinstance(attr, h5py.h5r.Reference):
                 refs.append(attr)
 
-
         if isinstance(obj, h5py.Dataset):
             # dataset is all references
-            if obj.dtype.metadata is not None and isinstance(obj.dtype.metadata.get('ref', None), h5py.h5r.Reference):
+            if obj.dtype.metadata is not None and isinstance(
+                obj.dtype.metadata.get("ref", None), h5py.h5r.Reference
+            ):
                 refs.extend(obj[:].tolist())
             # compound dtype
             elif isinstance(obj.dtype, np.dtypes.VoidDType):
                 for name in obj.dtype.names:
                     if isinstance(obj[name][0], h5py.h5r.Reference):
                         refs.extend(obj[name].tolist())
-
 
         for ref in refs:
             assert isinstance(ref, h5py.h5r.Reference)
@@ -262,7 +260,7 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     return references
 
 
-def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path:
+def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> Path:
     """
     Create a truncated HDF5 file where only the first few samples are kept.
 
@@ -277,34 +275,34 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
         :class:`pathlib.Path` path of the truncated file
     """
     if target is None:
-        target = source.parent / (source.stem + '_truncated.hdf5')
+        target = source.parent / (source.stem + "_truncated.hdf5")
     else:
         target = Path(target)
 
     source = Path(source)
 
     # and also a temporary file that we'll make with h5repack
-    target_tmp = target.parent / (target.stem + '_tmp.hdf5')
+    target_tmp = target.parent / (target.stem + "_tmp.hdf5")
 
     # copy the whole thing
     if target.exists():
         target.unlink()
-    print(f'Copying {source} to {target}...')
+    print(f"Copying {source} to {target}...")
     shutil.copy(source, target)
     os.chmod(target, 0o774)
 
     to_resize = []
-    def _need_resizing(name:str, obj: h5py.Dataset | h5py.Group):
+
+    def _need_resizing(name: str, obj: h5py.Dataset | h5py.Group):
         if isinstance(obj, h5py.Dataset):
             if obj.size > n:
                 to_resize.append(name)
 
-    print('Resizing datasets...')
+    print("Resizing datasets...")
     # first we get the items that need to be resized and then resize them below
     # problems with writing to the file from within the visititems call
-    h5f_target = h5py.File(str(target), 'r+')
+    h5f_target = h5py.File(str(target), "r+")
     h5f_target.visititems(_need_resizing)
-
 
     for resize in to_resize:
         obj = h5f_target.get(resize)
@@ -312,7 +310,7 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
             obj.resize(n, axis=0)
         except TypeError:
             # contiguous arrays can't be trivially resized, so we have to copy and create a new dataset
-            tmp_name = obj.name + '__tmp'
+            tmp_name = obj.name + "__tmp"
             original_name = obj.name
             obj.parent.move(obj.name, tmp_name)
             old_obj = obj.parent.get(tmp_name)
@@ -325,17 +323,18 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
     h5f_target.close()
 
     # use h5repack to actually remove the items from the dataset
-    if shutil.which('h5repack') is None:
-        warnings.warn("Truncated file made, but since h5repack not found in path, file won't be any smaller")
+    if shutil.which("h5repack") is None:
+        warnings.warn(
+            "Truncated file made, but since h5repack not found in path, file won't be any smaller"
+        )
         return target
 
-    print('Repacking hdf5...')
+    print("Repacking hdf5...")
     res = subprocess.run(
-        ['h5repack', '-f', 'GZIP=9', str(target), str(target_tmp)],
-        capture_output=True
+        ["h5repack", "-f", "GZIP=9", str(target), str(target_tmp)], capture_output=True
     )
     if res.returncode != 0:
-        warnings.warn(f'h5repack did not return 0: {res.stderr} {res.stdout}')
+        warnings.warn(f"h5repack did not return 0: {res.stderr} {res.stdout}")
         # remove the attempt at the repack
         target_tmp.unlink()
         return target
@@ -344,5 +343,3 @@ def truncate_file(source: Path, target: Optional[Path] = None, n:int=10) -> Path
     target_tmp.rename(target)
 
     return target
-
-

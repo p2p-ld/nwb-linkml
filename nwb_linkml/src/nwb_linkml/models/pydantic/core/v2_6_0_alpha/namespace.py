@@ -3,28 +3,47 @@ from datetime import datetime, date
 from enum import Enum
 from typing import List, Dict, Optional, Any, Union, ClassVar
 from pydantic import BaseModel as BaseModel, Field
-from nptyping import Shape, Float, Float32, Double, Float64, LongLong, Int64, Int, Int32, Int16, Short, Int8, UInt, UInt32, UInt16, UInt8, UInt64, Number, String, Unicode, Unicode, Unicode, String, Bool, Datetime64
+from nptyping import (
+    Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
+)
 from nwb_linkml.types import NDArray
 import sys
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
 
 
-from ...hdmf_experimental.v0_1_0.hdmf_experimental_resources import (
-    ExternalResources
-)
+from ...hdmf_experimental.v0_1_0.hdmf_experimental_resources import ExternalResources
 
-from ...hdmf_common.v1_5_0.hdmf_common_sparse import (
-    CSRMatrix
-)
+from ...hdmf_common.v1_5_0.hdmf_common_sparse import CSRMatrix
 
-from ...hdmf_common.v1_5_0.hdmf_common_base import (
-    Data,
-    Container,
-    SimpleMultiContainer
-)
+from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container, SimpleMultiContainer
 
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     VectorData,
@@ -32,16 +51,12 @@ from ...hdmf_common.v1_5_0.hdmf_common_table import (
     ElementIdentifiers,
     DynamicTableRegion,
     DynamicTable,
-    AlignedDynamicTable
+    AlignedDynamicTable,
 )
 
-from ...hdmf_experimental.v0_1_0.hdmf_experimental_experimental import (
-    EnumData
-)
+from ...hdmf_experimental.v0_1_0.hdmf_experimental_experimental import EnumData
 
-from .core_nwb_retinotopy import (
-    ImagingRetinotopy
-)
+from .core_nwb_retinotopy import ImagingRetinotopy
 
 from .core_nwb_base import (
     NWBData,
@@ -52,7 +67,7 @@ from .core_nwb_base import (
     NWBDataInterface,
     TimeSeries,
     ProcessingModule,
-    Images
+    Images,
 )
 
 from .core_nwb_ophys import (
@@ -66,12 +81,10 @@ from .core_nwb_ophys import (
     ImagingPlane,
     OpticalChannel,
     MotionCorrection,
-    CorrectedImageStack
+    CorrectedImageStack,
 )
 
-from .core_nwb_device import (
-    Device
-)
+from .core_nwb_device import Device
 
 from .core_nwb_image import (
     GrayscaleImage,
@@ -80,13 +93,10 @@ from .core_nwb_image import (
     ImageSeries,
     ImageMaskSeries,
     OpticalSeries,
-    IndexSeries
+    IndexSeries,
 )
 
-from .core_nwb_ogen import (
-    OptogeneticSeries,
-    OptogeneticStimulusSite
-)
+from .core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
 
 from .core_nwb_icephys import (
     PatchClampSeries,
@@ -104,7 +114,7 @@ from .core_nwb_icephys import (
     SimultaneousRecordingsTable,
     SequentialRecordingsTable,
     RepetitionsTable,
-    ExperimentalConditionsTable
+    ExperimentalConditionsTable,
 )
 
 from .core_nwb_ecephys import (
@@ -117,7 +127,7 @@ from .core_nwb_ecephys import (
     LFP,
     ElectrodeGroup,
     ClusterWaveforms,
-    Clustering
+    Clustering,
 )
 
 from .core_nwb_behavior import (
@@ -128,7 +138,7 @@ from .core_nwb_behavior import (
     PupilTracking,
     EyeTracking,
     CompassDirection,
-    Position
+    Position,
 )
 
 from .core_nwb_misc import (
@@ -136,41 +146,36 @@ from .core_nwb_misc import (
     AnnotationSeries,
     IntervalSeries,
     DecompositionSeries,
-    Units
+    Units,
 )
 
-from .core_nwb_file import (
-    ScratchData,
-    NWBFile,
-    LabMetaData,
-    Subject
-)
+from .core_nwb_file import ScratchData, NWBFile, LabMetaData, Subject
 
-from .core_nwb_epoch import (
-    TimeIntervals
-)
+from .core_nwb_epoch import TimeIntervals
 
 
 metamodel_version = "None"
 version = "2.6.0-alpha"
 
-class ConfiguredBaseModel(BaseModel,
-                validate_assignment = True,
-                validate_default = True,
-                extra = 'forbid',
-                arbitrary_types_allowed = True,
-                use_enum_values = True):
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
-    
+
+class ConfiguredBaseModel(
+    BaseModel,
+    validate_assignment=True,
+    validate_default=True,
+    extra="forbid",
+    arbitrary_types_allowed=True,
+    use_enum_values=True,
+):
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
+
 
 class LinkML_Meta(BaseModel):
     """Extra LinkML Metadata stored as a class attribute"""
+
     tree_root: bool = False
-
-
-
 
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-    

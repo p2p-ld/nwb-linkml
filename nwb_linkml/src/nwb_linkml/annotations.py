@@ -1,6 +1,7 @@
 """
 Utility functions for introspection on python annotations
 """
+
 import typing
 from typing import Any, List
 
@@ -9,9 +10,10 @@ def unwrap_optional(annotation):
     if typing.get_origin(annotation) == typing.Union:
         args = typing.get_args(annotation)
 
-        if len(args) == 2 and args[1].__name__ == 'NoneType':
+        if len(args) == 2 and args[1].__name__ == "NoneType":
             annotation = args[0]
     return annotation
+
 
 def get_inner_types(annotation) -> List[Any]:
     types = []
@@ -24,4 +26,3 @@ def get_inner_types(annotation) -> List[Any]:
         else:
             types.extend(get_inner_types(arg))
     return types
-

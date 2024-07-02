@@ -12,9 +12,10 @@ pytest_collect_file = Sybil(
         DocTestParser(optionflags=ELLIPSIS + NORMALIZE_WHITESPACE),
         PythonCodeBlockParser(),
     ],
-    patterns=['*.py'],
+    patterns=["*.py"],
 ).pytest()
 
-@pytest.fixture(autouse=True, scope='session')
+
+@pytest.fixture(autouse=True, scope="session")
 def set_config_vars(tmp_output_dir):
-    os.environ['NWB_LINKML_CACHE_DIR'] = str(tmp_output_dir)
+    os.environ["NWB_LINKML_CACHE_DIR"] = str(tmp_output_dir)

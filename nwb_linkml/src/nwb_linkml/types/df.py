@@ -11,6 +11,7 @@ Pydantic models that behave like pandas dataframes
     pandas has been removed from dependencies for now, as it not used elsewhere, but it is
     left in this module since it is necessary for it to make sense.
 """
+
 import ast
 import pdb
 from typing import List, Any, get_origin, get_args, Union, Optional, Dict, Type
@@ -24,7 +25,7 @@ from pydantic import (
     model_serializer,
     SerializerFunctionWrapHandler,
     ConfigDict,
-    model_validator
+    model_validator,
 )
 
 from nwb_linkml.maps.hdmf import model_from_dynamictable, dereference_reference_vector
@@ -67,19 +68,20 @@ class DataFrame(BaseModel, pd.DataFrame):
 
     _df: pd.DataFrame = None
     model_config = ConfigDict(validate_assignment=True)
+
     def __init__(self, **kwargs):
         # pdb.set_trace()
         super().__init__(**kwargs)
 
         self._df = self.__make_df()
 
-
     def __make_df(self) -> pd.DataFrame:
         # make dict that can handle ragged arrays and NoneTypes
-        items = {k:v for k,v in self.__dict__.items() if k in self.model_fields}
+        items = {k: v for k, v in self.__dict__.items() if k in self.model_fields}
 
-        df_dict = {k: (pd.Series(v) if isinstance(v, list) else pd.Series([v]))
-                   for k,v in items.items()}
+        df_dict = {
+            k: (pd.Series(v) if isinstance(v, list) else pd.Series([v])) for k, v in items.items()
+        }
         df = pd.DataFrame(df_dict)
         # replace Nans with None
         df = df.fillna(np.nan).replace([np.nan], [None])
@@ -97,8 +99,8 @@ class DataFrame(BaseModel, pd.DataFrame):
         """
         Mimic pandas dataframe and pydantic model behavior
         """
-        if item in ('df', '_df'):
-            return self.__pydantic_private__['_df']
+        if item in ("df", "_df"):
+            return self.__pydantic_private__["_df"]
         elif item in self.model_fields.keys():
             return self._df[item]
         else:
@@ -107,14 +109,14 @@ class DataFrame(BaseModel, pd.DataFrame):
             except AttributeError:
                 return object.__getattribute__(self, item)
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def recreate_df(self):
         """
         Remake DF when validating (eg. when updating values on assignment)
         """
         self.update_df()
 
-    @model_serializer(mode='wrap', when_used='always')
+    @model_serializer(mode="wrap", when_used="always")
     def serialize_model(self, nxt: SerializerFunctionWrapHandler) -> Dict[str, Any]:
         """
         We don't handle values that are changed on the dataframe by directly
@@ -124,18 +126,15 @@ class DataFrame(BaseModel, pd.DataFrame):
         if self._df is None:
             return nxt(self)
         else:
-            out = self._df.to_dict('list')
+            out = self._df.to_dict("list")
             # remove Nones
-            out = {
-                k: [inner_v for inner_v in v if inner_v is not None]
-                for k, v in out.items()
-            }
+            out = {k: [inner_v for inner_v in v if inner_v is not None] for k, v in out.items()}
             return nxt(self.__class__(**out))
 
 
-def dynamictable_to_df(group:h5py.Group,
-                       model:Optional[Type[DataFrame]]=None,
-                       base:Optional[BaseModel] = None) -> DataFrame:
+def dynamictable_to_df(
+    group: h5py.Group, model: Optional[Type[DataFrame]] = None, base: Optional[BaseModel] = None
+) -> DataFrame:
     if model is None:
         model = model_from_dynamictable(group, base)
 
@@ -143,16 +142,16 @@ def dynamictable_to_df(group:h5py.Group,
     for col, col_type in model.model_fields.items():
         if col not in group.keys():
             continue
-        idxname = col + '_index'
+        idxname = col + "_index"
         if idxname in group.keys():
             idx = group.get(idxname)[:]
-            data = group.get(col)[idx-1]
+            data = group.get(col)[idx - 1]
         else:
             data = group.get(col)[:]
 
         # Handle typing inside of list
         if isinstance(data[0], bytes):
-            data = data.astype('unicode')
+            data = data.astype("unicode")
         if isinstance(data[0], str):
             # lists and other compound data types can get flattened out to strings when stored
             # so we try and literal eval and recover them
@@ -172,12 +171,14 @@ def dynamictable_to_df(group:h5py.Group,
                 data = eval_list
         elif isinstance(data[0], h5py.h5r.Reference):
             data = [HDF5_Path(group[d].name) for d in data]
-        elif isinstance(data[0], tuple) and any([isinstance(d, h5py.h5r.Reference) for d in data[0]]):
+        elif isinstance(data[0], tuple) and any(
+            [isinstance(d, h5py.h5r.Reference) for d in data[0]]
+        ):
             # references stored inside a tuple, reference + location.
             # dereference them!?
             dset = group.get(col)
             names = dset.dtype.names
-            if names is not None and names[0] == 'idx_start' and names[1] == 'count':
+            if names is not None and names[0] == "idx_start" and names[1] == "count":
                 data = dereference_reference_vector(dset, data)
 
         else:
@@ -186,10 +187,6 @@ def dynamictable_to_df(group:h5py.Group,
         # After list, check if we need to put this thing inside of
         # another class, as indicated by the enclosing model
 
-
-
         items[col] = data
 
-    return model(hdf5_path = group.name,
-                 name = group.name.split('/')[-1],
-                 **items)
+    return model(hdf5_path=group.name, name=group.name.split("/")[-1], **items)

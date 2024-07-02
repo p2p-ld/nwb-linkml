@@ -1,6 +1,7 @@
 """
 Loading/saving NWB Schema yaml files
 """
+
 from pathlib import Path
 from typing import Optional
 from pprint import pprint
@@ -8,23 +9,24 @@ from pprint import pprint
 from linkml_runtime.loaders import yaml_loader
 import yaml
 
-from nwb_schema_language import Namespaces,  Group, Dataset
+from nwb_schema_language import Namespaces, Group, Dataset
 from nwb_linkml.providers.git import NamespaceRepo, NWB_CORE_REPO, HDMF_COMMON_REPO
 from nwb_linkml.maps.postload import PHASES, KeyMap, apply_postload
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
 
 
-def load_yaml(path:Path|str) -> dict:
+def load_yaml(path: Path | str) -> dict:
     if isinstance(path, str) and not Path(path).exists():
         ns_dict = yaml.safe_load(path)
     else:
-        with open(path, 'r') as file:
+        with open(path, "r") as file:
             ns_dict = yaml.safe_load(file)
     ns_dict = apply_postload(ns_dict)
     return ns_dict
 
-def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
+
+def load_namespaces(path: Path | NamespaceRepo) -> Namespaces:
     """Loads the NWB SCHEMA LANGUAGE namespaces (not the namespacesadapter)"""
     if isinstance(path, NamespaceRepo):
         path = path.provide_from_git()
@@ -34,7 +36,8 @@ def load_namespaces(path:Path|NamespaceRepo) -> Namespaces:
     namespaces = yaml_loader.load(ns_dict, target_class=Namespaces)
     return namespaces
 
-def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
+
+def load_schema_file(path: Path, yaml: Optional[dict] = None) -> SchemaAdapter:
     """
     Load a single schema file within an NWB namespace.
 
@@ -54,7 +57,7 @@ def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
 
     datasets = []
 
-    for dataset in source.get('datasets', []):
+    for dataset in source.get("datasets", []):
         try:
             datasets.append(Dataset(**dataset))
         except Exception as e:
@@ -62,24 +65,21 @@ def load_schema_file(path:Path, yaml:Optional[dict] = None) -> SchemaAdapter:
             raise e
 
     groups = []
-    for group in source.get('groups', []):
+    for group in source.get("groups", []):
         try:
             groups.append(Group(**group))
         except Exception as e:
             pprint(group)
             raise e
 
-    schema = SchemaAdapter(
-        path=path,
-        datasets=datasets,
-        groups=groups
-    )
+    schema = SchemaAdapter(path=path, datasets=datasets, groups=groups)
     return schema
 
+
 def load_namespace_adapter(
-        namespace: Path | NamespaceRepo | Namespaces,
-        path:Optional[Path]=None,
-        version: Optional[str]=None
+    namespace: Path | NamespaceRepo | Namespaces,
+    path: Optional[Path] = None,
+    version: Optional[str] = None,
 ) -> NamespacesAdapter:
     """
     Load all schema referenced by a namespace file
@@ -94,7 +94,7 @@ def load_namespace_adapter(
         :class:`.NamespacesAdapter`
     """
     if path is None:
-        path = Path('..')
+        path = Path("..")
     elif isinstance(path, str):
         path = Path(path)
 
@@ -123,12 +123,10 @@ def load_namespace_adapter(
             yml_file = (path / schema.source).resolve()
             sch.append(load_schema_file(yml_file))
 
-    adapter = NamespacesAdapter(
-        namespaces=namespaces,
-        schemas=sch
-    )
+    adapter = NamespacesAdapter(namespaces=namespaces, schemas=sch)
 
     return adapter
+
 
 def load_nwb_core(core_version="2.6.0", hdmf_version="1.5.0") -> NamespacesAdapter:
     """
@@ -155,17 +153,3 @@ def load_nwb_core(core_version="2.6.0", hdmf_version="1.5.0") -> NamespacesAdapt
     schema.imported.append(hdmf_schema)
 
     return schema
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -17,5 +17,3 @@ class Map(ABC):
     @abstractmethod
     def apply(cls, *args, **kwargs) -> Any:
         """Actually apply the map!"""
-
-

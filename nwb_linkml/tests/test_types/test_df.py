@@ -3,6 +3,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from typing import List, Union, Optional
 
+
 @pytest.mark.skip()
 def test_df():
     """
@@ -14,20 +15,16 @@ def test_df():
     class MyDf(DataFrame):
         ints: List[int]
         strings: List[str]
-        multi:  List[int | str]
+        multi: List[int | str]
         opts: Optional[List[int]] = None
 
     good_kwargs = {
-        'ints': [1,2,3],
-        'strings': ['a','b','c'],
-        'multi': [1,2,'a','d'],
-        'opts': []
+        "ints": [1, 2, 3],
+        "strings": ["a", "b", "c"],
+        "multi": [1, 2, "a", "d"],
+        "opts": [],
     }
-    bad_kwargs = {
-        'ints': ['a','b','c'],
-        'strings': [1,2,3],
-        'multi': 'd'
-    }
+    bad_kwargs = {"ints": ["a", "b", "c"], "strings": [1, 2, 3], "multi": "d"}
     df = MyDf(**good_kwargs)
     assert isinstance(df, BaseModel)
     assert isinstance(df, pd.DataFrame)
@@ -41,20 +38,19 @@ def test_df():
     _ = df.model_json_schema()
 
     # can we do pandas stuff
-    assert df['ints'].sum() == 6
-    assert df.loc[2].to_list() == [3, 'c', 'a', None]
+    assert df["ints"].sum() == 6
+    assert df.loc[2].to_list() == [3, "c", "a", None]
     # lmao
 
     # we don't include the model when dumping/doing the schema
-    assert 'df' not in df.model_json_schema()
-    assert '_df' not in df.model_json_schema()
+    assert "df" not in df.model_json_schema()
+    assert "_df" not in df.model_json_schema()
 
     # we update our dataframe when we assign
-    assert df.ints == good_kwargs['ints']
-    assert df['ints'].tolist()[0:3] == good_kwargs['ints']
-    df.ints = [1,2,3,4]
-    assert df.ints == [1,2,3,4]
-    assert (df['ints'] == pd.Series([1,2,3,4])).all()
+    assert df.ints == good_kwargs["ints"]
+    assert df["ints"].tolist()[0:3] == good_kwargs["ints"]
+    df.ints = [1, 2, 3, 4]
+    assert df.ints == [1, 2, 3, 4]
+    assert (df["ints"] == pd.Series([1, 2, 3, 4])).all()
 
-    df['ints'] = df['ints']._append(pd.Series(5))
-
+    df["ints"] = df["ints"]._append(pd.Series(5))
