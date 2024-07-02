@@ -2,6 +2,7 @@
 Base class for adapters
 """
 
+import sys
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import (
@@ -15,7 +16,6 @@ from typing import (
     Union,
     Unpack,
 )
-import sys
 
 from linkml_runtime.linkml_model import (
     ClassDefinition,
