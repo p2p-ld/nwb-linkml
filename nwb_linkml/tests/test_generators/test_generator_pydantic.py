@@ -237,7 +237,7 @@ def test_inline_with_identifier(imported_schema):
     """
     main = imported_schema["core"].MainTopLevel
     inline = main.model_fields["inline_dict"].annotation
-    assert typing.get_origin(typing.get_args(inline)[0]) == dict
+    assert typing.get_origin(typing.get_args(inline)[0]) is dict
     # god i hate pythons typing interface
     otherclass, stillanother = typing.get_args(typing.get_args(typing.get_args(inline)[0])[1])
     assert otherclass is imported_schema["core"].OtherClass
