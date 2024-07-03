@@ -115,9 +115,84 @@ def patch_schemaview() -> None:
 
     SchemaView.imports_closure = imports_closure
 
+def patch_array_expression() -> None:
+    """
+    Allow SlotDefinitions to use `any_of` with `array`
+
+    see: https://github.com/linkml/linkml-model/issues/199
+    """
+    from dataclasses import make_dataclass, field
+    from linkml_runtime.linkml_model import meta
+    from typing import Optional
+    new_dataclass = make_dataclass('AnonymousSlotExpression', fields=[('array', Optional[meta.ArrayExpression], field(default=None))], bases=(meta.AnonymousSlotExpression,))
+    meta.AnonymousSlotExpression = new_dataclass
+
+def patch_pretty_print() -> None:
+    """
+    Fix the godforsaken linkml dataclass reprs
+
+    See: https://github.com/linkml/linkml-runtime/pull/314
+    """
+    import re
+    from pprint import pformat
+    from typing import Any
+    import textwrap
+    from dataclasses import is_dataclass, make_dataclass, field
+    from linkml_runtime.linkml_model import meta
+    from linkml_runtime.utils.formatutils import items
+
+    def _pformat(fields: dict, cls_name: str, indent: str = '  ') -> str:
+        """
+        pretty format the fields of the items of a ``YAMLRoot`` object without the wonky indentation of pformat.
+        see ``YAMLRoot.__repr__``.
+        formatting is similar to black - items at similar levels of nesting have similar levels of indentation,
+        rather than getting placed at essentially random levels of indentation depending on what came before them.
+        """
+        res = []
+        total_len = 0
+        for key, val in fields:
+            if val == [] or val == {} or val is None:
+                continue
+            # pformat handles everything else that isn't a YAMLRoot object, but it sure does look ugly
+            # use it to split lines and as the thing of last resort, but otherwise indent = 0, we'll do that
+            val_str = pformat(val, indent=0, compact=True, sort_dicts=False)
+            # now we indent everything except the first line by indenting and then using regex to remove just the first indent
+            val_str = re.sub(rf'\A{re.escape(indent)}', '', textwrap.indent(val_str, indent))
+            # now recombine with the key in a format that can be re-eval'd into an object if indent is just whitespace
+            val_str = f"'{key}': " + val_str
+
+            # count the total length of this string so we know if we need to linebreak or not later
+            total_len += len(val_str)
+            res.append(val_str)
+
+        if total_len > 80:
+            inside = ',\n'.join(res)
+            # we indent twice - once for the inner contents of every inner object, and one to
+            # offset from the root element. that keeps us from needing to be recursive except for the
+            # single pformat call
+            inside = textwrap.indent(inside, indent)
+            return cls_name + '({\n' + inside + '\n})'
+        else:
+            return cls_name + '({' + ', '.join(res) + '})'
+
+    def __repr__(self):
+        return _pformat(items(self), self.__class__.__name__)
+
+    for cls_name in dir(meta):
+        cls = getattr(meta, cls_name)
+        if is_dataclass(cls):
+            new_dataclass = make_dataclass(cls.__name__,fields=[('__dummy__', Any,  field(default=None))], bases=(cls,), repr=False)
+            new_dataclass.__repr__ = __repr__
+            new_dataclass.__str__ = __repr__
+            setattr(meta, cls.__name__, new_dataclass)
+
+
+
 
 def apply_patches() -> None:
     """Apply all monkeypatches"""
     patch_npytyping_perf()
     patch_nptyping_warnings()
     patch_schemaview()
+    patch_array_expression()
+    patch_pretty_print()

@@ -5,8 +5,14 @@ Adapter for NWB datasets to linkml Classes
 from abc import abstractmethod
 from typing import Optional
 
-from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+from linkml_runtime.linkml_model.meta import (
+    ClassDefinition,
+    SlotDefinition,
+    ArrayExpression,
+    DimensionExpression,
+)
 
+from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.adapter import BuildResult
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
@@ -233,19 +239,20 @@ class MapArraylike(DatasetMap):
         """
         Map to an array class and the adjoining slot
         """
-        array_class = make_arraylike(cls, name)
+        array_adapter = ArrayAdapter(cls.dims, cls.shape)
+        expressions = array_adapter.make_slot()
         name = camel_to_snake(cls.name)
         res = BuildResult(
             slots=[
                 SlotDefinition(
                     name=name,
                     multivalued=False,
-                    range=array_class.name,
+                    range=ClassAdapter.handle_dtype(cls.dtype),
                     description=cls.doc,
                     required=cls.quantity not in ("*", "?"),
+                    **expressions
                 )
-            ],
-            classes=[array_class],
+            ]
         )
         return res
 
@@ -287,12 +294,11 @@ class MapArrayLikeAttributes(DatasetMap):
         """
         Map to an arraylike class
         """
-        array_class = make_arraylike(cls, name)
+        array_adapter = ArrayAdapter(cls.dims, cls.shape)
+        expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
-        array_slot = SlotDefinition(name="array", range=array_class.name)
-
-        res.classes.append(array_class)
-        res.classes[0].attributes.update({"array": array_slot})
+        array_slot = SlotDefinition(name="array", range=ClassAdapter.handle_dtype(cls.dtype), **expressions)
+        res.classes[0].attributes.update({'array':array_slot})
         return res
 
 
@@ -405,7 +411,7 @@ class DatasetAdapter(ClassAdapter):
         return res
 
 
-def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
+def make_array_range(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
     """
     Create a containing arraylike class
 

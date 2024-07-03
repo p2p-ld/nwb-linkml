@@ -36,7 +36,7 @@ def test_build_base(nwb_schema):
     assert len(base.classes) == 1
     img = base.classes[0]
     assert len(img.attributes) == 4
-    assert img.attributes["newslot"] is slot
+    assert img.attributes["newslot"] == slot
 
 
 def test_get_attr_name():
