@@ -1,4 +1,11 @@
 name: core.nwb.misc
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.misc
 version: 2.2.0
 imports:
@@ -35,13 +42,19 @@ classes:
       feature_units:
         name: feature_units
         description: Units of each feature.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_features
         range: text
         required: false
       features:
         name: features
         description: Description of the features represented in TimeSeries::data.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_features
         range: text
         required: true
     tree_root: true
@@ -64,19 +77,15 @@ classes:
         range: text
       array:
         name: array
-        range: AbstractFeatureSeries__data__Array
-  AbstractFeatureSeries__data__Array:
-    name: AbstractFeatureSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
         range: numeric
-        required: true
-      num_features:
-        name: num_features
-        range: numeric
-        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_features
   AnnotationSeries:
     name: AnnotationSeries
     description: Stores user annotations made during an experiment. The data[] field
@@ -93,7 +102,10 @@ classes:
       data:
         name: data
         description: Annotations made during an experiment.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_times
         range: text
         required: true
     tree_root: true
@@ -116,7 +128,10 @@ classes:
       data:
         name: data
         description: Use values >0 if interval started, <0 if interval ended.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_times
         range: int8
         required: true
     tree_root: true
@@ -169,23 +184,12 @@ classes:
         range: text
       array:
         name: array
-        range: DecompositionSeries__data__Array
-  DecompositionSeries__data__Array:
-    name: DecompositionSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
+        array:
+          dimensions:
+          - alias: num_times
+          - alias: num_channels
+          - alias: num_bands
         range: numeric
-        required: true
-      num_channels:
-        name: num_channels
-        range: numeric
-        required: true
-      num_bands:
-        name: num_bands
-        range: numeric
-        required: true
   DecompositionSeries__bands:
     name: DecompositionSeries__bands
     description: Table for describing the bands that this series was generated from.
@@ -209,33 +213,31 @@ classes:
         description: Low and high limit of each band in Hz. If it is a Gaussian filter,
           use 2 SD on either side of the center.
         multivalued: false
-        range: DecompositionSeries__bands__band_limits
+        array:
+          dimensions:
+          - alias: num_bands
+          - alias: low, high
+            exact_cardinality: 2
+        range: float32
         required: true
       band_mean:
         name: band_mean
         description: The mean Gaussian filters, in Hz.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_bands
         range: float32
         required: true
       band_stdev:
         name: band_stdev
         description: The standard deviation of Gaussian filters, in Hz.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_bands
         range: float32
         required: true
-  DecompositionSeries__bands__band_limits:
-    name: DecompositionSeries__bands__band_limits
-    description: Low and high limit of each band in Hz. If it is a Gaussian filter,
-      use 2 SD on either side of the center.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(band_limits)
-        identifier: true
-        range: string
-        required: true
-        equals_string: band_limits
   Units:
     name: Units
     description: Data about spiking units. Event times of observed units (e.g. cell,
@@ -269,7 +271,12 @@ classes:
         name: obs_intervals
         description: Observation intervals for each unit.
         multivalued: false
-        range: Units__obs_intervals
+        array:
+          dimensions:
+          - alias: num_intervals
+          - alias: start|end
+            exact_cardinality: 2
+        range: float64
         required: false
       electrodes_index:
         name: electrodes_index
@@ -292,14 +299,34 @@ classes:
         name: waveform_mean
         description: Spike waveform mean for each spike unit.
         multivalued: false
-        range: Units__waveform_mean
+        range: float32
         required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+            - alias: num_electrodes
       waveform_sd:
         name: waveform_sd
         description: Spike waveform standard deviation for each spike unit.
         multivalued: false
-        range: Units__waveform_sd
+        range: float32
         required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+            - alias: num_electrodes
     tree_root: true
   Units__spike_times_index:
     name: Units__spike_times_index
@@ -345,18 +372,6 @@ classes:
         range: string
         required: true
         equals_string: obs_intervals_index
-  Units__obs_intervals:
-    name: Units__obs_intervals
-    description: Observation intervals for each unit.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(obs_intervals)
-        identifier: true
-        range: string
-        required: true
-        equals_string: obs_intervals
   Units__electrodes_index:
     name: Units__electrodes_index
     description: Index into electrodes.
@@ -381,43 +396,3 @@ classes:
         range: string
         required: true
         equals_string: electrodes
-  Units__waveform_mean:
-    name: Units__waveform_mean
-    description: Spike waveform mean for each spike unit.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveform_mean)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveform_mean
-      sampling_rate:
-        name: sampling_rate
-        description: Sampling rate, in hertz.
-        range: float32
-      unit:
-        name: unit
-        description: Unit of measurement. This value is fixed to 'volts'.
-        range: text
-  Units__waveform_sd:
-    name: Units__waveform_sd
-    description: Spike waveform standard deviation for each spike unit.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveform_sd)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveform_sd
-      sampling_rate:
-        name: sampling_rate
-        description: Sampling rate, in hertz.
-        range: float32
-      unit:
-        name: unit
-        description: Unit of measurement. This value is fixed to 'volts'.
-        range: text

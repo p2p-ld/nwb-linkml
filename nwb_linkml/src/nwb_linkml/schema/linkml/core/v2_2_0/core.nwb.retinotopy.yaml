@@ -1,4 +1,11 @@
 name: core.nwb.retinotopy
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.retinotopy
 version: 2.2.0
 imports:
@@ -28,20 +35,12 @@ classes:
         range: float32
       array:
         name: array
-        range: RetinotopyMap__Array
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
+        range: float32
     tree_root: true
-  RetinotopyMap__Array:
-    name: RetinotopyMap__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   AxisMap:
     name: AxisMap
     description: Abstract two-dimensional map of responses to stimuli along a single
@@ -59,20 +58,12 @@ classes:
         range: text
       array:
         name: array
-        range: AxisMap__Array
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
+        range: float32
     tree_root: true
-  AxisMap__Array:
-    name: AxisMap__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
-        range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   RetinotopyImage:
     name: RetinotopyImage
     description: 'Gray-scale image related to retinotopic mapping. Array structure:
@@ -155,7 +146,11 @@ classes:
         description: Two-element array describing the contents of the two response
           axis fields. Description should be something like ['altitude', 'azimuth']
           or '['radius', 'theta'].
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_axes
+            exact_cardinality: 2
         range: text
         required: true
       focal_depth_image:

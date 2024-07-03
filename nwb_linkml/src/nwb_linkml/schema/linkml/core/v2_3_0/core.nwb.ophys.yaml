@@ -1,4 +1,11 @@
 name: core.nwb.ophys
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.ophys
 version: 2.3.0
 imports:
@@ -33,39 +40,18 @@ classes:
         name: field_of_view
         description: Width, height and depth of image, or imaged area, in meters.
         multivalued: false
-        range: TwoPhotonSeries__field_of_view
+        range: float32
         required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: width|height
+              exact_cardinality: 2
+        - array:
+            dimensions:
+            - alias: width|height|depth
+              exact_cardinality: 3
     tree_root: true
-  TwoPhotonSeries__field_of_view:
-    name: TwoPhotonSeries__field_of_view
-    description: Width, height and depth of image, or imaged area, in meters.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(field_of_view)
-        identifier: true
-        range: string
-        required: true
-        equals_string: field_of_view
-      array:
-        name: array
-        range: TwoPhotonSeries__field_of_view__Array
-  TwoPhotonSeries__field_of_view__Array:
-    name: TwoPhotonSeries__field_of_view__Array
-    is_a: Arraylike
-    attributes:
-      width|height:
-        name: width|height
-        range: float32
-        required: false
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-      width|height|depth:
-        name: width|height|depth
-        range: float32
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
   RoiResponseSeries:
     name: RoiResponseSeries
     description: ROI responses over an imaging plane. The first dimension represents
@@ -81,8 +67,16 @@ classes:
         name: data
         description: Signals from ROIs.
         multivalued: false
-        range: RoiResponseSeries__data
+        range: numeric
         required: true
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_ROIs
       rois:
         name: rois
         description: DynamicTableRegion referencing into an ROITable containing information
@@ -91,32 +85,6 @@ classes:
         range: RoiResponseSeries__rois
         required: true
     tree_root: true
-  RoiResponseSeries__data:
-    name: RoiResponseSeries__data
-    description: Signals from ROIs.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(data)
-        identifier: true
-        range: string
-        required: true
-        equals_string: data
-      array:
-        name: array
-        range: RoiResponseSeries__data__Array
-  RoiResponseSeries__data__Array:
-    name: RoiResponseSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
-        range: numeric
-        required: true
-      num_ROIs:
-        name: num_ROIs
-        range: numeric
-        required: false
   RoiResponseSeries__rois:
     name: RoiResponseSeries__rois
     description: DynamicTableRegion referencing into an ROITable containing information
@@ -137,12 +105,13 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: RoiResponseSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
     tree_root: true
   Fluorescence:
     name: Fluorescence
@@ -151,12 +120,13 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: RoiResponseSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
     tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
@@ -169,12 +139,13 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: PlaneSegmentation
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: PlaneSegmentation
     tree_root: true
   PlaneSegmentation:
     name: PlaneSegmentation
@@ -191,8 +162,20 @@ classes:
         description: ROI masks for each ROI. Each image mask is the size of the original
           imaging plane (or volume) and members of the ROI are finite non-zero.
         multivalued: false
-        range: PlaneSegmentation__image_mask
+        range: AnyType
         required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_roi
+            - alias: num_x
+            - alias: num_y
+        - array:
+            dimensions:
+            - alias: num_roi
+            - alias: num_x
+            - alias: num_y
+            - alias: num_z
       pixel_mask_index:
         name: pixel_mask_index
         description: Index into pixel_mask.
@@ -228,19 +211,6 @@ classes:
         any_of:
         - range: ImageSeries
     tree_root: true
-  PlaneSegmentation__image_mask:
-    name: PlaneSegmentation__image_mask
-    description: ROI masks for each ROI. Each image mask is the size of the original
-      imaging plane (or volume) and members of the ROI are finite non-zero.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(image_mask)
-        identifier: true
-        range: string
-        required: true
-        equals_string: image_mask
   PlaneSegmentation__pixel_mask_index:
     name: PlaneSegmentation__pixel_mask_index
     description: Index into pixel_mask.
@@ -270,12 +240,13 @@ classes:
     description: An imaging plane and its metadata.
     is_a: NWBContainer
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: OpticalChannel
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: OpticalChannel
     tree_root: true
   OpticalChannel:
     name: OpticalChannel
@@ -307,12 +278,13 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: CorrectedImageStack
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: CorrectedImageStack
     tree_root: true
   CorrectedImageStack:
     name: CorrectedImageStack

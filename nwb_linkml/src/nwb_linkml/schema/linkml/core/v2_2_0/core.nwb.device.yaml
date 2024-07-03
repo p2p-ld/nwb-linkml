@@ -1,4 +1,11 @@
 name: core.nwb.device
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.device
 version: 2.2.0
 imports:

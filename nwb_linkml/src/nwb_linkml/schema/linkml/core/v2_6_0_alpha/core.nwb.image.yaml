@@ -1,4 +1,11 @@
 name: core.nwb.image
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.image
 version: 2.6.0-alpha
 imports:
@@ -17,22 +24,7 @@ classes:
         identifier: true
         range: string
         required: true
-      array:
-        name: array
-        range: GrayscaleImage__Array
     tree_root: true
-  GrayscaleImage__Array:
-    name: GrayscaleImage__Array
-    is_a: Arraylike
-    attributes:
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
   RGBImage:
     name: RGBImage
     description: A color image.
@@ -43,28 +35,7 @@ classes:
         identifier: true
         range: string
         required: true
-      array:
-        name: array
-        range: RGBImage__Array
     tree_root: true
-  RGBImage__Array:
-    name: RGBImage__Array
-    is_a: Arraylike
-    attributes:
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
-      r, g, b:
-        name: r, g, b
-        range: numeric
-        required: true
-        minimum_cardinality: 3
-        maximum_cardinality: 3
   RGBAImage:
     name: RGBAImage
     description: A color image with transparency.
@@ -75,28 +46,7 @@ classes:
         identifier: true
         range: string
         required: true
-      array:
-        name: array
-        range: RGBAImage__Array
     tree_root: true
-  RGBAImage__Array:
-    name: RGBAImage__Array
-    is_a: Arraylike
-    attributes:
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
-      r, g, b, a:
-        name: r, g, b, a
-        range: numeric
-        required: true
-        minimum_cardinality: 4
-        maximum_cardinality: 4
   ImageSeries:
     name: ImageSeries
     description: General image data that is common between acquisition and stimulus
@@ -117,12 +67,27 @@ classes:
         description: Binary data representing images across frames. If data are stored
           in an external file, this should be an empty 3D array.
         multivalued: false
-        range: ImageSeries__data
+        range: numeric
         required: true
+        any_of:
+        - array:
+            dimensions:
+            - alias: frame
+            - alias: x
+            - alias: y
+        - array:
+            dimensions:
+            - alias: frame
+            - alias: x
+            - alias: y
+            - alias: z
       dimension:
         name: dimension
         description: Number of pixels on x, y, (and z) axes.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: rank
         range: int32
         required: false
       external_file:
@@ -132,8 +97,8 @@ classes:
           in the file system as one or more image file(s). This field should NOT be
           used if the image is stored in another NWB file and that file is linked
           to this file.
-        multivalued: true
-        range: text
+        multivalued: false
+        range: ImageSeries__external_file
         required: false
       format:
         name: format
@@ -145,41 +110,41 @@ classes:
         range: text
         required: false
     tree_root: true
-  ImageSeries__data:
-    name: ImageSeries__data
-    description: Binary data representing images across frames. If data are stored
-      in an external file, this should be an empty 3D array.
+  ImageSeries__external_file:
+    name: ImageSeries__external_file
+    description: Paths to one or more external file(s). The field is only present
+      if format='external'. This is only relevant if the image series is stored in
+      the file system as one or more image file(s). This field should NOT be used
+      if the image is stored in another NWB file and that file is linked to this file.
     attributes:
       name:
         name: name
-        ifabsent: string(data)
+        ifabsent: string(external_file)
         identifier: true
         range: string
         required: true
-        equals_string: data
+        equals_string: external_file
+      starting_frame:
+        name: starting_frame
+        description: Each external image may contain one or more consecutive frames
+          of the full ImageSeries. This attribute serves as an index to indicate which
+          frames each file contains, to faciliate random access. The 'starting_frame'
+          attribute, hence, contains a list of frame numbers within the full ImageSeries
+          of the first frame of each file listed in the parent 'external_file' dataset.
+          Zero-based indexing is used (hence, the first element will always be zero).
+          For example, if the 'external_file' dataset has three paths to files and
+          the first file has 5 frames, the second file has 10 frames, and the third
+          file has 20 frames, then this attribute will have values [0, 5, 15]. If
+          there is a single external file that holds all of the frames of the ImageSeries
+          (and so there is a single element in the 'external_file' dataset), then
+          this attribute should have value [0].
+        range: int32
       array:
         name: array
-        range: ImageSeries__data__Array
-  ImageSeries__data__Array:
-    name: ImageSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      frame:
-        name: frame
-        range: numeric
-        required: true
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
-      z:
-        name: z
-        range: numeric
-        required: false
+        array:
+          dimensions:
+          - alias: num_files
+        range: text
   ImageMaskSeries:
     name: ImageMaskSeries
     description: An alpha mask that is applied to a presented visual stimulus. The
@@ -219,14 +184,36 @@ classes:
         name: field_of_view
         description: Width, height and depth of image, or imaged area, in meters.
         multivalued: false
-        range: OpticalSeries__field_of_view
+        range: float32
         required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: width, height
+              exact_cardinality: 2
+        - array:
+            dimensions:
+            - alias: width, height, depth
+              exact_cardinality: 3
       data:
         name: data
         description: Images presented to subject, either grayscale or RGB
         multivalued: false
-        range: OpticalSeries__data
+        range: numeric
         required: true
+        any_of:
+        - array:
+            dimensions:
+            - alias: frame
+            - alias: x
+            - alias: y
+        - array:
+            dimensions:
+            - alias: frame
+            - alias: x
+            - alias: y
+            - alias: r, g, b
+              exact_cardinality: 3
       orientation:
         name: orientation
         description: Description of image relative to some reference frame (e.g.,
@@ -235,72 +222,6 @@ classes:
         range: text
         required: false
     tree_root: true
-  OpticalSeries__field_of_view:
-    name: OpticalSeries__field_of_view
-    description: Width, height and depth of image, or imaged area, in meters.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(field_of_view)
-        identifier: true
-        range: string
-        required: true
-        equals_string: field_of_view
-      array:
-        name: array
-        range: OpticalSeries__field_of_view__Array
-  OpticalSeries__field_of_view__Array:
-    name: OpticalSeries__field_of_view__Array
-    is_a: Arraylike
-    attributes:
-      width, height:
-        name: width, height
-        range: float32
-        required: false
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-      width, height, depth:
-        name: width, height, depth
-        range: float32
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
-  OpticalSeries__data:
-    name: OpticalSeries__data
-    description: Images presented to subject, either grayscale or RGB
-    attributes:
-      name:
-        name: name
-        ifabsent: string(data)
-        identifier: true
-        range: string
-        required: true
-        equals_string: data
-      array:
-        name: array
-        range: OpticalSeries__data__Array
-  OpticalSeries__data__Array:
-    name: OpticalSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      frame:
-        name: frame
-        range: numeric
-        required: true
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
-      r, g, b:
-        name: r, g, b
-        range: numeric
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
   IndexSeries:
     name: IndexSeries
     description: Stores indices to image frames stored in an ImageSeries. The purpose
@@ -321,7 +242,10 @@ classes:
         name: data
         description: Index of the image (using zero-indexing) in the linked Images
           object.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_times
         range: uint32
         required: true
     tree_root: true

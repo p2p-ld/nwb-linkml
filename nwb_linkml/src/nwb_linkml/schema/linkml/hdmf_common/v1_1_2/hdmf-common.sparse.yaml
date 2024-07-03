@@ -1,4 +1,11 @@
 name: hdmf-common.sparse
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
 id: hdmf-common.sparse
 version: 1.1.2
 imports:

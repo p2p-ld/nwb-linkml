@@ -1,4 +1,11 @@
 name: hdmf-experimental.nwb.language
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: 'False'
+  namespace:
+    tag: namespace
+    value: core
 description: Adapter objects to mimic the behavior of elements in the nwb-schema-language
 id: nwb.language
 imports:

@@ -1,8 +1,11 @@
 name: core
 annotations:
+  is_namespace:
+    tag: is_namespace
+    value: true
   namespace:
     tag: namespace
-    value: 'True'
+    value: core
 description: NWB namespace
 id: core
 version: 2.6.0-alpha

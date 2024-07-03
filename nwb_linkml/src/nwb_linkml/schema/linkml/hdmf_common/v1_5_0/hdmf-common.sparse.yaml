@@ -1,4 +1,11 @@
 name: hdmf-common.sparse
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
 id: hdmf-common.sparse
 version: 1.5.0
 imports:
@@ -26,19 +33,28 @@ classes:
       indices:
         name: indices
         description: The column indices.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: number of non-zero values
         range: uint
         required: true
       indptr:
         name: indptr
         description: The row index pointer.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: number of rows in the matrix + 1
         range: uint
         required: true
       data:
         name: data
         description: The non-zero values in the matrix.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: number of non-zero values
         range: AnyType
         required: true
     tree_root: true

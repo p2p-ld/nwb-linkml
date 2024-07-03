@@ -1,4 +1,11 @@
 name: core.nwb.base
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.base
 version: 2.3.0
 imports:
@@ -40,32 +47,25 @@ classes:
         range: text
       array:
         name: array
-        range: Image__Array
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+            - alias: r, g, b
+              exact_cardinality: 3
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+            - alias: r, g, b, a
+              exact_cardinality: 4
     tree_root: true
-  Image__Array:
-    name: Image__Array
-    is_a: Arraylike
-    attributes:
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
-      r, g, b:
-        name: r, g, b
-        range: numeric
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
-      r, g, b, a:
-        name: r, g, b, a
-        range: numeric
-        required: false
-        minimum_cardinality: 4
-        maximum_cardinality: 4
   NWBContainer:
     name: NWBContainer
     description: An abstract data type for a generic container storing collections
@@ -131,7 +131,10 @@ classes:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
           the common experiment master-clock stored in NWBFile.timestamps_reference_time.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_times
         range: float64
         required: false
       control:
@@ -139,7 +142,10 @@ classes:
         description: Numerical labels that apply to each time point in data for the
           purpose of querying and slicing data by these values. If present, the length
           of this array should be the same size as the first dimension of data.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_times
         range: uint8
         required: false
       control_description:
@@ -147,7 +153,10 @@ classes:
         description: Description of each control value. Must be present if control
           is present. If present, control_description[0] should describe time points
           where control == 0.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_control_values
         range: text
         required: false
       sync:
@@ -214,27 +223,26 @@ classes:
         range: text
       array:
         name: array
-        range: TimeSeries__data__Array
-  TimeSeries__data__Array:
-    name: TimeSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
         range: AnyType
-        required: true
-      num_DIM2:
-        name: num_DIM2
-        range: AnyType
-        required: false
-      num_DIM3:
-        name: num_DIM3
-        range: AnyType
-        required: false
-      num_DIM4:
-        name: num_DIM4
-        range: AnyType
-        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_DIM2
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_DIM2
+            - alias: num_DIM3
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_DIM2
+            - alias: num_DIM3
+            - alias: num_DIM4
   TimeSeries__starting_time:
     name: TimeSeries__starting_time
     description: Timestamp of the first sample in seconds. When timestamps are uniformly
@@ -281,13 +289,14 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: NWBDataInterface
-      - range: DynamicTable
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
     tree_root: true
   Images:
     name: Images

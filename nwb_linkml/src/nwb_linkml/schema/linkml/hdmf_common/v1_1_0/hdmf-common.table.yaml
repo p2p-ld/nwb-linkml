@@ -1,4 +1,11 @@
 name: hdmf-common.table
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
 id: hdmf-common.table
 version: 1.1.0
 imports:
@@ -80,18 +87,7 @@ classes:
         identifier: true
         range: string
         required: true
-      array:
-        name: array
-        range: ElementIdentifiers__Array
     tree_root: true
-  ElementIdentifiers__Array:
-    name: ElementIdentifiers__Array
-    is_a: Arraylike
-    attributes:
-      num_elements:
-        name: num_elements
-        range: int
-        required: true
   DynamicTableRegion:
     name: DynamicTableRegion
     description: DynamicTableRegion provides a link from one table to an index or
@@ -173,7 +169,10 @@ classes:
       id:
         name: id
         description: Array of unique identifiers for the rows of this dynamic table.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_rows
         range: int
         required: true
       vector_data:

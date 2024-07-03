@@ -1,4 +1,11 @@
 name: core.nwb.icephys
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.icephys
 version: 2.2.2
 imports:
@@ -30,8 +37,8 @@ classes:
       data:
         name: data
         description: Recorded voltage or current.
-        multivalued: true
-        range: numeric
+        multivalued: false
+        range: PatchClampSeries__data
         required: true
       gain:
         name: gain
@@ -41,6 +48,29 @@ classes:
         range: float32
         required: false
     tree_root: true
+  PatchClampSeries__data:
+    name: PatchClampSeries__data
+    description: Recorded voltage or current.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+      array:
+        name: array
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   CurrentClampSeries:
     name: CurrentClampSeries
     description: Voltage data from an intracellular current-clamp recording. A corresponding

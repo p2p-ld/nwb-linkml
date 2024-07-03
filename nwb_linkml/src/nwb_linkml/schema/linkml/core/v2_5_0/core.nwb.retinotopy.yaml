@@ -1,4 +1,11 @@
 name: core.nwb.retinotopy
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.retinotopy
 version: 2.5.0
 imports:
@@ -55,7 +62,11 @@ classes:
         description: Two-element array describing the contents of the two response
           axis fields. Description should be something like ['altitude', 'azimuth']
           or '['radius', 'theta'].
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: axis_1, axis_2
+            exact_cardinality: 2
         range: text
         required: true
       focal_depth_image:
@@ -106,19 +117,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_1_phase_map__Array
-  ImagingRetinotopy__axis_1_phase_map__Array:
-    name: ImagingRetinotopy__axis_1_phase_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__axis_1_power_map:
     name: ImagingRetinotopy__axis_1_power_map
     description: Power response on the first measured axis. Response is scaled so
@@ -146,19 +149,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_1_power_map__Array
-  ImagingRetinotopy__axis_1_power_map__Array:
-    name: ImagingRetinotopy__axis_1_power_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__axis_2_phase_map:
     name: ImagingRetinotopy__axis_2_phase_map
     description: Phase response to stimulus on the second measured axis.
@@ -185,19 +180,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_2_phase_map__Array
-  ImagingRetinotopy__axis_2_phase_map__Array:
-    name: ImagingRetinotopy__axis_2_phase_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__axis_2_power_map:
     name: ImagingRetinotopy__axis_2_power_map
     description: Power response on the second measured axis. Response is scaled so
@@ -225,19 +212,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_2_power_map__Array
-  ImagingRetinotopy__axis_2_power_map__Array:
-    name: ImagingRetinotopy__axis_2_power_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__focal_depth_image:
     name: ImagingRetinotopy__focal_depth_image
     description: 'Gray-scale image taken with same settings/parameters (e.g., focal
@@ -274,19 +253,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__focal_depth_image__Array
-  ImagingRetinotopy__focal_depth_image__Array:
-    name: ImagingRetinotopy__focal_depth_image__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: uint16
-        required: true
-      num_cols:
-        name: num_cols
-        range: uint16
-        required: true
   ImagingRetinotopy__sign_map:
     name: ImagingRetinotopy__sign_map
     description: Sine of the angle between the direction of the gradient in axis_1
@@ -310,19 +281,11 @@ classes:
         range: float32
       array:
         name: array
-        range: ImagingRetinotopy__sign_map__Array
-  ImagingRetinotopy__sign_map__Array:
-    name: ImagingRetinotopy__sign_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__vasculature_image:
     name: ImagingRetinotopy__vasculature_image
     description: 'Gray-scale anatomical image of cortical surface. Array structure:
@@ -355,16 +318,8 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__vasculature_image__Array
-  ImagingRetinotopy__vasculature_image__Array:
-    name: ImagingRetinotopy__vasculature_image__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: uint16
-        required: true
-      num_cols:
-        name: num_cols
-        range: uint16
-        required: true

@@ -1,4 +1,11 @@
 name: hdmf-experimental.resources
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-experimental
 id: hdmf-experimental.resources
 version: 0.1.0
 imports:
@@ -22,32 +29,47 @@ classes:
         name: keys
         description: A table for storing user terms that are used to refer to external
           resources.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_rows
         range: AnyType
         required: true
       entities:
         name: entities
         description: A table for mapping user terms (i.e., keys) to resource entities.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_rows
         range: AnyType
         required: true
       resources:
         name: resources
         description: A table for mapping user terms (i.e., keys) to resource entities.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_rows
         range: AnyType
         required: true
       objects:
         name: objects
         description: A table for identifying which objects in a file contain references
           to external resources.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_rows
         range: AnyType
         required: true
       object_keys:
         name: object_keys
         description: A table for identifying which objects use which keys.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_rows
         range: AnyType
         required: true
     tree_root: true

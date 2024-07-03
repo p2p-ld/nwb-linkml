@@ -1,4 +1,11 @@
 name: core.nwb.file
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.file
 version: 2.4.0
 imports:
@@ -56,7 +63,10 @@ classes:
           The file can be created after the experiment was run, so this may differ
           from the experiment start time. Each modification to the nwb file adds a
           new entry to the array.'
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_modifications
         range: isodatetime
         required: true
       identifier:
@@ -198,9 +208,14 @@ classes:
           having a particular scientific goal, trials (see trials subgroup) during
           an experiment, or epochs (see epochs subgroup) deriving from analysis of
           data.
-        multivalued: false
-        range: NWBFile__intervals
-        required: false
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeIntervals
+        - range: TimeIntervals
+        - range: TimeIntervals
+        - range: TimeIntervals
       units:
         name: units
         description: Data about sorted spike units.
@@ -289,7 +304,10 @@ classes:
         name: experimenter
         description: Name of person(s) who performed the experiment. Can also specify
           roles of different people involved.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_experimenters
         range: text
         required: false
       institution:
@@ -301,7 +319,10 @@ classes:
       keywords:
         name: keywords
         description: Terms to search over.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_keywords
         range: text
         required: false
       lab:
@@ -333,7 +354,10 @@ classes:
       related_publications:
         name: related_publications
         description: Publication information. PMID, DOI, URL, etc.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_publications
         range: text
         required: false
       session_id:
@@ -629,45 +653,6 @@ classes:
           together that belong to the same experimental experimental_conditions.
         multivalued: false
         range: ExperimentalConditionsTable
-        required: false
-  NWBFile__intervals:
-    name: NWBFile__intervals
-    description: Experimental intervals, whether that be logically distinct sub-experiments
-      having a particular scientific goal, trials (see trials subgroup) during an
-      experiment, or epochs (see epochs subgroup) deriving from analysis of data.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(intervals)
-        identifier: true
-        range: string
-        required: true
-        equals_string: intervals
-      epochs:
-        name: epochs
-        description: Divisions in time marking experimental stages or sub-divisions
-          of a single recording session.
-        multivalued: false
-        range: TimeIntervals
-        required: false
-      trials:
-        name: trials
-        description: Repeated experimental events that have a logical grouping.
-        multivalued: false
-        range: TimeIntervals
-        required: false
-      invalid_times:
-        name: invalid_times
-        description: Time intervals that should be removed from analysis.
-        multivalued: false
-        range: TimeIntervals
-        required: false
-      time_intervals:
-        name: time_intervals
-        description: Optional additional table(s) for describing other experimental
-          time intervals.
-        multivalued: true
-        range: TimeIntervals
         required: false
   LabMetaData:
     name: LabMetaData

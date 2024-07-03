@@ -1,4 +1,11 @@
 name: core.nwb.ogen
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.ogen
 version: 2.2.1
 imports:
@@ -20,7 +27,10 @@ classes:
       data:
         name: data
         description: Applied power for optogenetic stimulus, in watts.
-        multivalued: true
+        multivalued: false
+        array:
+          dimensions:
+          - alias: num_times
         range: numeric
         required: true
     tree_root: true
