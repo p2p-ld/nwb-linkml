@@ -8,12 +8,10 @@ from typing import Optional
 from linkml_runtime.linkml_model.meta import (
     ClassDefinition,
     SlotDefinition,
-    ArrayExpression,
-    DimensionExpression,
 )
 
-from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
 from nwb_linkml.maps.dtype import flat_to_linkml
@@ -250,7 +248,7 @@ class MapArraylike(DatasetMap):
                     range=ClassAdapter.handle_dtype(cls.dtype),
                     description=cls.doc,
                     required=cls.quantity not in ("*", "?"),
-                    **expressions
+                    **expressions,
                 )
             ]
         )
@@ -297,8 +295,10 @@ class MapArrayLikeAttributes(DatasetMap):
         array_adapter = ArrayAdapter(cls.dims, cls.shape)
         expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
-        array_slot = SlotDefinition(name="array", range=ClassAdapter.handle_dtype(cls.dtype), **expressions)
-        res.classes[0].attributes.update({'array':array_slot})
+        array_slot = SlotDefinition(
+            name="array", range=ClassAdapter.handle_dtype(cls.dtype), **expressions
+        )
+        res.classes[0].attributes.update({"array": array_slot})
         return res
 
 

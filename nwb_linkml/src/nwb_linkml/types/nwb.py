@@ -2,7 +2,7 @@
 Type annotations for NWB schema language types
 """
 
-from typing import List, Union, TypeAlias
+from typing import List, TypeAlias, Union
 
 DIMS_LIST: TypeAlias = List[Union[str, None]]
 """A single-dimension dims specification"""

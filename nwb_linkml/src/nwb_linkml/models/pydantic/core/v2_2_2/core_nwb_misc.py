@@ -1,71 +1,68 @@
 from __future__ import annotations
-from datetime import datetime, date
-from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
+
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    List,
+    Optional,
+    Union,
+)
+
 from nptyping import (
     Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
 )
+from pydantic import BaseModel as BaseModel
+from pydantic import ConfigDict, Field
+
 from nwb_linkml.types import NDArray
-import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+if TYPE_CHECKING:
+    import numpy as np
 
-
-from .core_nwb_ecephys import ElectrodeGroup
-
-from .core_nwb_base import TimeSeriesSync, TimeSeries, TimeSeriesStartingTime
 
 from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    VectorIndex,
-    VectorData,
     DynamicTable,
     DynamicTableRegion,
+    VectorData,
+    VectorIndex,
 )
-
+from .core_nwb_base import TimeSeries
 
 metamodel_version = "None"
 version = "2.2.2"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="allow",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
+
+    object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, i: slice | int) -> np.ndarray:
+        if hasattr(self, "array"):
+            return self.array[i]
+        else:
+            return super().__getitem__(i)
+
+    def __setitem__(self, i: slice | int, value: Any):
+        if hasattr(self, "array"):
+            self.array[i] = value
+        else:
+            super().__setitem__(i, value)
 
 
 class LinkML_Meta(BaseModel):
@@ -81,14 +78,12 @@ class AbstractFeatureSeries(TimeSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: AbstractFeatureSeriesData = Field(
-        ..., description="""Values of each feature at each time."""
+    data: str = Field(..., description="""Values of each feature at each time.""")
+    feature_units: Optional[NDArray[Shape["* num_features"], str]] = Field(
+        None, description="""Units of each feature."""
     )
-    feature_units: Optional[List[str]] = Field(
-        default_factory=list, description="""Units of each feature."""
-    )
-    features: List[str] = Field(
-        default_factory=list,
+    features: NDArray[Shape["* num_features"], str] = Field(
+        ...,
         description="""Description of the features represented in TimeSeries::data.""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
@@ -96,23 +91,23 @@ class AbstractFeatureSeries(TimeSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -131,8 +126,8 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
     )
     array: Optional[
         Union[
-            NDArray[Shape["* num_times"], Number],
-            NDArray[Shape["* num_times, * num_features"], Number],
+            NDArray[Shape["* num_times"], float],
+            NDArray[Shape["* num_times, * num_features"], float],
         ]
     ] = Field(None)
 
@@ -144,31 +139,31 @@ class AnnotationSeries(TimeSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: List[str] = Field(
-        default_factory=list, description="""Annotations made during an experiment."""
+    data: NDArray[Shape["* num_times"], str] = Field(
+        ..., description="""Annotations made during an experiment."""
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -181,32 +176,31 @@ class IntervalSeries(TimeSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: List[int] = Field(
-        default_factory=list,
-        description="""Use values >0 if interval started, <0 if interval ended.""",
+    data: NDArray[Shape["* num_times"], int] = Field(
+        ..., description="""Use values >0 if interval started, <0 if interval ended."""
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -219,11 +213,9 @@ class DecompositionSeries(TimeSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: DecompositionSeriesData = Field(
-        ..., description="""Data decomposed into frequency bands."""
-    )
+    data: str = Field(..., description="""Data decomposed into frequency bands.""")
     metric: str = Field(..., description="""The metric used, e.g. phase, amplitude, power.""")
-    bands: DecompositionSeriesBands = Field(
+    bands: str = Field(
         ...,
         description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""",
     )
@@ -232,23 +224,23 @@ class DecompositionSeries(TimeSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -265,9 +257,7 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], Number]] = Field(
-        None
-    )
+    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(None)
 
 
 class DecompositionSeriesBands(DynamicTable):
@@ -277,18 +267,18 @@ class DecompositionSeriesBands(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["bands"] = Field("bands")
-    band_name: Optional[List[str]] = Field(
+    band_name: Optional[List[str] | str] = Field(
         default_factory=list, description="""Name of the band, e.g. theta."""
     )
-    band_limits: DecompositionSeriesBandsBandLimits = Field(
+    band_limits: NDArray[Shape["* num_bands, 2 low, high"], float] = Field(
         ...,
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
     )
-    band_mean: List[float] = Field(
-        default_factory=list, description="""The mean Gaussian filters, in Hz."""
+    band_mean: NDArray[Shape["* num_bands"], float] = Field(
+        ..., description="""The mean Gaussian filters, in Hz."""
     )
-    band_stdev: List[float] = Field(
-        default_factory=list, description="""The standard deviation of Gaussian filters, in Hz."""
+    band_stdev: NDArray[Shape["* num_bands"], float] = Field(
+        ..., description="""The standard deviation of Gaussian filters, in Hz."""
     )
     colnames: Optional[str] = Field(
         None,
@@ -297,37 +287,17 @@ class DecompositionSeriesBands(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list, description="""Vector columns of this dynamic table."""
     )
-    vector_index: Optional[List[VectorIndex]] = Field(
+    vector_index: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Indices for the vector columns of this dynamic table.""",
     )
-
-
-class DecompositionSeriesBandsBandLimits(VectorData):
-    """
-    Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["band_limits"] = Field("band_limits")
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
 
 
 class Units(DynamicTable):
@@ -337,34 +307,37 @@ class Units(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    spike_times_index: Optional[UnitsSpikeTimesIndex] = Field(
+    spike_times_index: Optional[str] = Field(
         None, description="""Index into the spike_times dataset."""
     )
-    spike_times: Optional[UnitsSpikeTimes] = Field(
-        None, description="""Spike times for each unit."""
-    )
-    obs_intervals_index: Optional[UnitsObsIntervalsIndex] = Field(
+    spike_times: Optional[str] = Field(None, description="""Spike times for each unit.""")
+    obs_intervals_index: Optional[str] = Field(
         None, description="""Index into the obs_intervals dataset."""
     )
-    obs_intervals: Optional[UnitsObsIntervals] = Field(
+    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start|end"], float]] = Field(
         None, description="""Observation intervals for each unit."""
     )
-    electrodes_index: Optional[UnitsElectrodesIndex] = Field(
-        None, description="""Index into electrodes."""
-    )
-    electrodes: Optional[UnitsElectrodes] = Field(
+    electrodes_index: Optional[str] = Field(None, description="""Index into electrodes.""")
+    electrodes: Optional[str] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
     )
-    electrode_group: Optional[List[ElectrodeGroup]] = Field(
-        default_factory=list, description="""Electrode group that each spike unit came from."""
+    electrode_group: Optional[List[str] | str] = Field(
+        default_factory=list,
+        description="""Electrode group that each spike unit came from.""",
     )
-    waveform_mean: Optional[UnitsWaveformMean] = Field(
-        None, description="""Spike waveform mean for each spike unit."""
-    )
-    waveform_sd: Optional[UnitsWaveformSd] = Field(
-        None, description="""Spike waveform standard deviation for each spike unit."""
-    )
+    waveform_mean: Optional[
+        Union[
+            NDArray[Shape["* num_units, * num_samples"], float],
+            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+        ]
+    ] = Field(None, description="""Spike waveform mean for each spike unit.""")
+    waveform_sd: Optional[
+        Union[
+            NDArray[Shape["* num_units, * num_samples"], float],
+            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+        ]
+    ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -372,14 +345,14 @@ class Units(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list, description="""Vector columns of this dynamic table."""
     )
-    vector_index: Optional[List[VectorIndex]] = Field(
+    vector_index: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Indices for the vector columns of this dynamic table.""",
     )
@@ -392,8 +365,9 @@ class UnitsSpikeTimesIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["spike_times_index"] = Field("spike_times_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
 
@@ -429,30 +403,11 @@ class UnitsObsIntervalsIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["obs_intervals_index"] = Field("obs_intervals_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
-
-
-class UnitsObsIntervals(VectorData):
-    """
-    Observation intervals for each unit.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["obs_intervals"] = Field("obs_intervals")
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
 
 
 class UnitsElectrodesIndex(VectorIndex):
@@ -462,8 +417,9 @@ class UnitsElectrodesIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes_index"] = Field("electrodes_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
 
@@ -475,59 +431,12 @@ class UnitsElectrodes(DynamicTableRegion):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes"] = Field("electrodes")
-    table: Optional[DynamicTable] = Field(
-        None, description="""Reference to the DynamicTable object that this region applies to."""
+    table: Optional[str] = Field(
+        None,
+        description="""Reference to the DynamicTable object that this region applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
-
-
-class UnitsWaveformMean(VectorData):
-    """
-    Spike waveform mean for each spike unit.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["waveform_mean"] = Field("waveform_mean")
-    sampling_rate: Optional[float] = Field(None, description="""Sampling rate, in hertz.""")
-    unit: Optional[str] = Field(
-        None, description="""Unit of measurement. This value is fixed to 'volts'."""
-    )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
-
-
-class UnitsWaveformSd(VectorData):
-    """
-    Spike waveform standard deviation for each spike unit.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["waveform_sd"] = Field("waveform_sd")
-    sampling_rate: Optional[float] = Field(None, description="""Sampling rate, in hertz.""")
-    unit: Optional[str] = Field(
-        None, description="""Unit of measurement. This value is fixed to 'volts'."""
-    )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
     )
     array: Optional[
         Union[
@@ -548,13 +457,9 @@ IntervalSeries.model_rebuild()
 DecompositionSeries.model_rebuild()
 DecompositionSeriesData.model_rebuild()
 DecompositionSeriesBands.model_rebuild()
-DecompositionSeriesBandsBandLimits.model_rebuild()
 Units.model_rebuild()
 UnitsSpikeTimesIndex.model_rebuild()
 UnitsSpikeTimes.model_rebuild()
 UnitsObsIntervalsIndex.model_rebuild()
-UnitsObsIntervals.model_rebuild()
 UnitsElectrodesIndex.model_rebuild()
 UnitsElectrodes.model_rebuild()
-UnitsWaveformMean.model_rebuild()
-UnitsWaveformSd.model_rebuild()

@@ -1,64 +1,66 @@
 from __future__ import annotations
-from datetime import datetime, date
-from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
+
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    List,
+    Optional,
+    Union,
+)
+
 from nptyping import (
     Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
 )
+from pydantic import BaseModel as BaseModel
+from pydantic import ConfigDict, Field
+
 from nwb_linkml.types import NDArray
-import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+if TYPE_CHECKING:
+    import numpy as np
 
 
+from .core_nwb_base import (
+    NWBDataInterface,
+    TimeSeries,
+)
 from .core_nwb_misc import IntervalSeries
-
-from .core_nwb_base import TimeSeries, TimeSeriesSync, NWBDataInterface, TimeSeriesStartingTime
-
 
 metamodel_version = "None"
 version = "2.2.0"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="allow",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
+
+    object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, i: slice | int) -> np.ndarray:
+        if hasattr(self, "array"):
+            return self.array[i]
+        else:
+            return super().__getitem__(i)
+
+    def __setitem__(self, i: slice | int, value: Any):
+        if hasattr(self, "array"):
+            self.array[i] = value
+        else:
+            super().__setitem__(i, value)
 
 
 class LinkML_Meta(BaseModel):
@@ -74,35 +76,36 @@ class SpatialSeries(TimeSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: SpatialSeriesData = Field(
+    data: str = Field(
         ...,
         description="""1-D or 2-D array storing position or direction relative to some reference frame.""",
     )
     reference_frame: Optional[str] = Field(
-        None, description="""Description defining what exactly 'straight-ahead' means."""
+        None,
+        description="""Description defining what exactly 'straight-ahead' means.""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -121,8 +124,8 @@ class SpatialSeriesData(ConfiguredBaseModel):
     )
     array: Optional[
         Union[
-            NDArray[Shape["* num_times"], Number],
-            NDArray[Shape["* num_times, * num_features"], Number],
+            NDArray[Shape["* num_times"], float],
+            NDArray[Shape["* num_times, * num_features"], float],
         ]
     ] = Field(None)
 
@@ -133,7 +136,7 @@ class BehavioralEpochs(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, IntervalSeries]] = Field(default_factory=dict)
+    children: Optional[List[IntervalSeries] | IntervalSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -143,7 +146,7 @@ class BehavioralEvents(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, TimeSeries]] = Field(default_factory=dict)
+    children: Optional[List[TimeSeries] | TimeSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -153,7 +156,7 @@ class BehavioralTimeSeries(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, TimeSeries]] = Field(default_factory=dict)
+    children: Optional[List[TimeSeries] | TimeSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -163,7 +166,7 @@ class PupilTracking(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, TimeSeries]] = Field(default_factory=dict)
+    children: Optional[List[TimeSeries] | TimeSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -173,7 +176,7 @@ class EyeTracking(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, SpatialSeries]] = Field(default_factory=dict)
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -183,7 +186,7 @@ class CompassDirection(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, SpatialSeries]] = Field(default_factory=dict)
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -193,7 +196,7 @@ class Position(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, SpatialSeries]] = Field(default_factory=dict)
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 

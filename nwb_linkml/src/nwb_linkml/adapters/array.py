@@ -2,17 +2,15 @@
 Generator for array ranges from nwb dims/ranges
 """
 
-from itertools import zip_longest
-from typing import Dict, List, Literal, Optional, Union, NamedTuple, TypeAlias
+import warnings
+from typing import Dict, List, Literal, NamedTuple, Optional, Union
+
 from linkml_runtime.linkml_model.meta import (
-    ClassDefinition,
-    SlotDefinition,
     ArrayExpression,
     DimensionExpression,
 )
-import warnings
 
-from nwb_linkml.types.nwb import DIMS_LIST, DIMS_TYPE, SHAPE_LIST, SHAPE_TYPE
+from nwb_linkml.types.nwb import DIMS_TYPE, SHAPE_TYPE
 
 
 class Dimension(NamedTuple):
@@ -53,7 +51,8 @@ class ArrayAdapter:
         if len(dims) != len(shape):
             warnings.warn(
                 f"dims ({len(dims)} and shape ({len(shape)}) are not the same length!!! "
-                "Your schema is formatted badly"
+                "Your schema is formatted badly",
+                stacklevel=1
             )
 
         def _iter_dims(dims: DIMS_TYPE, shape: SHAPE_TYPE) -> List[Shape] | Shape:
@@ -97,13 +96,18 @@ class ArrayAdapter:
         expressions = [self.make_expression(shape) for shape in shapes]
         return expressions
 
-    def make_slot(self) -> Union[Dict[Literal['array'], ArrayExpression], Dict[Literal['any_of'], Dict[Literal['array'],List[ArrayExpression]]]]:
+    def make_slot(
+        self,
+    ) -> Union[
+        Dict[Literal["array"], ArrayExpression],
+        Dict[Literal["any_of"], Dict[Literal["array"], List[ArrayExpression]]],
+    ]:
         """
         Make the array expressions in a dict form that can be **kwarg'd into a SlotDefinition,
         taking into account needing to use ``any_of`` for multiple array range specifications.
         """
         expressions = self.make()
         if len(expressions) == 1:
-            return {'array': expressions[0]}
+            return {"array": expressions[0]}
         else:
-            return {'any_of': [{'array': expression} for expression in expressions]}
+            return {"any_of": [{"array": expression} for expression in expressions]}

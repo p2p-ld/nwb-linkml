@@ -12,6 +12,7 @@ from nwb_linkml.adapters.schema import SchemaAdapter
 
 __all__ = [
     "Adapter",
+    "ArrayAdapter",
     "BuildResult",
     "ClassAdapter",
     "DatasetAdapter",

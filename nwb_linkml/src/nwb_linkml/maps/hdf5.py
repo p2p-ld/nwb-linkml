@@ -15,7 +15,7 @@ import inspect
 import sys
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Type, Union
 
 import h5py
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,7 +23,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from nwb_linkml.annotations import unwrap_optional
 from nwb_linkml.maps import Map
 from nwb_linkml.maps.hdmf import dynamictable_to_model
-from nwb_linkml.providers.schema import SchemaProvider
 from nwb_linkml.types.hdf5 import HDF5_Path
 from nwb_linkml.types.ndarray import NDArrayProxy
 
@@ -34,6 +33,10 @@ else:
 
     class StrEnum(str, Enum):
         """StrEnum-ish class for python 3.10"""
+
+
+if TYPE_CHECKING:
+    from nwb_linkml.providers.schema import SchemaProvider
 
 
 class ReadPhases(StrEnum):
@@ -154,7 +157,7 @@ class HDF5Map(Map):
     def check(
         cls,
         src: H5SourceItem | H5ReadResult,
-        provider: SchemaProvider,
+        provider: "SchemaProvider",
         completed: Dict[str, H5ReadResult],
     ) -> bool:
         """Check if this map applies to the given item to read"""
@@ -164,7 +167,7 @@ class HDF5Map(Map):
     def apply(
         cls,
         src: H5SourceItem | H5ReadResult,
-        provider: SchemaProvider,
+        provider: "SchemaProvider",
         completed: Dict[str, H5ReadResult],
     ) -> H5ReadResult:
         """Actually apply the map!"""
@@ -217,7 +220,7 @@ class PruneEmpty(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         if src.h5_type == "group":
             with h5py.File(src.h5f_path, "r") as h5f:
@@ -226,7 +229,7 @@ class PruneEmpty(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         return H5ReadResult.model_construct(path=src.path, source=src, completed=True)
 
@@ -250,7 +253,7 @@ class ResolveDynamicTable(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         if src.h5_type == "dataset":
             return False
@@ -269,7 +272,7 @@ class ResolveDynamicTable(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
@@ -336,13 +339,13 @@ class ResolveModelGroup(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         return bool("neurodata_type" in src.attrs and src.h5_type == "group")
 
     @classmethod
     def apply(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         model = provider.get_class(src.namespace, src.neurodata_type)
         res = {}
@@ -395,7 +398,7 @@ class ResolveDatasetAsDict(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         if src.h5_type == "dataset" and "neurodata_type" not in src.attrs:
             with h5py.File(src.h5f_path, "r") as h5f:
@@ -406,7 +409,7 @@ class ResolveDatasetAsDict(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
 
         res = {
@@ -426,7 +429,7 @@ class ResolveScalars(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         if src.h5_type == "dataset" and "neurodata_type" not in src.attrs:
             with h5py.File(src.h5f_path, "r") as h5f:
@@ -437,7 +440,7 @@ class ResolveScalars(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         with h5py.File(src.h5f_path, "r") as h5f:
             obj = h5f.get(src.path)
@@ -459,7 +462,7 @@ class ResolveContainerGroups(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         if src.h5_type == "group" and "neurodata_type" not in src.attrs and len(src.attrs) == 0:
             with h5py.File(src.h5f_path, "r") as h5f:
@@ -470,7 +473,7 @@ class ResolveContainerGroups(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5SourceItem, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5SourceItem, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         """Simple, just return a dict with references to its children"""
         depends = []
@@ -516,7 +519,7 @@ class CompletePassThrough(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         passthrough_ops = ("ResolveDynamicTable", "ResolveDatasetAsDict", "ResolveScalars")
 
@@ -524,7 +527,7 @@ class CompletePassThrough(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         return src
 
@@ -542,7 +545,7 @@ class CompleteContainerGroups(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         return (
             src.model is None
@@ -553,7 +556,7 @@ class CompleteContainerGroups(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         res, errors, completes = resolve_references(src.result, completed)
 
@@ -571,7 +574,7 @@ class CompleteModelGroups(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         return (
             src.model is not None
@@ -582,7 +585,7 @@ class CompleteModelGroups(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         # gather any results that were left for completion elsewhere
         # first get all already-completed items
@@ -635,7 +638,7 @@ class CompleteNWBFile(HDF5Map):
 
     @classmethod
     def check(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> bool:
         return src.neurodata_type == "NWBFile" and all(
             [depend in completed for depend in src.depends]
@@ -643,7 +646,7 @@ class CompleteNWBFile(HDF5Map):
 
     @classmethod
     def apply(
-        cls, src: H5ReadResult, provider: SchemaProvider, completed: Dict[str, H5ReadResult]
+        cls, src: H5ReadResult, provider: "SchemaProvider", completed: Dict[str, H5ReadResult]
     ) -> H5ReadResult:
         res = {k: v for k, v in src.result.items() if not isinstance(v, HDF5_Path)}
         unpacked_results, errors, completes = resolve_references(src.result, completed)
@@ -699,7 +702,7 @@ class ReadQueue(BaseModel):
             "rather than passing a handle around"
         )
     )
-    provider: SchemaProvider = Field(
+    provider: "SchemaProvider" = Field(
         description="SchemaProvider used by each of the items in the read queue"
     )
     queue: Dict[str, H5SourceItem | H5ReadResult] = Field(

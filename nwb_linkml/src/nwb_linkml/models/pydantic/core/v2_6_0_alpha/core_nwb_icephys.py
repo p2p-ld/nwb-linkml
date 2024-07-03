@@ -1,76 +1,72 @@
 from __future__ import annotations
-from datetime import datetime, date
-from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
+
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    List,
+    Optional,
+    Union,
+)
+
 from nptyping import (
     Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
 )
+from pydantic import BaseModel as BaseModel
+from pydantic import ConfigDict, Field
+
 from nwb_linkml.types import NDArray
-import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+if TYPE_CHECKING:
+    import numpy as np
 
-
-from .core_nwb_base import (
-    TimeSeriesSync,
-    TimeSeriesReferenceVectorData,
-    TimeSeries,
-    NWBContainer,
-    TimeSeriesStartingTime,
-)
 
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     AlignedDynamicTable,
-    VectorIndex,
-    VectorData,
     DynamicTable,
     DynamicTableRegion,
+    VectorIndex,
 )
-
+from .core_nwb_base import (
+    NWBContainer,
+    TimeSeries,
+    TimeSeriesReferenceVectorData,
+)
 
 metamodel_version = "None"
 version = "2.6.0-alpha"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="allow",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
+
+    object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, i: slice | int) -> np.ndarray:
+        if hasattr(self, "array"):
+            return self.array[i]
+        else:
+            return super().__getitem__(i)
+
+    def __setitem__(self, i: slice | int, value: Any):
+        if hasattr(self, "array"):
+            self.array[i] = value
+        else:
+            super().__setitem__(i, value)
 
 
 class LinkML_Meta(BaseModel):
@@ -90,9 +86,10 @@ class PatchClampSeries(TimeSeries):
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
-        None, description="""Sweep number, allows to group different PatchClampSeries together."""
+        None,
+        description="""Sweep number, allows to group different PatchClampSeries together.""",
     )
-    data: List[float] = Field(default_factory=list, description="""Recorded voltage or current.""")
+    data: str = Field(..., description="""Recorded voltage or current.""")
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
@@ -102,26 +99,40 @@ class PatchClampSeries(TimeSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
+
+
+class PatchClampSeriesData(ConfiguredBaseModel):
+    """
+    Recorded voltage or current.
+    """
+
+    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
+    name: Literal["data"] = Field("data")
+    unit: Optional[str] = Field(
+        None,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+    )
+    array: Optional[NDArray[Shape["* num_times"], float]] = Field(None)
 
 
 class CurrentClampSeries(PatchClampSeries):
@@ -131,7 +142,7 @@ class CurrentClampSeries(PatchClampSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
+    data: str = Field(..., description="""Recorded voltage.""")
     bias_current: Optional[float] = Field(None, description="""Bias current, in amps.""")
     bridge_balance: Optional[float] = Field(None, description="""Bridge balance, in ohms.""")
     capacitance_compensation: Optional[float] = Field(
@@ -141,7 +152,8 @@ class CurrentClampSeries(PatchClampSeries):
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
-        None, description="""Sweep number, allows to group different PatchClampSeries together."""
+        None,
+        description="""Sweep number, allows to group different PatchClampSeries together.""",
     )
     gain: Optional[float] = Field(
         None,
@@ -152,23 +164,23 @@ class CurrentClampSeries(PatchClampSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -204,9 +216,10 @@ class IZeroClampSeries(CurrentClampSeries):
     capacitance_compensation: float = Field(
         ..., description="""Capacitance compensation, in farads, fixed to 0.0."""
     )
-    data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
+    data: str = Field(..., description="""Recorded voltage.""")
     sweep_number: Optional[int] = Field(
-        None, description="""Sweep number, allows to group different PatchClampSeries together."""
+        None,
+        description="""Sweep number, allows to group different PatchClampSeries together.""",
     )
     gain: Optional[float] = Field(
         None,
@@ -217,23 +230,23 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -246,12 +259,13 @@ class CurrentClampStimulusSeries(PatchClampSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: CurrentClampStimulusSeriesData = Field(..., description="""Stimulus current applied.""")
+    data: str = Field(..., description="""Stimulus current applied.""")
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
-        None, description="""Sweep number, allows to group different PatchClampSeries together."""
+        None,
+        description="""Sweep number, allows to group different PatchClampSeries together.""",
     )
     gain: Optional[float] = Field(
         None,
@@ -262,23 +276,23 @@ class CurrentClampStimulusSeries(PatchClampSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -305,33 +319,30 @@ class VoltageClampSeries(PatchClampSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: VoltageClampSeriesData = Field(..., description="""Recorded current.""")
-    capacitance_fast: Optional[VoltageClampSeriesCapacitanceFast] = Field(
-        None, description="""Fast capacitance, in farads."""
-    )
-    capacitance_slow: Optional[VoltageClampSeriesCapacitanceSlow] = Field(
-        None, description="""Slow capacitance, in farads."""
-    )
-    resistance_comp_bandwidth: Optional[VoltageClampSeriesResistanceCompBandwidth] = Field(
+    data: str = Field(..., description="""Recorded current.""")
+    capacitance_fast: Optional[str] = Field(None, description="""Fast capacitance, in farads.""")
+    capacitance_slow: Optional[str] = Field(None, description="""Slow capacitance, in farads.""")
+    resistance_comp_bandwidth: Optional[str] = Field(
         None, description="""Resistance compensation bandwidth, in hertz."""
     )
-    resistance_comp_correction: Optional[VoltageClampSeriesResistanceCompCorrection] = Field(
+    resistance_comp_correction: Optional[str] = Field(
         None, description="""Resistance compensation correction, in percent."""
     )
-    resistance_comp_prediction: Optional[VoltageClampSeriesResistanceCompPrediction] = Field(
+    resistance_comp_prediction: Optional[str] = Field(
         None, description="""Resistance compensation prediction, in percent."""
     )
-    whole_cell_capacitance_comp: Optional[VoltageClampSeriesWholeCellCapacitanceComp] = Field(
+    whole_cell_capacitance_comp: Optional[str] = Field(
         None, description="""Whole cell capacitance compensation, in farads."""
     )
-    whole_cell_series_resistance_comp: Optional[VoltageClampSeriesWholeCellSeriesResistanceComp] = (
-        Field(None, description="""Whole cell series resistance compensation, in ohms.""")
+    whole_cell_series_resistance_comp: Optional[str] = Field(
+        None, description="""Whole cell series resistance compensation, in ohms."""
     )
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
-        None, description="""Sweep number, allows to group different PatchClampSeries together."""
+        None,
+        description="""Sweep number, allows to group different PatchClampSeries together.""",
     )
     gain: Optional[float] = Field(
         None,
@@ -342,23 +353,23 @@ class VoltageClampSeries(PatchClampSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -483,12 +494,13 @@ class VoltageClampStimulusSeries(PatchClampSeries):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    data: VoltageClampStimulusSeriesData = Field(..., description="""Stimulus voltage applied.""")
+    data: str = Field(..., description="""Stimulus voltage applied.""")
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
-        None, description="""Sweep number, allows to group different PatchClampSeries together."""
+        None,
+        description="""Sweep number, allows to group different PatchClampSeries together.""",
     )
     gain: Optional[float] = Field(
         None,
@@ -499,23 +511,23 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
     )
-    starting_time: Optional[TimeSeriesStartingTime] = Field(
+    starting_time: Optional[str] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
     )
-    sync: Optional[TimeSeriesSync] = Field(
+    sync: Optional[str] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
@@ -544,7 +556,8 @@ class IntracellularElectrode(NWBContainer):
     name: str = Field(...)
     cell_id: Optional[str] = Field(None, description="""unique ID of the cell""")
     description: str = Field(
-        ..., description="""Description of electrode (e.g.,  whole-cell, sharp, etc.)."""
+        ...,
+        description="""Description of electrode (e.g.,  whole-cell, sharp, etc.).""",
     )
     filtering: Optional[str] = Field(None, description="""Electrode specific filtering.""")
     initial_access_resistance: Optional[str] = Field(
@@ -568,14 +581,15 @@ class SweepTable(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    sweep_number: Optional[List[int]] = Field(
-        default_factory=list, description="""Sweep number of the PatchClampSeries in that row."""
+    sweep_number: Optional[List[int] | int] = Field(
+        default_factory=list,
+        description="""Sweep number of the PatchClampSeries in that row.""",
     )
-    series: Optional[List[PatchClampSeries]] = Field(
+    series: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""The PatchClampSeries with the sweep number in that row.""",
     )
-    series_index: SweepTableSeriesIndex = Field(..., description="""Index for series.""")
+    series_index: str = Field(..., description="""Index for series.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -583,11 +597,11 @@ class SweepTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -600,8 +614,9 @@ class SweepTableSeriesIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["series_index"] = Field("series_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
@@ -626,7 +641,7 @@ class IntracellularElectrodesTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    electrode: Optional[List[IntracellularElectrode]] = Field(
+    electrode: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Column for storing the reference to the intracellular electrode.""",
     )
@@ -634,11 +649,11 @@ class IntracellularElectrodesTable(DynamicTable):
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -654,7 +669,7 @@ class IntracellularStimuliTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    stimulus: IntracellularStimuliTableStimulus = Field(
+    stimulus: str = Field(
         ...,
         description="""Column storing the reference to the recorded stimulus for the recording (rows).""",
     )
@@ -662,11 +677,11 @@ class IntracellularStimuliTable(DynamicTable):
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -702,7 +717,7 @@ class IntracellularResponsesTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    response: IntracellularResponsesTableResponse = Field(
+    response: str = Field(
         ...,
         description="""Column storing the reference to the recorded response for the recording (rows)""",
     )
@@ -710,11 +725,11 @@ class IntracellularResponsesTable(DynamicTable):
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -751,25 +766,30 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
         None,
         description="""Description of the contents of this table. Inherited from AlignedDynamicTable and overwritten here to fix the value of the attribute.""",
     )
-    electrodes: IntracellularElectrodesTable = Field(
-        ..., description="""Table for storing intracellular electrode related metadata."""
+    electrodes: str = Field(
+        ...,
+        description="""Table for storing intracellular electrode related metadata.""",
     )
-    stimuli: IntracellularStimuliTable = Field(
-        ..., description="""Table for storing intracellular stimulus related metadata."""
+    stimuli: str = Field(
+        ...,
+        description="""Table for storing intracellular stimulus related metadata.""",
     )
-    responses: IntracellularResponsesTable = Field(
-        ..., description="""Table for storing intracellular response related metadata."""
+    responses: str = Field(
+        ...,
+        description="""Table for storing intracellular response related metadata.""",
     )
-    children: Optional[Dict[str, DynamicTable]] = Field(default_factory=dict)
+    children: Optional[List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]] = (
+        Field(default_factory=dict)
+    )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -782,13 +802,11 @@ class SimultaneousRecordingsTable(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: Literal["simultaneous_recordings"] = Field("simultaneous_recordings")
-    recordings: SimultaneousRecordingsTableRecordings = Field(
+    recordings: str = Field(
         ...,
         description="""A reference to one or more rows in the IntracellularRecordingsTable table.""",
     )
-    recordings_index: SimultaneousRecordingsTableRecordingsIndex = Field(
-        ..., description="""Index dataset for the recordings column."""
-    )
+    recordings_index: str = Field(..., description="""Index dataset for the recordings column.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -796,11 +814,11 @@ class SimultaneousRecordingsTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -813,7 +831,7 @@ class SimultaneousRecordingsTableRecordings(DynamicTableRegion):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["recordings"] = Field("recordings")
-    table: Optional[IntracellularRecordingsTable] = Field(
+    table: Optional[str] = Field(
         None,
         description="""Reference to the IntracellularRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
@@ -837,8 +855,9 @@ class SimultaneousRecordingsTableRecordingsIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["recordings_index"] = Field("recordings_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
@@ -860,14 +879,14 @@ class SequentialRecordingsTable(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: Literal["sequential_recordings"] = Field("sequential_recordings")
-    simultaneous_recordings: SequentialRecordingsTableSimultaneousRecordings = Field(
+    simultaneous_recordings: str = Field(
         ...,
         description="""A reference to one or more rows in the SimultaneousRecordingsTable table.""",
     )
-    simultaneous_recordings_index: SequentialRecordingsTableSimultaneousRecordingsIndex = Field(
+    simultaneous_recordings_index: str = Field(
         ..., description="""Index dataset for the simultaneous_recordings column."""
     )
-    stimulus_type: Optional[List[str]] = Field(
+    stimulus_type: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""The type of stimulus used for the sequential recording.""",
     )
@@ -878,11 +897,11 @@ class SequentialRecordingsTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -895,7 +914,7 @@ class SequentialRecordingsTableSimultaneousRecordings(DynamicTableRegion):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["simultaneous_recordings"] = Field("simultaneous_recordings")
-    table: Optional[SimultaneousRecordingsTable] = Field(
+    table: Optional[str] = Field(
         None,
         description="""Reference to the SimultaneousRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
@@ -919,8 +938,9 @@ class SequentialRecordingsTableSimultaneousRecordingsIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["simultaneous_recordings_index"] = Field("simultaneous_recordings_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
@@ -942,11 +962,11 @@ class RepetitionsTable(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: Literal["repetitions"] = Field("repetitions")
-    sequential_recordings: RepetitionsTableSequentialRecordings = Field(
+    sequential_recordings: str = Field(
         ...,
         description="""A reference to one or more rows in the SequentialRecordingsTable table.""",
     )
-    sequential_recordings_index: RepetitionsTableSequentialRecordingsIndex = Field(
+    sequential_recordings_index: str = Field(
         ..., description="""Index dataset for the sequential_recordings column."""
     )
     colnames: Optional[str] = Field(
@@ -956,11 +976,11 @@ class RepetitionsTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -973,7 +993,7 @@ class RepetitionsTableSequentialRecordings(DynamicTableRegion):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["sequential_recordings"] = Field("sequential_recordings")
-    table: Optional[SequentialRecordingsTable] = Field(
+    table: Optional[str] = Field(
         None,
         description="""Reference to the SequentialRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
@@ -997,8 +1017,9 @@ class RepetitionsTableSequentialRecordingsIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["sequential_recordings_index"] = Field("sequential_recordings_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
@@ -1020,12 +1041,11 @@ class ExperimentalConditionsTable(DynamicTable):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: Literal["experimental_conditions"] = Field("experimental_conditions")
-    repetitions: ExperimentalConditionsTableRepetitions = Field(
-        ..., description="""A reference to one or more rows in the RepetitionsTable table."""
+    repetitions: str = Field(
+        ...,
+        description="""A reference to one or more rows in the RepetitionsTable table.""",
     )
-    repetitions_index: ExperimentalConditionsTableRepetitionsIndex = Field(
-        ..., description="""Index dataset for the repetitions column."""
-    )
+    repetitions_index: str = Field(..., description="""Index dataset for the repetitions column.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -1033,11 +1053,11 @@ class ExperimentalConditionsTable(DynamicTable):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
@@ -1050,7 +1070,7 @@ class ExperimentalConditionsTableRepetitions(DynamicTableRegion):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["repetitions"] = Field("repetitions")
-    table: Optional[RepetitionsTable] = Field(
+    table: Optional[str] = Field(
         None,
         description="""Reference to the RepetitionsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
@@ -1074,8 +1094,9 @@ class ExperimentalConditionsTableRepetitionsIndex(VectorIndex):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["repetitions_index"] = Field("repetitions_index")
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
@@ -1093,6 +1114,7 @@ class ExperimentalConditionsTableRepetitionsIndex(VectorIndex):
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 PatchClampSeries.model_rebuild()
+PatchClampSeriesData.model_rebuild()
 CurrentClampSeries.model_rebuild()
 CurrentClampSeriesData.model_rebuild()
 IZeroClampSeries.model_rebuild()

@@ -1,64 +1,62 @@
 from __future__ import annotations
-from datetime import datetime, date
-from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
+
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Optional,
+    Union,
+)
+
 from nptyping import (
     Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
 )
+from pydantic import BaseModel as BaseModel
+from pydantic import ConfigDict, Field
+
 from nwb_linkml.types import NDArray
-import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+if TYPE_CHECKING:
+    import numpy as np
 
 
+from .core_nwb_base import NWBData, NWBDataInterface
 from .core_nwb_image import GrayscaleImage
-
-from .core_nwb_base import NWBDataInterface, NWBData
-
 
 metamodel_version = "None"
 version = "2.2.0"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="allow",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
+
+    object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, i: slice | int) -> np.ndarray:
+        if hasattr(self, "array"):
+            return self.array[i]
+        else:
+            return super().__getitem__(i)
+
+    def __setitem__(self, i: slice | int, value: Any):
+        if hasattr(self, "array"):
+            self.array[i] = value
+        else:
+            super().__setitem__(i, value)
 
 
 class LinkML_Meta(BaseModel):
@@ -79,7 +77,7 @@ class RetinotopyMap(NWBData):
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
 
 
 class AxisMap(RetinotopyMap):
@@ -92,7 +90,7 @@ class AxisMap(RetinotopyMap):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
     dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
@@ -119,11 +117,17 @@ class RetinotopyImage(GrayscaleImage):
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    array: Optional[NDArray[Shape["* x, * y"], Number]] = Field(None)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
+    array: Optional[
+        Union[
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r, g, b"], float],
+            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+        ]
+    ] = Field(None)
 
 
 class ImagingRetinotopy(NWBDataInterface):
@@ -133,32 +137,32 @@ class ImagingRetinotopy(NWBDataInterface):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    axis_1_phase_map: ImagingRetinotopyAxis1PhaseMap = Field(
+    axis_1_phase_map: str = Field(
         ..., description="""Phase response to stimulus on the first measured axis."""
     )
-    axis_1_power_map: Optional[ImagingRetinotopyAxis1PowerMap] = Field(
+    axis_1_power_map: Optional[str] = Field(
         None,
         description="""Power response on the first measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.""",
     )
-    axis_2_phase_map: ImagingRetinotopyAxis2PhaseMap = Field(
+    axis_2_phase_map: str = Field(
         ..., description="""Phase response to stimulus on the second measured axis."""
     )
-    axis_2_power_map: Optional[ImagingRetinotopyAxis2PowerMap] = Field(
+    axis_2_power_map: Optional[str] = Field(
         None, description="""Power response to stimulus on the second measured axis."""
     )
-    sign_map: ImagingRetinotopySignMap = Field(
+    sign_map: str = Field(
         ...,
         description="""Sine of the angle between the direction of the gradient in axis_1 and axis_2.""",
     )
-    axis_descriptions: List[str] = Field(
-        default_factory=list,
+    axis_descriptions: NDArray[Shape["2 num_axes"], str] = Field(
+        ...,
         description="""Two-element array describing the contents of the two response axis fields. Description should be something like ['altitude', 'azimuth'] or '['radius', 'theta'].""",
     )
-    focal_depth_image: ImagingRetinotopyFocalDepthImage = Field(
+    focal_depth_image: str = Field(
         ...,
         description="""Gray-scale image taken with same settings/parameters (e.g., focal depth, wavelength) as data collection. Array format: [rows][columns].""",
     )
-    vasculature_image: ImagingRetinotopyVasculatureImage = Field(
+    vasculature_image: str = Field(
         ...,
         description="""Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]""",
     )
@@ -174,7 +178,7 @@ class ImagingRetinotopyAxis1PhaseMap(AxisMap):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
     dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
@@ -192,7 +196,7 @@ class ImagingRetinotopyAxis1PowerMap(AxisMap):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
     dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
@@ -210,7 +214,7 @@ class ImagingRetinotopyAxis2PhaseMap(AxisMap):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
     dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
@@ -228,7 +232,7 @@ class ImagingRetinotopyAxis2PowerMap(AxisMap):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
     dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
@@ -248,7 +252,7 @@ class ImagingRetinotopySignMap(RetinotopyMap):
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], Float32]] = Field(None)
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
 
 
 class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
@@ -271,11 +275,17 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    array: Optional[NDArray[Shape["* x, * y"], Number]] = Field(None)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
+    array: Optional[
+        Union[
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r, g, b"], float],
+            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+        ]
+    ] = Field(None)
 
 
 class ImagingRetinotopyVasculatureImage(RetinotopyImage):
@@ -297,11 +307,17 @@ class ImagingRetinotopyVasculatureImage(RetinotopyImage):
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    array: Optional[NDArray[Shape["* x, * y"], Number]] = Field(None)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
+    array: Optional[
+        Union[
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r, g, b"], float],
+            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+        ]
+    ] = Field(None)
 
 
 # Model rebuild

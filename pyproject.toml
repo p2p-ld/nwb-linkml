@@ -26,7 +26,8 @@ exclude = [
     "docs",
     "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_language.py",
     "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_pydantic.py",
-    "nwb_linkml/src/nwb_linkml/models/**/*.py"
+    "tests/__tmp__/**/*"
+    # "nwb_linkml/src/nwb_linkml/models/**/*.py"
 ]
 line-length = 100
 
@@ -74,6 +75,7 @@ fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**.py" = ["D", "ANN", "E501", "F841", "F722"]
+"nwb_linkml/src/nwb_linkml/models/**/*.py" = ["ANN202", "E501", "D", "F722", "UP036", "F403"]
 
 [tool.mypy]
 plugins = [

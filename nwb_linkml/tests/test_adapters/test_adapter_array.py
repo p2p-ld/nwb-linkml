@@ -1,10 +1,7 @@
-import pdb
-
 import pytest
 
-from typing import Tuple
-from nwb_linkml.types.nwb import DIMS_TYPE, SHAPE_TYPE
 from nwb_linkml.adapters.array import ArrayAdapter, Dimension, Shape
+from nwb_linkml.types.nwb import DIMS_TYPE, SHAPE_TYPE
 
 # pytest.param([['dim1'], ['dim1', 'dim2'], ['dim1', 'dim3']], [[1], [1, 2], [1, 2]], [],
 #              id='multi shape inconsistent dims'),

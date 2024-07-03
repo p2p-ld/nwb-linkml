@@ -1,59 +1,59 @@
 from __future__ import annotations
-from datetime import datetime, date
-from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
+
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    List,
+    Optional,
+)
+
 from nptyping import (
     Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
 )
+from pydantic import BaseModel as BaseModel
+from pydantic import ConfigDict, Field
+
 from nwb_linkml.types import NDArray
-import sys
 
 if sys.version_info >= (3, 8):
-    from typing import Literal
+    pass
 else:
-    from typing_extensions import Literal
+    pass
+if TYPE_CHECKING:
+    import numpy as np
 
 
 metamodel_version = "None"
 version = "1.1.2"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="allow",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
+
+    object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, i: slice | int) -> np.ndarray:
+        if hasattr(self, "array"):
+            return self.array[i]
+        else:
+            return super().__getitem__(i)
+
+    def __setitem__(self, i: slice | int, value: Any):
+        if hasattr(self, "array"):
+            self.array[i] = value
+        else:
+            super().__setitem__(i, value)
 
 
 class LinkML_Meta(BaseModel):
@@ -78,7 +78,7 @@ class Index(Data):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    target: Optional[Data] = Field(
+    target: Optional[str] = Field(
         None, description="""Target dataset that this index applies to."""
     )
 
@@ -102,8 +102,9 @@ class VectorIndex(Index):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: Optional[str] = Field(
+        None,
+        description="""Reference to the target dataset that this index applies to.""",
     )
 
 
@@ -114,7 +115,6 @@ class ElementIdentifiers(Data):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    array: Optional[NDArray[Shape["* num_elements"], Int]] = Field(None)
 
 
 class DynamicTableRegion(VectorData):
@@ -124,8 +124,9 @@ class DynamicTableRegion(VectorData):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    table: Optional[DynamicTable] = Field(
-        None, description="""Reference to the DynamicTable object that this region applies to."""
+    table: Optional[str] = Field(
+        None,
+        description="""Reference to the DynamicTable object that this region applies to.""",
     )
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
@@ -155,14 +156,14 @@ class DynamicTable(Container):
     description: Optional[str] = Field(
         None, description="""Description of what is in this dynamic table."""
     )
-    id: List[int] = Field(
-        default_factory=list,
+    id: NDArray[Shape["* num_rows"], int] = Field(
+        ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
     )
-    vector_data: Optional[List[VectorData]] = Field(
+    vector_data: Optional[List[str] | str] = Field(
         default_factory=list, description="""Vector columns of this dynamic table."""
     )
-    vector_index: Optional[List[VectorIndex]] = Field(
+    vector_index: Optional[List[str] | str] = Field(
         default_factory=list,
         description="""Indices for the vector columns of this dynamic table.""",
     )

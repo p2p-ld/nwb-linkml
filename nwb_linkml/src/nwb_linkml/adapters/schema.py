@@ -2,6 +2,7 @@
 I don't know if NWB necessarily has a term for a single nwb schema file, so we're going
 to call them "schema" objects
 """
+
 import pdb
 from pathlib import Path
 from typing import List, Optional, Type
@@ -75,12 +76,12 @@ class SchemaAdapter(Adapter):
         res = BuildResult()
         for dset in self.datasets:
             new_res = DatasetAdapter(cls=dset).build()
-            if len(new_res.slots)>0:
+            if len(new_res.slots) > 0:
                 pdb.set_trace()
             res += new_res
         for group in self.groups:
             new_res = GroupAdapter(cls=group).build()
-            if len(new_res.slots)>0:
+            if len(new_res.slots) > 0:
                 pdb.set_trace()
             res += new_res
 

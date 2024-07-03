@@ -41,6 +41,7 @@ from typing import Dict, List, Optional, Tuple, Type, Union
 from jinja2 import Template
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation
+from linkml.generators.pydanticgen.black import format_black
 from linkml.generators.common.type_designators import (
     get_type_designator_value,
 )
@@ -274,7 +275,8 @@ class NWBPydanticGenerator(PydanticGenerator):
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
     pydantic_version = "2"
     array_representations: List[ArrayRepresentation] = field(
-        default_factory=lambda: [ArrayRepresentation.NUMPYDANTIC])
+        default_factory=lambda: [ArrayRepresentation.NUMPYDANTIC]
+    )
     black: bool = True
 
     def _locate_imports(self, needed_classes: List[str], sv: SchemaView) -> Dict[str, List[str]]:
@@ -435,14 +437,14 @@ class NWBPydanticGenerator(PydanticGenerator):
     ):  # pragma: no cover
         # Confirm that the original slot range (ignoring the default that comes in from
         # induced_slot) isn't in addition to setting any_of
-        allowed_keys = ('array',)
+        allowed_keys = ("array",)
 
         if len(s.any_of) > 0 and sv.get_slot(sn).range is not None:
             allowed = True
             for option in s.any_of:
                 items = remove_empty_items(option)
                 if not all([key in allowed_keys for key in items.keys()]):
-                    allowed=False
+                    allowed = False
             if allowed:
                 return
             base_range_subsumes_any_of = False
@@ -452,7 +454,6 @@ class NWBPydanticGenerator(PydanticGenerator):
                 base_range_subsumes_any_of = True
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
-
 
     def _get_linkml_classvar(self, cls: ClassDefinition) -> SlotDefinition:
         """A class variable that holds additional linkml attrs"""
@@ -631,12 +632,14 @@ class NWBPydanticGenerator(PydanticGenerator):
 
         return slot_value
 
-    def generate_python_range(self, slot_range, slot_def: SlotDefinition, class_def: ClassDefinition) -> str:
+    def generate_python_range(
+        self, slot_range, slot_def: SlotDefinition, class_def: ClassDefinition
+    ) -> str:
         """
         Generate the python range for a slot range value
         """
         if isinstance(slot_range, ArrayExpression):
-            temp_slot = SlotDefinition(name='array', array=slot_range)
+            temp_slot = SlotDefinition(name="array", array=slot_range)
             inner_range = super().generate_python_range(slot_def.range, slot_def, class_def)
             results = super().get_array_representations_range(temp_slot, inner_range)
             return results[0].annotation
@@ -648,7 +651,7 @@ class NWBPydanticGenerator(PydanticGenerator):
 
             inner_range = super().generate_python_range(inner_range, slot_def, class_def)
             if slot_range.array is not None:
-                temp_slot = SlotDefinition(name='array', array=slot_range.array)
+                temp_slot = SlotDefinition(name="array", array=slot_range.array)
                 results = super().get_array_representations_range(temp_slot, inner_range)
                 inner_range = results[0].annotation
             return inner_range
@@ -803,6 +806,8 @@ class NWBPydanticGenerator(PydanticGenerator):
             class_isa_plus_mixins=self.get_class_isa_plus_mixins(sorted_classes),
             injected_fields=self.INJECTED_FIELDS,
         )
+        if self.black and format_black is not None:
+            code = format_black(code)
         return code
 
     def compile_module(
