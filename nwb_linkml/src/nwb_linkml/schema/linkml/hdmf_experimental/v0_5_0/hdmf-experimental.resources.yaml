@@ -1,0 +1,228 @@
+name: hdmf-experimental.resources
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-experimental
+id: hdmf-experimental.resources
+version: 0.5.0
+imports:
+- ../../hdmf_common/v1_8_0/namespace
+- hdmf-experimental.nwb.language
+default_prefix: hdmf-experimental.resources/
+classes:
+  HERD:
+    name: HERD
+    description: HDMF External Resources Data Structure. A set of six tables for tracking
+      external resource references in a file or across multiple files.
+    is_a: Container
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      keys:
+        name: keys
+        description: A table for storing user terms that are used to refer to external
+          resources.
+        multivalued: false
+        range: HERD__keys
+        required: true
+      files:
+        name: files
+        description: A table for storing object ids of files used in external resources.
+        multivalued: false
+        range: HERD__files
+        required: true
+      entities:
+        name: entities
+        description: A table for mapping user terms (i.e., keys) to resource entities.
+        multivalued: false
+        range: HERD__entities
+        required: true
+      objects:
+        name: objects
+        description: A table for identifying which objects in a file contain references
+          to external resources.
+        multivalued: false
+        range: HERD__objects
+        required: true
+      object_keys:
+        name: object_keys
+        description: A table for identifying which objects use which keys.
+        multivalued: false
+        range: HERD__object_keys
+        required: true
+      entity_keys:
+        name: entity_keys
+        description: A table for identifying which keys use which entity.
+        multivalued: false
+        range: HERD__entity_keys
+        required: true
+    tree_root: true
+  HERD__keys:
+    name: HERD__keys
+    description: A table for storing user terms that are used to refer to external
+      resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(keys)
+        identifier: true
+        range: string
+        required: true
+        equals_string: keys
+      key:
+        name: key
+        description: The user term that maps to one or more resources in the `resources`
+          table, e.g., "human".
+        multivalued: false
+        range: text
+        required: true
+  HERD__files:
+    name: HERD__files
+    description: A table for storing object ids of files used in external resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(files)
+        identifier: true
+        range: string
+        required: true
+        equals_string: files
+      file_object_id:
+        name: file_object_id
+        description: The object id (UUID) of a file that contains objects that refers
+          to external resources.
+        multivalued: false
+        range: text
+        required: true
+  HERD__entities:
+    name: HERD__entities
+    description: A table for mapping user terms (i.e., keys) to resource entities.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(entities)
+        identifier: true
+        range: string
+        required: true
+        equals_string: entities
+      entity_id:
+        name: entity_id
+        description: The compact uniform resource identifier (CURIE) of the entity,
+          in the form [prefix]:[unique local identifier], e.g., 'NCBI_TAXON:9606'.
+        multivalued: false
+        range: text
+        required: true
+      entity_uri:
+        name: entity_uri
+        description: The URI for the entity this reference applies to. This can be
+          an empty string. e.g., https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=9606
+        multivalued: false
+        range: text
+        required: true
+  HERD__objects:
+    name: HERD__objects
+    description: A table for identifying which objects in a file contain references
+      to external resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(objects)
+        identifier: true
+        range: string
+        required: true
+        equals_string: objects
+      files_idx:
+        name: files_idx
+        description: The row index to the file in the `files` table containing the
+          object.
+        multivalued: false
+        range: uint
+        required: true
+      object_id:
+        name: object_id
+        description: The object id (UUID) of the object.
+        multivalued: false
+        range: text
+        required: true
+      object_type:
+        name: object_type
+        description: The data type of the object.
+        multivalued: false
+        range: text
+        required: true
+      relative_path:
+        name: relative_path
+        description: The relative path from the data object with the `object_id` to
+          the dataset or attribute with the value(s) that is associated with an external
+          resource. This can be an empty string if the object is a dataset that contains
+          the value(s) that is associated with an external resource.
+        multivalued: false
+        range: text
+        required: true
+      field:
+        name: field
+        description: The field within the compound data type using an external resource.
+          This is used only if the dataset or attribute is a compound data type; otherwise
+          this should be an empty string.
+        multivalued: false
+        range: text
+        required: true
+  HERD__object_keys:
+    name: HERD__object_keys
+    description: A table for identifying which objects use which keys.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(object_keys)
+        identifier: true
+        range: string
+        required: true
+        equals_string: object_keys
+      objects_idx:
+        name: objects_idx
+        description: The row index to the object in the `objects` table that holds
+          the key
+        multivalued: false
+        range: uint
+        required: true
+      keys_idx:
+        name: keys_idx
+        description: The row index to the key in the `keys` table.
+        multivalued: false
+        range: uint
+        required: true
+  HERD__entity_keys:
+    name: HERD__entity_keys
+    description: A table for identifying which keys use which entity.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(entity_keys)
+        identifier: true
+        range: string
+        required: true
+        equals_string: entity_keys
+      entities_idx:
+        name: entities_idx
+        description: The row index to the entity in the `entities` table.
+        multivalued: false
+        range: uint
+        required: true
+      keys_idx:
+        name: keys_idx
+        description: The row index to the key in the `keys` table.
+        multivalued: false
+        range: uint
+        required: true

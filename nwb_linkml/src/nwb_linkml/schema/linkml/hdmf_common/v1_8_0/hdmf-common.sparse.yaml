@@ -1,0 +1,60 @@
+name: hdmf-common.sparse
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
+id: hdmf-common.sparse
+version: 1.8.0
+imports:
+- hdmf-common.base
+- hdmf-common.nwb.language
+default_prefix: hdmf-common.sparse/
+classes:
+  CSRMatrix:
+    name: CSRMatrix
+    description: A compressed sparse row matrix. Data are stored in the standard CSR
+      format, where column indices for row i are stored in indices[indptr[i]:indptr[i+1]]
+      and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
+    is_a: Container
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      shape:
+        name: shape
+        description: The shape (number of rows, number of columns) of this sparse
+          matrix.
+        range: uint
+      indices:
+        name: indices
+        description: The column indices.
+        multivalued: false
+        array:
+          dimensions:
+          - alias: number of non-zero values
+        range: uint
+        required: true
+      indptr:
+        name: indptr
+        description: The row index pointer.
+        multivalued: false
+        array:
+          dimensions:
+          - alias: number of rows in the matrix + 1
+        range: uint
+        required: true
+      data:
+        name: data
+        description: The non-zero values in the matrix.
+        multivalued: false
+        array:
+          dimensions:
+          - alias: number of non-zero values
+        range: AnyType
+        required: true
+    tree_root: true

@@ -1,20 +1,54 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
+    Dict,
     Optional,
+    Any,
+    Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
+from nptyping import (
+    Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
+)
+from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
-    pass
+    from typing import Literal
 else:
-    pass
+    from typing_extensions import Literal
 if TYPE_CHECKING:
     import numpy as np
 
@@ -37,7 +71,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -56,14 +90,5 @@ class LinkML_Meta(BaseModel):
     tree_root: bool = False
 
 
-class Arraylike(ConfiguredBaseModel):
-    """
-    Container for arraylike information held in the dims, shape, and dtype properties.this is a special case to be interpreted by downstream i/o. this class has no slotsand is abstract by default.- Each slot within a subclass indicates a possible dimension.- Only dimensions that are present in all the dimension specifiers in the  original schema are required.- Shape requirements are indicated using max/min cardinalities on the slot.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-
-
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-Arraylike.model_rebuild()

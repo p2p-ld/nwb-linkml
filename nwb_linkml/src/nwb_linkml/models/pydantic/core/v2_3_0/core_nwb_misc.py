@@ -1,22 +1,49 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
     Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -27,12 +54,16 @@ if TYPE_CHECKING:
 
 
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
-    DynamicTable,
     DynamicTableRegion,
-    VectorData,
     VectorIndex,
+    VectorData,
+    DynamicTable,
 )
-from .core_nwb_base import TimeSeries
+
+from .core_nwb_ecephys import ElectrodeGroup
+
+from .core_nwb_base import TimeSeriesStartingTime, TimeSeries, TimeSeriesSync
+
 
 metamodel_version = "None"
 version = "2.3.0"
@@ -52,7 +83,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -86,7 +117,9 @@ class AbstractFeatureSeries(TimeSeries):
         ...,
         description="""Description of the features represented in TimeSeries::data.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -142,7 +175,9 @@ class AnnotationSeries(TimeSeries):
     data: NDArray[Shape["* num_times"], str] = Field(
         ..., description="""Annotations made during an experiment."""
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -179,7 +214,9 @@ class IntervalSeries(TimeSeries):
     data: NDArray[Shape["* num_times"], int] = Field(
         ..., description="""Use values >0 if interval started, <0 if interval ended."""
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -214,7 +251,9 @@ class DecompositionSeries(TimeSeries):
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Data decomposed into frequency bands.""")
-    metric: str = Field(..., description="""The metric used, e.g. phase, amplitude, power.""")
+    metric: str = Field(
+        ..., description="""The metric used, e.g. phase, amplitude, power."""
+    )
     source_channels: Optional[str] = Field(
         None,
         description="""DynamicTableRegion pointer to the channels that this decomposition series was generated from.""",
@@ -223,7 +262,9 @@ class DecompositionSeries(TimeSeries):
         ...,
         description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -261,7 +302,9 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(None)
+    array: Optional[
+        NDArray[Shape["* num_times, * num_channels, * num_bands"], float]
+    ] = Field(None)
 
 
 class DecompositionSeriesSourceChannels(DynamicTableRegion):
@@ -331,18 +374,22 @@ class Units(DynamicTable):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    name: str = Field("Units")
     spike_times_index: Optional[str] = Field(
         None, description="""Index into the spike_times dataset."""
     )
-    spike_times: Optional[str] = Field(None, description="""Spike times for each unit.""")
+    spike_times: Optional[str] = Field(
+        None, description="""Spike times for each unit."""
+    )
     obs_intervals_index: Optional[str] = Field(
         None, description="""Index into the obs_intervals dataset."""
     )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start|end"], float]] = Field(
-        None, description="""Observation intervals for each unit."""
+    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start|end"], float]] = (
+        Field(None, description="""Observation intervals for each unit.""")
     )
-    electrodes_index: Optional[str] = Field(None, description="""Index into electrodes.""")
+    electrodes_index: Optional[str] = Field(
+        None, description="""Index into electrodes."""
+    )
     electrodes: Optional[str] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
@@ -362,10 +409,14 @@ class Units(DynamicTable):
             NDArray[Shape["* num_units, * num_samples"], float],
             NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
         ]
-    ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
-    waveforms: Optional[NDArray[Shape["* num_waveforms, * num_samples"], float]] = Field(
-        None,
-        description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
+    ] = Field(
+        None, description="""Spike waveform standard deviation for each spike unit."""
+    )
+    waveforms: Optional[NDArray[Shape["* num_waveforms, * num_samples"], float]] = (
+        Field(
+            None,
+            description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
+        )
     )
     waveforms_index: Optional[str] = Field(
         None,

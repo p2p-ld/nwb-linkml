@@ -1,22 +1,49 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
     Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -28,9 +55,13 @@ if TYPE_CHECKING:
 
 from .core_nwb_base import (
     NWBDataInterface,
+    TimeSeriesStartingTime,
+    TimeSeriesSync,
     TimeSeries,
 )
+
 from .core_nwb_misc import IntervalSeries
+
 
 metamodel_version = "None"
 version = "2.2.0"
@@ -50,7 +81,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -84,7 +115,9 @@ class SpatialSeries(TimeSeries):
         None,
         description="""Description defining what exactly 'straight-ahead' means.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -136,7 +169,9 @@ class BehavioralEpochs(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[IntervalSeries] | IntervalSeries] = Field(default_factory=dict)
+    children: Optional[List[IntervalSeries] | IntervalSeries] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 
@@ -176,7 +211,9 @@ class EyeTracking(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 
@@ -186,7 +223,9 @@ class CompassDirection(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 
@@ -196,7 +235,9 @@ class Position(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 

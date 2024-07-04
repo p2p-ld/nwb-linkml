@@ -1,22 +1,49 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
     Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -26,13 +53,18 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, DynamicTableRegion
+from .core_nwb_image import ImageSeriesExternalFile, ImageSeries
+
 from .core_nwb_base import (
-    NWBContainer,
+    TimeSeriesStartingTime,
+    TimeSeriesSync,
     NWBDataInterface,
     TimeSeries,
+    NWBContainer,
 )
-from .core_nwb_image import ImageSeries
+
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, DynamicTableRegion
+
 
 metamodel_version = "None"
 version = "2.2.2"
@@ -52,7 +84,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -109,7 +141,9 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -151,7 +185,9 @@ class RoiResponseSeries(TimeSeries):
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -208,7 +244,9 @@ class DfOverF(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(default_factory=dict)
+    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 
@@ -218,7 +256,9 @@ class Fluorescence(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(default_factory=dict)
+    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 
@@ -228,9 +268,9 @@ class ImageSegmentation(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]] = (
-        Field(default_factory=dict)
-    )
+    children: Optional[
+        List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
+    ] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -250,7 +290,9 @@ class MotionCorrection(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[NWBDataInterface] | NWBDataInterface] = Field(default_factory=dict)
+    children: Optional[List[NWBDataInterface] | NWBDataInterface] = Field(
+        default_factory=dict
+    )
     name: str = Field(...)
 
 

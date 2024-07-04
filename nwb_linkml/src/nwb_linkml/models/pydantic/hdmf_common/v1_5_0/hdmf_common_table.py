@@ -1,32 +1,60 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
     Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
-    pass
+    from typing import Literal
 else:
-    pass
+    from typing_extensions import Literal
 if TYPE_CHECKING:
     import numpy as np
 
 
 from .hdmf_common_base import Container, Data
+
 
 metamodel_version = "None"
 version = "1.5.0"
@@ -46,7 +74,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -115,7 +143,7 @@ class ElementIdentifiers(Data):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    name: str = Field("element_id")
 
 
 class DynamicTableRegion(VectorData):
@@ -172,9 +200,9 @@ class AlignedDynamicTable(DynamicTable):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]] = (
-        Field(default_factory=dict)
-    )
+    children: Optional[
+        List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
+    ] = Field(default_factory=dict)
     name: str = Field(...)
     colnames: Optional[str] = Field(
         None,

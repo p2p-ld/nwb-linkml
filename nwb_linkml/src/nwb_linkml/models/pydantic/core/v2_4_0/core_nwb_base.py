@@ -1,22 +1,49 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
     Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -26,8 +53,10 @@ if TYPE_CHECKING:
     import numpy as np
 
 
+from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData, DynamicTable
+
 from ...hdmf_common.v1_5_0.hdmf_common_base import Container, Data
-from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable, VectorData
+
 
 metamodel_version = "None"
 version = "2.4.0"
@@ -47,7 +76,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -81,7 +110,18 @@ class TimeSeriesReferenceVectorData(VectorData):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    name: str = Field("timeseries")
+    idx_start: int = Field(
+        ...,
+        description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
+    )
+    count: int = Field(
+        ...,
+        description="""Number of data samples available in this time series, during this epoch""",
+    )
+    timeseries: str = Field(
+        ..., description="""The TimeSeries that this index applies to"""
+    )
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -105,7 +145,9 @@ class Image(NWBData):
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
-    description: Optional[str] = Field(None, description="""Description of the image.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the image."""
+    )
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
@@ -140,7 +182,9 @@ class TimeSeries(NWBDataInterface):
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        None, description="""Description of the time series."""
+    )
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -247,7 +291,7 @@ class Images(NWBDataInterface):
     """
 
     linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    name: str = Field("Images")
     description: Optional[str] = Field(
         None, description="""Description of this collection of images."""
     )

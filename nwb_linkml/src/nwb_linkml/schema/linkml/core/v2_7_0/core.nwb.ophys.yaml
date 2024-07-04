@@ -1,0 +1,421 @@
+name: core.nwb.ophys
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
+id: core.nwb.ophys
+version: 2.7.0
+imports:
+- core.nwb.image
+- core.nwb.base
+- ../../hdmf_common/v1_8_0/namespace
+- core.nwb.device
+- core.nwb.language
+default_prefix: core.nwb.ophys/
+classes:
+  OnePhotonSeries:
+    name: OnePhotonSeries
+    description: Image stack recorded over time from 1-photon microscope.
+    is_a: ImageSeries
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      pmt_gain:
+        name: pmt_gain
+        description: Photomultiplier gain.
+        range: float32
+      scan_line_rate:
+        name: scan_line_rate
+        description: Lines imaged per second. This is also stored in /general/optophysiology
+          but is kept here as it is useful information for analysis, and so good to
+          be stored w/ the actual data.
+        range: float32
+      exposure_time:
+        name: exposure_time
+        description: Exposure time of the sample; often the inverse of the frequency.
+        range: float32
+      binning:
+        name: binning
+        description: Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc.
+        range: uint8
+      power:
+        name: power
+        description: Power of the excitation in mW, if known.
+        range: float32
+      intensity:
+        name: intensity
+        description: Intensity of the excitation in mW/mm^2, if known.
+        range: float32
+    tree_root: true
+  TwoPhotonSeries:
+    name: TwoPhotonSeries
+    description: Image stack recorded over time from 2-photon microscope.
+    is_a: ImageSeries
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      pmt_gain:
+        name: pmt_gain
+        description: Photomultiplier gain.
+        range: float32
+      scan_line_rate:
+        name: scan_line_rate
+        description: Lines imaged per second. This is also stored in /general/optophysiology
+          but is kept here as it is useful information for analysis, and so good to
+          be stored w/ the actual data.
+        range: float32
+      field_of_view:
+        name: field_of_view
+        description: Width, height and depth of image, or imaged area, in meters.
+        multivalued: false
+        range: float32
+        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: width|height
+              exact_cardinality: 2
+        - array:
+            dimensions:
+            - alias: width|height|depth
+              exact_cardinality: 3
+    tree_root: true
+  RoiResponseSeries:
+    name: RoiResponseSeries
+    description: ROI responses over an imaging plane. The first dimension represents
+      time. The second dimension, if present, represents ROIs.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      data:
+        name: data
+        description: Signals from ROIs.
+        multivalued: false
+        range: numeric
+        required: true
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_ROIs
+      rois:
+        name: rois
+        description: DynamicTableRegion referencing into an ROITable containing information
+          on the ROIs stored in this timeseries.
+        multivalued: false
+        range: RoiResponseSeries__rois
+        required: true
+    tree_root: true
+  RoiResponseSeries__rois:
+    name: RoiResponseSeries__rois
+    description: DynamicTableRegion referencing into an ROITable containing information
+      on the ROIs stored in this timeseries.
+    is_a: DynamicTableRegion
+    attributes:
+      name:
+        name: name
+        ifabsent: string(rois)
+        identifier: true
+        range: string
+        required: true
+        equals_string: rois
+  DfOverF:
+    name: DfOverF
+    description: dF/F information about a region of interest (ROI). Storage hierarchy
+      of dF/F should be the same as for segmentation (i.e., same names for ROIs and
+      for image planes).
+    is_a: NWBDataInterface
+    attributes:
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
+    tree_root: true
+  Fluorescence:
+    name: Fluorescence
+    description: Fluorescence information about a region of interest (ROI). Storage
+      hierarchy of fluorescence should be the same as for segmentation (ie, same names
+      for ROIs and for image planes).
+    is_a: NWBDataInterface
+    attributes:
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
+    tree_root: true
+  ImageSegmentation:
+    name: ImageSegmentation
+    description: Stores pixels in an image that represent different regions of interest
+      (ROIs) or masks. All segmentation for a given imaging plane is stored together,
+      with storage for multiple imaging planes (masks) supported. Each ROI is stored
+      in its own subgroup, with the ROI group containing both a 2D mask and a list
+      of pixels that make up this mask. Segments can also be used for masking neuropil.
+      If segmentation is allowed to change with time, a new imaging plane (or module)
+      is required and ROI names should remain consistent between them.
+    is_a: NWBDataInterface
+    attributes:
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: PlaneSegmentation
+    tree_root: true
+  PlaneSegmentation:
+    name: PlaneSegmentation
+    description: Results from image segmentation of a specific imaging plane.
+    is_a: DynamicTable
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      image_mask:
+        name: image_mask
+        description: ROI masks for each ROI. Each image mask is the size of the original
+          imaging plane (or volume) and members of the ROI are finite non-zero.
+        multivalued: false
+        range: AnyType
+        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_roi
+            - alias: num_x
+            - alias: num_y
+        - array:
+            dimensions:
+            - alias: num_roi
+            - alias: num_x
+            - alias: num_y
+            - alias: num_z
+      pixel_mask_index:
+        name: pixel_mask_index
+        description: Index into pixel_mask.
+        multivalued: false
+        range: PlaneSegmentation__pixel_mask_index
+        required: false
+      pixel_mask:
+        name: pixel_mask
+        description: 'Pixel masks for each ROI: a list of indices and weights for
+          the ROI. Pixel masks are concatenated and parsing of this dataset is maintained
+          by the PlaneSegmentation'
+        multivalued: false
+        range: PlaneSegmentation__pixel_mask
+        required: false
+      voxel_mask_index:
+        name: voxel_mask_index
+        description: Index into voxel_mask.
+        multivalued: false
+        range: PlaneSegmentation__voxel_mask_index
+        required: false
+      voxel_mask:
+        name: voxel_mask
+        description: 'Voxel masks for each ROI: a list of indices and weights for
+          the ROI. Voxel masks are concatenated and parsing of this dataset is maintained
+          by the PlaneSegmentation'
+        multivalued: false
+        range: PlaneSegmentation__voxel_mask
+        required: false
+      reference_images:
+        name: reference_images
+        description: Image stacks that the segmentation masks apply to.
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: ImageSeries
+    tree_root: true
+  PlaneSegmentation__pixel_mask_index:
+    name: PlaneSegmentation__pixel_mask_index
+    description: Index into pixel_mask.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(pixel_mask_index)
+        identifier: true
+        range: string
+        required: true
+        equals_string: pixel_mask_index
+  PlaneSegmentation__pixel_mask:
+    name: PlaneSegmentation__pixel_mask
+    description: 'Pixel masks for each ROI: a list of indices and weights for the
+      ROI. Pixel masks are concatenated and parsing of this dataset is maintained
+      by the PlaneSegmentation'
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(pixel_mask)
+        identifier: true
+        range: string
+        required: true
+        equals_string: pixel_mask
+      x:
+        name: x
+        description: Pixel x-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      y:
+        name: y
+        description: Pixel y-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      weight:
+        name: weight
+        description: Weight of the pixel.
+        multivalued: false
+        range: float32
+        required: false
+  PlaneSegmentation__voxel_mask_index:
+    name: PlaneSegmentation__voxel_mask_index
+    description: Index into voxel_mask.
+    is_a: VectorIndex
+    attributes:
+      name:
+        name: name
+        ifabsent: string(voxel_mask_index)
+        identifier: true
+        range: string
+        required: true
+        equals_string: voxel_mask_index
+  PlaneSegmentation__voxel_mask:
+    name: PlaneSegmentation__voxel_mask
+    description: 'Voxel masks for each ROI: a list of indices and weights for the
+      ROI. Voxel masks are concatenated and parsing of this dataset is maintained
+      by the PlaneSegmentation'
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(voxel_mask)
+        identifier: true
+        range: string
+        required: true
+        equals_string: voxel_mask
+      x:
+        name: x
+        description: Voxel x-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      y:
+        name: y
+        description: Voxel y-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      z:
+        name: z
+        description: Voxel z-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      weight:
+        name: weight
+        description: Weight of the voxel.
+        multivalued: false
+        range: float32
+        required: false
+  ImagingPlane:
+    name: ImagingPlane
+    description: An imaging plane and its metadata.
+    is_a: NWBContainer
+    attributes:
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: OpticalChannel
+    tree_root: true
+  OpticalChannel:
+    name: OpticalChannel
+    description: An optical channel used to record from an imaging plane.
+    is_a: NWBContainer
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description or other notes about the channel.
+        multivalued: false
+        range: text
+        required: true
+      emission_lambda:
+        name: emission_lambda
+        description: Emission wavelength for channel, in nm.
+        multivalued: false
+        range: float32
+        required: true
+    tree_root: true
+  MotionCorrection:
+    name: MotionCorrection
+    description: 'An image stack where all frames are shifted (registered) to a common
+      coordinate system, to account for movement and drift between frames. Note: each
+      frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
+    is_a: NWBDataInterface
+    attributes:
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: CorrectedImageStack
+    tree_root: true
+  CorrectedImageStack:
+    name: CorrectedImageStack
+    description: Results from motion correction of an image stack.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      corrected:
+        name: corrected
+        description: Image stack with frames shifted to the common coordinates.
+        multivalued: false
+        range: ImageSeries
+        required: true
+      xy_translation:
+        name: xy_translation
+        description: Stores the x,y delta necessary to align each frame to the common
+          coordinates, for example, to align each frame to a reference image.
+        multivalued: false
+        range: TimeSeries
+        required: true
+    tree_root: true

@@ -1,0 +1,74 @@
+name: core.nwb.ogen
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
+id: core.nwb.ogen
+version: 2.7.0
+imports:
+- core.nwb.base
+- core.nwb.device
+- core.nwb.language
+default_prefix: core.nwb.ogen/
+classes:
+  OptogeneticSeries:
+    name: OptogeneticSeries
+    description: An optogenetic stimulus.
+    is_a: TimeSeries
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      data:
+        name: data
+        description: Applied power for optogenetic stimulus, in watts. Shape can be
+          1D or 2D. 2D data is meant to be used in an extension of OptogeneticSeries
+          that defines what the second dimension represents.
+        multivalued: false
+        range: numeric
+        required: true
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_rois
+    tree_root: true
+  OptogeneticStimulusSite:
+    name: OptogeneticStimulusSite
+    description: A site of optogenetic stimulation.
+    is_a: NWBContainer
+    attributes:
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of stimulation site.
+        multivalued: false
+        range: text
+        required: true
+      excitation_lambda:
+        name: excitation_lambda
+        description: Excitation wavelength, in nm.
+        multivalued: false
+        range: float32
+        required: true
+      location:
+        name: location
+        description: Location of the stimulation site. Specify the area, layer, comments
+          on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
+          standard atlas names for anatomical regions when possible.
+        multivalued: false
+        range: text
+        required: true
+    tree_root: true

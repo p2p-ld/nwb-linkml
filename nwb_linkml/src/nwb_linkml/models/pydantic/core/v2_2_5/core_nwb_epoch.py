@@ -1,21 +1,49 @@
 from __future__ import annotations
-
-import sys
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
+    Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -26,9 +54,13 @@ if TYPE_CHECKING:
 
 
 from ...hdmf_common.v1_1_3.hdmf_common_table import (
+    VectorData,
     DynamicTable,
     VectorIndex,
 )
+
+from .core_nwb_base import TimeSeries
+
 
 metamodel_version = "None"
 version = "2.2.5"
@@ -48,7 +80,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -85,10 +117,12 @@ class TimeIntervals(DynamicTable):
         description="""User-defined tags that identify or categorize events.""",
     )
     tags_index: Optional[str] = Field(None, description="""Index for tags.""")
-    timeseries: Optional[List[Any] | Any] = Field(
-        default_factory=list, description="""An index into a TimeSeries object."""
+    timeseries: Optional[str] = Field(
+        None, description="""An index into a TimeSeries object."""
     )
-    timeseries_index: Optional[str] = Field(None, description="""Index for timeseries.""")
+    timeseries_index: Optional[str] = Field(
+        None, description="""Index for timeseries."""
+    )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -123,6 +157,37 @@ class TimeIntervalsTagsIndex(VectorIndex):
     array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
 
 
+class TimeIntervalsTimeseries(VectorData):
+    """
+    An index into a TimeSeries object.
+    """
+
+    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
+    name: Literal["timeseries"] = Field("timeseries")
+    idx_start: Optional[int] = Field(
+        None,
+        description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
+    )
+    count: Optional[int] = Field(
+        None,
+        description="""Number of data samples available in this time series, during this epoch.""",
+    )
+    timeseries: Optional[str] = Field(
+        None, description="""the TimeSeries that this index applies to."""
+    )
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
+    array: Optional[
+        Union[
+            NDArray[Shape["* dim0"], Any],
+            NDArray[Shape["* dim0, * dim1"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
+        ]
+    ] = Field(None)
+
+
 class TimeIntervalsTimeseriesIndex(VectorIndex):
     """
     Index for timeseries.
@@ -141,4 +206,5 @@ class TimeIntervalsTimeseriesIndex(VectorIndex):
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 TimeIntervals.model_rebuild()
 TimeIntervalsTagsIndex.model_rebuild()
+TimeIntervalsTimeseries.model_rebuild()
 TimeIntervalsTimeseriesIndex.model_rebuild()

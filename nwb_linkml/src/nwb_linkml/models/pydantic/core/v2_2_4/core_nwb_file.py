@@ -1,23 +1,49 @@
 from __future__ import annotations
-
-import sys
-from datetime import datetime
+from datetime import datetime, date
+from enum import Enum
 from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    List,
+    Dict,
     Optional,
+    Any,
     Union,
+    ClassVar,
+    Annotated,
+    TypeVar,
+    List,
+    TYPE_CHECKING,
 )
+from pydantic import BaseModel as BaseModel, Field
+from pydantic import ConfigDict, BeforeValidator
 
 from nptyping import (
     Shape,
+    Float,
+    Float32,
+    Double,
+    Float64,
+    LongLong,
+    Int64,
+    Int,
+    Int32,
+    Int16,
+    Short,
+    Int8,
+    UInt,
+    UInt32,
+    UInt16,
+    UInt8,
+    UInt64,
+    Number,
+    String,
+    Unicode,
+    Unicode,
+    Unicode,
+    String,
+    Bool,
+    Datetime64,
 )
-from pydantic import BaseModel as BaseModel
-from pydantic import ConfigDict, Field
-
 from nwb_linkml.types import NDArray
+import sys
 
 if sys.version_info >= (3, 8):
     from typing import Literal
@@ -27,20 +53,34 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    DynamicTable,
-)
+from .core_nwb_misc import Units
+
+from .core_nwb_device import Device
+
+from .core_nwb_ecephys import ElectrodeGroup
+
+from .core_nwb_epoch import TimeIntervals
+
 from .core_nwb_base import (
     NWBContainer,
     NWBData,
-    NWBDataInterface,
-    ProcessingModule,
     TimeSeries,
+    ProcessingModule,
+    NWBDataInterface,
 )
-from .core_nwb_device import Device
-from .core_nwb_epoch import TimeIntervals
-from .core_nwb_ogen import OptogeneticStimulusSite
+
 from .core_nwb_ophys import ImagingPlane
+
+from .core_nwb_icephys import SweepTable, IntracellularElectrode
+
+from ...hdmf_common.v1_1_3.hdmf_common_table import (
+    VectorIndex,
+    VectorData,
+    DynamicTable,
+)
+
+from .core_nwb_ogen import OptogeneticStimulusSite
+
 
 metamodel_version = "None"
 version = "2.2.4"
@@ -60,7 +100,7 @@ class ConfiguredBaseModel(BaseModel):
 
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> np.ndarray:
+    def __getitem__(self, i: slice | int) -> "np.ndarray":
         if hasattr(self, "array"):
             return self.array[i]
         else:
@@ -201,7 +241,9 @@ class NWBFileGeneral(ConfiguredBaseModel):
     keywords: Optional[NDArray[Shape["* num_keywords"], str]] = Field(
         None, description="""Terms to search over."""
     )
-    lab: Optional[str] = Field(None, description="""Laboratory where experiment was performed.""")
+    lab: Optional[str] = Field(
+        None, description="""Laboratory where experiment was performed."""
+    )
     notes: Optional[str] = Field(None, description="""Notes about the experiment.""")
     pharmacology: Optional[str] = Field(
         None,
@@ -214,7 +256,9 @@ class NWBFileGeneral(ConfiguredBaseModel):
     related_publications: Optional[NDArray[Shape["* num_publications"], str]] = Field(
         None, description="""Publication information. PMID, DOI, URL, etc."""
     )
-    session_id: Optional[str] = Field(None, description="""Lab-specific ID for the session.""")
+    session_id: Optional[str] = Field(
+        None, description="""Lab-specific ID for the session."""
+    )
     slices: Optional[str] = Field(
         None,
         description="""Description of slices, including information about preparation thickness, orientation, temperature, and bath solution.""",
@@ -253,9 +297,11 @@ class NWBFileGeneral(ConfiguredBaseModel):
     intracellular_ephys: Optional[str] = Field(
         None, description="""Metadata related to intracellular electrophysiology."""
     )
-    optogenetics: Optional[List[OptogeneticStimulusSite] | OptogeneticStimulusSite] = Field(
-        default_factory=dict,
-        description="""Metadata describing optogenetic stimuluation.""",
+    optogenetics: Optional[List[OptogeneticStimulusSite] | OptogeneticStimulusSite] = (
+        Field(
+            default_factory=dict,
+            description="""Metadata describing optogenetic stimuluation.""",
+        )
     )
     optophysiology: Optional[List[ImagingPlane] | ImagingPlane] = Field(
         default_factory=dict, description="""Metadata related to optophysiology."""
