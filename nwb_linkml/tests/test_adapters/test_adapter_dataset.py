@@ -1,6 +1,9 @@
 from nwb_linkml.adapters.dataset import (
     MapScalar,
+    DatasetAdapter
 )
+from nwb_linkml.adapters import NamespacesAdapter
+
 from nwb_schema_language import Dataset
 
 

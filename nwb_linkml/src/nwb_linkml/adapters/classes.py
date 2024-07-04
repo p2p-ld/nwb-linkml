@@ -123,6 +123,7 @@ class ClassAdapter(Adapter):
 
             name_parts.append(self.cls.name)
             name = "__".join(name_parts)
+
         elif self.cls.neurodata_type_inc is not None:
             # again, this is against the schema, but is common
             name = self.cls.neurodata_type_inc
@@ -206,12 +207,20 @@ class ClassAdapter(Adapter):
         Returns:
 
         """
-        if self.cls.name:
+        if self.cls.name or self.cls.default_name:
+            if self.cls.name:
+                # name overrides default_name
+                name = self.cls.name
+                equals_string = name
+            else:
+                name = self.cls.default_name
+                equals_string = None
+
             name_slot = SlotDefinition(
                 name="name",
                 required=True,
-                ifabsent=f"string({self.cls.name})",
-                equals_string=self.cls.name,
+                ifabsent=f"string({name})",
+                equals_string=equals_string,
                 range="string",
                 identifier=True,
             )

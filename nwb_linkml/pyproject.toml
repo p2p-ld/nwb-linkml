@@ -23,6 +23,7 @@ dependencies = [
     "blosc2>=2.2.7",
     "tqdm>=4.66.1",
     'typing-extensions>=4.12.2;python_version<"3.11"',
+    "numpydantic>=1.2.1",
 ]
 
 [project.urls]

@@ -67,7 +67,7 @@ def tmp_output_dir_mod(tmp_output_dir) -> Path:
     return subpath
 
 
-@pytest.fixture(scope="session", params=[{"core_version": "2.6.0", "hdmf_version": "1.5.0"}])
+@pytest.fixture(scope="session", params=[{"core_version": "2.7.0", "hdmf_version": "1.8.0"}])
 def nwb_core_fixture(request) -> NamespacesAdapter:
     nwb_core = io.load_nwb_core(**request.param)
     nwb_core.populate_imports()

@@ -34,20 +34,6 @@ for nwbtype, linkmltype in flat_to_linkml.items():
     atype = TypeDefinition(name=nwbtype, minimum_value=amin, typeof=linkmltype)
     DTypeTypes.append(atype)
 
-Arraylike = ClassDefinition(
-    name="Arraylike",
-    description=(
-        "Container for arraylike information held in the dims, shape, and dtype properties."
-        "this is a special case to be interpreted by downstream i/o. this class has no slots"
-        "and is abstract by default."
-        "- Each slot within a subclass indicates a possible dimension."
-        "- Only dimensions that are present in all the dimension specifiers in the"
-        "  original schema are required."
-        "- Shape requirements are indicated using max/min cardinalities on the slot."
-    ),
-    abstract=True,
-)
-
 AnyType = ClassDefinition(
     name="AnyType",
     class_uri="linkml:Any",
@@ -60,7 +46,7 @@ NwbLangSchema = SchemaDefinition(
     id="nwb.language",
     description="Adapter objects to mimic the behavior of elements in the nwb-schema-language",
     enums=[FlatDType],
-    classes=[Arraylike, AnyType],
+    classes=[AnyType],
     types=DTypeTypes,
     imports=["linkml:types"],
     prefixes={"linkml": Prefix("linkml", "https://w3id.org/linkml")},
