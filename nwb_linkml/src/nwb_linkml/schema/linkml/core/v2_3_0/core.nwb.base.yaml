@@ -305,6 +305,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(Images)
         identifier: true
         range: string
         required: true

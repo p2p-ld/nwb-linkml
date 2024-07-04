@@ -34,8 +34,30 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(timeseries)
         identifier: true
         range: string
+        required: true
+      idx_start:
+        name: idx_start
+        description: Start index into the TimeSeries 'data' and 'timestamp' datasets
+          of the referenced TimeSeries. The first dimension of those arrays is always
+          time.
+        multivalued: false
+        range: int32
+        required: true
+      count:
+        name: count
+        description: Number of data samples available in this time series, during
+          this epoch
+        multivalued: false
+        range: int32
+        required: true
+      timeseries:
+        name: timeseries
+        description: The TimeSeries that this index applies to
+        multivalued: false
+        range: TimeSeries
         required: true
     tree_root: true
   Image:
@@ -318,6 +340,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(Images)
         identifier: true
         range: string
         required: true

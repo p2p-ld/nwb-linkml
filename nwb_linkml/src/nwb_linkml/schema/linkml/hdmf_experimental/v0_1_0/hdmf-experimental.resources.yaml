@@ -30,46 +30,163 @@ classes:
         description: A table for storing user terms that are used to refer to external
           resources.
         multivalued: false
-        array:
-          dimensions:
-          - alias: num_rows
-        range: AnyType
+        range: ExternalResources__keys
         required: true
       entities:
         name: entities
         description: A table for mapping user terms (i.e., keys) to resource entities.
         multivalued: false
-        array:
-          dimensions:
-          - alias: num_rows
-        range: AnyType
+        range: ExternalResources__entities
         required: true
       resources:
         name: resources
         description: A table for mapping user terms (i.e., keys) to resource entities.
         multivalued: false
-        array:
-          dimensions:
-          - alias: num_rows
-        range: AnyType
+        range: ExternalResources__resources
         required: true
       objects:
         name: objects
         description: A table for identifying which objects in a file contain references
           to external resources.
         multivalued: false
-        array:
-          dimensions:
-          - alias: num_rows
-        range: AnyType
+        range: ExternalResources__objects
         required: true
       object_keys:
         name: object_keys
         description: A table for identifying which objects use which keys.
         multivalued: false
-        array:
-          dimensions:
-          - alias: num_rows
-        range: AnyType
+        range: ExternalResources__object_keys
         required: true
     tree_root: true
+  ExternalResources__keys:
+    name: ExternalResources__keys
+    description: A table for storing user terms that are used to refer to external
+      resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(keys)
+        identifier: true
+        range: string
+        required: true
+        equals_string: keys
+      key:
+        name: key
+        description: The user term that maps to one or more resources in the 'resources'
+          table.
+        multivalued: false
+        range: text
+        required: true
+  ExternalResources__entities:
+    name: ExternalResources__entities
+    description: A table for mapping user terms (i.e., keys) to resource entities.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(entities)
+        identifier: true
+        range: string
+        required: true
+        equals_string: entities
+      keys_idx:
+        name: keys_idx
+        description: The index to the key in the 'keys' table.
+        multivalued: false
+        range: uint
+        required: true
+      resources_idx:
+        name: resources_idx
+        description: The index into the 'resources' table
+        multivalued: false
+        range: uint
+        required: true
+      entity_id:
+        name: entity_id
+        description: The unique identifier entity.
+        multivalued: false
+        range: text
+        required: true
+      entity_uri:
+        name: entity_uri
+        description: The URI for the entity this reference applies to. This can be
+          an empty string.
+        multivalued: false
+        range: text
+        required: true
+  ExternalResources__resources:
+    name: ExternalResources__resources
+    description: A table for mapping user terms (i.e., keys) to resource entities.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(resources)
+        identifier: true
+        range: string
+        required: true
+        equals_string: resources
+      resource:
+        name: resource
+        description: The name of the resource.
+        multivalued: false
+        range: text
+        required: true
+      resource_uri:
+        name: resource_uri
+        description: The URI for the resource. This can be an empty string.
+        multivalued: false
+        range: text
+        required: true
+  ExternalResources__objects:
+    name: ExternalResources__objects
+    description: A table for identifying which objects in a file contain references
+      to external resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(objects)
+        identifier: true
+        range: string
+        required: true
+        equals_string: objects
+      object_id:
+        name: object_id
+        description: The UUID for the object.
+        multivalued: false
+        range: text
+        required: true
+      field:
+        name: field
+        description: The field of the object. This can be an empty string if the object
+          is a dataset and the field is the dataset values.
+        multivalued: false
+        range: text
+        required: true
+  ExternalResources__object_keys:
+    name: ExternalResources__object_keys
+    description: A table for identifying which objects use which keys.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(object_keys)
+        identifier: true
+        range: string
+        required: true
+        equals_string: object_keys
+      objects_idx:
+        name: objects_idx
+        description: The index to the 'objects' table for the object that holds the
+          key.
+        multivalued: false
+        range: uint
+        required: true
+      keys_idx:
+        name: keys_idx
+        description: The index to the 'keys' table for the key.
+        multivalued: false
+        range: uint
+        required: true

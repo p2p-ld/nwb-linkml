@@ -246,6 +246,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(Units)
         identifier: true
         range: string
         required: true

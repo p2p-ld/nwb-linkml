@@ -224,8 +224,9 @@ classes:
         description: 'Pixel masks for each ROI: a list of indices and weights for
           the ROI. Pixel masks are concatenated and parsing of this dataset is maintained
           by the PlaneSegmentation'
-        multivalued: true
-        range: AnyType
+        multivalued: false
+        range: PlaneSegmentation__pixel_mask
+        required: false
       voxel_mask_index:
         name: voxel_mask_index
         description: Index into voxel_mask.
@@ -237,8 +238,9 @@ classes:
         description: 'Voxel masks for each ROI: a list of indices and weights for
           the ROI. Voxel masks are concatenated and parsing of this dataset is maintained
           by the PlaneSegmentation'
-        multivalued: true
-        range: AnyType
+        multivalued: false
+        range: PlaneSegmentation__voxel_mask
+        required: false
       reference_images:
         name: reference_images
         description: Image stacks that the segmentation masks apply to.
@@ -260,6 +262,38 @@ classes:
         range: string
         required: true
         equals_string: pixel_mask_index
+  PlaneSegmentation__pixel_mask:
+    name: PlaneSegmentation__pixel_mask
+    description: 'Pixel masks for each ROI: a list of indices and weights for the
+      ROI. Pixel masks are concatenated and parsing of this dataset is maintained
+      by the PlaneSegmentation'
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(pixel_mask)
+        identifier: true
+        range: string
+        required: true
+        equals_string: pixel_mask
+      x:
+        name: x
+        description: Pixel x-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      y:
+        name: y
+        description: Pixel y-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      weight:
+        name: weight
+        description: Weight of the pixel.
+        multivalued: false
+        range: float32
+        required: false
   PlaneSegmentation__voxel_mask_index:
     name: PlaneSegmentation__voxel_mask_index
     description: Index into voxel_mask.
@@ -272,6 +306,44 @@ classes:
         range: string
         required: true
         equals_string: voxel_mask_index
+  PlaneSegmentation__voxel_mask:
+    name: PlaneSegmentation__voxel_mask
+    description: 'Voxel masks for each ROI: a list of indices and weights for the
+      ROI. Voxel masks are concatenated and parsing of this dataset is maintained
+      by the PlaneSegmentation'
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(voxel_mask)
+        identifier: true
+        range: string
+        required: true
+        equals_string: voxel_mask
+      x:
+        name: x
+        description: Voxel x-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      y:
+        name: y
+        description: Voxel y-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      z:
+        name: z
+        description: Voxel z-coordinate.
+        multivalued: false
+        range: uint32
+        required: false
+      weight:
+        name: weight
+        description: Weight of the voxel.
+        multivalued: false
+        range: float32
+        required: false
   ImagingPlane:
     name: ImagingPlane
     description: An imaging plane and its metadata.

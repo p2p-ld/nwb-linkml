@@ -28,6 +28,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(ImagingRetinotopy)
         identifier: true
         range: string
         required: true

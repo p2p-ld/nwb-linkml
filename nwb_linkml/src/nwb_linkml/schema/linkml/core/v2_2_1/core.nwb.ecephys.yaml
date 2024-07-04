@@ -139,6 +139,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(FeatureExtraction)
         identifier: true
         range: string
         required: true
@@ -200,6 +201,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(EventDetection)
         identifier: true
         range: string
         required: true
@@ -309,9 +311,38 @@ classes:
         name: position
         description: stereotaxic or common framework coordinates
         multivalued: false
-        range: AnyType
+        range: ElectrodeGroup__position
         required: false
     tree_root: true
+  ElectrodeGroup__position:
+    name: ElectrodeGroup__position
+    description: stereotaxic or common framework coordinates
+    attributes:
+      name:
+        name: name
+        ifabsent: string(position)
+        identifier: true
+        range: string
+        required: true
+        equals_string: position
+      x:
+        name: x
+        description: x coordinate
+        multivalued: false
+        range: float32
+        required: false
+      y:
+        name: y
+        description: y coordinate
+        multivalued: false
+        range: float32
+        required: false
+      z:
+        name: z
+        description: z coordinate
+        multivalued: false
+        range: float32
+        required: false
   ClusterWaveforms:
     name: ClusterWaveforms
     description: DEPRECATED The mean waveform shape, including standard deviation,
@@ -324,6 +355,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(ClusterWaveforms)
         identifier: true
         range: string
         required: true
@@ -366,6 +398,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(Clustering)
         identifier: true
         range: string
         required: true

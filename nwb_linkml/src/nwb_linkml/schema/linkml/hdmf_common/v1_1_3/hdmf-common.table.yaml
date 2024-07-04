@@ -112,6 +112,7 @@ classes:
     attributes:
       name:
         name: name
+        ifabsent: string(element_id)
         identifier: true
         range: string
         required: true

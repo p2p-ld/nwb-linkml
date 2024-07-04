@@ -49,8 +49,9 @@ classes:
       timeseries:
         name: timeseries
         description: An index into a TimeSeries object.
-        multivalued: true
-        range: AnyType
+        multivalued: false
+        range: TimeIntervals__timeseries
+        required: false
       timeseries_index:
         name: timeseries_index
         description: Index for timeseries.
@@ -70,6 +71,39 @@ classes:
         range: string
         required: true
         equals_string: tags_index
+  TimeIntervals__timeseries:
+    name: TimeIntervals__timeseries
+    description: An index into a TimeSeries object.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(timeseries)
+        identifier: true
+        range: string
+        required: true
+        equals_string: timeseries
+      idx_start:
+        name: idx_start
+        description: Start index into the TimeSeries 'data' and 'timestamp' datasets
+          of the referenced TimeSeries. The first dimension of those arrays is always
+          time.
+        multivalued: false
+        range: int32
+        required: false
+      count:
+        name: count
+        description: Number of data samples available in this time series, during
+          this epoch.
+        multivalued: false
+        range: int32
+        required: false
+      timeseries:
+        name: timeseries
+        description: the TimeSeries that this index applies to.
+        multivalued: false
+        range: TimeSeries
+        required: false
   TimeIntervals__timeseries_index:
     name: TimeIntervals__timeseries_index
     description: Index for timeseries.
