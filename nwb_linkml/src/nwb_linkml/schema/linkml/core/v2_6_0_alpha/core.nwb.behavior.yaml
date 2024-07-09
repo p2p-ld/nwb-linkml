@@ -80,12 +80,12 @@ classes:
         - array:
             dimensions:
             - alias: num_times
-            - alias: x,y
+            - alias: x_y
               exact_cardinality: 2
         - array:
             dimensions:
             - alias: num_times
-            - alias: x,y,z
+            - alias: x_y_z
               exact_cardinality: 3
   BehavioralEpochs:
     name: BehavioralEpochs

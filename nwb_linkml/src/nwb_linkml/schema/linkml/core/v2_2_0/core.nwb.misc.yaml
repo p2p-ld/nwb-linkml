@@ -216,7 +216,7 @@ classes:
         array:
           dimensions:
           - alias: num_bands
-          - alias: low, high
+          - alias: low_high
             exact_cardinality: 2
         range: float32
         required: true
@@ -275,7 +275,7 @@ classes:
         array:
           dimensions:
           - alias: num_intervals
-          - alias: start|end
+          - alias: start_end
             exact_cardinality: 2
         range: float64
         required: false

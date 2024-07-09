@@ -45,11 +45,11 @@ classes:
         any_of:
         - array:
             dimensions:
-            - alias: width|height
+            - alias: width_height
               exact_cardinality: 2
         - array:
             dimensions:
-            - alias: width|height
+            - alias: width_height
               exact_cardinality: 3
     tree_root: true
   RoiResponseSeries:
@@ -76,7 +76,7 @@ classes:
         - array:
             dimensions:
             - alias: num_times
-            - alias: num_ROIs
+            - alias: num_rois
       rois:
         name: rois
         description: DynamicTableRegion referencing into an ROITable containing information

@@ -92,13 +92,13 @@ classes:
             dimensions:
             - alias: x
             - alias: y
-            - alias: r, g, b
+            - alias: r_g_b
               exact_cardinality: 3
         - array:
             dimensions:
             - alias: x
             - alias: y
-            - alias: r, g, b, a
+            - alias: r_g_b_a
               exact_cardinality: 4
     tree_root: true
   ImageReferences:
@@ -291,18 +291,18 @@ classes:
         - array:
             dimensions:
             - alias: num_times
-            - alias: num_DIM2
+            - alias: num_dim2
         - array:
             dimensions:
             - alias: num_times
-            - alias: num_DIM2
-            - alias: num_DIM3
+            - alias: num_dim2
+            - alias: num_dim3
         - array:
             dimensions:
             - alias: num_times
-            - alias: num_DIM2
-            - alias: num_DIM3
-            - alias: num_DIM4
+            - alias: num_dim2
+            - alias: num_dim3
+            - alias: num_dim4
   TimeSeries__starting_time:
     name: TimeSeries__starting_time
     description: Timestamp of the first sample in seconds. When timestamps are uniformly

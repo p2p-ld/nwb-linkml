@@ -189,11 +189,11 @@ classes:
         any_of:
         - array:
             dimensions:
-            - alias: width, height
+            - alias: width_height
               exact_cardinality: 2
         - array:
             dimensions:
-            - alias: width, height, depth
+            - alias: width_height_depth
               exact_cardinality: 3
       data:
         name: data
@@ -212,7 +212,7 @@ classes:
             - alias: frame
             - alias: x
             - alias: y
-            - alias: r, g, b
+            - alias: r_g_b
               exact_cardinality: 3
       orientation:
         name: orientation

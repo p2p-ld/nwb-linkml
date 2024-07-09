@@ -36,7 +36,7 @@ classes:
         multivalued: false
         array:
           dimensions:
-          - alias: number of non-zero values
+          - alias: number_of_non_zero_values
         range: uint
         required: true
       indptr:
@@ -45,7 +45,7 @@ classes:
         multivalued: false
         array:
           dimensions:
-          - alias: number of rows in the matrix + 1
+          - alias: number_of_rows_in_the_matrix_1
         range: uint
         required: true
       data:
@@ -54,7 +54,7 @@ classes:
         multivalued: false
         array:
           dimensions:
-          - alias: number of non-zero values
+          - alias: number_of_non_zero_values
         range: AnyType
         required: true
     tree_root: true
