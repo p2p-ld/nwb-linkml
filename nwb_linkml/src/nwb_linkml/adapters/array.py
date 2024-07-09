@@ -10,6 +10,7 @@ from linkml_runtime.linkml_model.meta import (
     DimensionExpression,
 )
 
+from nwb_linkml.maps.naming import snake_case
 from nwb_linkml.types.nwb import DIMS_TYPE, SHAPE_TYPE
 
 
@@ -87,7 +88,7 @@ class ArrayAdapter:
         """
         Create the corresponding array specification from a shape
         """
-        dims = [DimensionExpression(alias=dim.dims, exact_cardinality=dim.shape) for dim in shape]
+        dims = [DimensionExpression(alias=snake_case(dim.dims), exact_cardinality=dim.shape) for dim in shape]
         return ArrayExpression(dimensions=dims)
 
     def make(self) -> List[ArrayExpression]:

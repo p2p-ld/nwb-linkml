@@ -9,6 +9,8 @@ from sybil.parsers.rest import DocTestParser, PythonCodeBlockParser
 
 from .fixtures import *  # noqa: F403
 
+# Test adapter generation examples
+
 pytest_collect_file = Sybil(
     parsers=[
         DocTestParser(optionflags=ELLIPSIS + NORMALIZE_WHITESPACE),

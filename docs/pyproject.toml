@@ -21,6 +21,7 @@ dependencies = [
     "myst-nb @ git+https://github.com/executablebooks/MyST-NB.git",
     "ipykernel>=6.25.2",
     "ipywidgets>=8.1.1",
+    "sphinx-jinja>=2.0.2",
 ]
 
 [build-system]
@@ -35,3 +36,5 @@ check-hidden = true
 # ignore-words-list = ''
 
 
+[tool.pdm]
+distribution = false

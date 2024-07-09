@@ -3,24 +3,45 @@ Adapters to linkML classes
 """
 
 from abc import abstractmethod
-from typing import List, Optional
+from typing import Type, TypeVar, List, Optional
 
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+from pydantic import field_validator
+
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
 from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype
 
+T = TypeVar('T', bound=Type[Dataset] | Type[Group])
+TI = TypeVar('TI', bound=Dataset | Group)
 
 class ClassAdapter(Adapter):
     """
     Abstract adapter to class-like things in linkml, holds methods common to
     both DatasetAdapter and GroupAdapter
     """
+    TYPE: T
+    """
+    The type that this adapter class handles
+    """
 
-    cls: Dataset | Group
+    cls: TI
     parent: Optional["ClassAdapter"] = None
+
+    @field_validator('cls', mode='before')
+    @classmethod
+    def cast_from_string(cls, value: str | TI) -> TI:
+        """
+        Cast from YAML string to desired class
+        """
+        if isinstance(value, str):
+            from nwb_linkml.io.schema import load_yaml
+            value = load_yaml(value)
+            value = cls.TYPE(**value)
+        return value
+
 
     @abstractmethod
     def build(self) -> BuildResult:

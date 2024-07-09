@@ -1,12 +1,10 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
-import pdb
 from abc import abstractmethod
 from typing import Optional, Type
 
 from linkml_runtime.linkml_model.meta import (
-    ClassDefinition,
     SlotDefinition,
 )
 
@@ -51,37 +49,23 @@ class MapScalar(DatasetMap):
 
     Examples:
 
-        .. grid:: 2
-            :gutter: 1
-            :margin: 0
-            :padding: 0
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - name: MyScalar
+                  doc: A scalar
+                  dtype: int32
+                  quantity: '?'
+            :linkml:
+                attributes:
+                - name: MyScalar
+                  description: A scalar
+                  multivalued: false
+                  range: int32
+                  required: false
 
-            .. grid-item-card::
-                :margin: 0
 
-                NWB Schema
-                ^^^
-                .. code-block:: yaml
 
-                    datasets:
-                    - name: MyScalar
-                      doc: A scalar
-                      dtype: int32
-                      quantity: '?'
-
-            .. grid-item-card::
-                :margin: 0
-
-                LinkML
-                ^^^
-                .. code-block:: yaml
-
-                    attributes:
-                    - name: MyScalar
-                      description: A scalar
-                      multivalued: false
-                      range: int32
-                      required: false
 
 
     """
@@ -463,6 +447,7 @@ class DatasetAdapter(ClassAdapter):
     """
     Orchestrator class for datasets - calls the set of applicable mapping classes
     """
+    TYPE = Dataset
 
     cls: Dataset
 

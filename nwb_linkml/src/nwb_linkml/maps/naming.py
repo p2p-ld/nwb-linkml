@@ -5,12 +5,28 @@ String manipulation methods for names
 import re
 from pathlib import Path
 
-CAMEL_TO_SNAKE = re.compile("((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))")
+CAMEL_TO_SNAKE = re.compile(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))")
 """
 Convert camel case to snake case
 
 courtesy of: https://stackoverflow.com/a/12867228
 """
+
+def snake_case(name: str | None) -> str | None:
+    """
+    Snake caser for replacing all non-word characters with single underscores
+
+    Primarily used when creating dimension labels in
+    :class:`~nwb_linkml.adapters.ArrayAdapter` , see also :func:`.camel_to_snake`
+    for converting camelcased names.
+    """
+    if name is None:
+        return None
+
+    name = name.strip()
+    name = re.sub(r'\W+', '_', name)
+    name = name.lower()
+    return name
 
 
 def camel_to_snake(name: str) -> str:

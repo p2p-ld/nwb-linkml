@@ -23,6 +23,7 @@ from linkml_runtime.linkml_model import (
     SlotDefinition,
     TypeDefinition,
 )
+from linkml_runtime.dumpers import yaml_dumper
 from pydantic import BaseModel
 
 from nwb_schema_language import Attribute, Dataset, Group, Schema
@@ -89,6 +90,23 @@ class BuildResult:
             out_str += name_str + item_str
 
         return out_str
+
+    def as_linkml(self) -> str:
+        """
+        Print build results as linkml-style YAML.
+
+        Note that only non-schema results will be included, as a schema
+        usually contains all the other types.
+        """
+        output = {}
+        for label, alist in (("classes", self.classes),
+            ("slots", self.slots),
+            ("types", self.types)):
+            if not alist:
+                continue
+            output[label] = {a.name: a for a in alist}
+        return yaml_dumper.dumps(output)
+
 
 
 class Adapter(BaseModel):
