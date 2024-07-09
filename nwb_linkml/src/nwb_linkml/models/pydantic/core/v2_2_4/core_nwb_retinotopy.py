@@ -114,7 +114,7 @@ class ImagingRetinotopy(NWBDataInterface):
         None,
         description="""Power response on the second measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.""",
     )
-    axis_descriptions: NDArray[Shape["2 axis_1, axis_2"], str] = Field(
+    axis_descriptions: NDArray[Shape["2 axis_1_axis_2"], str] = Field(
         ...,
         description="""Two-element array describing the contents of the two response axis fields. Description should be something like ['altitude', 'azimuth'] or '['radius', 'theta'].""",
     )

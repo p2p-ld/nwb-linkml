@@ -53,16 +53,16 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_8_0.hdmf_common_table import (
-    DynamicTableRegion,
-    VectorIndex,
-    VectorData,
-    DynamicTable,
-)
+from .core_nwb_base import TimeSeriesStartingTime, TimeSeries, TimeSeriesSync
 
 from .core_nwb_ecephys import ElectrodeGroup
 
-from .core_nwb_base import TimeSeriesStartingTime, TimeSeries, TimeSeriesSync
+from ...hdmf_common.v1_8_0.hdmf_common_table import (
+    DynamicTable,
+    DynamicTableRegion,
+    VectorIndex,
+    VectorData,
+)
 
 
 metamodel_version = "None"
@@ -341,7 +341,7 @@ class DecompositionSeriesBands(DynamicTable):
     band_name: Optional[List[str] | str] = Field(
         default_factory=list, description="""Name of the band, e.g. theta."""
     )
-    band_limits: NDArray[Shape["* num_bands, 2 low, high"], float] = Field(
+    band_limits: NDArray[Shape["* num_bands, 2 low_high"], float] = Field(
         ...,
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
     )
@@ -384,7 +384,7 @@ class Units(DynamicTable):
     obs_intervals_index: Optional[str] = Field(
         None, description="""Index into the obs_intervals dataset."""
     )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start|end"], float]] = (
+    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = (
         Field(None, description="""Observation intervals for each unit.""")
     )
     electrodes_index: Optional[str] = Field(

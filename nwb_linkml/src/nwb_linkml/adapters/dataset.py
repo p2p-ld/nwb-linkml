@@ -447,7 +447,7 @@ class DatasetAdapter(ClassAdapter):
     """
     Orchestrator class for datasets - calls the set of applicable mapping classes
     """
-    TYPE = Dataset
+    TYPE: Type = Dataset
 
     cls: Dataset
 

@@ -53,27 +53,27 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_misc import Units
-
 from .core_nwb_device import Device
 
 from .core_nwb_ecephys import ElectrodeGroup
 
-from .core_nwb_epoch import TimeIntervals
+from .core_nwb_ophys import ImagingPlane
+
+from .core_nwb_icephys import IntracellularElectrode, SweepTable
 
 from .core_nwb_base import (
     NWBContainer,
     NWBData,
     TimeSeries,
-    ProcessingModule,
     NWBDataInterface,
+    ProcessingModule,
 )
 
-from .core_nwb_ophys import ImagingPlane
+from .core_nwb_epoch import TimeIntervals
 
-from .core_nwb_icephys import SweepTable, IntracellularElectrode
+from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable, VectorData
 
-from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData, DynamicTable
+from .core_nwb_misc import Units
 
 from .core_nwb_ogen import OptogeneticStimulusSite
 

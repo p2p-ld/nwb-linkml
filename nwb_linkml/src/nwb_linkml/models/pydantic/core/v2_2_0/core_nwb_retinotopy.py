@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import NWBData, NWBDataInterface
+from .core_nwb_base import NWBDataInterface, NWBData
 
 from .core_nwb_image import GrayscaleImage
 
@@ -162,8 +162,8 @@ class RetinotopyImage(GrayscaleImage):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -336,8 +336,8 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -372,8 +372,8 @@ class ImagingRetinotopyVasculatureImage(RetinotopyImage):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 

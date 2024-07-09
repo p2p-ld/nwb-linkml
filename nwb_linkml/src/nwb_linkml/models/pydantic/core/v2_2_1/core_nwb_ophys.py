@@ -53,15 +53,15 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_image import ImageSeriesExternalFile, ImageSeries
-
 from .core_nwb_base import (
+    NWBDataInterface,
     TimeSeriesStartingTime,
     TimeSeriesSync,
-    NWBDataInterface,
     TimeSeries,
     NWBContainer,
 )
+
+from .core_nwb_image import ImageSeriesExternalFile, ImageSeries
 
 from ...hdmf_common.v1_1_2.hdmf_common_table import DynamicTable, DynamicTableRegion
 
@@ -117,8 +117,8 @@ class TwoPhotonSeries(ImageSeries):
     )
     field_of_view: Optional[
         Union[
-            NDArray[Shape["2 width|height"], float],
-            NDArray[Shape["3 width|height"], float],
+            NDArray[Shape["2 width_height"], float],
+            NDArray[Shape["3 width_height"], float],
         ]
     ] = Field(
         None,
@@ -179,7 +179,7 @@ class RoiResponseSeries(TimeSeries):
     name: str = Field(...)
     data: Union[
         NDArray[Shape["* num_times"], float],
-        NDArray[Shape["* num_times, * num_ROIs"], float],
+        NDArray[Shape["* num_times, * num_rois"], float],
     ] = Field(..., description="""Signals from ROIs.""")
     rois: str = Field(
         ...,
@@ -325,8 +325,8 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
     )
     array: Optional[
         Union[
-            NDArray[Shape["* height, * width, * depth, 3 x, y, z"], float],
-            NDArray[Shape["* height, * width, 3 x, y, z"], float],
+            NDArray[Shape["* height, * width, * depth, 3 x_y_z"], float],
+            NDArray[Shape["* height, * width, 3 x_y_z"], float],
         ]
     ] = Field(None)
 
@@ -342,7 +342,7 @@ class ImagingPlaneOriginCoords(ConfiguredBaseModel):
         None,
         description="""Measurement units for origin_coords. The default value is 'meters'.""",
     )
-    array: Optional[NDArray[Shape["2 x, y, 3 x, y, z"], float]] = Field(None)
+    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(None)
 
 
 class ImagingPlaneGridSpacing(ConfiguredBaseModel):
@@ -356,7 +356,7 @@ class ImagingPlaneGridSpacing(ConfiguredBaseModel):
         None,
         description="""Measurement units for grid_spacing. The default value is 'meters'.""",
     )
-    array: Optional[NDArray[Shape["2 x, y, 3 x, y, z"], float]] = Field(None)
+    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(None)
 
 
 class OpticalChannel(NWBContainer):

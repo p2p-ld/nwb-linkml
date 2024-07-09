@@ -54,10 +54,10 @@ if TYPE_CHECKING:
 
 
 from .core_nwb_base import (
+    TimeSeriesSync,
     NWBContainer,
     TimeSeries,
     TimeSeriesStartingTime,
-    TimeSeriesSync,
 )
 
 

@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_1_2.hdmf_common_table import Container, Data, DynamicTable
+from ...hdmf_common.v1_1_2.hdmf_common_table import Data, Container, DynamicTable
 
 
 metamodel_version = "None"
@@ -118,8 +118,8 @@ class Image(NWBData):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -204,9 +204,9 @@ class TimeSeriesData(ConfiguredBaseModel):
     array: Optional[
         Union[
             NDArray[Shape["* num_times"], Any],
-            NDArray[Shape["* num_times, * num_DIM2"], Any],
-            NDArray[Shape["* num_times, * num_DIM2, * num_DIM3"], Any],
-            NDArray[Shape["* num_times, * num_DIM2, * num_DIM3, * num_DIM4"], Any],
+            NDArray[Shape["* num_times, * num_dim2"], Any],
+            NDArray[Shape["* num_times, * num_dim2, * num_dim3"], Any],
+            NDArray[Shape["* num_times, * num_dim2, * num_dim3, * num_dim4"], Any],
         ]
     ] = Field(None)
 

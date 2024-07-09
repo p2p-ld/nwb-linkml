@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import TimeSeriesStartingTime, TimeSeriesSync, Image, TimeSeries
+from .core_nwb_base import Image, TimeSeriesStartingTime, TimeSeriesSync, TimeSeries
 
 
 metamodel_version = "None"
@@ -109,8 +109,8 @@ class GrayscaleImage(Image):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -131,8 +131,8 @@ class RGBImage(Image):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -153,8 +153,8 @@ class RGBAImage(Image):
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r, g, b"], float],
-            NDArray[Shape["* x, * y, 4 r, g, b, a"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -293,8 +293,8 @@ class OpticalSeries(ImageSeries):
     )
     field_of_view: Optional[
         Union[
-            NDArray[Shape["2 width, height"], float],
-            NDArray[Shape["3 width, height, depth"], float],
+            NDArray[Shape["2 width_height"], float],
+            NDArray[Shape["3 width_height_depth"], float],
         ]
     ] = Field(
         None,
@@ -302,7 +302,7 @@ class OpticalSeries(ImageSeries):
     )
     data: Union[
         NDArray[Shape["* frame, * x, * y"], float],
-        NDArray[Shape["* frame, * x, * y, 3 r, g, b"], float],
+        NDArray[Shape["* frame, * x, * y, 3 r_g_b"], float],
     ] = Field(
         ..., description="""Images presented to subject, either grayscale or RGB"""
     )

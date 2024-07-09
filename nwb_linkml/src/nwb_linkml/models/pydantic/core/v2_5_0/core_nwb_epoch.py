@@ -54,12 +54,12 @@ if TYPE_CHECKING:
 
 
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
+    VectorIndex,
     VectorData,
     DynamicTable,
-    VectorIndex,
 )
 
-from .core_nwb_base import TimeSeriesReferenceVectorData, TimeSeries
+from .core_nwb_base import TimeSeries, TimeSeriesReferenceVectorData
 
 
 metamodel_version = "None"

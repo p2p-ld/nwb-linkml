@@ -53,15 +53,15 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable, DynamicTableRegion
-
 from .core_nwb_base import (
-    TimeSeriesStartingTime,
     NWBDataInterface,
+    TimeSeriesStartingTime,
     TimeSeriesSync,
     TimeSeries,
     NWBContainer,
 )
+
+from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable, DynamicTableRegion
 
 
 metamodel_version = "None"

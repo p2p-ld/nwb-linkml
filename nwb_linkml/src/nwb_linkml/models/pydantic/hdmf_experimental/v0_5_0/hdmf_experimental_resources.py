@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_8_0.hdmf_common_base import Container, Data
+from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container
 
 
 metamodel_version = "None"

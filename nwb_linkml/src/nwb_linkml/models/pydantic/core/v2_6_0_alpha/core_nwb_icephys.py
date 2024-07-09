@@ -53,20 +53,20 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_5_0.hdmf_common_table import (
-    DynamicTableRegion,
-    AlignedDynamicTable,
-    VectorIndex,
-    VectorData,
-    DynamicTable,
-)
-
 from .core_nwb_base import (
     TimeSeriesStartingTime,
-    TimeSeriesReferenceVectorData,
     NWBContainer,
     TimeSeries,
     TimeSeriesSync,
+    TimeSeriesReferenceVectorData,
+)
+
+from ...hdmf_common.v1_5_0.hdmf_common_table import (
+    DynamicTable,
+    DynamicTableRegion,
+    VectorIndex,
+    VectorData,
+    AlignedDynamicTable,
 )
 
 

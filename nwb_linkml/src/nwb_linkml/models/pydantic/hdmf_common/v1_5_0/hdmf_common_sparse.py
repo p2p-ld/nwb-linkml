@@ -104,13 +104,13 @@ class CSRMatrix(Container):
         None,
         description="""The shape (number of rows, number of columns) of this sparse matrix.""",
     )
-    indices: NDArray[Shape["* number of non-zero values"], int] = Field(
+    indices: NDArray[Shape["* number_of_non_zero_values"], int] = Field(
         ..., description="""The column indices."""
     )
-    indptr: NDArray[Shape["* number of rows in the matrix + 1"], int] = Field(
+    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], int] = Field(
         ..., description="""The row index pointer."""
     )
-    data: NDArray[Shape["* number of non-zero values"], Any] = Field(
+    data: NDArray[Shape["* number_of_non_zero_values"], Any] = Field(
         ..., description="""The non-zero values in the matrix."""
     )
 

@@ -159,8 +159,8 @@ class SpatialSeriesData(ConfiguredBaseModel):
         Union[
             NDArray[Shape["* num_times"], float],
             NDArray[Shape["* num_times, 1 x"], float],
-            NDArray[Shape["* num_times, 2 x,y"], float],
-            NDArray[Shape["* num_times, 3 x,y,z"], float],
+            NDArray[Shape["* num_times, 2 x_y"], float],
+            NDArray[Shape["* num_times, 3 x_y_z"], float],
         ]
     ] = Field(None)
 
