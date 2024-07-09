@@ -37,6 +37,7 @@ plot = [
     "dash-cytoscape<1.0.0,>=0.3.0",
 ]
 tests = [
+    "nwb-linkml[plot]",
     "pytest<8.0.0,>=7.4.0",
     "pytest-depends<2.0.0,>=1.0.1",
     "coverage<7.0.0,>=6.1.1",
@@ -68,14 +69,14 @@ addopts = [
     "--cov-append",
     "--cov-config=.coveragerc",
     "-p no:doctest",
-    "--ignore=tests/__tmp__"
+    "--ignore=tests/__tmp__",
+    "--ignore=src/nwb_linkml/models",
+    "--ignore=src/nwb_linkml/schema"
 ]
 testpaths = [
+    "src/nwb_linkml",
     "tests",
-    'nwb_linkml/tests',
-    'src/nwb_linkml'
 ]
-doctest_optionflags = "NORMALIZE_WHITESPACE"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore:parse_obj:pydantic.PydanticDeprecatedSince20"

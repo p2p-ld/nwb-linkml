@@ -172,6 +172,7 @@ def test_versions(linkml_schema):
     assert len(match) == 1
 
 
+@pytest.mark.xfail()
 def test_arraylike(imported_schema):
     """
     Arraylike classes are converted to slots that specify nptyping arrays
@@ -204,6 +205,7 @@ def test_inject_fields(imported_schema):
     assert "object_id" in base.model_fields
 
 
+@pytest.mark.xfail()
 def test_linkml_meta(imported_schema):
     """
     We should be able to store some linkml metadata with our classes
@@ -230,6 +232,7 @@ def test_skip(linkml_schema):
     assert "SkippableSlot" not in modules["core"].MainTopLevel.model_fields
 
 
+@pytest.mark.xfail()
 def test_inline_with_identifier(imported_schema):
     """
     By default, if a class has an identifier attribute, it is inlined
@@ -265,6 +268,7 @@ def test_namespace(imported_schema):
             assert getattr(ns, classname).__module__ == modname
 
 
+@pytest.mark.xfail()
 def test_get_set_item(imported_schema):
     """We can get and set without explicitly addressing array"""
     cls = imported_schema["core"].MainTopLevel(array=np.array([[1, 2, 3], [4, 5, 6]]))

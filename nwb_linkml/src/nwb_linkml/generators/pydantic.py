@@ -632,9 +632,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             with open(self.template_file) as template_file:
                 template_obj = Template(template_file.read())
         else:
-            template_obj = Template(
-                default_template(self.pydantic_version, extra_classes=[])
-            )
+            template_obj = Template(default_template(self.pydantic_version, extra_classes=[]))
 
         sv: SchemaView
         sv = self.schemaview

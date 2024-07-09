@@ -1,6 +1,7 @@
 import codecs
 import os
 import sys
+import warnings
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -17,21 +18,23 @@ TEMPLATE = """
 
     .. grid-item-card::
         :margin: 0
+        :padding: 0
 
         NWB Schema
         ^^^
         .. code-block:: yaml
 
-            {{ nwb }}
+            {{ nwb | indent(12) }}
 
     .. grid-item-card::
         :margin: 0
+        :padding: 0
 
         LinkML
         ^^^
         .. code-block:: yaml
 
-            {{ linkml }}
+            {{ linkml | indent(12) }}
 """
 
 class AdapterDirective(Directive):
@@ -59,28 +62,8 @@ class AdapterDirective(Directive):
         template = Environment(
             #**conf.jinja_env_kwargs
         ).from_string(TEMPLATE)
-        new_content = template.render(**cxt)
 
+        new_content = template.render(**cxt)
         new_content = StringList(new_content.splitlines(), source='')
         sphinx.util.nested_parse_with_titles(self.state, new_content, node)
         return node.children
-
-
-def debug_print(title, content):
-    stars = '*' * 10
-    print('\n{1} Begin Debug Output: {0} {1}'.format(title, stars))
-    print(content)
-    print('\n{1} End Debug Output: {0} {1}'.format(title, stars))
-
-
-def setup(app):
-    AdapterDirective.app = app
-    app.add_directive('jinja', JinjaDirective)
-    app.add_config_value('jinja_contexts', {}, 'env')
-    app.add_config_value('jinja_base', app.srcdir, 'env')
-    app.add_config_value('jinja_env_kwargs', {}, 'env')
-    app.add_config_value('jinja_filters', {}, 'env')
-    app.add_config_value('jinja_tests', {}, 'env')
-    app.add_config_value('jinja_globals', {}, 'env')
-    app.add_config_value('jinja_policies', {}, 'env')
-    return {'parallel_read_safe': True, 'parallel_write_safe': True}

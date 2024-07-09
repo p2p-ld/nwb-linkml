@@ -12,6 +12,7 @@ Convert camel case to snake case
 courtesy of: https://stackoverflow.com/a/12867228
 """
 
+
 def snake_case(name: str | None) -> str | None:
     """
     Snake caser for replacing all non-word characters with single underscores
@@ -24,7 +25,7 @@ def snake_case(name: str | None) -> str | None:
         return None
 
     name = name.strip()
-    name = re.sub(r'\W+', '_', name)
+    name = re.sub(r"\W+", "_", name)
     name = name.lower()
     return name
 

@@ -18,6 +18,7 @@ class GroupAdapter(ClassAdapter):
     """
     Adapt NWB Groups to LinkML Classes
     """
+
     TYPE: Type = Group
 
     cls: Group

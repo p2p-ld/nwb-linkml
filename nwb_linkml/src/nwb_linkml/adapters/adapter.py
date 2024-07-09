@@ -98,15 +98,10 @@ class BuildResult:
         Note that only non-schema results will be included, as a schema
         usually contains all the other types.
         """
-        output = {}
-        for label, alist in (("classes", self.classes),
-            ("slots", self.slots),
-            ("types", self.types)):
-            if not alist:
-                continue
-            output[label] = {a.name: a for a in alist}
-        return yaml_dumper.dumps(output)
 
+        items = (("classes", self.classes), ("slots", self.slots), ("types", self.types))
+        output = {k: v for k, v in items if v}
+        return yaml_dumper.dumps(output)
 
 
 class Adapter(BaseModel):
@@ -118,7 +113,9 @@ class Adapter(BaseModel):
         Generate the corresponding linkML element for this adapter
         """
 
-    def walk(self, input: Union[BaseModel, dict, list]) -> Generator[Union[BaseModel, Any, None], None, None]:
+    def walk(
+        self, input: Union[BaseModel, dict, list]
+    ) -> Generator[Union[BaseModel, Any, None], None, None]:
         """
         Iterate through all items in the given model.
 
@@ -202,7 +199,9 @@ class Adapter(BaseModel):
                     yield item
 
     def walk_types(
-        self, input: Union[BaseModel, dict, list], get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]
+        self,
+        input: Union[BaseModel, dict, list],
+        get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]],
     ) -> Generator[T | Ts, None, None]:
         """
         Walk a model, yielding items that are the same type as the given type

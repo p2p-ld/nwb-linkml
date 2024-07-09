@@ -53,7 +53,7 @@ class ArrayAdapter:
             warnings.warn(
                 f"dims ({len(dims)} and shape ({len(shape)}) are not the same length!!! "
                 "Your schema is formatted badly",
-                stacklevel=1
+                stacklevel=1,
             )
 
         def _iter_dims(dims: DIMS_TYPE, shape: SHAPE_TYPE) -> List[Shape] | Shape:
@@ -88,7 +88,10 @@ class ArrayAdapter:
         """
         Create the corresponding array specification from a shape
         """
-        dims = [DimensionExpression(alias=snake_case(dim.dims), exact_cardinality=dim.shape) for dim in shape]
+        dims = [
+            DimensionExpression(alias=snake_case(dim.dims), exact_cardinality=dim.shape)
+            for dim in shape
+        ]
         return ArrayExpression(dimensions=dims)
 
     def make(self) -> List[ArrayExpression]:

@@ -12,16 +12,18 @@ from pydantic import field_validator
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype
+from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype, FlatDtype
 
-T = TypeVar('T', bound=Type[Dataset] | Type[Group])
-TI = TypeVar('TI', bound=Dataset | Group)
+T = TypeVar("T", bound=Type[Dataset] | Type[Group])
+TI = TypeVar("TI", bound=Dataset | Group)
+
 
 class ClassAdapter(Adapter):
     """
     Abstract adapter to class-like things in linkml, holds methods common to
     both DatasetAdapter and GroupAdapter
     """
+
     TYPE: T
     """
     The type that this adapter class handles
@@ -30,7 +32,7 @@ class ClassAdapter(Adapter):
     cls: TI
     parent: Optional["ClassAdapter"] = None
 
-    @field_validator('cls', mode='before')
+    @field_validator("cls", mode="before")
     @classmethod
     def cast_from_string(cls, value: str | TI) -> TI:
         """
@@ -38,10 +40,10 @@ class ClassAdapter(Adapter):
         """
         if isinstance(value, str):
             from nwb_linkml.io.schema import load_yaml
+
             value = load_yaml(value)
             value = cls.TYPE(**value)
         return value
-
 
     @abstractmethod
     def build(self) -> BuildResult:
@@ -202,6 +204,8 @@ class ClassAdapter(Adapter):
         elif dtype is None or dtype == []:
             # Some ill-defined datasets are "abstract" despite that not being in the schema language
             return "AnyType"
+        elif isinstance(dtype, FlatDtype):
+            return dtype.value
         elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
             # there is precisely one class that uses compound dtypes:
             # TimeSeriesReferenceVectorData

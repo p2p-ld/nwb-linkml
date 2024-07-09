@@ -1,8 +1,9 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
+
 from abc import abstractmethod
-from typing import Optional, Type
+from typing import ClassVar, Optional, Type
 
 from linkml_runtime.linkml_model.meta import (
     SlotDefinition,
@@ -57,16 +58,12 @@ class MapScalar(DatasetMap):
                   dtype: int32
                   quantity: '?'
             :linkml:
-                attributes:
+                slots:
                 - name: MyScalar
                   description: A scalar
                   multivalued: false
                   range: int32
                   required: false
-
-
-
-
 
     """
 
@@ -213,7 +210,9 @@ class MapArraylike(DatasetMap):
         """
         Check if we're a plain array
         """
-        return cls.name and all([cls.dims, cls.shape]) and not has_attrs(cls) and not is_compound(cls)
+        return (
+            cls.name and all([cls.dims, cls.shape]) and not has_attrs(cls) and not is_compound(cls)
+        )
 
     @classmethod
     def apply(
@@ -376,6 +375,7 @@ class MapNVectors(DatasetMap):
         res = BuildResult(slots=[this_slot])
         return res
 
+
 class MapCompoundDtype(DatasetMap):
     """
     A ``dtype`` declared as an array of types that function effectively as a row in a table.
@@ -431,23 +431,18 @@ class MapCompoundDtype(DatasetMap):
                 name=a_dtype.name,
                 description=a_dtype.doc,
                 range=ClassAdapter.handle_dtype(a_dtype.dtype),
-                **QUANTITY_MAP[cls.quantity]
+                **QUANTITY_MAP[cls.quantity],
             )
         res.classes[0].attributes.update(slots)
         return res
-
-
-
-
-
-
 
 
 class DatasetAdapter(ClassAdapter):
     """
     Orchestrator class for datasets - calls the set of applicable mapping classes
     """
-    TYPE: Type = Dataset
+
+    TYPE: ClassVar[Type] = Dataset
 
     cls: Dataset
 
@@ -502,8 +497,14 @@ def is_1d(cls: Dataset) -> bool:
         and len(cls.dims[0]) == 1
     )
 
+
 def is_compound(cls: Dataset) -> bool:
-    return isinstance(cls.dtype, list) and len(cls.dtype)>0 and isinstance(cls.dtype[0], CompoundDtype)
+    return (
+        isinstance(cls.dtype, list)
+        and len(cls.dtype) > 0
+        and isinstance(cls.dtype[0], CompoundDtype)
+    )
+
 
 def has_attrs(cls: Dataset) -> bool:
     """

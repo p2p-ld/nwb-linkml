@@ -264,14 +264,16 @@ class LinkMLProvider(Provider):
 
     Examples:
 
-        >>> provider = LinkMLProvider()
-        >>> # Simplest case, get the core nwb schema from the default NWB core repo
-        >>> core = provider.get('core')
-        >>> # Get a specific version of the core schema
-        >>> core_other_version = provider.get('core', '2.2.0')
-        >>> # Build a custom schema and then get it
-        >>> # provider.build_from_yaml('myschema.yaml')
-        >>> # my_schema = provider.get('myschema')
+        .. code-block:: python
+
+            provider = LinkMLProvider()
+            # Simplest case, get the core nwb schema from the default NWB core repo
+            core = provider.get('core')
+            # Get a specific version of the core schema
+            core_other_version = provider.get('core', '2.2.0')
+            # Build a custom schema and then get it
+            # provider.build_from_yaml('myschema.yaml')
+            # my_schema = provider.get('myschema')
 
     """
 
