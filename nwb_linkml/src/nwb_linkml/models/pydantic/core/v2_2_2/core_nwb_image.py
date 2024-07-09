@@ -15,34 +15,8 @@ from typing import (
 from pydantic import BaseModel as BaseModel, Field
 from pydantic import ConfigDict, BeforeValidator
 
-from nptyping import (
-    Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
-)
-from nwb_linkml.types import NDArray
+from numpydantic import Shape, NDArray
+from numpydantic.dtype import *
 import sys
 
 if sys.version_info >= (3, 8):
@@ -53,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import Image, TimeSeriesStartingTime, TimeSeriesSync, TimeSeries
+from .core_nwb_base import Image, TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
 
 
 metamodel_version = "None"

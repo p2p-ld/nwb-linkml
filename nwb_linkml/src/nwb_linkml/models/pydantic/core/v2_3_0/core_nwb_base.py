@@ -15,34 +15,8 @@ from typing import (
 from pydantic import BaseModel as BaseModel, Field
 from pydantic import ConfigDict, BeforeValidator
 
-from nptyping import (
-    Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
-)
-from nwb_linkml.types import NDArray
+from numpydantic import Shape, NDArray
+from numpydantic.dtype import *
 import sys
 
 if sys.version_info >= (3, 8):
@@ -53,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container
+from ...hdmf_common.v1_5_0.hdmf_common_base import Container, Data
 
 from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable
 
