@@ -27,9 +27,9 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import NWBDataInterface, NWBData
-
 from .core_nwb_image import GrayscaleImage
+
+from .core_nwb_base import NWBData, NWBDataInterface
 
 
 metamodel_version = "None"
@@ -37,13 +37,6 @@ version = "2.2.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -63,18 +56,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class RetinotopyMap(NWBData):
     """
     Abstract two-dimensional map of responses. Array structure: [num_rows][num_columns]
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     dimension: Optional[int] = Field(
         None,
@@ -91,7 +77,6 @@ class AxisMap(RetinotopyMap):
     Abstract two-dimensional map of responses to stimuli along a single response axis (e.g. eccentricity)
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
@@ -111,7 +96,6 @@ class RetinotopyImage(GrayscaleImage):
     Gray-scale image related to retinotopic mapping. Array structure: [num_rows][num_columns]
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     bits_per_pixel: Optional[int] = Field(
         None,
@@ -147,7 +131,6 @@ class ImagingRetinotopy(NWBDataInterface):
     Intrinsic signal optical imaging or widefield imaging for measuring retinotopy. Stores orthogonal maps (e.g., altitude/azimuth; radius/theta) of responses to specific stimuli and a combined polarity map from which to identify visual areas. NOTE: for data consistency, all images and arrays are stored in the format [row][column] and [row, col], which equates to [y][x]. Field of view and dimension arrays may appear backward (i.e., y before x).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("ImagingRetinotopy")
     axis_1_phase_map: str = Field(
         ..., description="""Phase response to stimulus on the first measured axis."""
@@ -185,7 +168,6 @@ class ImagingRetinotopyAxis1PhaseMap(AxisMap):
     Phase response to stimulus on the first measured axis.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_1_phase_map"] = Field("axis_1_phase_map")
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
@@ -205,7 +187,6 @@ class ImagingRetinotopyAxis1PowerMap(AxisMap):
     Power response on the first measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_1_power_map"] = Field("axis_1_power_map")
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
@@ -225,7 +206,6 @@ class ImagingRetinotopyAxis2PhaseMap(AxisMap):
     Phase response to stimulus on the second measured axis.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_2_phase_map"] = Field("axis_2_phase_map")
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
@@ -245,7 +225,6 @@ class ImagingRetinotopyAxis2PowerMap(AxisMap):
     Power response to stimulus on the second measured axis.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_2_power_map"] = Field("axis_2_power_map")
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
@@ -265,7 +244,6 @@ class ImagingRetinotopySignMap(RetinotopyMap):
     Sine of the angle between the direction of the gradient in axis_1 and axis_2.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["sign_map"] = Field("sign_map")
     dimension: Optional[int] = Field(
         None,
@@ -282,7 +260,6 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
     Gray-scale image taken with same settings/parameters (e.g., focal depth, wavelength) as data collection. Array format: [rows][columns].
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["focal_depth_image"] = Field("focal_depth_image")
     focal_depth: Optional[float] = Field(
         None, description="""Focal depth offset, in meters."""
@@ -321,7 +298,6 @@ class ImagingRetinotopyVasculatureImage(RetinotopyImage):
     Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["vasculature_image"] = Field("vasculature_image")
     bits_per_pixel: Optional[int] = Field(
         None,
@@ -350,18 +326,3 @@ class ImagingRetinotopyVasculatureImage(RetinotopyImage):
             NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-RetinotopyMap.model_rebuild()
-AxisMap.model_rebuild()
-RetinotopyImage.model_rebuild()
-ImagingRetinotopy.model_rebuild()
-ImagingRetinotopyAxis1PhaseMap.model_rebuild()
-ImagingRetinotopyAxis1PowerMap.model_rebuild()
-ImagingRetinotopyAxis2PhaseMap.model_rebuild()
-ImagingRetinotopyAxis2PowerMap.model_rebuild()
-ImagingRetinotopySignMap.model_rebuild()
-ImagingRetinotopyFocalDepthImage.model_rebuild()
-ImagingRetinotopyVasculatureImage.model_rebuild()

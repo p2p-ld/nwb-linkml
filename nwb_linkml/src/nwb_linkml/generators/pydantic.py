@@ -67,10 +67,10 @@ from nwb_linkml.maps import flat_to_nptyping
 from nwb_linkml.maps.naming import module_case, version_module_case
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
+# class LinkML_Meta(BaseModel):
+#     """Extra LinkML Metadata stored as a class attribute"""
+#
+#     tree_root: bool = False
 
 
 def default_template(
@@ -112,32 +112,9 @@ from {{ import_module }} import (
 metamodel_version = "{{metamodel_version}}"
 version = "{{version if version else None}}"
 """
-    ### BASE MODEL ###
-    if pydantic_ver == "1":  # pragma: no cover
-        template += """
-List = BaseList
-        
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
-                validate_assignment = False,
-                validate_all = True,
-                underscore_attrs_are_private = True,
-                extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
-                arbitrary_types_allowed = True,
-                use_enum_values = True):
-"""
-    else:
-        template += """
+    template += """
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment = True,
-        validate_default = True,
-        extra = {% if allow_extra %}'allow'{% else %}'forbid'{% endif %},
-        arbitrary_types_allowed = True,
-        use_enum_values = True
-    )
+
 """
     ### Injected Fields
     template += """
@@ -233,23 +210,6 @@ class {{ c.name }}
     None
     {% endfor %}
 {% endfor %}
-"""
-    ### FWD REFS / REBUILD MODEL ###
-    if pydantic_ver == "1":  # pragma: no cover
-        template += """
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-{% for c in schema.classes.values() -%}
-{{ c.name }}.update_forward_refs()
-{% endfor %}
-"""
-    else:
-        template += """
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-{% for c in schema.classes.values() -%}
-{{ c.name }}.model_rebuild()
-{% endfor %}    
 """
     return template
 
@@ -455,18 +415,18 @@ class NWBPydanticGenerator(PydanticGenerator):
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
 
-    def _get_linkml_classvar(self, cls: ClassDefinition) -> SlotDefinition:
-        """A class variable that holds additional linkml attrs"""
-        slot = SlotDefinition(name="linkml_meta")
-        slot.annotations["python_range"] = Annotation("python_range", "ClassVar[LinkML_Meta]")
-        meta_fields = {k: getattr(cls, k, None) for k in LinkML_Meta.model_fields.keys()}
-        meta_field_strings = [f"{k}={v}" for k, v in meta_fields.items() if v is not None]
-        meta_field_string = ", ".join(meta_field_strings)
-        slot.annotations["fixed_field"] = Annotation(
-            "fixed_field", f"Field(LinkML_Meta({meta_field_string}), frozen=True)"
-        )
-
-        return slot
+    # def _get_linkml_classvar(self, cls: ClassDefinition) -> SlotDefinition:
+    #     """A class variable that holds additional linkml attrs"""
+    #     slot = SlotDefinition(name="linkml_meta")
+    #     slot.annotations["python_range"] = Annotation("python_range", "ClassVar[LinkML_Meta]")
+    #     meta_fields = {k: getattr(cls, k, None) for k in LinkML_Meta.model_fields.keys()}
+    #     meta_field_strings = [f"{k}={v}" for k, v in meta_fields.items() if v is not None]
+    #     meta_field_string = ", ".join(meta_field_strings)
+    #     slot.annotations["fixed_field"] = Annotation(
+    #         "fixed_field", f"Field(LinkML_Meta({meta_field_string}), frozen=True)"
+    #     )
+    #
+    #     return slot
 
     def sort_classes(
         self, clist: List[ClassDefinition], imports: Dict[str, List[str]]
@@ -673,7 +633,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                 template_obj = Template(template_file.read())
         else:
             template_obj = Template(
-                default_template(self.pydantic_version, extra_classes=[LinkML_Meta])
+                default_template(self.pydantic_version, extra_classes=[])
             )
 
         sv: SchemaView
@@ -718,7 +678,7 @@ class NWBPydanticGenerator(PydanticGenerator):
                 del class_def.attributes[attribute]
 
             # make class attr that stores extra linkml attrs
-            class_def.attributes["linkml_meta"] = self._get_linkml_classvar(class_def)
+            # class_def.attributes["linkml_meta"] = self._get_linkml_classvar(class_def)
 
             class_name = class_original.name
             predefined_slot_values[camelcase(class_name)] = {}

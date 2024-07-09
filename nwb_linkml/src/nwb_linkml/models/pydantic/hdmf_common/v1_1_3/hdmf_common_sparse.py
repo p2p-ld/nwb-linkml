@@ -32,13 +32,6 @@ version = "1.1.3"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -58,18 +51,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class CSRMatrix(ConfiguredBaseModel):
     """
     a compressed sparse row matrix
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     shape: Optional[int] = Field(
         None, description="""the shape of this sparse matrix"""
@@ -84,7 +70,6 @@ class CSRMatrixIndices(ConfiguredBaseModel):
     column indices
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["indices"] = Field("indices")
 
 
@@ -93,7 +78,6 @@ class CSRMatrixIndptr(ConfiguredBaseModel):
     index pointer
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["indptr"] = Field("indptr")
 
 
@@ -102,13 +86,4 @@ class CSRMatrixData(ConfiguredBaseModel):
     values in the matrix
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-CSRMatrix.model_rebuild()
-CSRMatrixIndices.model_rebuild()
-CSRMatrixIndptr.model_rebuild()
-CSRMatrixData.model_rebuild()

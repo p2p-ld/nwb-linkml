@@ -28,18 +28,18 @@ if TYPE_CHECKING:
 
 
 from .core_nwb_base import (
-    TimeSeries,
-    TimeSeriesSync,
-    NWBDataInterface,
-    TimeSeriesStartingTime,
     NWBContainer,
+    TimeSeriesSync,
+    TimeSeriesStartingTime,
+    NWBDataInterface,
+    TimeSeries,
 )
 
 from ...hdmf_common.v1_8_0.hdmf_common_table import (
     DynamicTableRegion,
+    VectorIndex,
     DynamicTable,
     VectorData,
-    VectorIndex,
 )
 
 from .core_nwb_image import ImageSeries, ImageSeriesExternalFile
@@ -50,13 +50,6 @@ version = "2.7.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -76,18 +69,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class OnePhotonSeries(ImageSeries):
     """
     Image stack recorded over time from 1-photon microscope.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
     scan_line_rate: Optional[float] = Field(
@@ -160,7 +146,6 @@ class TwoPhotonSeries(ImageSeries):
     Image stack recorded over time from 2-photon microscope.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
     scan_line_rate: Optional[float] = Field(
@@ -228,7 +213,6 @@ class RoiResponseSeries(TimeSeries):
     ROI responses over an imaging plane. The first dimension represents time. The second dimension, if present, represents ROIs.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Union[
         NDArray[Shape["* num_times"], float],
@@ -272,7 +256,6 @@ class RoiResponseSeriesRois(DynamicTableRegion):
     DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["rois"] = Field("rois")
     table: Optional[str] = Field(
         None,
@@ -296,7 +279,6 @@ class DfOverF(NWBDataInterface):
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
         default_factory=dict
     )
@@ -308,7 +290,6 @@ class Fluorescence(NWBDataInterface):
     Fluorescence information about a region of interest (ROI). Storage hierarchy of fluorescence should be the same as for segmentation (ie, same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
         default_factory=dict
     )
@@ -320,7 +301,6 @@ class ImageSegmentation(NWBDataInterface):
     Stores pixels in an image that represent different regions of interest (ROIs) or masks. All segmentation for a given imaging plane is stored together, with storage for multiple imaging planes (masks) supported. Each ROI is stored in its own subgroup, with the ROI group containing both a 2D mask and a list of pixels that make up this mask. Segments can also be used for masking neuropil. If segmentation is allowed to change with time, a new imaging plane (or module) is required and ROI names should remain consistent between them.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[PlaneSegmentation] | PlaneSegmentation] = Field(
         default_factory=dict
     )
@@ -332,7 +312,6 @@ class PlaneSegmentation(DynamicTable):
     Results from image segmentation of a specific imaging plane.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     image_mask: Optional[
         Union[
@@ -383,7 +362,6 @@ class PlaneSegmentationPixelMaskIndex(VectorIndex):
     Index into pixel_mask.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["pixel_mask_index"] = Field("pixel_mask_index")
     target: Optional[str] = Field(
         None,
@@ -407,7 +385,6 @@ class PlaneSegmentationPixelMask(VectorData):
     Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["pixel_mask"] = Field("pixel_mask")
     x: Optional[int] = Field(None, description="""Pixel x-coordinate.""")
     y: Optional[int] = Field(None, description="""Pixel y-coordinate.""")
@@ -430,7 +407,6 @@ class PlaneSegmentationVoxelMaskIndex(VectorIndex):
     Index into voxel_mask.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["voxel_mask_index"] = Field("voxel_mask_index")
     target: Optional[str] = Field(
         None,
@@ -454,7 +430,6 @@ class PlaneSegmentationVoxelMask(VectorData):
     Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["voxel_mask"] = Field("voxel_mask")
     x: Optional[int] = Field(None, description="""Voxel x-coordinate.""")
     y: Optional[int] = Field(None, description="""Voxel y-coordinate.""")
@@ -478,7 +453,6 @@ class ImagingPlane(NWBContainer):
     An imaging plane and its metadata.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[OpticalChannel] | OpticalChannel] = Field(
         default_factory=dict
     )
@@ -490,7 +464,6 @@ class OpticalChannel(NWBContainer):
     An optical channel used to record from an imaging plane.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     description: str = Field(
         ..., description="""Description or other notes about the channel."""
@@ -505,7 +478,6 @@ class MotionCorrection(NWBDataInterface):
     An image stack where all frames are shifted (registered) to a common coordinate system, to account for movement and drift between frames. Note: each frame at each point in time is assumed to be 2-D (has only x & y dimensions).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[CorrectedImageStack] | CorrectedImageStack] = Field(
         default_factory=dict
     )
@@ -517,7 +489,6 @@ class CorrectedImageStack(NWBDataInterface):
     Results from motion correction of an image stack.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     corrected: str = Field(
         ...,
@@ -527,23 +498,3 @@ class CorrectedImageStack(NWBDataInterface):
         ...,
         description="""Stores the x,y delta necessary to align each frame to the common coordinates, for example, to align each frame to a reference image.""",
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-OnePhotonSeries.model_rebuild()
-TwoPhotonSeries.model_rebuild()
-RoiResponseSeries.model_rebuild()
-RoiResponseSeriesRois.model_rebuild()
-DfOverF.model_rebuild()
-Fluorescence.model_rebuild()
-ImageSegmentation.model_rebuild()
-PlaneSegmentation.model_rebuild()
-PlaneSegmentationPixelMaskIndex.model_rebuild()
-PlaneSegmentationPixelMask.model_rebuild()
-PlaneSegmentationVoxelMaskIndex.model_rebuild()
-PlaneSegmentationVoxelMask.model_rebuild()
-ImagingPlane.model_rebuild()
-OpticalChannel.model_rebuild()
-MotionCorrection.model_rebuild()
-CorrectedImageStack.model_rebuild()

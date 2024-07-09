@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .hdmf_common_base import Container, Data
+from .hdmf_common_base import Data, Container
 
 
 metamodel_version = "None"
@@ -35,13 +35,6 @@ version = "1.8.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -61,18 +54,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class VectorData(Data):
     """
     An n-dimensional dataset representing a column of a DynamicTable. If used without an accompanying VectorIndex, first dimension is along the rows of the DynamicTable and each step along the first dimension is a cell of the larger table. VectorData can also be used to represent a ragged array if paired with a VectorIndex. This allows for storing arrays of varying length in a single cell of the DynamicTable by indexing into this VectorData. The first vector is at VectorData[0:VectorIndex[0]]. The second vector is at VectorData[VectorIndex[0]:VectorIndex[1]], and so on.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
@@ -92,7 +78,6 @@ class VectorIndex(VectorData):
     Used with VectorData to encode a ragged array. An array of indices into the first dimension of the target VectorData, and forming a map between the rows of a DynamicTable and the indices of the VectorData. The name of the VectorIndex is expected to be the name of the target VectorData object followed by \"_index\".
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     target: Optional[str] = Field(
         None,
@@ -116,7 +101,6 @@ class ElementIdentifiers(Data):
     A list of unique identifiers for values within a dataset, e.g. rows of a DynamicTable.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("element_id")
 
 
@@ -125,7 +109,6 @@ class DynamicTableRegion(VectorData):
     DynamicTableRegion provides a link from one table to an index or region of another. The `table` attribute is a link to another `DynamicTable`, indicating which table is referenced, and the data is int(s) indicating the row(s) (0-indexed) of the target array. `DynamicTableRegion`s can be used to associate rows with repeated meta-data without data duplication. They can also be used to create hierarchical relationships between multiple `DynamicTable`s. `DynamicTableRegion` objects may be paired with a `VectorIndex` object to create ragged references, so a single cell of a `DynamicTable` can reference many rows of another `DynamicTable`.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     table: Optional[str] = Field(
         None,
@@ -149,7 +132,6 @@ class DynamicTable(Container):
     A group containing multiple datasets that are aligned on the first dimension (Currently, this requirement if left up to APIs to check and enforce). These datasets represent different columns in the table. Apart from a column that contains unique identifiers for each row, there are no other required datasets. Users are free to add any number of custom VectorData objects (columns) here. DynamicTable also supports ragged array columns, where each element can be of a different size. To add a ragged array column, use a VectorIndex type to index the corresponding VectorData type. See documentation for VectorData and VectorIndex for more details. Unlike a compound data type, which is analogous to storing an array-of-structs, a DynamicTable can be thought of as a struct-of-arrays. This provides an alternative structure to choose from when optimizing storage for anticipated access patterns. Additionally, this type provides a way of creating a table without having to define a compound type up front. Although this convenience may be attractive, users should think carefully about how data will be accessed. DynamicTable is more appropriate for column-centric access, whereas a dataset with a compound type would be more appropriate for row-centric access. Finally, data size should also be taken into account. For small tables, performance loss may be an acceptable trade-off for the flexibility of a DynamicTable.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     colnames: Optional[str] = Field(
         None,
@@ -173,7 +155,6 @@ class AlignedDynamicTable(DynamicTable):
     DynamicTable container that supports storing a collection of sub-tables. Each sub-table is a DynamicTable itself that is aligned with the main table by row index. I.e., all DynamicTables stored in this group MUST have the same number of rows. This type effectively defines a 2-level table in which the main data is stored in the main table implemented by this type and additional columns of the table are grouped into categories, with each category being represented by a separate DynamicTable stored within the group.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[
         List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
     ] = Field(default_factory=dict)
@@ -193,13 +174,3 @@ class AlignedDynamicTable(DynamicTable):
         default_factory=list,
         description="""Vector columns, including index columns, of this dynamic table.""",
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-VectorData.model_rebuild()
-VectorIndex.model_rebuild()
-ElementIdentifiers.model_rebuild()
-DynamicTableRegion.model_rebuild()
-DynamicTable.model_rebuild()
-AlignedDynamicTable.model_rebuild()

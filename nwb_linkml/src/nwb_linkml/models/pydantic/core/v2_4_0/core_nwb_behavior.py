@@ -28,9 +28,9 @@ if TYPE_CHECKING:
 
 
 from .core_nwb_base import (
-    NWBDataInterface,
     TimeSeries,
     TimeSeriesStartingTime,
+    NWBDataInterface,
     TimeSeriesSync,
 )
 
@@ -42,13 +42,6 @@ version = "2.4.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -68,18 +61,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class SpatialSeries(TimeSeries):
     """
     Direction, e.g., of gaze or travel, or position. The TimeSeries::data field is a 2D array storing position or direction relative to some reference frame. Array structure: [num measurements] [num dimensions]. Each SpatialSeries has a text dataset reference_frame that indicates the zero-position, or the zero-axes for direction. For example, if representing gaze direction, 'straight-ahead' might be a specific pixel on the monitor, or some other point in space. For position data, the 0,0 point might be the top-left corner of an enclosure, as viewed from the tracking camera. The unit of data will indicate how to interpret SpatialSeries values.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(
         ...,
@@ -123,7 +109,6 @@ class SpatialSeriesData(ConfiguredBaseModel):
     1-D or 2-D array storing position or direction relative to some reference frame.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -142,7 +127,6 @@ class BehavioralEpochs(NWBDataInterface):
     TimeSeries for storing behavioral epochs.  The objective of this and the other two Behavioral interfaces (e.g. BehavioralEvents and BehavioralTimeSeries) is to provide generic hooks for software tools/scripts. This allows a tool/script to take the output one specific interface (e.g., UnitTimes) and plot that data relative to another data modality (e.g., behavioral events) without having to define all possible modalities in advance. Declaring one of these interfaces means that one or more TimeSeries of the specified type is published. These TimeSeries should reside in a group having the same name as the interface. For example, if a BehavioralTimeSeries interface is declared, the module will have one or more TimeSeries defined in the module sub-group 'BehavioralTimeSeries'. BehavioralEpochs should use IntervalSeries. BehavioralEvents is used for irregular events. BehavioralTimeSeries is for continuous data.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[IntervalSeries] | IntervalSeries] = Field(
         default_factory=dict
     )
@@ -154,7 +138,6 @@ class BehavioralEvents(NWBDataInterface):
     TimeSeries for storing behavioral events. See description of <a href=\"#BehavioralEpochs\">BehavioralEpochs</a> for more details.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[TimeSeries] | TimeSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
@@ -164,7 +147,6 @@ class BehavioralTimeSeries(NWBDataInterface):
     TimeSeries for storing Behavoioral time series data. See description of <a href=\"#BehavioralEpochs\">BehavioralEpochs</a> for more details.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[TimeSeries] | TimeSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
@@ -174,7 +156,6 @@ class PupilTracking(NWBDataInterface):
     Eye-tracking data, representing pupil size.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[TimeSeries] | TimeSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
@@ -184,7 +165,6 @@ class EyeTracking(NWBDataInterface):
     Eye-tracking data, representing direction of gaze.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
         default_factory=dict
     )
@@ -196,7 +176,6 @@ class CompassDirection(NWBDataInterface):
     With a CompassDirection interface, a module publishes a SpatialSeries object representing a floating point value for theta. The SpatialSeries::reference_frame field should indicate what direction corresponds to 0 and which is the direction of rotation (this should be clockwise). The si_unit for the SpatialSeries should be radians or degrees.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
         default_factory=dict
     )
@@ -208,21 +187,7 @@ class Position(NWBDataInterface):
     Position data, whether along the x, x/y or x/y/z axis.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
         default_factory=dict
     )
     name: str = Field(...)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-SpatialSeries.model_rebuild()
-SpatialSeriesData.model_rebuild()
-BehavioralEpochs.model_rebuild()
-BehavioralEvents.model_rebuild()
-BehavioralTimeSeries.model_rebuild()
-PupilTracking.model_rebuild()
-EyeTracking.model_rebuild()
-CompassDirection.model_rebuild()
-Position.model_rebuild()

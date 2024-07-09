@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_8_0.hdmf_common_base import Container, Data
+from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container
 
 
 metamodel_version = "None"
@@ -35,13 +35,6 @@ version = "0.5.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -61,18 +54,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class HERD(Container):
     """
     HDMF External Resources Data Structure. A set of six tables for tracking external resource references in a file or across multiple files.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     keys: str = Field(
         ...,
@@ -103,7 +89,6 @@ class HERDKeys(Data):
     A table for storing user terms that are used to refer to external resources.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["keys"] = Field("keys")
     key: str = Field(
         ...,
@@ -116,7 +101,6 @@ class HERDFiles(Data):
     A table for storing object ids of files used in external resources.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["files"] = Field("files")
     file_object_id: str = Field(
         ...,
@@ -129,7 +113,6 @@ class HERDEntities(Data):
     A table for mapping user terms (i.e., keys) to resource entities.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["entities"] = Field("entities")
     entity_id: str = Field(
         ...,
@@ -146,7 +129,6 @@ class HERDObjects(Data):
     A table for identifying which objects in a file contain references to external resources.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["objects"] = Field("objects")
     files_idx: int = Field(
         ...,
@@ -169,7 +151,6 @@ class HERDObjectKeys(Data):
     A table for identifying which objects use which keys.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["object_keys"] = Field("object_keys")
     objects_idx: int = Field(
         ...,
@@ -185,7 +166,6 @@ class HERDEntityKeys(Data):
     A table for identifying which keys use which entity.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["entity_keys"] = Field("entity_keys")
     entities_idx: int = Field(
         ..., description="""The row index to the entity in the `entities` table."""
@@ -193,14 +173,3 @@ class HERDEntityKeys(Data):
     keys_idx: int = Field(
         ..., description="""The row index to the key in the `keys` table."""
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-HERD.model_rebuild()
-HERDKeys.model_rebuild()
-HERDFiles.model_rebuild()
-HERDEntities.model_rebuild()
-HERDObjects.model_rebuild()
-HERDObjectKeys.model_rebuild()
-HERDEntityKeys.model_rebuild()

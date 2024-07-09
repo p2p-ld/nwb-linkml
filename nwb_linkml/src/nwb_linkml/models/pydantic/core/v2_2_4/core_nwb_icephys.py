@@ -28,16 +28,16 @@ if TYPE_CHECKING:
 
 
 from .core_nwb_base import (
-    TimeSeries,
+    NWBContainer,
     TimeSeriesSync,
     TimeSeriesStartingTime,
-    NWBContainer,
+    TimeSeries,
 )
 
 from ...hdmf_common.v1_1_3.hdmf_common_table import (
+    VectorIndex,
     DynamicTable,
     VectorData,
-    VectorIndex,
 )
 
 
@@ -46,13 +46,6 @@ version = "2.2.4"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -72,18 +65,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class PatchClampSeries(TimeSeries):
     """
     An abstract base class for patch-clamp data - stimulus or response, current or voltage.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
@@ -131,7 +117,6 @@ class PatchClampSeriesData(ConfiguredBaseModel):
     Recorded voltage or current.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -145,7 +130,6 @@ class CurrentClampSeries(PatchClampSeries):
     Voltage data from an intracellular current-clamp recording. A corresponding CurrentClampStimulusSeries (stored separately as a stimulus) is used to store the current injected.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Recorded voltage.""")
     bias_current: Optional[float] = Field(
@@ -202,7 +186,6 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
     Recorded voltage.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -216,7 +199,6 @@ class IZeroClampSeries(CurrentClampSeries):
     Voltage data from an intracellular recording when all current and amplifier settings are off (i.e., CurrentClampSeries fields will be zero). There is no CurrentClampStimulusSeries associated with an IZero series because the amplifier is disconnected and no stimulus can reach the cell.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     bias_current: float = Field(
         ..., description="""Bias current, in amps, fixed to 0.0."""
@@ -273,7 +255,6 @@ class CurrentClampStimulusSeries(PatchClampSeries):
     Stimulus current applied during current clamp recording.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Stimulus current applied.""")
     stimulus_description: Optional[str] = Field(
@@ -321,7 +302,6 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
     Stimulus current applied.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -335,7 +315,6 @@ class VoltageClampSeries(PatchClampSeries):
     Current data from an intracellular voltage-clamp recording. A corresponding VoltageClampStimulusSeries (stored separately as a stimulus) is used to store the voltage injected.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Recorded current.""")
     capacitance_fast: Optional[str] = Field(
@@ -404,7 +383,6 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
     Recorded current.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -418,7 +396,6 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
     Fast capacitance, in farads.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["capacitance_fast"] = Field("capacitance_fast")
     unit: Optional[str] = Field(
         None,
@@ -432,7 +409,6 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
     Slow capacitance, in farads.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["capacitance_slow"] = Field("capacitance_slow")
     unit: Optional[str] = Field(
         None,
@@ -446,7 +422,6 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
     Resistance compensation bandwidth, in hertz.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["resistance_comp_bandwidth"] = Field("resistance_comp_bandwidth")
     unit: Optional[str] = Field(
         None,
@@ -460,7 +435,6 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
     Resistance compensation correction, in percent.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["resistance_comp_correction"] = Field("resistance_comp_correction")
     unit: Optional[str] = Field(
         None,
@@ -474,7 +448,6 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
     Resistance compensation prediction, in percent.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["resistance_comp_prediction"] = Field("resistance_comp_prediction")
     unit: Optional[str] = Field(
         None,
@@ -488,7 +461,6 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
     Whole cell capacitance compensation, in farads.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["whole_cell_capacitance_comp"] = Field("whole_cell_capacitance_comp")
     unit: Optional[str] = Field(
         None,
@@ -502,7 +474,6 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
     Whole cell series resistance compensation, in ohms.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["whole_cell_series_resistance_comp"] = Field(
         "whole_cell_series_resistance_comp"
     )
@@ -518,7 +489,6 @@ class VoltageClampStimulusSeries(PatchClampSeries):
     Stimulus voltage applied during a voltage clamp recording.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Stimulus voltage applied.""")
     stimulus_description: Optional[str] = Field(
@@ -566,7 +536,6 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
     Stimulus voltage applied.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -580,7 +549,6 @@ class IntracellularElectrode(NWBContainer):
     An intracellular electrode and its metadata.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     description: str = Field(
         ...,
@@ -612,7 +580,6 @@ class SweepTable(DynamicTable):
     The table which groups different PatchClampSeries together.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     sweep_number: Optional[List[int] | int] = Field(
         default_factory=list,
@@ -648,35 +615,9 @@ class SweepTableSeriesIndex(VectorIndex):
     Index for series.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["series_index"] = Field("series_index")
     target: Optional[str] = Field(
         None,
         description="""Reference to the target dataset that this index applies to.""",
     )
     array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-PatchClampSeries.model_rebuild()
-PatchClampSeriesData.model_rebuild()
-CurrentClampSeries.model_rebuild()
-CurrentClampSeriesData.model_rebuild()
-IZeroClampSeries.model_rebuild()
-CurrentClampStimulusSeries.model_rebuild()
-CurrentClampStimulusSeriesData.model_rebuild()
-VoltageClampSeries.model_rebuild()
-VoltageClampSeriesData.model_rebuild()
-VoltageClampSeriesCapacitanceFast.model_rebuild()
-VoltageClampSeriesCapacitanceSlow.model_rebuild()
-VoltageClampSeriesResistanceCompBandwidth.model_rebuild()
-VoltageClampSeriesResistanceCompCorrection.model_rebuild()
-VoltageClampSeriesResistanceCompPrediction.model_rebuild()
-VoltageClampSeriesWholeCellCapacitanceComp.model_rebuild()
-VoltageClampSeriesWholeCellSeriesResistanceComp.model_rebuild()
-VoltageClampStimulusSeries.model_rebuild()
-VoltageClampStimulusSeriesData.model_rebuild()
-IntracellularElectrode.model_rebuild()
-SweepTable.model_rebuild()
-SweepTableSeriesIndex.model_rebuild()

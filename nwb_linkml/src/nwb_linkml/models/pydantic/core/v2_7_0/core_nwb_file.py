@@ -27,38 +27,38 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_ophys import ImagingPlane
-
-from .core_nwb_base import (
-    TimeSeries,
-    NWBDataInterface,
-    ProcessingModule,
-    NWBContainer,
-    NWBData,
-    Images,
+from .core_nwb_icephys import (
+    SweepTable,
+    SimultaneousRecordingsTable,
+    SequentialRecordingsTable,
+    RepetitionsTable,
+    ExperimentalConditionsTable,
+    IntracellularElectrode,
+    IntracellularRecordingsTable,
 )
 
 from .core_nwb_epoch import TimeIntervals
 
-from ...hdmf_common.v1_8_0.hdmf_common_table import DynamicTable, VectorData
+from .core_nwb_ecephys import ElectrodeGroup
 
-from .core_nwb_icephys import (
-    RepetitionsTable,
-    IntracellularElectrode,
-    SequentialRecordingsTable,
-    IntracellularRecordingsTable,
-    SweepTable,
-    ExperimentalConditionsTable,
-    SimultaneousRecordingsTable,
+from .core_nwb_base import (
+    NWBContainer,
+    ProcessingModule,
+    Images,
+    NWBData,
+    NWBDataInterface,
+    TimeSeries,
 )
 
-from .core_nwb_ogen import OptogeneticStimulusSite
+from .core_nwb_device import Device
 
 from .core_nwb_misc import Units
 
-from .core_nwb_ecephys import ElectrodeGroup
+from .core_nwb_ogen import OptogeneticStimulusSite
 
-from .core_nwb_device import Device
+from ...hdmf_common.v1_8_0.hdmf_common_table import DynamicTable, VectorData
+
+from .core_nwb_ophys import ImagingPlane
 
 
 metamodel_version = "None"
@@ -66,13 +66,6 @@ version = "2.7.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -92,18 +85,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class ScratchData(NWBData):
     """
     Any one-off datasets
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     notes: Optional[str] = Field(
         None, description="""Any notes the user has about the dataset being stored"""
@@ -115,7 +101,6 @@ class NWBFile(NWBContainer):
     An NWB file storing cellular-based neurophysiology data from a single experimental session.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: Literal["root"] = Field("root")
     nwb_version: Optional[str] = Field(
         None,
@@ -186,7 +171,6 @@ class NWBFileStimulus(ConfiguredBaseModel):
     Data pushed into the system (eg, video stimulus, sound, voltage, etc) and secondary representations of that data (eg, measurements of something used as a stimulus). This group should be made read-only after experiment complete and timestamps are corrected to common timebase. Stores both presented stimuli and stimulus templates, the latter in case the same stimulus is presented multiple times, or is pulled from an external stimulus library. Stimuli are here defined as any signal that is pushed into the system as part of the experiment (eg, sound, video, voltage, etc). Many different experiments can use the same stimuli, and stimuli can be re-used during an experiment. The stimulus group is organized so that one version of template stimuli can be stored and these be used multiple times. These templates can exist in the present file or can be linked to a remote library file.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["stimulus"] = Field("stimulus")
     presentation: Optional[
         List[Union[BaseModel, DynamicTable, NWBDataInterface, TimeSeries]]
@@ -207,7 +191,6 @@ class NWBFileGeneral(ConfiguredBaseModel):
     Experimental metadata, including protocol, notes and description of hardware device(s).  The metadata stored in this section should be used to describe the experiment. Metadata necessary for interpreting the data is stored with the data. General experimental metadata, including animal strain, experimental protocols, experimenter, devices, etc, are stored under 'general'. Core metadata (e.g., that required to interpret data fields) is stored with the data itself, and implicitly defined by the file specification (e.g., time is in seconds). The strategy used here for storing non-core metadata is to use free-form text fields, such as would appear in sentences or paragraphs from a Methods section. Metadata fields are text to enable them to be more general, for example to represent ranges instead of numerical values. Machine-readable metadata is stored as attributes to these free-form datasets. All entries in the below table are to be included when data is present. Unused groups (e.g., intracellular_ephys in an optophysiology experiment) should not be created unless there is data to store within them.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["general"] = Field("general")
     data_collection: Optional[str] = Field(
         None, description="""Notes about data collection and analysis."""
@@ -297,7 +280,6 @@ class NWBFileGeneralSourceScript(ConfiguredBaseModel):
     Script file or link to public source code used to create this NWB file.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["source_script"] = Field("source_script")
     file_name: Optional[str] = Field(None, description="""Name of script file.""")
     value: str = Field(...)
@@ -308,7 +290,6 @@ class NWBFileGeneralExtracellularEphys(ConfiguredBaseModel):
     Metadata related to extracellular electrophysiology.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["extracellular_ephys"] = Field("extracellular_ephys")
     electrode_group: Optional[List[str] | str] = Field(
         default_factory=list, description="""Physical group of electrodes."""
@@ -324,7 +305,6 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
     A table of all electrodes (i.e. channels) used for recording.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes"] = Field("electrodes")
     x: Optional[List[float] | float] = Field(
         default_factory=list,
@@ -392,7 +372,6 @@ class NWBFileGeneralIntracellularEphys(ConfiguredBaseModel):
     Metadata related to intracellular electrophysiology.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["intracellular_ephys"] = Field("intracellular_ephys")
     filtering: Optional[str] = Field(
         None,
@@ -432,7 +411,6 @@ class LabMetaData(NWBContainer):
     Lab-specific meta-data.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
 
 
@@ -441,7 +419,6 @@ class Subject(NWBContainer):
     Information about the animal or person from which the data was measured.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     age: Optional[str] = Field(
         None,
@@ -476,25 +453,9 @@ class SubjectAge(ConfiguredBaseModel):
     Age of subject. Can be supplied instead of 'date_of_birth'.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["age"] = Field("age")
     reference: Optional[str] = Field(
         None,
         description="""Age is with reference to this event. Can be 'birth' or 'gestational'. If reference is omitted, 'birth' is implied.""",
     )
     value: str = Field(...)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-ScratchData.model_rebuild()
-NWBFile.model_rebuild()
-NWBFileStimulus.model_rebuild()
-NWBFileGeneral.model_rebuild()
-NWBFileGeneralSourceScript.model_rebuild()
-NWBFileGeneralExtracellularEphys.model_rebuild()
-NWBFileGeneralExtracellularEphysElectrodes.model_rebuild()
-NWBFileGeneralIntracellularEphys.model_rebuild()
-LabMetaData.model_rebuild()
-Subject.model_rebuild()
-SubjectAge.model_rebuild()

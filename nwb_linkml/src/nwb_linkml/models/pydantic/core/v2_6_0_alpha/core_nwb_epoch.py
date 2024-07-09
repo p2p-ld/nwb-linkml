@@ -27,13 +27,13 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import TimeSeries, TimeSeriesReferenceVectorData
-
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
-    DynamicTable,
     VectorIndex,
+    DynamicTable,
     VectorData,
 )
+
+from .core_nwb_base import TimeSeriesReferenceVectorData, TimeSeries
 
 
 metamodel_version = "None"
@@ -41,13 +41,6 @@ version = "2.6.0-alpha"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -67,18 +60,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class TimeIntervals(DynamicTable):
     """
     A container for aggregating epoch data and the TimeSeries that each epoch applies to.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     start_time: Optional[List[float] | float] = Field(
         default_factory=list, description="""Start time of epoch, in seconds."""
@@ -119,7 +105,6 @@ class TimeIntervalsTagsIndex(VectorIndex):
     Index for tags.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["tags_index"] = Field("tags_index")
     target: Optional[str] = Field(
         None,
@@ -143,7 +128,6 @@ class TimeIntervalsTimeseries(TimeSeriesReferenceVectorData):
     An index into a TimeSeries object.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["timeseries"] = Field("timeseries")
     idx_start: int = Field(
         ...,
@@ -174,7 +158,6 @@ class TimeIntervalsTimeseriesIndex(VectorIndex):
     Index for timeseries.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["timeseries_index"] = Field("timeseries_index")
     target: Optional[str] = Field(
         None,
@@ -191,11 +174,3 @@ class TimeIntervalsTimeseriesIndex(VectorIndex):
             NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
         ]
     ] = Field(None)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-TimeIntervals.model_rebuild()
-TimeIntervalsTagsIndex.model_rebuild()
-TimeIntervalsTimeseries.model_rebuild()
-TimeIntervalsTimeseriesIndex.model_rebuild()

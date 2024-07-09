@@ -118,7 +118,7 @@ class Adapter(BaseModel):
         Generate the corresponding linkML element for this adapter
         """
 
-    def walk(self, input: BaseModel | list | dict) -> Generator[BaseModel | Any | None, None, None]:
+    def walk(self, input: Union[BaseModel, dict, list]) -> Generator[Union[BaseModel, Any, None], None, None]:
         """
         Iterate through all items in the given model.
 
@@ -158,7 +158,7 @@ class Adapter(BaseModel):
             pass
 
     def walk_fields(
-        self, input: BaseModel | list | dict, field: str | Tuple[str, ...]
+        self, input: Union[BaseModel, dict, list], field: str | Tuple[str, ...]
     ) -> Generator[Any, None, None]:
         """
         Recursively walk input for fields that match ``field``
@@ -178,7 +178,7 @@ class Adapter(BaseModel):
                 yield item[1]
 
     def walk_field_values(
-        self, input: BaseModel | list | dict, field: str, value: Optional[Any] = None
+        self, input: Union[BaseModel, dict, list], field: str, value: Optional[Any] = None
     ) -> Generator[BaseModel, None, None]:
         """
         Recursively walk input for **models** that contain a ``field`` as a direct child
@@ -202,7 +202,7 @@ class Adapter(BaseModel):
                     yield item
 
     def walk_types(
-        self, input: BaseModel | list | dict, get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]
+        self, input: Union[BaseModel, dict, list], get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]
     ) -> Generator[T | Ts, None, None]:
         """
         Walk a model, yielding items that are the same type as the given type

@@ -27,17 +27,17 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, DynamicTableRegion
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTableRegion, DynamicTable
+
+from .core_nwb_image import ImageSeriesExternalFile, ImageSeries
 
 from .core_nwb_base import (
-    NWBDataInterface,
-    TimeSeriesStartingTime,
-    TimeSeries,
     NWBContainer,
+    TimeSeriesStartingTime,
+    NWBDataInterface,
+    TimeSeries,
     TimeSeriesSync,
 )
-
-from .core_nwb_image import ImageSeries, ImageSeriesExternalFile
 
 
 metamodel_version = "None"
@@ -45,13 +45,6 @@ version = "2.2.2"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -71,18 +64,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class TwoPhotonSeries(ImageSeries):
     """
     Image stack recorded over time from 2-photon microscope.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
     scan_line_rate: Optional[float] = Field(
@@ -149,7 +135,6 @@ class RoiResponseSeries(TimeSeries):
     ROI responses over an imaging plane. The first dimension represents time. The second dimension, if present, represents ROIs.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Union[
         NDArray[Shape["* num_times"], float],
@@ -193,7 +178,6 @@ class RoiResponseSeriesRois(DynamicTableRegion):
     DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["rois"] = Field("rois")
     table: Optional[str] = Field(
         None,
@@ -217,7 +201,6 @@ class DfOverF(NWBDataInterface):
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
         default_factory=dict
     )
@@ -229,7 +212,6 @@ class Fluorescence(NWBDataInterface):
     Fluorescence information about a region of interest (ROI). Storage hierarchy of fluorescence should be the same as for segmentation (ie, same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
         default_factory=dict
     )
@@ -241,7 +223,6 @@ class ImageSegmentation(NWBDataInterface):
     Stores pixels in an image that represent different regions of interest (ROIs) or masks. All segmentation for a given imaging plane is stored together, with storage for multiple imaging planes (masks) supported. Each ROI is stored in its own subgroup, with the ROI group containing both a 2D mask and a list of pixels that make up this mask. Segments can also be used for masking neuropil. If segmentation is allowed to change with time, a new imaging plane (or module) is required and ROI names should remain consistent between them.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[
         List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
     ] = Field(default_factory=dict)
@@ -253,7 +234,6 @@ class ImagingPlane(NWBContainer):
     An imaging plane and its metadata.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[NWBContainer] | NWBContainer] = Field(default_factory=dict)
     name: str = Field(...)
 
@@ -263,20 +243,7 @@ class MotionCorrection(NWBDataInterface):
     An image stack where all frames are shifted (registered) to a common coordinate system, to account for movement and drift between frames. Note: each frame at each point in time is assumed to be 2-D (has only x & y dimensions).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[NWBDataInterface] | NWBDataInterface] = Field(
         default_factory=dict
     )
     name: str = Field(...)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-TwoPhotonSeries.model_rebuild()
-RoiResponseSeries.model_rebuild()
-RoiResponseSeriesRois.model_rebuild()
-DfOverF.model_rebuild()
-Fluorescence.model_rebuild()
-ImageSegmentation.model_rebuild()
-ImagingPlane.model_rebuild()
-MotionCorrection.model_rebuild()

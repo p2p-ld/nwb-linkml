@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_1_3.hdmf_common_table import Container, Data, DynamicTable
+from ...hdmf_common.v1_1_3.hdmf_common_table import Data, Container, DynamicTable
 
 
 metamodel_version = "None"
@@ -35,13 +35,6 @@ version = "2.2.4"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -61,18 +54,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class NWBData(Data):
     """
     An abstract data type for a dataset.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
 
 
@@ -81,7 +67,6 @@ class Image(NWBData):
     An abstract data type for an image. Shape can be 2-D (x, y), or 3-D where the third dimension can have three or four elements, e.g. (x, y, (r, g, b)) or (x, y, (r, g, b, a)).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
@@ -103,7 +88,6 @@ class NWBContainer(Container):
     An abstract data type for a generic container storing collections of data and metadata. Base type for all data and metadata containers.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
 
 
@@ -112,7 +96,6 @@ class NWBDataInterface(NWBContainer):
     An abstract data type for a generic container storing collections of data, as opposed to metadata.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
 
 
@@ -121,7 +104,6 @@ class TimeSeries(NWBDataInterface):
     General purpose time series.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     description: Optional[str] = Field(
         None, description="""Description of the time series."""
@@ -161,7 +143,6 @@ class TimeSeriesData(ConfiguredBaseModel):
     Data values. Data can be in 1-D, 2-D, 3-D, or 4-D. The first dimension should always represent time. This can also be used to store binary data (e.g., image frames). This can also be a link to data stored in an external file.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     conversion: Optional[float] = Field(
         None,
@@ -190,7 +171,6 @@ class TimeSeriesStartingTime(ConfiguredBaseModel):
     Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["starting_time"] = Field("starting_time")
     rate: Optional[float] = Field(None, description="""Sampling rate, in Hz.""")
     unit: Optional[str] = Field(
@@ -205,7 +185,6 @@ class TimeSeriesSync(ConfiguredBaseModel):
     Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["sync"] = Field("sync")
 
 
@@ -214,7 +193,6 @@ class ProcessingModule(NWBContainer):
     A collection of processed data.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[
         List[Union[BaseModel, DynamicTable, NWBDataInterface]]
         | Union[BaseModel, DynamicTable, NWBDataInterface]
@@ -227,7 +205,6 @@ class Images(NWBDataInterface):
     A collection of images.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("Images")
     description: Optional[str] = Field(
         None, description="""Description of this collection of images."""
@@ -235,17 +212,3 @@ class Images(NWBDataInterface):
     image: List[str] | str = Field(
         default_factory=list, description="""Images stored in this collection."""
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-NWBData.model_rebuild()
-Image.model_rebuild()
-NWBContainer.model_rebuild()
-NWBDataInterface.model_rebuild()
-TimeSeries.model_rebuild()
-TimeSeriesData.model_rebuild()
-TimeSeriesStartingTime.model_rebuild()
-TimeSeriesSync.model_rebuild()
-ProcessingModule.model_rebuild()
-Images.model_rebuild()

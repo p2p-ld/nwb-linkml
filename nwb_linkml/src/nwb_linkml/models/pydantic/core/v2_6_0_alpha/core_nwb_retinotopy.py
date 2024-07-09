@@ -35,13 +35,6 @@ version = "2.6.0-alpha"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -61,18 +54,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class ImagingRetinotopy(NWBDataInterface):
     """
     Intrinsic signal optical imaging or widefield imaging for measuring retinotopy. Stores orthogonal maps (e.g., altitude/azimuth; radius/theta) of responses to specific stimuli and a combined polarity map from which to identify visual areas. This group does not store the raw responses imaged during retinotopic mapping or the stimuli presented, but rather the resulting phase and power maps after applying a Fourier transform on the averaged responses. Note: for data consistency, all images and arrays are stored in the format [row][column] and [row, col], which equates to [y][x]. Field of view and dimension arrays may appear backward (i.e., y before x).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("ImagingRetinotopy")
     axis_1_phase_map: str = Field(
         ..., description="""Phase response to stimulus on the first measured axis."""
@@ -111,7 +97,6 @@ class ImagingRetinotopyAxis1PhaseMap(ConfiguredBaseModel):
     Phase response to stimulus on the first measured axis.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_1_phase_map"] = Field("axis_1_phase_map")
     dimension: Optional[int] = Field(
         None,
@@ -131,7 +116,6 @@ class ImagingRetinotopyAxis1PowerMap(ConfiguredBaseModel):
     Power response on the first measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_1_power_map"] = Field("axis_1_power_map")
     dimension: Optional[int] = Field(
         None,
@@ -151,7 +135,6 @@ class ImagingRetinotopyAxis2PhaseMap(ConfiguredBaseModel):
     Phase response to stimulus on the second measured axis.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_2_phase_map"] = Field("axis_2_phase_map")
     dimension: Optional[int] = Field(
         None,
@@ -171,7 +154,6 @@ class ImagingRetinotopyAxis2PowerMap(ConfiguredBaseModel):
     Power response on the second measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["axis_2_power_map"] = Field("axis_2_power_map")
     dimension: Optional[int] = Field(
         None,
@@ -191,7 +173,6 @@ class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
     Gray-scale image taken with same settings/parameters (e.g., focal depth, wavelength) as data collection. Array format: [rows][columns].
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["focal_depth_image"] = Field("focal_depth_image")
     bits_per_pixel: Optional[int] = Field(
         None,
@@ -218,7 +199,6 @@ class ImagingRetinotopySignMap(ConfiguredBaseModel):
     Sine of the angle between the direction of the gradient in axis_1 and axis_2.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["sign_map"] = Field("sign_map")
     dimension: Optional[int] = Field(
         None,
@@ -235,7 +215,6 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
     Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["vasculature_image"] = Field("vasculature_image")
     bits_per_pixel: Optional[int] = Field(
         None,
@@ -252,15 +231,3 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], int]] = Field(None)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-ImagingRetinotopy.model_rebuild()
-ImagingRetinotopyAxis1PhaseMap.model_rebuild()
-ImagingRetinotopyAxis1PowerMap.model_rebuild()
-ImagingRetinotopyAxis2PhaseMap.model_rebuild()
-ImagingRetinotopyAxis2PowerMap.model_rebuild()
-ImagingRetinotopyFocalDepthImage.model_rebuild()
-ImagingRetinotopySignMap.model_rebuild()
-ImagingRetinotopyVasculatureImage.model_rebuild()

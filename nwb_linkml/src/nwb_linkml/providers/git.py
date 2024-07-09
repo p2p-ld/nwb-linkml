@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import warnings
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, DirectoryPath, Field, HttpUrl
 
@@ -25,7 +25,7 @@ class NamespaceRepo(BaseModel):
             " within a namespaces NWB list)"
         )
     )
-    repository: HttpUrl | DirectoryPath = Field(
+    repository: Union[HttpUrl, DirectoryPath] = Field(
         description="URL or local absolute path to the root repository"
     )
     path: Path = Field(description="Relative path from the repository root to the namespace file")

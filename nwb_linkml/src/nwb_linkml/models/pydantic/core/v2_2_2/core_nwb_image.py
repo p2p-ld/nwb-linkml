@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import Image, TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
+from .core_nwb_base import Image, TimeSeriesStartingTime, TimeSeries, TimeSeriesSync
 
 
 metamodel_version = "None"
@@ -35,13 +35,6 @@ version = "2.2.2"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -61,18 +54,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class GrayscaleImage(Image):
     """
     A grayscale image.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
@@ -94,7 +80,6 @@ class RGBImage(Image):
     A color image.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
@@ -116,7 +101,6 @@ class RGBAImage(Image):
     A color image with transparency.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
@@ -138,7 +122,6 @@ class ImageSeries(TimeSeries):
     General image data that is common between acquisition and stimulus time series. Sometimes the image data is stored in the file in a raw format while other times it will be stored as a series of external image files in the host file system. The data field will either be binary data, if the data is stored in the NWB file, or empty, if the data is stored in an external image stack. [frame][x][y] or [frame][x][y][z].
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Optional[
         Union[
@@ -191,7 +174,6 @@ class ImageSeriesExternalFile(ConfiguredBaseModel):
     Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["external_file"] = Field("external_file")
     starting_frame: Optional[int] = Field(
         None,
@@ -205,7 +187,6 @@ class ImageMaskSeries(ImageSeries):
     An alpha mask that is applied to a presented visual stimulus. The 'data' array contains an array of mask values that are applied to the displayed image. Mask values are stored as RGBA. Mask can vary with time. The timestamps array indicates the starting time of a mask, and that mask pattern continues until it's explicitly changed.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Optional[
         Union[
@@ -258,7 +239,6 @@ class OpticalSeries(ImageSeries):
     Image data that is presented or recorded. A stimulus template movie will be stored only as an image. When the image is presented as stimulus, additional data is required, such as field of view (e.g., how much of the visual field the image covers, or how what is the area of the target being imaged). If the OpticalSeries represents acquired imaging data, orientation is also important.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     distance: Optional[float] = Field(
         None, description="""Distance from camera/monitor to target/eye."""
@@ -327,7 +307,6 @@ class IndexSeries(TimeSeries):
     Stores indices to image frames stored in an ImageSeries. The purpose of the ImageIndexSeries is to allow a static image stack to be stored somewhere, and the images in the stack to be referenced out-of-order. This can be for the display of individual images, or of movie segments (as a movie is simply a series of images). The data field stores the index of the frame in the referenced ImageSeries, and the timestamps array indicates when that image was displayed.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: NDArray[Shape["* num_times"], int] = Field(
         ..., description="""Index of the frame in the referenced ImageSeries."""
@@ -359,15 +338,3 @@ class IndexSeries(TimeSeries):
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-GrayscaleImage.model_rebuild()
-RGBImage.model_rebuild()
-RGBAImage.model_rebuild()
-ImageSeries.model_rebuild()
-ImageSeriesExternalFile.model_rebuild()
-ImageMaskSeries.model_rebuild()
-OpticalSeries.model_rebuild()
-IndexSeries.model_rebuild()

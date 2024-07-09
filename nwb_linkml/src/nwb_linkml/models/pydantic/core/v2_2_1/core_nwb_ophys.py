@@ -27,17 +27,17 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from ...hdmf_common.v1_1_2.hdmf_common_table import DynamicTable, DynamicTableRegion
+from ...hdmf_common.v1_1_2.hdmf_common_table import DynamicTableRegion, DynamicTable
+
+from .core_nwb_image import ImageSeriesExternalFile, ImageSeries
 
 from .core_nwb_base import (
-    NWBDataInterface,
-    TimeSeriesStartingTime,
-    TimeSeries,
     NWBContainer,
+    TimeSeriesStartingTime,
+    NWBDataInterface,
+    TimeSeries,
     TimeSeriesSync,
 )
-
-from .core_nwb_image import ImageSeries, ImageSeriesExternalFile
 
 
 metamodel_version = "None"
@@ -45,13 +45,6 @@ version = "2.2.1"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -71,18 +64,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class TwoPhotonSeries(ImageSeries):
     """
     Image stack recorded over time from 2-photon microscope.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
     scan_line_rate: Optional[float] = Field(
@@ -149,7 +135,6 @@ class RoiResponseSeries(TimeSeries):
     ROI responses over an imaging plane. The first dimension represents time. The second dimension, if present, represents ROIs.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Union[
         NDArray[Shape["* num_times"], float],
@@ -193,7 +178,6 @@ class RoiResponseSeriesRois(DynamicTableRegion):
     DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["rois"] = Field("rois")
     table: Optional[str] = Field(
         None,
@@ -209,7 +193,6 @@ class DfOverF(NWBDataInterface):
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
         default_factory=dict
     )
@@ -221,7 +204,6 @@ class Fluorescence(NWBDataInterface):
     Fluorescence information about a region of interest (ROI). Storage hierarchy of fluorescence should be the same as for segmentation (ie, same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
         default_factory=dict
     )
@@ -233,7 +215,6 @@ class ImageSegmentation(NWBDataInterface):
     Stores pixels in an image that represent different regions of interest (ROIs) or masks. All segmentation for a given imaging plane is stored together, with storage for multiple imaging planes (masks) supported. Each ROI is stored in its own subgroup, with the ROI group containing both a 2D mask and a list of pixels that make up this mask. Segments can also be used for masking neuropil. If segmentation is allowed to change with time, a new imaging plane (or module) is required and ROI names should remain consistent between them.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[
         List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
     ] = Field(default_factory=dict)
@@ -245,7 +226,6 @@ class ImagingPlane(NWBContainer):
     An imaging plane and its metadata.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     description: Optional[str] = Field(
         None, description="""Description of the imaging plane."""
@@ -287,7 +267,6 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
     DEPRECATED Physical position of each pixel. 'xyz' represents the position of the pixel relative to the defined coordinate space. Deprecated in favor of origin_coords and grid_spacing.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["manifold"] = Field("manifold")
     conversion: Optional[float] = Field(
         None,
@@ -310,7 +289,6 @@ class ImagingPlaneOriginCoords(ConfiguredBaseModel):
     Physical location of the first element of the imaging plane (0, 0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the physical location is relative to (e.g., bregma).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["origin_coords"] = Field("origin_coords")
     unit: Optional[str] = Field(
         None,
@@ -324,7 +302,6 @@ class ImagingPlaneGridSpacing(ConfiguredBaseModel):
     Space between pixels in (x, y) or voxels in (x, y, z) directions, in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame to interpret the grid.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["grid_spacing"] = Field("grid_spacing")
     unit: Optional[str] = Field(
         None,
@@ -338,7 +315,6 @@ class OpticalChannel(NWBContainer):
     An optical channel used to record from an imaging plane.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: str = Field(...)
     description: str = Field(
         ..., description="""Description or other notes about the channel."""
@@ -353,24 +329,7 @@ class MotionCorrection(NWBDataInterface):
     An image stack where all frames are shifted (registered) to a common coordinate system, to account for movement and drift between frames. Note: each frame at each point in time is assumed to be 2-D (has only x & y dimensions).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[NWBDataInterface] | NWBDataInterface] = Field(
         default_factory=dict
     )
     name: str = Field(...)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-TwoPhotonSeries.model_rebuild()
-RoiResponseSeries.model_rebuild()
-RoiResponseSeriesRois.model_rebuild()
-DfOverF.model_rebuild()
-Fluorescence.model_rebuild()
-ImageSegmentation.model_rebuild()
-ImagingPlane.model_rebuild()
-ImagingPlaneManifold.model_rebuild()
-ImagingPlaneOriginCoords.model_rebuild()
-ImagingPlaneGridSpacing.model_rebuild()
-OpticalChannel.model_rebuild()
-MotionCorrection.model_rebuild()

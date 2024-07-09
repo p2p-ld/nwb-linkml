@@ -27,15 +27,15 @@ if TYPE_CHECKING:
     import numpy as np
 
 
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTableRegion, DynamicTable
+
 from .core_nwb_base import (
+    NWBContainer,
+    TimeSeriesStartingTime,
     NWBDataInterface,
     TimeSeries,
-    TimeSeriesStartingTime,
-    NWBContainer,
     TimeSeriesSync,
 )
-
-from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTableRegion, DynamicTable
 
 
 metamodel_version = "None"
@@ -43,13 +43,6 @@ version = "2.2.2"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -69,18 +62,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class ElectricalSeries(TimeSeries):
     """
     A time series of acquired voltage data from extracellular recordings. The data field is an int or float array storing data in volts. The first dimension should always represent time. The second dimension, if present, should represent channels.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Union[
         NDArray[Shape["* num_times"], float],
@@ -129,7 +115,6 @@ class ElectricalSeriesElectrodes(DynamicTableRegion):
     DynamicTableRegion pointer to the electrodes that this time series was generated from.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes"] = Field("electrodes")
     table: Optional[str] = Field(
         None,
@@ -153,7 +138,6 @@ class SpikeEventSeries(ElectricalSeries):
     Stores snapshots/snippets of recorded spike events (i.e., threshold crossings). This may also be raw data, as reported by ephys hardware. If so, the TimeSeries::description field should describe how events were detected. All SpikeEventSeries should reside in a module (under EventWaveform interface) even if the spikes were reported and stored by hardware. All events span the same recording channels and store snapshots of equal duration. TimeSeries::data array structure: [num events] [num channels] [num samples] (or [num events] [num samples] for single electrode).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: Union[
         NDArray[Shape["* num_events, * num_channels, * num_samples"], float],
@@ -201,7 +185,6 @@ class FeatureExtraction(NWBDataInterface):
     Features, such as PC1 and PC2, that are extracted from signals stored in a SpikeEventSeries or other source.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("FeatureExtraction")
     description: NDArray[Shape["* num_features"], str] = Field(
         ...,
@@ -228,7 +211,6 @@ class FeatureExtractionElectrodes(DynamicTableRegion):
     DynamicTableRegion pointer to the electrodes that this time series was generated from.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes"] = Field("electrodes")
     table: Optional[str] = Field(
         None,
@@ -252,7 +234,6 @@ class EventDetection(NWBDataInterface):
     Detected spike events from voltage trace(s).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("EventDetection")
     detection_method: str = Field(
         ...,
@@ -272,7 +253,6 @@ class EventWaveform(NWBDataInterface):
     Represents either the waveforms of detected events, as extracted from a raw data trace in /acquisition, or the event waveforms that were stored during experiment acquisition.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[SpikeEventSeries] | SpikeEventSeries] = Field(
         default_factory=dict
     )
@@ -284,7 +264,6 @@ class FilteredEphys(NWBDataInterface):
     Electrophysiology data from one or more channels that has been subjected to filtering. Examples of filtered data include Theta and Gamma (LFP has its own interface). FilteredEphys modules publish an ElectricalSeries for each filtered channel or set of channels. The name of each ElectricalSeries is arbitrary but should be informative. The source of the filtered data, whether this is from analysis of another time series or as acquired by hardware, should be noted in each's TimeSeries::description field. There is no assumed 1::1 correspondence between filtered ephys signals and electrodes, as a single signal can apply to many nearby electrodes, and one electrode may have different filtered (e.g., theta and/or gamma) signals represented. Filter properties should be noted in the ElectricalSeries.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[ElectricalSeries] | ElectricalSeries] = Field(
         default_factory=dict
     )
@@ -296,7 +275,6 @@ class LFP(NWBDataInterface):
     LFP data from one or more channels. The electrode map in each published ElectricalSeries will identify which channels are providing LFP data. Filter properties should be noted in the ElectricalSeries description or comments field.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     children: Optional[List[ElectricalSeries] | ElectricalSeries] = Field(
         default_factory=dict
     )
@@ -308,7 +286,6 @@ class ElectrodeGroup(NWBContainer):
     A physical grouping of electrodes, e.g. a shank of an array.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     description: Optional[str] = Field(
         None, description="""Description of this electrode group."""
@@ -327,7 +304,6 @@ class ElectrodeGroupPosition(ConfiguredBaseModel):
     stereotaxic or common framework coordinates
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["position"] = Field("position")
     x: Optional[float] = Field(None, description="""x coordinate""")
     y: Optional[float] = Field(None, description="""y coordinate""")
@@ -339,7 +315,6 @@ class ClusterWaveforms(NWBDataInterface):
     DEPRECATED The mean waveform shape, including standard deviation, of the different clusters. Ideally, the waveform analysis should be performed on data that is only high-pass filtered. This is a separate module because it is expected to require updating. For example, IMEC probes may require different storage requirements to store/display mean waveforms, requiring a new interface or an extension of this one.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("ClusterWaveforms")
     waveform_filtering: str = Field(
         ..., description="""Filtering applied to data before generating mean/sd"""
@@ -359,7 +334,6 @@ class Clustering(NWBDataInterface):
     DEPRECATED Clustered spike data, whether from automatic clustering tools (e.g., klustakwik) or as a result of manual sorting.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("Clustering")
     description: str = Field(
         ...,
@@ -376,20 +350,3 @@ class Clustering(NWBDataInterface):
         ...,
         description="""Times of clustered events, in seconds. This may be a link to times field in associated FeatureExtraction module.""",
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-ElectricalSeries.model_rebuild()
-ElectricalSeriesElectrodes.model_rebuild()
-SpikeEventSeries.model_rebuild()
-FeatureExtraction.model_rebuild()
-FeatureExtractionElectrodes.model_rebuild()
-EventDetection.model_rebuild()
-EventWaveform.model_rebuild()
-FilteredEphys.model_rebuild()
-LFP.model_rebuild()
-ElectrodeGroup.model_rebuild()
-ElectrodeGroupPosition.model_rebuild()
-ClusterWaveforms.model_rebuild()
-Clustering.model_rebuild()

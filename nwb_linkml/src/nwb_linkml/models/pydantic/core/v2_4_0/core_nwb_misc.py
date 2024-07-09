@@ -27,16 +27,16 @@ if TYPE_CHECKING:
     import numpy as np
 
 
-from .core_nwb_base import TimeSeries, TimeSeriesSync, TimeSeriesStartingTime
+from .core_nwb_ecephys import ElectrodeGroup
 
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTableRegion,
+    VectorIndex,
     DynamicTable,
     VectorData,
-    VectorIndex,
 )
 
-from .core_nwb_ecephys import ElectrodeGroup
+from .core_nwb_base import TimeSeriesSync, TimeSeriesStartingTime, TimeSeries
 
 
 metamodel_version = "None"
@@ -44,13 +44,6 @@ version = "2.4.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    model_config = ConfigDict(
-        validate_assignment=True,
-        validate_default=True,
-        extra="allow",
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
@@ -70,18 +63,11 @@ class ConfiguredBaseModel(BaseModel):
             super().__setitem__(i, value)
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
-
-    tree_root: bool = False
-
-
 class AbstractFeatureSeries(TimeSeries):
     """
     Abstract features, such as quantitative descriptions of sensory stimuli. The TimeSeries::data field is a 2D array, storing those features (e.g., for visual grating stimulus this might be orientation, spatial frequency and contrast). Null stimuli (eg, uniform gray) can be marked as being an independent feature (eg, 1.0 for gray, 0.0 for actual stimulus) or by storing NaNs for feature values, or through use of the TimeSeries::control fields. A set of features is considered to persist until the next set of features is defined. The final set of features stored should be the null set. This is useful when storing the raw stimulus is impractical.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Values of each feature at each time.""")
     feature_units: Optional[NDArray[Shape["* num_features"], str]] = Field(
@@ -125,7 +111,6 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
     Values of each feature at each time.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -144,7 +129,6 @@ class AnnotationSeries(TimeSeries):
     Stores user annotations made during an experiment. The data[] field stores a text array, and timestamps are stored for each annotation (ie, interval=1). This is largely an alias to a standard TimeSeries storing a text array but that is identifiable as storing annotations in a machine-readable way.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: NDArray[Shape["* num_times"], str] = Field(
         ..., description="""Annotations made during an experiment."""
@@ -183,7 +167,6 @@ class IntervalSeries(TimeSeries):
     Stores intervals of data. The timestamps field stores the beginning and end of intervals. The data field stores whether the interval just started (>0 value) or ended (<0 value). Different interval types can be represented in the same series by using multiple key values (eg, 1 for feature A, 2 for feature B, 3 for feature C, etc). The field data stores an 8-bit integer. This is largely an alias of a standard TimeSeries but that is identifiable as representing time intervals in a machine-readable way.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: NDArray[Shape["* num_times"], int] = Field(
         ..., description="""Use values >0 if interval started, <0 if interval ended."""
@@ -222,7 +205,6 @@ class DecompositionSeries(TimeSeries):
     Spectral analysis of a time series, e.g. of an LFP or a speech signal.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field(...)
     data: str = Field(..., description="""Data decomposed into frequency bands.""")
     metric: str = Field(
@@ -270,7 +252,6 @@ class DecompositionSeriesData(ConfiguredBaseModel):
     Data decomposed into frequency bands.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["data"] = Field("data")
     unit: Optional[str] = Field(
         None,
@@ -286,7 +267,6 @@ class DecompositionSeriesSourceChannels(DynamicTableRegion):
     DynamicTableRegion pointer to the channels that this decomposition series was generated from.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["source_channels"] = Field("source_channels")
     table: Optional[str] = Field(
         None,
@@ -310,7 +290,6 @@ class DecompositionSeriesBands(DynamicTable):
     Table for describing the bands that this series was generated from. There should be one row in this table for each band.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["bands"] = Field("bands")
     band_name: Optional[List[str] | str] = Field(
         default_factory=list, description="""Name of the band, e.g. theta."""
@@ -347,7 +326,6 @@ class Units(DynamicTable):
     Data about spiking units. Event times of observed units (e.g. cell, synapse, etc.) should be concatenated and stored in spike_times.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
     name: str = Field("Units")
     spike_times_index: Optional[str] = Field(
         None, description="""Index into the spike_times dataset."""
@@ -422,7 +400,6 @@ class UnitsSpikeTimesIndex(VectorIndex):
     Index into the spike_times dataset.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["spike_times_index"] = Field("spike_times_index")
     target: Optional[str] = Field(
         None,
@@ -446,7 +423,6 @@ class UnitsSpikeTimes(VectorData):
     Spike times for each unit.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["spike_times"] = Field("spike_times")
     resolution: Optional[float] = Field(
         None,
@@ -470,7 +446,6 @@ class UnitsObsIntervalsIndex(VectorIndex):
     Index into the obs_intervals dataset.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["obs_intervals_index"] = Field("obs_intervals_index")
     target: Optional[str] = Field(
         None,
@@ -494,7 +469,6 @@ class UnitsElectrodesIndex(VectorIndex):
     Index into electrodes.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes_index"] = Field("electrodes_index")
     target: Optional[str] = Field(
         None,
@@ -518,7 +492,6 @@ class UnitsElectrodes(DynamicTableRegion):
     Electrode that each spike unit came from, specified using a DynamicTableRegion.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["electrodes"] = Field("electrodes")
     table: Optional[str] = Field(
         None,
@@ -542,7 +515,6 @@ class UnitsWaveformsIndex(VectorIndex):
     Index into the waveforms dataset. One value for every spike event. See 'waveforms' for more detail.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["waveforms_index"] = Field("waveforms_index")
     target: Optional[str] = Field(
         None,
@@ -566,7 +538,6 @@ class UnitsWaveformsIndexIndex(VectorIndex):
     Index into the waveforms_index dataset. One value for every unit (row in the table). See 'waveforms' for more detail.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
     name: Literal["waveforms_index_index"] = Field("waveforms_index_index")
     target: Optional[str] = Field(
         None,
@@ -583,23 +554,3 @@ class UnitsWaveformsIndexIndex(VectorIndex):
             NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
         ]
     ] = Field(None)
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-AbstractFeatureSeries.model_rebuild()
-AbstractFeatureSeriesData.model_rebuild()
-AnnotationSeries.model_rebuild()
-IntervalSeries.model_rebuild()
-DecompositionSeries.model_rebuild()
-DecompositionSeriesData.model_rebuild()
-DecompositionSeriesSourceChannels.model_rebuild()
-DecompositionSeriesBands.model_rebuild()
-Units.model_rebuild()
-UnitsSpikeTimesIndex.model_rebuild()
-UnitsSpikeTimes.model_rebuild()
-UnitsObsIntervalsIndex.model_rebuild()
-UnitsElectrodesIndex.model_rebuild()
-UnitsElectrodes.model_rebuild()
-UnitsWaveformsIndex.model_rebuild()
-UnitsWaveformsIndexIndex.model_rebuild()

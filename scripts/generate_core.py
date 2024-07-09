@@ -75,82 +75,83 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
     )
     panel = Panel(Group(build_progress, overall_progress))
 
+    try:
+        with Live(panel) as live:
+            # make pbar tasks
+            linkml_task = None
+            pydantic_task = None
 
-    with Live(panel) as live:
-        # make pbar tasks
-        linkml_task = None
-        pydantic_task = None
+            for version in NWB_CORE_REPO.versions:
+                # build linkml
+                try:
+                    # check out the version (this should also refresh the hdmf-common schema)
+                    linkml_task = build_progress.add_task('', name=version, action='Checkout Version', total=3)
+                    repo.tag = version
+                    build_progress.update(linkml_task, advance=1, action="Load Namespaces")
 
-        for version in NWB_CORE_REPO.versions:
-            # build linkml
-            try:
-                # check out the version (this should also refresh the hdmf-common schema)
-                linkml_task = build_progress.add_task('', name=version, action='Checkout Version', total=3)
-                repo.tag = version
-                build_progress.update(linkml_task, advance=1, action="Load Namespaces")
-
-                # first load the core namespace
-                core_ns = io.load_namespace_adapter(repo.namespace_file)
-                # then the hdmf-common namespace
-                hdmf_common_ns = io.load_namespace_adapter(repo.temp_directory / 'hdmf-common-schema' / 'common' / 'namespace.yaml')
-                core_ns.imported.append(hdmf_common_ns)
-                build_progress.update(linkml_task, advance=1, action="Build LinkML")
-
-
-                linkml_res = linkml_provider.build(core_ns)
-                build_progress.update(linkml_task, advance=1, action="Built LinkML")
-
-                # build pydantic
-                ns_files = [res['namespace'] for res in linkml_res.values()]
-                all_schema = []
-                for ns_file in ns_files:
-                    all_schema.extend(list(ns_file.parent.glob('*.yaml')))
-
-                pydantic_task = build_progress.add_task('', name=version, action='', total=len(all_schema))
-                for schema in all_schema:
-                    pbar_string = ' - '.join([schema.parts[-3], schema.parts[-2], schema.parts[-1]])
-                    build_progress.update(pydantic_task, action=pbar_string)
-                    pydantic_provider.build(schema, versions=core_ns.versions, split=True)
-                    build_progress.update(pydantic_task, advance=1)
-                build_progress.update(pydantic_task, action='Built Pydantic')
+                    # first load the core namespace
+                    core_ns = io.load_namespace_adapter(repo.namespace_file)
+                    # then the hdmf-common namespace
+                    hdmf_common_ns = io.load_namespace_adapter(repo.temp_directory / 'hdmf-common-schema' / 'common' / 'namespace.yaml')
+                    core_ns.imported.append(hdmf_common_ns)
+                    build_progress.update(linkml_task, advance=1, action="Build LinkML")
 
 
+                    linkml_res = linkml_provider.build(core_ns)
+                    build_progress.update(linkml_task, advance=1, action="Built LinkML")
 
-            except Exception as e:
-                build_progress.stop_task(linkml_task)
-                if linkml_task is not None:
-                    build_progress.update(linkml_task, action='[bold red]LinkML Build Failed')
+                    # build pydantic
+                    ns_files = [res['namespace'] for res in linkml_res.values()]
+                    all_schema = []
+                    for ns_file in ns_files:
+                        all_schema.extend(list(ns_file.parent.glob('*.yaml')))
+
+                    pydantic_task = build_progress.add_task('', name=version, action='', total=len(all_schema))
+                    for schema in all_schema:
+                        pbar_string = ' - '.join([schema.parts[-3], schema.parts[-2], schema.parts[-1]])
+                        build_progress.update(pydantic_task, action=pbar_string)
+                        pydantic_provider.build(schema, versions=core_ns.versions, split=True)
+                        build_progress.update(pydantic_task, advance=1)
+                    build_progress.update(pydantic_task, action='Built Pydantic')
+
+
+
+                except Exception as e:
                     build_progress.stop_task(linkml_task)
-                if pydantic_task is not None:
-                    build_progress.update(pydantic_task, action='[bold red]LinkML Build Failed')
-                    build_progress.stop_task(pydantic_task)
-                failed_versions[version] = traceback.format_exception(e)
+                    if linkml_task is not None:
+                        build_progress.update(linkml_task, action='[bold red]LinkML Build Failed')
+                        build_progress.stop_task(linkml_task)
+                    if pydantic_task is not None:
+                        build_progress.update(pydantic_task, action='[bold red]LinkML Build Failed')
+                        build_progress.stop_task(pydantic_task)
+                    failed_versions[version] = traceback.format_exception(e)
 
-            finally:
-                overall_progress.update(overall_task, advance=1)
-                linkml_task = None
-                pydantic_task = None
+                finally:
+                    overall_progress.update(overall_task, advance=1)
+                    linkml_task = None
+                    pydantic_task = None
 
-    if not dry_run:
-        shutil.rmtree(yaml_path / 'linkml')
-        shutil.rmtree(pydantic_path / 'pydantic')
-        shutil.move(tmp_dir / 'linkml', yaml_path)
-        shutil.move(tmp_dir / 'pydantic', pydantic_path)
+        if not dry_run:
+            shutil.rmtree(yaml_path / 'linkml')
+            shutil.rmtree(pydantic_path / 'pydantic')
+            shutil.move(tmp_dir / 'linkml', yaml_path)
+            shutil.move(tmp_dir / 'pydantic', pydantic_path)
 
-        # import the most recent version of the schemaz we built
-        latest_version = sorted((pydantic_path / 'pydantic' / 'core').iterdir(), key=os.path.getmtime)[-1]
+            # import the most recent version of the schemaz we built
+            latest_version = sorted((pydantic_path / 'pydantic' / 'core').iterdir(), key=os.path.getmtime)[-1]
 
-        # make inits to use the schema! we don't usually do this in the
-        # provider class because we directly import the files there.
-        with open(pydantic_path / 'pydantic' / '__init__.py', 'w') as initfile:
-            initfile.write(' ')
+            # make inits to use the schema! we don't usually do this in the
+            # provider class because we directly import the files there.
+            with open(pydantic_path / 'pydantic' / '__init__.py', 'w') as initfile:
+                initfile.write(' ')
 
-        with open(pydantic_path / '__init__.py', 'w') as initfile:
-            initfile.write(f'from .pydantic.core.{latest_version.name}.namespace import *')
+            with open(pydantic_path / '__init__.py', 'w') as initfile:
+                initfile.write(f'from .pydantic.core.{latest_version.name}.namespace import *')
 
-    if len(failed_versions) > 0:
-        print('Failed Building Versions:')
-        print(failed_versions)
+    finally:
+        if len(failed_versions) > 0:
+            print('Failed Building Versions:')
+            print(failed_versions)
 
 
 
