@@ -19,7 +19,7 @@ NWB_KEYS = re.compile(r"(^\s*datasets:\s*\n)|^groups:")
 def _strip_nwb(nwb: str) -> str:
     # strip 'datasets:' keys and decoration left in for readability/context
     nwb = re.sub(NWB_KEYS, "", nwb)
-    nwb = re.sub(r"-", " ", nwb)
+    nwb = re.sub(r"^-", " ", nwb)
     nwb = textwrap.dedent(nwb)
     return nwb
 

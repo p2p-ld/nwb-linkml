@@ -35,8 +35,17 @@ __all__ = [
 def tmp_output_dir() -> Path:
     path = Path(__file__).parent.resolve() / "__tmp__"
     if path.exists():
-        shutil.rmtree(str(path))
-    path.mkdir()
+        for subdir in path.iterdir():
+            if subdir.name == 'git':
+                # don't wipe out git repos every time, they don't rly change
+                continue
+            elif subdir.is_file() and subdir.parent != path:
+                continue
+            elif subdir.is_file():
+                subdir.unlink(missing_ok=True)
+            else:
+                shutil.rmtree(str(subdir))
+    path.mkdir(exist_ok=True)
 
     return path
 

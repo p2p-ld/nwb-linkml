@@ -107,7 +107,7 @@ class ArrayAdapter:
         Dict[Literal["any_of"], Dict[Literal["array"], List[ArrayExpression]]],
     ]:
         """
-        Make the array expressions in a dict form that can be **kwarg'd into a SlotDefinition,
+        Make the array expressions in a dict form that can be ``**kwarg``'d into a SlotDefinition,
         taking into account needing to use ``any_of`` for multiple array range specifications.
         """
         expressions = self.make()

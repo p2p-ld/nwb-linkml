@@ -1,7 +1,6 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
-
 from abc import abstractmethod
 from typing import ClassVar, Optional, Type
 
@@ -119,6 +118,54 @@ class MapScalarAttributes(DatasetMap):
     """
     A scalar with attributes gets an additional slot "value" that contains the actual scalar
     value of this field
+
+    Examples:
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - name: starting_time
+                  dtype: float64
+                  doc: Timestamp of the first sample in seconds. When timestamps are uniformly
+                    spaced, the timestamp of the first sample can be specified and all subsequent
+                    ones calculated from the sampling rate attribute.
+                  quantity: '?'
+                  attributes:
+                  - name: rate
+                    dtype: float32
+                    doc: Sampling rate, in Hz.
+                  - name: unit
+                    dtype: text
+                    value: seconds
+                    doc: Unit of measurement for time, which is fixed to 'seconds'.
+            :linkml:
+                classes:
+                - name: starting_time
+                  description: Timestamp of the first sample in seconds. When timestamps are uniformly
+                    spaced, the timestamp of the first sample can be specified and all subsequent
+                    ones calculated from the sampling rate attribute.
+                  attributes:
+                    name:
+                      name: name
+                      ifabsent: string(starting_time)
+                      identifier: true
+                      range: string
+                      required: true
+                      equals_string: starting_time
+                    rate:
+                      name: rate
+                      description: Sampling rate, in Hz.
+                      range: float32
+                    unit:
+                      name: unit
+                      description: Unit of measurement for time, which is fixed to 'seconds'.
+                      range: text
+                    value:
+                      name: value
+                      range: float64
+                      required: true
+                  tree_root: true
+
     """
 
     @classmethod
@@ -133,7 +180,7 @@ class MapScalarAttributes(DatasetMap):
             * - ``neurodata_type_inc``
               - ``None``
             * - ``attributes``
-              - Truthy
+              - ``True``
             * - ``dims``
               - ``None``
             * - ``shape``
@@ -167,13 +214,65 @@ class MapScalarAttributes(DatasetMap):
 
 class MapListlike(DatasetMap):
     """
-    Datasets that refer to other datasets (that handle their own arrays)
+    Datasets that refer to a list of other datasets.
+
+    Used exactly once in the core schema, in ``ImageReferences`` -
+    an array of references to other ``Image`` datasets. We ignore the
+    usual array structure and unnest the implicit array into a slot names from the
+    target type rather than the oddly-named ``num_images`` dimension so that
+    ultimately in the pydantic model we get a nicely behaved single-level list.
+
+    Examples:
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - neurodata_type_def: ImageReferences
+                  neurodata_type_inc: NWBData
+                  dtype:
+                    target_type: Image
+                    reftype: object
+                  dims:
+                  - num_images
+                  shape:
+                  - null
+                  doc: Ordered dataset of references to Image objects.
+            :linkml:
+                classes:
+                - name: ImageReferences
+                  description: Ordered dataset of references to Image objects.
+                  is_a: NWBData
+                  attributes:
+                    name:
+                      name: name
+                      identifier: true
+                      range: string
+                      required: true
+                    image:
+                      name: image
+                      description: Ordered dataset of references to Image objects.
+                      multivalued: true
+                      range: Image
+                      required: true
+                  tree_root: true
+
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
         Check if we are a 1D dataset that isn't a normal datatype
+
+        .. list-table::
+            :header-rows: 1
+            :align: left
+
+            * - Attr
+              - Value
+            * - :func:`.is_1d`
+              - ``True``
+            * - ``dtype``
+              - ``Class``
         """
         dtype = ClassAdapter.handle_dtype(cls.dtype)
         return is_1d(cls) and dtype != "AnyType" and dtype not in flat_to_linkml
@@ -202,13 +301,83 @@ class MapArraylike(DatasetMap):
     Datasets without any additional attributes don't create their own subclass,
     they're just an array :).
 
-    Replace the base class with the array class, and make a slot that refers to it.
+    Replace the base class with a slot that defines the array.
+
+    Examples:
+
+        eg. from ``image.ImageSeries`` :
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - name: data
+                  dtype: numeric
+                  dims:
+                  - - frame
+                    - x
+                    - y
+                  - - frame
+                    - x
+                    - y
+                    - z
+                  shape:
+                  - - null
+                    - null
+                    - null
+                  - - null
+                    - null
+                    - null
+                    - null
+                  doc: Binary data representing images across frames. If data are stored in an external
+                    file, this should be an empty 3D array.
+            :linkml:
+                slots:
+                - name: data
+                  description: Binary data representing images across frames. If data are stored in
+                    an external file, this should be an empty 3D array.
+                  multivalued: false
+                  range: numeric
+                  required: true
+                  any_of:
+                  - array:
+                      dimensions:
+                      - alias: frame
+                      - alias: x
+                      - alias: y
+                  - array:
+                      dimensions:
+                      - alias: frame
+                      - alias: x
+                      - alias: y
+                      - alias: z
+
+
+
+
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
         Check if we're a plain array
+
+        .. list-table::
+            :header-rows: 1
+            :align: left
+
+            * - Attr
+              - Value
+            * - ``name``
+              - ``True``
+            * - ``dims``
+              - ``True``
+            * - ``shape``
+              - ``True``
+            * - :func:`.has_attrs`
+              - ``False``
+            * - :func:`.is_compound`
+              - ``False``
+
         """
         return (
             cls.name and all([cls.dims, cls.shape]) and not has_attrs(cls) and not is_compound(cls)
@@ -243,6 +412,88 @@ class MapArrayLikeAttributes(DatasetMap):
     """
     The most general case - treat everything that isn't handled by one of the special cases
     as an array!
+
+    Examples:
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - neurodata_type_def: Image
+                  neurodata_type_inc: NWBData
+                  dtype: numeric
+                  dims:
+                  - - x
+                    - y
+                  - - x
+                    - y
+                    - r, g, b
+                  - - x
+                    - y
+                    - r, g, b, a
+                  shape:
+                  - - null
+                    - null
+                  - - null
+                    - null
+                    - 3
+                  - - null
+                    - null
+                    - 4
+                  doc: An abstract data type for an image. Shape can be 2-D (x, y), or 3-D where the
+                    third dimension can have three or four elements, e.g. (x, y, (r, g, b)) or
+                    (x, y, (r, g, b, a)).
+                  attributes:
+                  - name: resolution
+                    dtype: float32
+                    doc: Pixel resolution of the image, in pixels per centimeter.
+                    required: false
+                  - name: description
+                    dtype: text
+                    doc: Description of the image.
+                    required: false
+            :linkml:
+                classes:
+                - name: Image
+                  description: An abstract data type for an image. Shape can be 2-D (x, y), or 3-D
+                    where the third dimension can have three or four elements, e.g. (x, y, (r, g,
+                    b)) or (x, y, (r, g, b, a)).
+                  is_a: NWBData
+                  attributes:
+                    name:
+                      name: name
+                      identifier: true
+                      range: string
+                      required: true
+                    resolution:
+                      name: resolution
+                      description: Pixel resolution of the image, in pixels per centimeter.
+                      range: float32
+                    description:
+                      name: description
+                      description: Description of the image.
+                      range: text
+                    array:
+                      name: array
+                      range: numeric
+                      any_of:
+                      - array:
+                          dimensions:
+                          - alias: x
+                          - alias: y
+                      - array:
+                          dimensions:
+                          - alias: x
+                          - alias: y
+                          - alias: r_g_b
+                            exact_cardinality: 3
+                      - array:
+                          dimensions:
+                          - alias: x
+                          - alias: y
+                          - alias: r_g_b_a
+                            exact_cardinality: 4
+                  tree_root: true
+
     """
 
     NEEDS_NAME = True
@@ -487,7 +738,11 @@ class DatasetAdapter(ClassAdapter):
 
 def is_1d(cls: Dataset) -> bool:
     """
-    Check if the values of a dataset are 1-dimensional
+    Check if the values of a dataset are 1-dimensional.
+
+    Specifically:
+    * a single-layer dim/shape list of length 1, or
+    * a nested dim/shape list where every nested spec is of length 1
     """
     return (
         not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1

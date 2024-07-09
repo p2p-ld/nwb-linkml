@@ -20,7 +20,16 @@ def load_yaml(path: Path | str) -> dict:
     """
     Load yaml file from file, applying postload modifications
     """
-    if isinstance(path, str) and not Path(path).exists():
+    is_file = False
+    try:
+        a_path = Path(path)
+        if a_path.exists():
+            is_file = True
+    except OSError:
+        # long strings can't be made into paths!
+        pass
+
+    if not is_file:
         ns_dict = yaml.safe_load(path)
     else:
         with open(path) as file:
