@@ -77,9 +77,7 @@ class AbstractFeatureSeries(TimeSeries):
         ...,
         description="""Description of the features represented in TimeSeries::data.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -133,9 +131,7 @@ class AnnotationSeries(TimeSeries):
     data: NDArray[Shape["* num_times"], str] = Field(
         ..., description="""Annotations made during an experiment."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -171,9 +167,7 @@ class IntervalSeries(TimeSeries):
     data: NDArray[Shape["* num_times"], int] = Field(
         ..., description="""Use values >0 if interval started, <0 if interval ended."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -207,16 +201,12 @@ class DecompositionSeries(TimeSeries):
 
     name: str = Field(...)
     data: str = Field(..., description="""Data decomposed into frequency bands.""")
-    metric: str = Field(
-        ..., description="""The metric used, e.g. phase, amplitude, power."""
-    )
+    metric: str = Field(..., description="""The metric used, e.g. phase, amplitude, power.""")
     bands: str = Field(
         ...,
         description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -253,9 +243,7 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[
-        NDArray[Shape["* num_times, * num_channels, * num_bands"], float]
-    ] = Field(None)
+    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(None)
 
 
 class DecompositionSeriesBands(DynamicTable):
@@ -306,18 +294,14 @@ class Units(DynamicTable):
     spike_times_index: Optional[str] = Field(
         None, description="""Index into the spike_times dataset."""
     )
-    spike_times: Optional[str] = Field(
-        None, description="""Spike times for each unit."""
-    )
+    spike_times: Optional[str] = Field(None, description="""Spike times for each unit.""")
     obs_intervals_index: Optional[str] = Field(
         None, description="""Index into the obs_intervals dataset."""
     )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = (
-        Field(None, description="""Observation intervals for each unit.""")
+    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = Field(
+        None, description="""Observation intervals for each unit."""
     )
-    electrodes_index: Optional[str] = Field(
-        None, description="""Index into electrodes."""
-    )
+    electrodes_index: Optional[str] = Field(None, description="""Index into electrodes.""")
     electrodes: Optional[str] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
@@ -337,9 +321,7 @@ class Units(DynamicTable):
             NDArray[Shape["* num_units, * num_samples"], float],
             NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
         ]
-    ] = Field(
-        None, description="""Spike waveform standard deviation for each spike unit."""
-    )
+    ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",

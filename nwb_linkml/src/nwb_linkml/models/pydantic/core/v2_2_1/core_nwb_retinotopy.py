@@ -66,9 +66,7 @@ class RetinotopyMap(NWBData):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
 
 
@@ -86,9 +84,7 @@ class AxisMap(RetinotopyMap):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
 
 
 class RetinotopyImage(GrayscaleImage):
@@ -105,18 +101,14 @@ class RetinotopyImage(GrayscaleImage):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the image."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
@@ -177,9 +169,7 @@ class ImagingRetinotopyAxis1PhaseMap(AxisMap):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
 
 
 class ImagingRetinotopyAxis1PowerMap(AxisMap):
@@ -196,9 +186,7 @@ class ImagingRetinotopyAxis1PowerMap(AxisMap):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
 
 
 class ImagingRetinotopyAxis2PhaseMap(AxisMap):
@@ -215,9 +203,7 @@ class ImagingRetinotopyAxis2PhaseMap(AxisMap):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
 
 
 class ImagingRetinotopyAxis2PowerMap(AxisMap):
@@ -234,9 +220,7 @@ class ImagingRetinotopyAxis2PowerMap(AxisMap):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
 
 
 class ImagingRetinotopySignMap(RetinotopyMap):
@@ -249,9 +233,7 @@ class ImagingRetinotopySignMap(RetinotopyMap):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(None)
 
 
@@ -261,9 +243,7 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
     """
 
     name: Literal["focal_depth_image"] = Field("focal_depth_image")
-    focal_depth: Optional[float] = Field(
-        None, description="""Focal depth offset, in meters."""
-    )
+    focal_depth: Optional[float] = Field(None, description="""Focal depth offset, in meters.""")
     bits_per_pixel: Optional[int] = Field(
         None,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
@@ -272,18 +252,14 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the image."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
@@ -307,18 +283,14 @@ class ImagingRetinotopyVasculatureImage(RetinotopyImage):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the image."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],

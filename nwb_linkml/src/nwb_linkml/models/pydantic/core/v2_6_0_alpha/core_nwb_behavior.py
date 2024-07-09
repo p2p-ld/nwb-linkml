@@ -75,9 +75,7 @@ class SpatialSeries(TimeSeries):
         None,
         description="""Description defining what exactly 'straight-ahead' means.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -129,9 +127,7 @@ class BehavioralEpochs(NWBDataInterface):
     TimeSeries for storing behavioral epochs.  The objective of this and the other two Behavioral interfaces (e.g. BehavioralEvents and BehavioralTimeSeries) is to provide generic hooks for software tools/scripts. This allows a tool/script to take the output one specific interface (e.g., UnitTimes) and plot that data relative to another data modality (e.g., behavioral events) without having to define all possible modalities in advance. Declaring one of these interfaces means that one or more TimeSeries of the specified type is published. These TimeSeries should reside in a group having the same name as the interface. For example, if a BehavioralTimeSeries interface is declared, the module will have one or more TimeSeries defined in the module sub-group 'BehavioralTimeSeries'. BehavioralEpochs should use IntervalSeries. BehavioralEvents is used for irregular events. BehavioralTimeSeries is for continuous data.
     """
 
-    children: Optional[List[IntervalSeries] | IntervalSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[IntervalSeries] | IntervalSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -167,9 +163,7 @@ class EyeTracking(NWBDataInterface):
     Eye-tracking data, representing direction of gaze.
     """
 
-    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -178,9 +172,7 @@ class CompassDirection(NWBDataInterface):
     With a CompassDirection interface, a module publishes a SpatialSeries object representing a floating point value for theta. The SpatialSeries::reference_frame field should indicate what direction corresponds to 0 and which is the direction of rotation (this should be clockwise). The si_unit for the SpatialSeries should be radians or degrees.
     """
 
-    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -189,7 +181,5 @@ class Position(NWBDataInterface):
     Position data, whether along the x, x/y or x/y/z axis.
     """
 
-    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[SpatialSeries] | SpatialSeries] = Field(default_factory=dict)
     name: str = Field(...)

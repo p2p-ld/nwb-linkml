@@ -68,9 +68,7 @@ class OptogeneticSeries(TimeSeries):
     data: NDArray[Shape["* num_times"], float] = Field(
         ..., description="""Applied power for optogenetic stimulus, in watts."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -104,9 +102,7 @@ class OptogeneticStimulusSite(NWBContainer):
 
     name: str = Field(...)
     description: str = Field(..., description="""Description of stimulation site.""")
-    excitation_lambda: float = Field(
-        ..., description="""Excitation wavelength, in nm."""
-    )
+    excitation_lambda: float = Field(..., description="""Excitation wavelength, in nm.""")
     location: str = Field(
         ...,
         description="""Location of the stimulation site. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",

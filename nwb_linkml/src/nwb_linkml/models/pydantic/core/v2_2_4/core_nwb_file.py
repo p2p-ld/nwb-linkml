@@ -198,9 +198,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
     keywords: Optional[NDArray[Shape["* num_keywords"], str]] = Field(
         None, description="""Terms to search over."""
     )
-    lab: Optional[str] = Field(
-        None, description="""Laboratory where experiment was performed."""
-    )
+    lab: Optional[str] = Field(None, description="""Laboratory where experiment was performed.""")
     notes: Optional[str] = Field(None, description="""Notes about the experiment.""")
     pharmacology: Optional[str] = Field(
         None,
@@ -213,9 +211,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
     related_publications: Optional[NDArray[Shape["* num_publications"], str]] = Field(
         None, description="""Publication information. PMID, DOI, URL, etc."""
     )
-    session_id: Optional[str] = Field(
-        None, description="""Lab-specific ID for the session."""
-    )
+    session_id: Optional[str] = Field(None, description="""Lab-specific ID for the session.""")
     slices: Optional[str] = Field(
         None,
         description="""Description of slices, including information about preparation thickness, orientation, temperature, and bath solution.""",
@@ -254,11 +250,9 @@ class NWBFileGeneral(ConfiguredBaseModel):
     intracellular_ephys: Optional[str] = Field(
         None, description="""Metadata related to intracellular electrophysiology."""
     )
-    optogenetics: Optional[List[OptogeneticStimulusSite] | OptogeneticStimulusSite] = (
-        Field(
-            default_factory=dict,
-            description="""Metadata describing optogenetic stimuluation.""",
-        )
+    optogenetics: Optional[List[OptogeneticStimulusSite] | OptogeneticStimulusSite] = Field(
+        default_factory=dict,
+        description="""Metadata describing optogenetic stimuluation.""",
     )
     optophysiology: Optional[List[ImagingPlane] | ImagingPlane] = Field(
         default_factory=dict, description="""Metadata related to optophysiology."""

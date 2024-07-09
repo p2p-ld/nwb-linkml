@@ -155,9 +155,9 @@ class AlignedDynamicTable(DynamicTable):
     DynamicTable container that supports storing a collection of sub-tables. Each sub-table is a DynamicTable itself that is aligned with the main table by row index. I.e., all DynamicTables stored in this group MUST have the same number of rows. This type effectively defines a 2-level table in which the main data is stored in the main table implemented by this type and additional columns of the table are grouped into categories, with each category being represented by a separate DynamicTable stored within the group.
     """
 
-    children: Optional[
-        List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
-    ] = Field(default_factory=dict)
+    children: Optional[List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]] = (
+        Field(default_factory=dict)
+    )
     name: str = Field(...)
     colnames: Optional[str] = Field(
         None,

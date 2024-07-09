@@ -99,12 +99,8 @@ class ExternalResourcesEntities(Data):
     """
 
     name: Literal["entities"] = Field("entities")
-    keys_idx: int = Field(
-        ..., description="""The index to the key in the 'keys' table."""
-    )
-    resources_idx: int = Field(
-        ..., description="""The index into the 'resources' table"""
-    )
+    keys_idx: int = Field(..., description="""The index to the key in the 'keys' table.""")
+    resources_idx: int = Field(..., description="""The index into the 'resources' table""")
     entity_id: str = Field(..., description="""The unique identifier entity.""")
     entity_uri: str = Field(
         ...,
@@ -147,6 +143,4 @@ class ExternalResourcesObjectKeys(Data):
         ...,
         description="""The index to the 'objects' table for the object that holds the key.""",
     )
-    keys_idx: int = Field(
-        ..., description="""The index to the 'keys' table for the key."""
-    )
+    keys_idx: int = Field(..., description="""The index to the 'keys' table for the key.""")

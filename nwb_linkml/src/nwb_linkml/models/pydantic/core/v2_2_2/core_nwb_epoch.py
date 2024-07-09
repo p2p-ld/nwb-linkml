@@ -77,12 +77,8 @@ class TimeIntervals(DynamicTable):
         description="""User-defined tags that identify or categorize events.""",
     )
     tags_index: Optional[str] = Field(None, description="""Index for tags.""")
-    timeseries: Optional[str] = Field(
-        None, description="""An index into a TimeSeries object."""
-    )
-    timeseries_index: Optional[str] = Field(
-        None, description="""Index for timeseries."""
-    )
+    timeseries: Optional[str] = Field(None, description="""An index into a TimeSeries object.""")
+    timeseries_index: Optional[str] = Field(None, description="""Index for timeseries.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",

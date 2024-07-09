@@ -106,9 +106,7 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -149,9 +147,7 @@ class RoiResponseSeries(TimeSeries):
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -206,9 +202,7 @@ class DfOverF(NWBDataInterface):
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
     """
 
-    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -217,9 +211,7 @@ class Fluorescence(NWBDataInterface):
     Fluorescence information about a region of interest (ROI). Storage hierarchy of fluorescence should be the same as for segmentation (ie, same names for ROIs and for image planes).
     """
 
-    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -228,9 +220,7 @@ class ImageSegmentation(NWBDataInterface):
     Stores pixels in an image that represent different regions of interest (ROIs) or masks. All segmentation for a given imaging plane is stored together, with storage for multiple imaging planes (masks) supported. Each ROI is stored in its own subgroup, with the ROI group containing both a 2D mask and a list of pixels that make up this mask. Segments can also be used for masking neuropil. If segmentation is allowed to change with time, a new imaging plane (or module) is required and ROI names should remain consistent between them.
     """
 
-    children: Optional[List[PlaneSegmentation] | PlaneSegmentation] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[PlaneSegmentation] | PlaneSegmentation] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -249,16 +239,12 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.""",
     )
-    pixel_mask_index: Optional[str] = Field(
-        None, description="""Index into pixel_mask."""
-    )
+    pixel_mask_index: Optional[str] = Field(None, description="""Index into pixel_mask.""")
     pixel_mask: Optional[str] = Field(
         None,
         description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
-    voxel_mask_index: Optional[str] = Field(
-        None, description="""Index into voxel_mask."""
-    )
+    voxel_mask_index: Optional[str] = Field(None, description="""Index into voxel_mask.""")
     voxel_mask: Optional[str] = Field(
         None,
         description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
@@ -380,9 +366,7 @@ class ImagingPlane(NWBContainer):
     An imaging plane and its metadata.
     """
 
-    children: Optional[List[OpticalChannel] | OpticalChannel] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[OpticalChannel] | OpticalChannel] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -392,12 +376,8 @@ class OpticalChannel(NWBContainer):
     """
 
     name: str = Field(...)
-    description: str = Field(
-        ..., description="""Description or other notes about the channel."""
-    )
-    emission_lambda: float = Field(
-        ..., description="""Emission wavelength for channel, in nm."""
-    )
+    description: str = Field(..., description="""Description or other notes about the channel.""")
+    emission_lambda: float = Field(..., description="""Emission wavelength for channel, in nm.""")
 
 
 class MotionCorrection(NWBDataInterface):

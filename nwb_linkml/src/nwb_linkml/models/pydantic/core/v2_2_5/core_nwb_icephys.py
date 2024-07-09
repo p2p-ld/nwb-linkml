@@ -83,9 +83,7 @@ class PatchClampSeries(TimeSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -132,12 +130,8 @@ class CurrentClampSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: str = Field(..., description="""Recorded voltage.""")
-    bias_current: Optional[float] = Field(
-        None, description="""Bias current, in amps."""
-    )
-    bridge_balance: Optional[float] = Field(
-        None, description="""Bridge balance, in ohms."""
-    )
+    bias_current: Optional[float] = Field(None, description="""Bias current, in amps.""")
+    bridge_balance: Optional[float] = Field(None, description="""Bridge balance, in ohms.""")
     capacitance_compensation: Optional[float] = Field(
         None, description="""Capacitance compensation, in farads."""
     )
@@ -152,9 +146,7 @@ class CurrentClampSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -200,12 +192,8 @@ class IZeroClampSeries(CurrentClampSeries):
     """
 
     name: str = Field(...)
-    bias_current: float = Field(
-        ..., description="""Bias current, in amps, fixed to 0.0."""
-    )
-    bridge_balance: float = Field(
-        ..., description="""Bridge balance, in ohms, fixed to 0.0."""
-    )
+    bias_current: float = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
+    bridge_balance: float = Field(..., description="""Bridge balance, in ohms, fixed to 0.0.""")
     capacitance_compensation: float = Field(
         ..., description="""Capacitance compensation, in farads, fixed to 0.0."""
     )
@@ -221,9 +209,7 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -268,9 +254,7 @@ class CurrentClampStimulusSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -317,12 +301,8 @@ class VoltageClampSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: str = Field(..., description="""Recorded current.""")
-    capacitance_fast: Optional[str] = Field(
-        None, description="""Fast capacitance, in farads."""
-    )
-    capacitance_slow: Optional[str] = Field(
-        None, description="""Slow capacitance, in farads."""
-    )
+    capacitance_fast: Optional[str] = Field(None, description="""Fast capacitance, in farads.""")
+    capacitance_slow: Optional[str] = Field(None, description="""Slow capacitance, in farads.""")
     resistance_comp_bandwidth: Optional[str] = Field(
         None, description="""Resistance compensation bandwidth, in hertz."""
     )
@@ -349,9 +329,7 @@ class VoltageClampSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -474,9 +452,7 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
     Whole cell series resistance compensation, in ohms.
     """
 
-    name: Literal["whole_cell_series_resistance_comp"] = Field(
-        "whole_cell_series_resistance_comp"
-    )
+    name: Literal["whole_cell_series_resistance_comp"] = Field("whole_cell_series_resistance_comp")
     unit: Optional[str] = Field(
         None,
         description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""",
@@ -502,9 +478,7 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -554,9 +528,7 @@ class IntracellularElectrode(NWBContainer):
         ...,
         description="""Description of electrode (e.g.,  whole-cell, sharp, etc.).""",
     )
-    filtering: Optional[str] = Field(
-        None, description="""Electrode specific filtering."""
-    )
+    filtering: Optional[str] = Field(None, description="""Electrode specific filtering.""")
     initial_access_resistance: Optional[str] = Field(
         None, description="""Initial access resistance."""
     )
@@ -564,12 +536,8 @@ class IntracellularElectrode(NWBContainer):
         None,
         description="""Location of the electrode. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
     )
-    resistance: Optional[str] = Field(
-        None, description="""Electrode resistance, in ohms."""
-    )
-    seal: Optional[str] = Field(
-        None, description="""Information about seal used for recording."""
-    )
+    resistance: Optional[str] = Field(None, description="""Electrode resistance, in ohms.""")
+    seal: Optional[str] = Field(None, description="""Information about seal used for recording.""")
     slice: Optional[str] = Field(
         None, description="""Information about slice used for recording."""
     )

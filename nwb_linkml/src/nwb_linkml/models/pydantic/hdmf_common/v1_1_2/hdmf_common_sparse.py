@@ -57,9 +57,7 @@ class CSRMatrix(ConfiguredBaseModel):
     """
 
     name: str = Field(...)
-    shape: Optional[int] = Field(
-        None, description="""the shape of this sparse matrix"""
-    )
+    shape: Optional[int] = Field(None, description="""the shape of this sparse matrix""")
     indices: str = Field(..., description="""column indices""")
     indptr: str = Field(..., description="""index pointer""")
     data: str = Field(..., description="""values in the matrix""")

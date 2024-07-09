@@ -86,9 +86,7 @@ class PatchClampSeries(TimeSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -135,12 +133,8 @@ class CurrentClampSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: str = Field(..., description="""Recorded voltage.""")
-    bias_current: Optional[float] = Field(
-        None, description="""Bias current, in amps."""
-    )
-    bridge_balance: Optional[float] = Field(
-        None, description="""Bridge balance, in ohms."""
-    )
+    bias_current: Optional[float] = Field(None, description="""Bias current, in amps.""")
+    bridge_balance: Optional[float] = Field(None, description="""Bridge balance, in ohms.""")
     capacitance_compensation: Optional[float] = Field(
         None, description="""Capacitance compensation, in farads."""
     )
@@ -155,9 +149,7 @@ class CurrentClampSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -207,12 +199,8 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""An IZeroClampSeries has no stimulus, so this attribute is automatically set to \"N/A\"""",
     )
-    bias_current: float = Field(
-        ..., description="""Bias current, in amps, fixed to 0.0."""
-    )
-    bridge_balance: float = Field(
-        ..., description="""Bridge balance, in ohms, fixed to 0.0."""
-    )
+    bias_current: float = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
+    bridge_balance: float = Field(..., description="""Bridge balance, in ohms, fixed to 0.0.""")
     capacitance_compensation: float = Field(
         ..., description="""Capacitance compensation, in farads, fixed to 0.0."""
     )
@@ -225,9 +213,7 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -272,9 +258,7 @@ class CurrentClampStimulusSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -321,12 +305,8 @@ class VoltageClampSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: str = Field(..., description="""Recorded current.""")
-    capacitance_fast: Optional[str] = Field(
-        None, description="""Fast capacitance, in farads."""
-    )
-    capacitance_slow: Optional[str] = Field(
-        None, description="""Slow capacitance, in farads."""
-    )
+    capacitance_fast: Optional[str] = Field(None, description="""Fast capacitance, in farads.""")
+    capacitance_slow: Optional[str] = Field(None, description="""Slow capacitance, in farads.""")
     resistance_comp_bandwidth: Optional[str] = Field(
         None, description="""Resistance compensation bandwidth, in hertz."""
     )
@@ -353,9 +333,7 @@ class VoltageClampSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -478,9 +456,7 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
     Whole cell series resistance compensation, in ohms.
     """
 
-    name: Literal["whole_cell_series_resistance_comp"] = Field(
-        "whole_cell_series_resistance_comp"
-    )
+    name: Literal["whole_cell_series_resistance_comp"] = Field("whole_cell_series_resistance_comp")
     unit: Optional[str] = Field(
         None,
         description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""",
@@ -506,9 +482,7 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -559,9 +533,7 @@ class IntracellularElectrode(NWBContainer):
         ...,
         description="""Description of electrode (e.g.,  whole-cell, sharp, etc.).""",
     )
-    filtering: Optional[str] = Field(
-        None, description="""Electrode specific filtering."""
-    )
+    filtering: Optional[str] = Field(None, description="""Electrode specific filtering.""")
     initial_access_resistance: Optional[str] = Field(
         None, description="""Initial access resistance."""
     )
@@ -569,12 +541,8 @@ class IntracellularElectrode(NWBContainer):
         None,
         description="""Location of the electrode. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
     )
-    resistance: Optional[str] = Field(
-        None, description="""Electrode resistance, in ohms."""
-    )
-    seal: Optional[str] = Field(
-        None, description="""Information about seal used for recording."""
-    )
+    resistance: Optional[str] = Field(None, description="""Electrode resistance, in ohms.""")
+    seal: Optional[str] = Field(None, description="""Information about seal used for recording.""")
     slice: Optional[str] = Field(
         None, description="""Information about slice used for recording."""
     )
@@ -707,9 +675,7 @@ class IntracellularStimuliTableStimulus(TimeSeriesReferenceVectorData):
         ...,
         description="""Number of data samples available in this time series, during this epoch""",
     )
-    timeseries: str = Field(
-        ..., description="""The TimeSeries that this index applies to"""
-    )
+    timeseries: str = Field(..., description="""The TimeSeries that this index applies to""")
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -737,9 +703,7 @@ class IntracellularStimuliTableStimulusTemplate(TimeSeriesReferenceVectorData):
         ...,
         description="""Number of data samples available in this time series, during this epoch""",
     )
-    timeseries: str = Field(
-        ..., description="""The TimeSeries that this index applies to"""
-    )
+    timeseries: str = Field(..., description="""The TimeSeries that this index applies to""")
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -794,9 +758,7 @@ class IntracellularResponsesTableResponse(TimeSeriesReferenceVectorData):
         ...,
         description="""Number of data samples available in this time series, during this epoch""",
     )
-    timeseries: str = Field(
-        ..., description="""The TimeSeries that this index applies to"""
-    )
+    timeseries: str = Field(..., description="""The TimeSeries that this index applies to""")
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -832,9 +794,9 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
         ...,
         description="""Table for storing intracellular response related metadata.""",
     )
-    children: Optional[
-        List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
-    ] = Field(default_factory=dict)
+    children: Optional[List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]] = (
+        Field(default_factory=dict)
+    )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -859,9 +821,7 @@ class SimultaneousRecordingsTable(DynamicTable):
         ...,
         description="""A reference to one or more rows in the IntracellularRecordingsTable table.""",
     )
-    recordings_index: str = Field(
-        ..., description="""Index dataset for the recordings column."""
-    )
+    recordings_index: str = Field(..., description="""Index dataset for the recordings column.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
@@ -987,9 +947,7 @@ class SequentialRecordingsTableSimultaneousRecordingsIndex(VectorIndex):
     Index dataset for the simultaneous_recordings column.
     """
 
-    name: Literal["simultaneous_recordings_index"] = Field(
-        "simultaneous_recordings_index"
-    )
+    name: Literal["simultaneous_recordings_index"] = Field("simultaneous_recordings_index")
     target: Optional[str] = Field(
         None,
         description="""Reference to the target dataset that this index applies to.""",
@@ -1093,9 +1051,7 @@ class ExperimentalConditionsTable(DynamicTable):
         ...,
         description="""A reference to one or more rows in the RepetitionsTable table.""",
     )
-    repetitions_index: str = Field(
-        ..., description="""Index dataset for the repetitions column."""
-    )
+    repetitions_index: str = Field(..., description="""Index dataset for the repetitions column.""")
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",

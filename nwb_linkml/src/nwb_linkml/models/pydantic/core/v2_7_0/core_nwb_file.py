@@ -175,14 +175,10 @@ class NWBFileStimulus(ConfiguredBaseModel):
     presentation: Optional[
         List[Union[BaseModel, DynamicTable, NWBDataInterface, TimeSeries]]
         | Union[BaseModel, DynamicTable, NWBDataInterface, TimeSeries]
-    ] = Field(
-        default_factory=dict, description="""Stimuli presented during the experiment."""
-    )
-    templates: Optional[List[Union[Images, TimeSeries]] | Union[Images, TimeSeries]] = (
-        Field(
-            default_factory=dict,
-            description="""Template stimuli. Timestamps in templates are based on stimulus design and are relative to the beginning of the stimulus. When templates are used, the stimulus instances must convert presentation times to the experiment`s time reference frame.""",
-        )
+    ] = Field(default_factory=dict, description="""Stimuli presented during the experiment.""")
+    templates: Optional[List[Union[Images, TimeSeries]] | Union[Images, TimeSeries]] = Field(
+        default_factory=dict,
+        description="""Template stimuli. Timestamps in templates are based on stimulus design and are relative to the beginning of the stimulus. When templates are used, the stimulus instances must convert presentation times to the experiment`s time reference frame.""",
     )
 
 
@@ -208,9 +204,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
     keywords: Optional[NDArray[Shape["* num_keywords"], str]] = Field(
         None, description="""Terms to search over."""
     )
-    lab: Optional[str] = Field(
-        None, description="""Laboratory where experiment was performed."""
-    )
+    lab: Optional[str] = Field(None, description="""Laboratory where experiment was performed.""")
     notes: Optional[str] = Field(None, description="""Notes about the experiment.""")
     pharmacology: Optional[str] = Field(
         None,
@@ -223,9 +217,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
     related_publications: Optional[NDArray[Shape["* num_publications"], str]] = Field(
         None, description="""Publication information. PMID, DOI, URL, etc."""
     )
-    session_id: Optional[str] = Field(
-        None, description="""Lab-specific ID for the session."""
-    )
+    session_id: Optional[str] = Field(None, description="""Lab-specific ID for the session.""")
     slices: Optional[str] = Field(
         None,
         description="""Description of slices, including information about preparation thickness, orientation, temperature, and bath solution.""",
@@ -264,11 +256,9 @@ class NWBFileGeneral(ConfiguredBaseModel):
     intracellular_ephys: Optional[str] = Field(
         None, description="""Metadata related to intracellular electrophysiology."""
     )
-    optogenetics: Optional[List[OptogeneticStimulusSite] | OptogeneticStimulusSite] = (
-        Field(
-            default_factory=dict,
-            description="""Metadata describing optogenetic stimuluation.""",
-        )
+    optogenetics: Optional[List[OptogeneticStimulusSite] | OptogeneticStimulusSite] = Field(
+        default_factory=dict,
+        description="""Metadata describing optogenetic stimuluation.""",
     )
     optophysiology: Optional[List[ImagingPlane] | ImagingPlane] = Field(
         default_factory=dict, description="""Metadata related to optophysiology."""

@@ -101,9 +101,7 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -144,9 +142,7 @@ class RoiResponseSeries(TimeSeries):
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
@@ -201,9 +197,7 @@ class DfOverF(NWBDataInterface):
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
     """
 
-    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -212,9 +206,7 @@ class Fluorescence(NWBDataInterface):
     Fluorescence information about a region of interest (ROI). Storage hierarchy of fluorescence should be the same as for segmentation (ie, same names for ROIs and for image planes).
     """
 
-    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[RoiResponseSeries] | RoiResponseSeries] = Field(default_factory=dict)
     name: str = Field(...)
 
 
@@ -223,9 +215,9 @@ class ImageSegmentation(NWBDataInterface):
     Stores pixels in an image that represent different regions of interest (ROIs) or masks. All segmentation for a given imaging plane is stored together, with storage for multiple imaging planes (masks) supported. Each ROI is stored in its own subgroup, with the ROI group containing both a 2D mask and a list of pixels that make up this mask. Segments can also be used for masking neuropil. If segmentation is allowed to change with time, a new imaging plane (or module) is required and ROI names should remain consistent between them.
     """
 
-    children: Optional[
-        List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]
-    ] = Field(default_factory=dict)
+    children: Optional[List[Union[BaseModel, DynamicTable]] | Union[BaseModel, DynamicTable]] = (
+        Field(default_factory=dict)
+    )
     name: str = Field(...)
 
 
@@ -243,7 +235,5 @@ class MotionCorrection(NWBDataInterface):
     An image stack where all frames are shifted (registered) to a common coordinate system, to account for movement and drift between frames. Note: each frame at each point in time is assumed to be 2-D (has only x & y dimensions).
     """
 
-    children: Optional[List[NWBDataInterface] | NWBDataInterface] = Field(
-        default_factory=dict
-    )
+    children: Optional[List[NWBDataInterface] | NWBDataInterface] = Field(default_factory=dict)
     name: str = Field(...)

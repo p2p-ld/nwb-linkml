@@ -78,9 +78,7 @@ class TimeSeriesReferenceVectorData(VectorData):
         ...,
         description="""Number of data samples available in this time series, during this epoch""",
     )
-    timeseries: str = Field(
-        ..., description="""The TimeSeries that this index applies to"""
-    )
+    timeseries: str = Field(..., description="""The TimeSeries that this index applies to""")
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -103,9 +101,7 @@ class Image(NWBData):
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of the image."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
@@ -137,9 +133,7 @@ class TimeSeries(NWBDataInterface):
     """
 
     name: str = Field(...)
-    description: Optional[str] = Field(
-        None, description="""Description of the time series."""
-    )
+    description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",

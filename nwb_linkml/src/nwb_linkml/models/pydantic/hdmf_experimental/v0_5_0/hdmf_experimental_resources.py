@@ -156,9 +156,7 @@ class HERDObjectKeys(Data):
         ...,
         description="""The row index to the object in the `objects` table that holds the key""",
     )
-    keys_idx: int = Field(
-        ..., description="""The row index to the key in the `keys` table."""
-    )
+    keys_idx: int = Field(..., description="""The row index to the key in the `keys` table.""")
 
 
 class HERDEntityKeys(Data):
@@ -170,6 +168,4 @@ class HERDEntityKeys(Data):
     entities_idx: int = Field(
         ..., description="""The row index to the entity in the `entities` table."""
     )
-    keys_idx: int = Field(
-        ..., description="""The row index to the key in the `keys` table."""
-    )
+    keys_idx: int = Field(..., description="""The row index to the key in the `keys` table.""")
