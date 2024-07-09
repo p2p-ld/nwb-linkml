@@ -36,7 +36,7 @@ def tmp_output_dir() -> Path:
     path = Path(__file__).parent.resolve() / "__tmp__"
     if path.exists():
         for subdir in path.iterdir():
-            if subdir.name == 'git':
+            if subdir.name == "git":
                 # don't wipe out git repos every time, they don't rly change
                 continue
             elif subdir.is_file() and subdir.parent != path:

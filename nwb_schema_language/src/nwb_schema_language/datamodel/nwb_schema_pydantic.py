@@ -265,4 +265,3 @@ class Dataset(DtypeMixin):
     dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
         default_factory=list
     )
-

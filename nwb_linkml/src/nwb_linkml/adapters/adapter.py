@@ -16,6 +16,7 @@ from typing import (
     Union,
 )
 
+from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import (
     ClassDefinition,
     Definition,
@@ -23,7 +24,6 @@ from linkml_runtime.linkml_model import (
     SlotDefinition,
     TypeDefinition,
 )
-from linkml_runtime.dumpers import yaml_dumper
 from pydantic import BaseModel
 
 from nwb_schema_language import Attribute, Dataset, Group, Schema

@@ -1,6 +1,7 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
+
 from abc import abstractmethod
 from typing import ClassVar, Optional, Type
 
@@ -14,7 +15,7 @@ from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
 from nwb_linkml.maps.dtype import flat_to_linkml
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import Dataset, CompoundDtype
+from nwb_schema_language import CompoundDtype, Dataset
 
 
 class DatasetMap(Map):
@@ -141,9 +142,9 @@ class MapScalarAttributes(DatasetMap):
             :linkml:
                 classes:
                 - name: starting_time
-                  description: Timestamp of the first sample in seconds. When timestamps are uniformly
-                    spaced, the timestamp of the first sample can be specified and all subsequent
-                    ones calculated from the sampling rate attribute.
+                  description: Timestamp of the first sample in seconds. When timestamps are
+                    uniformly spaced, the timestamp of the first sample can be specified and all
+                    subsequent ones calculated from the sampling rate attribute.
                   attributes:
                     name:
                       name: name
@@ -328,8 +329,8 @@ class MapArraylike(DatasetMap):
                     - null
                     - null
                     - null
-                  doc: Binary data representing images across frames. If data are stored in an external
-                    file, this should be an empty 3D array.
+                  doc: Binary data representing images across frames. If data are stored in an
+                    external file, this should be an empty 3D array.
             :linkml:
                 slots:
                 - name: data
@@ -754,6 +755,7 @@ def is_1d(cls: Dataset) -> bool:
 
 
 def is_compound(cls: Dataset) -> bool:
+    """Check if dataset has a compound dtype"""
     return (
         isinstance(cls.dtype, list)
         and len(cls.dtype) > 0

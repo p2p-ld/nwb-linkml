@@ -3,16 +3,15 @@ Adapters to linkML classes
 """
 
 from abc import abstractmethod
-from typing import Type, TypeVar, List, Optional
+from typing import List, Optional, Type, TypeVar
 
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
 from pydantic import field_validator
 
-
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype, FlatDtype
+from nwb_schema_language import CompoundDtype, Dataset, DTypeType, FlatDtype, Group, ReferenceDtype
 
 T = TypeVar("T", bound=Type[Dataset] | Type[Group])
 TI = TypeVar("TI", bound=Dataset | Group)

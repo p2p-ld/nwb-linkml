@@ -1,6 +1,6 @@
 import pytest
-from nwb_linkml.adapters.dataset import MapScalar
 
+from nwb_linkml.adapters.dataset import MapScalar
 from nwb_schema_language import Dataset
 
 

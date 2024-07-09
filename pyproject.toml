@@ -24,6 +24,7 @@ target-version = "py311"
 include = ["nwb_linkml/**/*.py", "nwb_schema_language/src/**/*.py", "pyproject.toml"]
 exclude = [
     "docs",
+    "nwb_linkml/src/nwb_linkml/models/**/*.py",
     "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_language.py",
     "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_pydantic.py",
     "tests/__tmp__/**/*"

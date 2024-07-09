@@ -1,11 +1,17 @@
+"""
+Test fixtures primarily for doctests for adapters
+"""
+
 import re
 import textwrap
-from doctest import NORMALIZE_WHITESPACE, ELLIPSIS
-from sybil import Document
-from sybil import Sybil, Region
+from doctest import ELLIPSIS, NORMALIZE_WHITESPACE
+from typing import Generator
+
+import yaml
+from sybil import Document, Example, Region, Sybil
 from sybil.parsers.codeblock import PythonCodeBlockParser
 from sybil.parsers.doctest import DocTestParser
-import yaml
+
 from nwb_linkml import adapters
 
 # Test adapter generation examples
@@ -24,7 +30,7 @@ def _strip_nwb(nwb: str) -> str:
     return nwb
 
 
-def test_adapter_block(example):
+def test_adapter_block(example: Example) -> None:
     """
     The linkml generated from a nwb example input should match
     that provided in the docstring.
@@ -44,10 +50,13 @@ def test_adapter_block(example):
     assert generated == expected
 
 
-def parse_adapter_blocks(document: Document):
+def parse_adapter_blocks(document: Document) -> Generator[Region, None, None]:
+    """
+    Parse blocks with adapter directives, yield to test with :func:`.test_adapter_block`
+    """
     for start_match, end_match, source in document.find_region_sources(ADAPTER_START, ADAPTER_END):
         # parse
-        sections = re.split(r":\w+?:", source, re.MULTILINE)
+        sections = re.split(r":\w+?:", source, flags=re.MULTILINE)
         sections = [textwrap.dedent(section).strip() for section in sections]
 
         sections[1] = _strip_nwb(sections[1])
@@ -56,9 +65,7 @@ def parse_adapter_blocks(document: Document):
 
 
 adapter_parser = Sybil(
-    parsers=[
-        parse_adapter_blocks
-    ],
+    parsers=[parse_adapter_blocks],
     patterns=["adapters/*.py"],
 )
 
