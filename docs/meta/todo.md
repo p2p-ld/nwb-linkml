@@ -12,6 +12,9 @@ Cleanup
 - [ ] Update pydantic generator
 - [ ] Make a minimal pydanticgen-only package to slim linkml deps?
 - [ ] Disambiguate "maps" terminology - split out simple maps from the eg. dataset mapping classes
+- [ ] Remove unnecessary imports
+  - dask
+  - nptyping
 
 Important things that are not implemented yet!
 
@@ -25,6 +28,7 @@ Important things that are not implemented yet!
   - Or do we want to just say "no dynamictables, just subclass and add more slots since it's super easy to do that."
   - method to return a dataframe
   - append rows/this should just be a df basically.
+  - existing handler is fucked, for example, in `maps/hdmf`
 - [ ] Handle indirect indexing eg. https://pynwb.readthedocs.io/en/stable/tutorials/general/plot_timeintervals.html#accessing-referenced-timeseries
 
 ## Docs TODOs
