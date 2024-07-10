@@ -1,3 +1,7 @@
+"""
+Provider for LinkML schema built from NWB schema
+"""
+
 import shutil
 from pathlib import Path
 from typing import Dict, Optional, TypedDict

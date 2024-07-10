@@ -18,6 +18,7 @@ for its domain.
     - so **providers** are the things that manage the multistage build process given some cache of
       the stages so that you can go like "gimme model i want my model" and you will probably get it.
 """
+
 # ruff: noqa: I001 - import order necessary to avoid circular imports :)
 from nwb_linkml.providers.provider import Provider
 from nwb_linkml.providers.linkml import LinkMLProvider

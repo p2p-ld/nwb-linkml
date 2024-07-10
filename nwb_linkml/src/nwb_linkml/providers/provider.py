@@ -1,3 +1,7 @@
+"""
+Base provider class
+"""
+
 import importlib
 import os
 from abc import ABC, abstractmethod
@@ -116,6 +120,7 @@ class Provider(ABC):
         Dictionary mapping a namespace to a list of built versions
         """
         from nwb_linkml.providers import LinkMLProvider
+
         versions = {}  # type: Dict[str, List[Path]]
 
         # first get any builtins provided by the package itself
@@ -159,5 +164,3 @@ class Provider(ABC):
             for k, v_paths in versions.items()
         }
         return res
-
-

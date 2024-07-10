@@ -1,6 +1,7 @@
 """
 Provider for pydantic models.
 """
+
 import importlib
 import sys
 from importlib.abc import MetaPathFinder
@@ -100,8 +101,8 @@ class PydanticProvider(Provider):
             # we're given a name of a namespace to build
             name = namespace
             path = (
-                    LinkMLProvider(path=self.config.cache_dir).namespace_path(namespace, version)
-                    / "namespace.yaml"
+                LinkMLProvider(path=self.config.cache_dir).namespace_path(namespace, version)
+                / "namespace.yaml"
             )
             if version is None:
                 # Get the most recently built version
@@ -201,7 +202,7 @@ class PydanticProvider(Provider):
 
         return serialized
 
-    def _make_inits(self, out_file: Path):
+    def _make_inits(self, out_file: Path) -> None:
         """
         Make __init__.py files for the directory a model is output to and its immediate parent.
         (ig this could be generalized in depth but lets not go nuts in here with the nesting)
