@@ -18,7 +18,7 @@ class Dimension(NamedTuple):
     """A single dimension/shape pair"""
 
     dims: Optional[str] = None
-    shape: [Optional[int]] = None
+    shape: Optional[int] = None
 
 
 class Shape(tuple[Dimension]):
