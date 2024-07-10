@@ -13,10 +13,10 @@ from typing import Optional, TypedDict
 
 import numpy as np
 import pytest
+from numpydantic.ndarray import NDArrayMeta
 from pydantic import BaseModel
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator, compile_python
-from nwb_linkml.types.ndarray import NDArrayMeta
 
 from ..fixtures import (
     TestSchemas,

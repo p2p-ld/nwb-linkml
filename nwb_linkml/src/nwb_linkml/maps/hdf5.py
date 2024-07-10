@@ -18,13 +18,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Type, Union
 
 import h5py
+from numpydantic.interface.hdf5 import H5ArrayPath
 from pydantic import BaseModel, ConfigDict, Field
 
 from nwb_linkml.annotations import unwrap_optional
 from nwb_linkml.maps import Map
 from nwb_linkml.maps.hdmf import dynamictable_to_model
 from nwb_linkml.types.hdf5 import HDF5_Path
-from nwb_linkml.types.ndarray import NDArrayProxy
 
 if sys.version_info.minor >= 11:
     from enum import StrEnum
@@ -241,7 +241,7 @@ class ResolveDynamicTable(HDF5Map):
     Dynamic tables are sort of odd in that their models don't include their fields
     (except as a list of strings in ``colnames`` ),
     so we need to create a new model that includes fields for each column,
-    and then we include the datasets as :class:`~.nwb_linkml.types.ndarray.NDArrayProxy`
+    and then we include the datasets as :class:`~numpydantic.interface.hdf5.H5ArrayPath`
     objects which lazy load the arrays in a thread/process safe way.
 
     This map also resolves the child elements,
@@ -386,7 +386,7 @@ class ResolveDatasetAsDict(HDF5Map):
     """
     Resolve datasets that do not have a ``neurodata_type`` of their own as a dictionary
     that will be packaged into a model in the next step. Grabs the array in an
-    :class:`~nwb_linkml.types.ndarray.NDArrayProxy`
+    :class:`~numpydantic.interface.hdf5.H5ArrayPath`
     under an ``array`` key, and then grabs any additional ``attrs`` as well.
 
     Mutually exclusive with :class:`.ResolveScalars` - this only applies to datasets that are larger
@@ -413,7 +413,7 @@ class ResolveDatasetAsDict(HDF5Map):
     ) -> H5ReadResult:
 
         res = {
-            "array": NDArrayProxy(h5f_file=src.h5f_path, path=src.path),
+            "array": H5ArrayPath(file=src.h5f_path, path=src.path),
             "hdf5_path": src.path,
             "name": src.parts[-1],
             **src.attrs,
