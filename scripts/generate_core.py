@@ -13,7 +13,7 @@ from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, Column
 from rich import print
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
-from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
+from nwb_linkml.providers import LinkMLProvider, PydanticProvider
 from nwb_linkml.providers.git import NWB_CORE_REPO, GitRepo
 from nwb_linkml.io import schema as io
 
