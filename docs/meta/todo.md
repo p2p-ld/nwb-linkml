@@ -10,11 +10,20 @@ NWB schema translation
 
 Cleanup
 - [ ] Update pydantic generator
+- [ ] Restore regresssions from stripping the generator
+- [ ] Use the class rather than a string in _get_class_slot_range_origin:
+      ```
+      or inlined_as_list
+      or (
+      # sv.get_identifier_slot(range_cls.name, use_key=True) is None and
+      ``` 
+                
 - [ ] Make a minimal pydanticgen-only package to slim linkml deps?
 - [ ] Disambiguate "maps" terminology - split out simple maps from the eg. dataset mapping classes
 - [ ] Remove unnecessary imports
   - dask
   - nptyping
+- [ ] Adapt the split generation to the new split generator style 
 
 Important things that are not implemented yet!
 
