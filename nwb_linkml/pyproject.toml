@@ -14,7 +14,7 @@ dependencies = [
     "nwb-schema-language>=0.1.3",
     "rich>=13.5.2",
     #"linkml>=1.7.10",
-    "linkml @ git+https://github.com/sneakers-the-rat/linkml@arrays-numpydantic",
+    "linkml @ git+https://github.com/sneakers-the-rat/linkml@nwb-linkml",
     "nptyping>=2.5.0",
     "pydantic>=2.3.0",
     "h5py>=3.9.0",
