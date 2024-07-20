@@ -12,7 +12,6 @@ from typing import List, Optional, Type
 
 from pydantic import BaseModel
 
-from nwb_linkml import io
 from nwb_linkml.io.yaml import yaml_peek
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.maps.naming import module_case, version_module_case
@@ -69,9 +68,6 @@ class PydanticProvider(Provider):
                 NWB -> LinkML schema to load from.
             out_file (Optional[Path]): Optionally override the output file. If ``None``,
                 generate from namespace and version
-            version (Optional[str]): The version of the schema to build, if present.
-                Works similarly to ``version`` in :class:`.LinkMLProvider`.
-                Ignored if ``namespace`` is a Path.
             split (bool): If ``False`` (default), generate a single ``namespace.py`` file,
                 otherwise generate a python file for each schema in the namespace
                 in addition to a ``namespace.py`` that imports from them
@@ -111,23 +107,10 @@ class PydanticProvider(Provider):
             fn = module_case(fn) + ".py"
             out_file = self.path / name / version / fn
 
-        default_kwargs = {
-            "split": split,
-            "emit_metadata": True,
-            "gen_slots": True,
-            "pydantic_version": "2",
-        }
-        default_kwargs.update(kwargs)
-
-        # if we weren't given explicit versions to load, figure them out from the namespace
-        if versions is None:
-            versions = self._get_dependent_versions(path)
-
-
         if split:
-            result = self._build_split(path, versions, default_kwargs, dump, out_file, force)
+            result = self._build_split(path, dump, out_file, force, **kwargs)
         else:
-            result = self._build_unsplit(path, versions, default_kwargs, dump, out_file, force)
+            result = self._build_unsplit(path, dump, out_file, force, **kwargs)
 
         self.install_pathfinder()
         return result
@@ -135,18 +118,17 @@ class PydanticProvider(Provider):
     def _build_unsplit(
         self,
         path: Path,
-        versions: dict,
-        default_kwargs: dict,
         dump: bool,
         out_file: Path,
         force: bool,
+        **kwargs
     ) -> Optional[str]:
         if out_file.exists() and not force:
             with open(out_file) as ofile:
                 serialized = ofile.read()
             return serialized
 
-        generator = NWBPydanticGenerator(str(path), versions=versions, **default_kwargs)
+        generator = NWBPydanticGenerator(str(path), **kwargs)
         serialized = generator.serialize()
         if dump:
             out_file.parent.mkdir(parents=True, exist_ok=True)
@@ -160,17 +142,16 @@ class PydanticProvider(Provider):
     def _build_split(
         self,
         path: Path,
-        versions: dict,
-        default_kwargs: dict,
         dump: bool,
         out_file: Path,
         force: bool,
+        **kwargs
     ) -> List[str]:
         serialized = []
         for schema_file in path.parent.glob("*.yaml"):
             this_out = out_file.parent / (module_case(schema_file.stem) + ".py")
             serialized.append(
-                self._build_unsplit(schema_file, versions, default_kwargs, dump, this_out, force)
+                self._build_unsplit(schema_file, default_kwargs, dump, this_out, force, **kwargs)
             )
 
         # If there are dependent versions that also need to be built, do that now!
@@ -203,28 +184,6 @@ class PydanticProvider(Provider):
             if not ifile.exists():
                 with open(ifile, "w") as ifile_open:
                     ifile_open.write(" ")
-
-    def _get_dependent_versions(self, path: Path) -> dict[str, str]:
-        """
-        For a given namespace schema file, get the versions of any other schemas it imports
-
-        Namespace imports will be in the importing schema like:
-
-            imports:
-            -../../hdmf_common/v1_8_0/namespace
-            -../../hdmf_experimental/v0_5_0/namespace
-
-        Returns:
-            dict[str,str]: A dictionary mapping a namespace to a version number
-        """
-        schema = io.schema.load_yaml(path)
-        versions = {}
-        for i in schema["imports"]:
-            if i.startswith(".."):
-                import_path = (Path(path).parent / Path(i + ".yaml")).resolve()
-                imported_schema = io.schema.load_yaml(import_path)
-                versions[imported_schema["name"]] = imported_schema["version"]
-        return versions
 
     @classmethod
     def module_name(self, namespace: str, version: str) -> str:

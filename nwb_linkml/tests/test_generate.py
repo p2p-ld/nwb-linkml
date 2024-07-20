@@ -61,10 +61,6 @@ def test_generate_pydantic(tmp_output_dir):
 
         generator = NWBPydanticGenerator(
             str(schema_path),
-            pydantic_version="2",
-            emit_metadata=True,
-            gen_classvars=True,
-            gen_slots=True,
             schema_map=preloaded_schema,
         )
         gen_pydantic = generator.serialize()

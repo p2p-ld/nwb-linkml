@@ -83,6 +83,10 @@ class NWBPydanticGenerator(PydanticGenerator):
         default_factory=lambda: [ArrayRepresentation.NUMPYDANTIC]
     )
     black: bool = True
+    inlined: bool = True
+    emit_metadata: bool = True,
+    gen_classvars: bool = True,
+    gen_slots: bool = True,
 
     def _check_anyof(
         self, s: SlotDefinition, sn: SlotDefinitionName, sv: SchemaView

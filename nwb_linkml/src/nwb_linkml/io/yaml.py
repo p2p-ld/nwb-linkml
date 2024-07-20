@@ -7,6 +7,10 @@ import re
 from pathlib import Path
 from typing import Literal, List, Union, overload
 
+import yaml
+
+from nwb_linkml.maps.postload import apply_postload
+
 
 @overload
 def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:Literal[True]=True) -> str: ...
@@ -61,3 +65,24 @@ def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:bool=Tru
 
     raise KeyError(f'Key {key} not found in {path}')
 
+
+def load_yaml(path: Path | str) -> dict:
+    """
+    Load yaml file from file, applying postload modifications
+    """
+    is_file = False
+    try:
+        a_path = Path(path)
+        if a_path.exists():
+            is_file = True
+    except OSError:
+        # long strings can't be made into paths!
+        pass
+
+    if not is_file:
+        ns_dict = yaml.safe_load(path)
+    else:
+        with open(path) as file:
+            ns_dict = yaml.safe_load(file)
+    ns_dict = apply_postload(ns_dict)
+    return ns_dict

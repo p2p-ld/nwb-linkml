@@ -38,7 +38,7 @@ class ClassAdapter(Adapter):
         Cast from YAML string to desired class
         """
         if isinstance(value, str):
-            from nwb_linkml.io.schema import load_yaml
+            from nwb_linkml.io.yaml import load_yaml
 
             value = load_yaml(value)
             value = cls.TYPE(**value)

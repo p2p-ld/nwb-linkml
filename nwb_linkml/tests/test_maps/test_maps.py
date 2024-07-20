@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from yaml import CDumper as Dumper
 
-from nwb_linkml.io.schema import load_yaml
+from nwb_linkml.io.yaml import load_yaml
 
 
 def test_preload_maps():
