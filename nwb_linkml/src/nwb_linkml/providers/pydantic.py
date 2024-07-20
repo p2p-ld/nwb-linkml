@@ -13,6 +13,7 @@ from typing import List, Optional, Type
 from pydantic import BaseModel
 
 from nwb_linkml import io
+from nwb_linkml.io.yaml import yaml_peek
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.maps.naming import module_case, version_module_case
 from nwb_linkml.providers import LinkMLProvider, Provider
@@ -36,9 +37,6 @@ class PydanticProvider(Provider):
 
     def __init__(self, path: Optional[Path] = None, verbose: bool = True):
         super().__init__(path, verbose)
-        # create a metapathfinder to find module we might create
-        pathfinder = EctopicModelFinder(self.path)
-        sys.meta_path.append(pathfinder)
 
     @property
     def path(self) -> Path:
@@ -50,7 +48,6 @@ class PydanticProvider(Provider):
         namespace: str | Path,
         out_file: Optional[Path] = None,
         version: Optional[str] = None,
-        versions: Optional[dict] = None,
         split: bool = True,
         dump: bool = True,
         force: bool = False,
@@ -75,13 +72,6 @@ class PydanticProvider(Provider):
             version (Optional[str]): The version of the schema to build, if present.
                 Works similarly to ``version`` in :class:`.LinkMLProvider`.
                 Ignored if ``namespace`` is a Path.
-            versions (Optional[dict]): An explicit mapping of namespaces and versions to use when
-                building the combined pydantic `namespace.py` file.
-                Since NWB doesn't have an explicit version dependency system between schema,
-                there is intrinsic ambiguity between which version
-                of which schema should be used when imported from another.
-                This mapping allows those ambiguities to be resolved.
-                See :class:`.NWBPydanticGenerator` 's ``versions`` argument for more information.
             split (bool): If ``False`` (default), generate a single ``namespace.py`` file,
                 otherwise generate a python file for each schema in the namespace
                 in addition to a ``namespace.py`` that imports from them
@@ -107,19 +97,15 @@ class PydanticProvider(Provider):
             if version is None:
                 # Get the most recently built version
                 version = LinkMLProvider(path=self.config.cache_dir).available_versions[name][-1]
-            fn = path.parts[-1]
+            fn = path.name
         else:
             # given a path to a namespace linkml yaml file
             path = Path(namespace)
-            # FIXME: this is extremely fragile, but get the details from the path.
-            # this is faster than reading yaml for now
-            name = path.parts[-3]
-            version = path.parts[-2]
-            fn = path.parts[-1]
+            name = yaml_peek('name', path)
+            version = yaml_peek('version', path)
+            fn = path.name
 
         version = version_module_case(version)
-        # this is extremely fragile, we should not be inferring version number from paths...
-        # TODO: we need an efficient peek for specific keys within a yaml file
         if out_file is None:
             fn = fn.removesuffix(".yaml")
             fn = module_case(fn) + ".py"
@@ -137,10 +123,14 @@ class PydanticProvider(Provider):
         if versions is None:
             versions = self._get_dependent_versions(path)
 
+
         if split:
-            return self._build_split(path, versions, default_kwargs, dump, out_file, force)
+            result = self._build_split(path, versions, default_kwargs, dump, out_file, force)
         else:
-            return self._build_unsplit(path, versions, default_kwargs, dump, out_file, force)
+            result = self._build_unsplit(path, versions, default_kwargs, dump, out_file, force)
+
+        self.install_pathfinder()
+        return result
 
     def _build_unsplit(
         self,
@@ -405,6 +395,19 @@ class PydanticProvider(Provider):
         """
         mod = self.get(namespace, version)
         return getattr(mod, class_)
+
+    def install_pathfinder(self):
+        """
+        Add a :class:`.EctopicModelFinder` instance that allows us to import from
+        the directory that we are generating models into
+        """
+        # check if one already exists
+        matches = [finder for finder in sys.meta_path if isinstance(finder, EctopicModelFinder) and finder.path == self.path]
+        if len(matches) > 0:
+            return
+
+        pathfinder = EctopicModelFinder(self.path)
+        sys.meta_path.append(pathfinder)
 
 
 class EctopicModelFinder(MetaPathFinder):
