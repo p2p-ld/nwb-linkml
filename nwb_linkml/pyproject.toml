@@ -73,6 +73,10 @@ addopts = [
     "--ignore=src/nwb_linkml/models",
     "--ignore=src/nwb_linkml/schema"
 ]
+markers = [
+    "dev: tests that are just for development rather than testing correctness",
+    "provider: tests for providers!"
+]
 testpaths = [
     "src/nwb_linkml",
     "tests",

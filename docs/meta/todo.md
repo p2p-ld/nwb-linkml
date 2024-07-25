@@ -10,7 +10,7 @@ NWB schema translation
 
 Cleanup
 - [ ] Update pydantic generator
-- [ ] Restore regresssions from stripping the generator
+- [ ] Restore regressions from stripping the generator
 - [ ] Use the class rather than a string in _get_class_slot_range_origin:
       ```
       or inlined_as_list
@@ -39,6 +39,9 @@ Important things that are not implemented yet!
   - append rows/this should just be a df basically.
   - existing handler is fucked, for example, in `maps/hdmf`
 - [ ] Handle indirect indexing eg. https://pynwb.readthedocs.io/en/stable/tutorials/general/plot_timeintervals.html#accessing-referenced-timeseries
+
+Remove monkeypatches/overrides once PRs are closed
+- [ ] https://github.com/linkml/linkml-runtime/pull/330
 
 ## Docs TODOs
 

@@ -36,16 +36,11 @@ from copy import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 
-from jinja2 import Template
 from linkml.generators import PydanticGenerator
+from linkml.generators.pydanticgen.build import SlotResult
 from linkml.generators.pydanticgen.array import ArrayRepresentation
-from linkml.generators.pydanticgen.black import format_black
-from linkml.generators.common.type_designators import (
-    get_type_designator_value,
-)
-from linkml.utils.ifabsent_functions import ifabsent_value_declaration
 from linkml_runtime.linkml_model.meta import (
     Annotation,
     AnonymousSlotExpression,
@@ -77,6 +72,8 @@ class NWBPydanticGenerator(PydanticGenerator):
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
     )
     split: bool = True
+
+
     schema_map: Optional[Dict[str, SchemaDefinition]] = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
     array_representations: List[ArrayRepresentation] = field(
@@ -84,9 +81,12 @@ class NWBPydanticGenerator(PydanticGenerator):
     )
     black: bool = True
     inlined: bool = True
-    emit_metadata: bool = True,
-    gen_classvars: bool = True,
-    gen_slots: bool = True,
+    emit_metadata: bool = True
+    gen_classvars: bool = True
+    gen_slots: bool = True
+
+
+    skip_meta: ClassVar[Tuple[str]] = ('domain_of',)
 
     def _check_anyof(
         self, s: SlotDefinition, sn: SlotDefinitionName, sv: SchemaView
@@ -111,6 +111,18 @@ class NWBPydanticGenerator(PydanticGenerator):
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
 
+    def before_generate_schema(self):
+        pass
+
+    def after_generate_slot(self, slot: SlotResult, sv: SchemaView) -> SlotResult:
+        """
+        - strip unwanted metadata
+        """
+        for key in self.skip_meta:
+            if key in slot.attribute.meta:
+                del slot.attribute.meta[key]
+        return slot
+
     def compile_module(
         self, module_path: Path = None, module_name: str = "test", **kwargs
     ) -> ModuleType:  # pragma: no cover - replaced with provider
@@ -129,6 +141,8 @@ class NWBPydanticGenerator(PydanticGenerator):
             return compile_python(pycode, module_path, module_name)
         except NameError as e:
             raise e
+
+
 
 
 def compile_python(

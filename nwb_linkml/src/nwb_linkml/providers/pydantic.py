@@ -3,6 +3,7 @@ Provider for pydantic models.
 """
 
 import importlib
+import re
 import sys
 from importlib.abc import MetaPathFinder
 from importlib.machinery import ModuleSpec
@@ -10,9 +11,10 @@ from pathlib import Path
 from types import ModuleType
 from typing import List, Optional, Type
 
+from linkml_runtime.linkml_model.meta import SchemaDefinition
+from linkml.generators.pydanticgen.pydanticgen import SplitMode, _import_to_path
 from pydantic import BaseModel
 
-from nwb_linkml.io.yaml import yaml_peek
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.maps.naming import module_case, version_module_case
 from nwb_linkml.providers import LinkMLProvider, Provider
@@ -33,6 +35,20 @@ class PydanticProvider(Provider):
     """
 
     PROVIDES = "pydantic"
+    SPLIT_PATTERN = (
+        "...{% if schema.annotations.namespace %}"
+        "{{ schema.annotations.namespace.value | replace('.', '_') }}"
+        "{% else %}unknown{% endif %}"
+        "."
+        "v{{ schema.version | replace('.', '_') }}"
+        "."
+        "{% if schema.annotations.is_namespace and schema.annotations.is_namespace.value %}"
+        "namespace"
+        "{% else %}"
+        "{{ schema.name | replace('.', '_') }}"
+        "{% endif %}"
+    )
+    """See :attr:`~linkml.generators.PydanticGenerator.split_pattern"""
 
     def __init__(self, path: Optional[Path] = None, verbose: bool = True):
         super().__init__(path, verbose)
@@ -45,7 +61,6 @@ class PydanticProvider(Provider):
     def build(
         self,
         namespace: str | Path,
-        out_file: Optional[Path] = None,
         version: Optional[str] = None,
         split: bool = True,
         dump: bool = True,
@@ -66,8 +81,6 @@ class PydanticProvider(Provider):
                 :class:`.LinkMLProvider` to get the converted schema. If a path,
                 assume we have been given an explicit ``namespace.yaml`` from a converted
                 NWB -> LinkML schema to load from.
-            out_file (Optional[Path]): Optionally override the output file. If ``None``,
-                generate from namespace and version
             split (bool): If ``False`` (default), generate a single ``namespace.py`` file,
                 otherwise generate a python file for each schema in the namespace
                 in addition to a ``namespace.py`` that imports from them
@@ -85,32 +98,20 @@ class PydanticProvider(Provider):
             namespace.endswith(".yaml") or namespace.endswith(".yml")
         ):
             # we're given a name of a namespace to build
-            name = namespace
             path = (
                 LinkMLProvider(path=self.config.cache_dir).namespace_path(namespace, version)
                 / "namespace.yaml"
             )
-            if version is None:
-                # Get the most recently built version
-                version = LinkMLProvider(path=self.config.cache_dir).available_versions[name][-1]
-            fn = path.name
+
         else:
             # given a path to a namespace linkml yaml file
             path = Path(namespace)
-            name = yaml_peek('name', path)
-            version = yaml_peek('version', path)
-            fn = path.name
 
-        version = version_module_case(version)
-        if out_file is None:
-            fn = fn.removesuffix(".yaml")
-            fn = module_case(fn) + ".py"
-            out_file = self.path / name / version / fn
 
         if split:
-            result = self._build_split(path, dump, out_file, force, **kwargs)
+            result = self._build_split(path, dump, force, **kwargs)
         else:
-            result = self._build_unsplit(path, dump, out_file, force, **kwargs)
+            result = self._build_unsplit(path, dump, force, **kwargs)
 
         self.install_pathfinder()
         return result
@@ -119,16 +120,17 @@ class PydanticProvider(Provider):
         self,
         path: Path,
         dump: bool,
-        out_file: Path,
         force: bool,
         **kwargs
-    ) -> Optional[str]:
+    ) -> str:
+        generator = NWBPydanticGenerator(str(path), split=False, split_pattern=self.SPLIT_PATTERN, **kwargs)
+        out_module = generator.generate_module_import(generator.schemaview.schema)
+        out_file = (self.path / _import_to_path(out_module)).resolve()
         if out_file.exists() and not force:
             with open(out_file) as ofile:
                 serialized = ofile.read()
             return serialized
 
-        generator = NWBPydanticGenerator(str(path), **kwargs)
         serialized = generator.serialize()
         if dump:
             out_file.parent.mkdir(parents=True, exist_ok=True)
@@ -143,35 +145,72 @@ class PydanticProvider(Provider):
         self,
         path: Path,
         dump: bool,
-        out_file: Path,
         force: bool,
         **kwargs
     ) -> List[str]:
-        serialized = []
-        for schema_file in path.parent.glob("*.yaml"):
-            this_out = out_file.parent / (module_case(schema_file.stem) + ".py")
-            serialized.append(
-                self._build_unsplit(schema_file, default_kwargs, dump, this_out, force, **kwargs)
-            )
+        res = []
 
-        # If there are dependent versions that also need to be built, do that now!
-        needed = [
-            (module_case(ns), version_module_case(version))
-            for ns, version in versions.items()
-            if version_module_case(version) not in self.available_versions.get(ns, [])
-        ]
-        for needs in needed:
-            needed_path = path.parents[2] / needs[0] / needs[1] / "namespace.yaml"
-            out_file_stem = out_file.parents[2] / needs[0] / needs[1]
-            for schema_file in needed_path.parent.glob("*.yaml"):
-                this_out = out_file_stem / (module_case(schema_file.stem) + ".py")
-                serialized.append(
-                    self._build_unsplit(
-                        schema_file, versions, default_kwargs, dump, this_out, force
-                    )
+        # first make the namespace file we were given
+
+        # remove any directory traversal at the head of the pattern for this,
+        # we're making relative to the provider's path not the generated schema at first
+        root_pattern = re.sub(r'^\.*', '', self.SPLIT_PATTERN)
+        gen = NWBPydanticGenerator(schema=path, split=True, split_pattern=root_pattern, split_mode=SplitMode.FULL)
+        mod_name = gen.generate_module_import(gen.schemaview.schema)
+        ns_file = (self.path / _import_to_path(mod_name)).resolve()
+
+        # now replace the real import path so the generated module has it
+        gen.split_pattern = self.SPLIT_PATTERN
+        # always render since we need to at least render to know what we're importing
+        rendered = gen.render()
+
+        if not ns_file.exists() or force:
+            ns_file.parent.mkdir(exist_ok=True, parents=True)
+            serialized = gen.serialize(rendered_module=rendered)
+            if dump:
+                with open(ns_file, 'w') as ofile:
+                    ofile.write(serialized)
+        else:
+            with open(ns_file, 'r') as ofile:
+                serialized = ofile.read()
+        res.append(serialized)
+
+        # then each of the other schemas :)
+        imported_schema: dict[str, SchemaDefinition] = {
+            gen.generate_module_import(sch): sch for sch in gen.schemaview.schema_map.values()
+        }
+        for generated_import in [i for i in rendered.python_imports if i.schema]:
+            import_file = (ns_file.parent / _import_to_path(generated_import.module)).resolve()
+
+            if not import_file.exists() or force:
+                import_file.parent.mkdir(exist_ok=True, parents=True)
+                schema = imported_schema[generated_import.module]
+                is_namespace = False
+                ns_annotation = schema.annotations.get('is_namespace', None)
+                if ns_annotation:
+                    is_namespace = ns_annotation.value
+
+                # fix schema source to absolute path so schemaview can find imports
+                schema.source_file = (Path(gen.schemaview.schema.source_file).parent / schema.source_file).resolve()
+
+                import_gen = NWBPydanticGenerator(
+                    schema,
+                    split=True,
+                    split_pattern=self.SPLIT_PATTERN,
+                    split_mode=SplitMode.FULL if is_namespace else SplitMode.AUTO
                 )
+                serialized = import_gen.serialize()
+                if dump:
+                    with open(import_file, 'w') as ofile:
+                        ofile.write(serialized)
 
-        return serialized
+            else:
+                with open(import_file, 'r') as ofile:
+                    serialized = ofile.read()
+
+            res.append(serialized)
+
+        return res
 
     def _make_inits(self, out_file: Path) -> None:
         """
