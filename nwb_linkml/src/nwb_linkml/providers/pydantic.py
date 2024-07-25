@@ -12,7 +12,7 @@ from types import ModuleType
 from typing import List, Optional, Type
 
 from linkml_runtime.linkml_model.meta import SchemaDefinition
-from linkml.generators.pydanticgen.pydanticgen import SplitMode, _import_to_path
+from linkml.generators.pydanticgen.pydanticgen import SplitMode, _import_to_path, _ensure_inits
 from pydantic import BaseModel
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
@@ -148,7 +148,9 @@ class PydanticProvider(Provider):
         force: bool,
         **kwargs
     ) -> List[str]:
+        # FIXME: This is messy as all fuck, we're just getting it to work again so we can start iterating on the models themselves
         res = []
+        module_paths = []
 
         # first make the namespace file we were given
 
@@ -170,6 +172,7 @@ class PydanticProvider(Provider):
             if dump:
                 with open(ns_file, 'w') as ofile:
                     ofile.write(serialized)
+                module_paths.append(ns_file)
         else:
             with open(ns_file, 'r') as ofile:
                 serialized = ofile.read()
@@ -203,12 +206,17 @@ class PydanticProvider(Provider):
                 if dump:
                     with open(import_file, 'w') as ofile:
                         ofile.write(serialized)
+                    module_paths.append(import_file)
 
             else:
                 with open(import_file, 'r') as ofile:
                     serialized = ofile.read()
 
             res.append(serialized)
+
+        # make __init__.py files if we generated any files
+        if len(module_paths) > 0:
+            _ensure_inits(module_paths)
 
         return res
 

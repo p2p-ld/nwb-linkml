@@ -11,6 +11,8 @@ NWB schema translation
 Cleanup
 - [ ] Update pydantic generator
 - [ ] Restore regressions from stripping the generator
+- [x] Make any_of with array ranges work
+- [ ] PR upstream `equals_string` and `ifabsent` (if existing PR doesnt fix)
 - [ ] Use the class rather than a string in _get_class_slot_range_origin:
       ```
       or inlined_as_list
@@ -42,6 +44,9 @@ Important things that are not implemented yet!
 
 Remove monkeypatches/overrides once PRs are closed
 - [ ] https://github.com/linkml/linkml-runtime/pull/330
+
+Tests
+- [ ] Ensure schemas and pydantic modules in repos are up to date
 
 ## Docs TODOs
 

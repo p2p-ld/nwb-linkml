@@ -246,7 +246,6 @@ class ClassAdapter(Adapter):
                 ifabsent=f"string({name})",
                 equals_string=equals_string,
                 range="string",
-                identifier=True,
             )
         else:
             name_slot = SlotDefinition(name="name", required=True, range="string", identifier=True)

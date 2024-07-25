@@ -30,6 +30,7 @@ The `serialize` method:
 
 import inspect
 import pdb
+import re
 import sys
 import warnings
 from copy import copy
@@ -40,7 +41,8 @@ from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.build import SlotResult
-from linkml.generators.pydanticgen.array import ArrayRepresentation
+from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
+from linkml.generators.pydanticgen.template import PydanticModule
 from linkml_runtime.linkml_model.meta import (
     Annotation,
     AnonymousSlotExpression,
@@ -60,6 +62,8 @@ from pydantic import BaseModel
 
 from nwb_linkml.maps import flat_to_nptyping
 from nwb_linkml.maps.naming import module_case, version_module_case
+
+OPTIONAL_PATTERN = re.compile(r'Optional\[([\w\.]*)\]')
 
 @dataclass
 class NWBPydanticGenerator(PydanticGenerator):
@@ -86,7 +90,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     gen_slots: bool = True
 
 
-    skip_meta: ClassVar[Tuple[str]] = ('domain_of',)
+    skip_meta: ClassVar[Tuple[str]] = ('domain_of','alias')
 
     def _check_anyof(
         self, s: SlotDefinition, sn: SlotDefinitionName, sv: SchemaView
@@ -111,17 +115,41 @@ class NWBPydanticGenerator(PydanticGenerator):
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
 
-    def before_generate_schema(self):
-        pass
-
     def after_generate_slot(self, slot: SlotResult, sv: SchemaView) -> SlotResult:
         """
         - strip unwanted metadata
+        - generate range with any_of
         """
         for key in self.skip_meta:
             if key in slot.attribute.meta:
                 del slot.attribute.meta[key]
+
+        # make array ranges in any_of
+        if 'any_of' in slot.attribute.meta:
+            any_ofs = slot.attribute.meta['any_of']
+            if all(['array' in expr for expr in any_ofs]):
+                ranges = []
+                is_optional = False
+                for expr in any_ofs:
+                    # remove optional from inner type
+                    pyrange = slot.attribute.range
+                    is_optional = OPTIONAL_PATTERN.match(pyrange)
+                    if is_optional:
+                        pyrange = is_optional.groups()[0]
+                    range_generator = NumpydanticArray(ArrayExpression(**expr['array']), pyrange)
+                    ranges.append(range_generator.make().range)
+
+                slot.attribute.range = 'Union[' + ', '.join(ranges) + ']'
+                if is_optional:
+                    slot.attribute.range = 'Optional[' + slot.attribute.range + ']'
+                del slot.attribute.meta['any_of']
+
         return slot
+
+    def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
+        if 'source_file' in template.meta:
+            del template.meta['source_file']
+
 
     def compile_module(
         self, module_path: Path = None, module_name: str = "test", **kwargs
