@@ -11,8 +11,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import List, Optional, Type
 
+from linkml.generators.pydanticgen.pydanticgen import SplitMode, _ensure_inits, _import_to_path
 from linkml_runtime.linkml_model.meta import SchemaDefinition
-from linkml.generators.pydanticgen.pydanticgen import SplitMode, _import_to_path, _ensure_inits
 from pydantic import BaseModel
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
@@ -107,7 +107,6 @@ class PydanticProvider(Provider):
             # given a path to a namespace linkml yaml file
             path = Path(namespace)
 
-
         if split:
             result = self._build_split(path, dump, force, **kwargs)
         else:
@@ -116,14 +115,10 @@ class PydanticProvider(Provider):
         self.install_pathfinder()
         return result
 
-    def _build_unsplit(
-        self,
-        path: Path,
-        dump: bool,
-        force: bool,
-        **kwargs
-    ) -> str:
-        generator = NWBPydanticGenerator(str(path), split=False, split_pattern=self.SPLIT_PATTERN, **kwargs)
+    def _build_unsplit(self, path: Path, dump: bool, force: bool, **kwargs) -> str:
+        generator = NWBPydanticGenerator(
+            str(path), split=False, split_pattern=self.SPLIT_PATTERN, **kwargs
+        )
         out_module = generator.generate_module_import(generator.schemaview.schema)
         out_file = (self.path / _import_to_path(out_module)).resolve()
         if out_file.exists() and not force:
@@ -141,14 +136,9 @@ class PydanticProvider(Provider):
 
         return serialized
 
-    def _build_split(
-        self,
-        path: Path,
-        dump: bool,
-        force: bool,
-        **kwargs
-    ) -> List[str]:
-        # FIXME: This is messy as all fuck, we're just getting it to work again so we can start iterating on the models themselves
+    def _build_split(self, path: Path, dump: bool, force: bool, **kwargs) -> List[str]:
+        # FIXME: This is messy as all fuck, we're just getting it to work again
+        # so we can start iterating on the models themselves
         res = []
         module_paths = []
 
@@ -156,8 +146,10 @@ class PydanticProvider(Provider):
 
         # remove any directory traversal at the head of the pattern for this,
         # we're making relative to the provider's path not the generated schema at first
-        root_pattern = re.sub(r'^\.*', '', self.SPLIT_PATTERN)
-        gen = NWBPydanticGenerator(schema=path, split=True, split_pattern=root_pattern, split_mode=SplitMode.FULL)
+        root_pattern = re.sub(r"^\.*", "", self.SPLIT_PATTERN)
+        gen = NWBPydanticGenerator(
+            schema=path, split=True, split_pattern=root_pattern, split_mode=SplitMode.FULL
+        )
         mod_name = gen.generate_module_import(gen.schemaview.schema)
         ns_file = (self.path / _import_to_path(mod_name)).resolve()
 
@@ -170,11 +162,11 @@ class PydanticProvider(Provider):
             ns_file.parent.mkdir(exist_ok=True, parents=True)
             serialized = gen.serialize(rendered_module=rendered)
             if dump:
-                with open(ns_file, 'w') as ofile:
+                with open(ns_file, "w") as ofile:
                     ofile.write(serialized)
                 module_paths.append(ns_file)
         else:
-            with open(ns_file, 'r') as ofile:
+            with open(ns_file) as ofile:
                 serialized = ofile.read()
         res.append(serialized)
 
@@ -189,27 +181,29 @@ class PydanticProvider(Provider):
                 import_file.parent.mkdir(exist_ok=True, parents=True)
                 schema = imported_schema[generated_import.module]
                 is_namespace = False
-                ns_annotation = schema.annotations.get('is_namespace', None)
+                ns_annotation = schema.annotations.get("is_namespace", None)
                 if ns_annotation:
                     is_namespace = ns_annotation.value
 
                 # fix schema source to absolute path so schemaview can find imports
-                schema.source_file = (Path(gen.schemaview.schema.source_file).parent / schema.source_file).resolve()
+                schema.source_file = (
+                    Path(gen.schemaview.schema.source_file).parent / schema.source_file
+                ).resolve()
 
                 import_gen = NWBPydanticGenerator(
                     schema,
                     split=True,
                     split_pattern=self.SPLIT_PATTERN,
-                    split_mode=SplitMode.FULL if is_namespace else SplitMode.AUTO
+                    split_mode=SplitMode.FULL if is_namespace else SplitMode.AUTO,
                 )
                 serialized = import_gen.serialize()
                 if dump:
-                    with open(import_file, 'w') as ofile:
+                    with open(import_file, "w") as ofile:
                         ofile.write(serialized)
                     module_paths.append(import_file)
 
             else:
-                with open(import_file, 'r') as ofile:
+                with open(import_file) as ofile:
                     serialized = ofile.read()
 
             res.append(serialized)
@@ -402,13 +396,17 @@ class PydanticProvider(Provider):
         mod = self.get(namespace, version)
         return getattr(mod, class_)
 
-    def install_pathfinder(self):
+    def install_pathfinder(self) -> None:
         """
         Add a :class:`.EctopicModelFinder` instance that allows us to import from
         the directory that we are generating models into
         """
         # check if one already exists
-        matches = [finder for finder in sys.meta_path if isinstance(finder, EctopicModelFinder) and finder.path == self.path]
+        matches = [
+            finder
+            for finder in sys.meta_path
+            if isinstance(finder, EctopicModelFinder) and finder.path == self.path
+        ]
         if len(matches) > 0:
             return
 

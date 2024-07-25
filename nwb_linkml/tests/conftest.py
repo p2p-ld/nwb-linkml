@@ -18,15 +18,21 @@ def pytest_addoption(parser):
         "--without-cache", action="store_true", help="Don't use a sqlite cache for network requests"
     )
     parser.addoption(
-        "--dev", action="store_true", help="run tests that are intended only for development use, eg. those that generate output for inspection"
+        "--dev",
+        action="store_true",
+        help=(
+            "run tests that are intended only for development use, eg. those that generate output"
+            " for inspection"
+        ),
     )
+
 
 def pytest_collection_modifyitems(config, items: List[pytest.Item]):
     # remove dev tests from collection if we're not in dev mode!
-    if config.getoption('--dev'):
-        remove_tests = [t for t in items if not t.get_closest_marker('dev')]
+    if config.getoption("--dev"):
+        remove_tests = [t for t in items if not t.get_closest_marker("dev")]
     else:
-        remove_tests = [t for t in items if t.get_closest_marker('dev')]
+        remove_tests = [t for t in items if t.get_closest_marker("dev")]
     for t in remove_tests:
         items.remove(t)
 
@@ -56,4 +62,3 @@ def patch_requests_cache(pytestconfig):
     # delete cache file unless we have requested it to persist for inspection
     if not pytestconfig.getoption("--with-output"):
         cache_file.unlink(missing_ok=True)
-

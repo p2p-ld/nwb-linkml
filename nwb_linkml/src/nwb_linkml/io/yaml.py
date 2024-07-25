@@ -3,9 +3,10 @@ Utility functions for dealing with yaml files.
 
 No we are not going to implement a yaml parser here
 """
+
 import re
 from pathlib import Path
-from typing import Literal, List, Union, overload
+from typing import List, Literal, Union, overload
 
 import yaml
 
@@ -13,15 +14,26 @@ from nwb_linkml.maps.postload import apply_postload
 
 
 @overload
-def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:Literal[True]=True) -> str: ...
+def yaml_peek(
+    key: str, path: Union[str, Path], root: bool = True, first: Literal[True] = True
+) -> str: ...
+
 
 @overload
-def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:Literal[False]=False) -> List[str]: ...
+def yaml_peek(
+    key: str, path: Union[str, Path], root: bool = True, first: Literal[False] = False
+) -> List[str]: ...
+
 
 @overload
-def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:bool=True) -> Union[str, List[str]]: ...
+def yaml_peek(
+    key: str, path: Union[str, Path], root: bool = True, first: bool = True
+) -> Union[str, List[str]]: ...
 
-def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:bool=True) -> Union[str, List[str]]:
+
+def yaml_peek(
+    key: str, path: Union[str, Path], root: bool = True, first: bool = True
+) -> Union[str, List[str]]:
     """
     Peek into a yaml file without parsing the whole file to retrieve the value of a single key.
 
@@ -43,27 +55,27 @@ def yaml_peek(key: str, path: Union[str, Path], root:bool = True, first:bool=Tru
         str
     """
     if root:
-        pattern = re.compile(rf'^(?P<key>{key}):\s*(?P<value>\S.*)')
+        pattern = re.compile(rf"^(?P<key>{key}):\s*(?P<value>\S.*)")
     else:
-        pattern = re.compile(rf'^\s*(?P<key>{key}):\s*(?P<value>\S.*)')
+        pattern = re.compile(rf"^\s*(?P<key>{key}):\s*(?P<value>\S.*)")
 
     res = None
     if first:
-        with open(path, 'r') as yfile:
-            for l in yfile:
-                res = pattern.match(l)
+        with open(path) as yfile:
+            for line in yfile:
+                res = pattern.match(line)
                 if res:
                     break
         if res:
-            return res.groupdict()['value']
+            return res.groupdict()["value"]
     else:
-        with open(path, 'r') as yfile:
+        with open(path) as yfile:
             text = yfile.read()
-        res = [match.groupdict()['value'] for match in pattern.finditer(text)]
+        res = [match.groupdict()["value"] for match in pattern.finditer(text)]
         if res:
             return res
 
-    raise KeyError(f'Key {key} not found in {path}')
+    raise KeyError(f"Key {key} not found in {path}")
 
 
 def load_yaml(path: Path | str) -> dict:

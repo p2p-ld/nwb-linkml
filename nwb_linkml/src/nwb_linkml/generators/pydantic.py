@@ -63,7 +63,8 @@ from pydantic import BaseModel
 from nwb_linkml.maps import flat_to_nptyping
 from nwb_linkml.maps.naming import module_case, version_module_case
 
-OPTIONAL_PATTERN = re.compile(r'Optional\[([\w\.]*)\]')
+OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
+
 
 @dataclass
 class NWBPydanticGenerator(PydanticGenerator):
@@ -77,7 +78,6 @@ class NWBPydanticGenerator(PydanticGenerator):
     )
     split: bool = True
 
-
     schema_map: Optional[Dict[str, SchemaDefinition]] = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
     array_representations: List[ArrayRepresentation] = field(
@@ -89,8 +89,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     gen_classvars: bool = True
     gen_slots: bool = True
 
-
-    skip_meta: ClassVar[Tuple[str]] = ('domain_of','alias')
+    skip_meta: ClassVar[Tuple[str]] = ("domain_of", "alias")
 
     def _check_anyof(
         self, s: SlotDefinition, sn: SlotDefinitionName, sv: SchemaView
@@ -125,9 +124,9 @@ class NWBPydanticGenerator(PydanticGenerator):
                 del slot.attribute.meta[key]
 
         # make array ranges in any_of
-        if 'any_of' in slot.attribute.meta:
-            any_ofs = slot.attribute.meta['any_of']
-            if all(['array' in expr for expr in any_ofs]):
+        if "any_of" in slot.attribute.meta:
+            any_ofs = slot.attribute.meta["any_of"]
+            if all(["array" in expr for expr in any_ofs]):
                 ranges = []
                 is_optional = False
                 for expr in any_ofs:
@@ -136,20 +135,19 @@ class NWBPydanticGenerator(PydanticGenerator):
                     is_optional = OPTIONAL_PATTERN.match(pyrange)
                     if is_optional:
                         pyrange = is_optional.groups()[0]
-                    range_generator = NumpydanticArray(ArrayExpression(**expr['array']), pyrange)
+                    range_generator = NumpydanticArray(ArrayExpression(**expr["array"]), pyrange)
                     ranges.append(range_generator.make().range)
 
-                slot.attribute.range = 'Union[' + ', '.join(ranges) + ']'
+                slot.attribute.range = "Union[" + ", ".join(ranges) + "]"
                 if is_optional:
-                    slot.attribute.range = 'Optional[' + slot.attribute.range + ']'
-                del slot.attribute.meta['any_of']
+                    slot.attribute.range = "Optional[" + slot.attribute.range + "]"
+                del slot.attribute.meta["any_of"]
 
         return slot
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
-        if 'source_file' in template.meta:
-            del template.meta['source_file']
-
+        if "source_file" in template.meta:
+            del template.meta["source_file"]
 
     def compile_module(
         self, module_path: Path = None, module_name: str = "test", **kwargs
@@ -169,8 +167,6 @@ class NWBPydanticGenerator(PydanticGenerator):
             return compile_python(pycode, module_path, module_name)
         except NameError as e:
             raise e
-
-
 
 
 def compile_python(

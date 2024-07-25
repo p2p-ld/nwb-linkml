@@ -1,6 +1,7 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
+
 from abc import abstractmethod
 from typing import ClassVar, Optional, Type
 

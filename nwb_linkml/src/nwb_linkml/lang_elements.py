@@ -2,7 +2,9 @@
 Language elements in nwb schema language that have a fixed, alternative representation
 in LinkML. These are exported as an nwb.language.yml file along with every generated namespace
 """
+
 from typing import List
+
 from linkml_runtime.linkml_model import (
     ClassDefinition,
     EnumDefinition,
@@ -35,11 +37,14 @@ def _make_dtypes() -> List[TypeDefinition]:
 
         np_type = flat_to_np[nwbtype]
 
-        repr_string = f'np.{np_type.__name__}' if np_type.__module__ == 'numpy' else None
+        repr_string = f"np.{np_type.__name__}" if np_type.__module__ == "numpy" else None
 
-        atype = TypeDefinition(name=nwbtype, minimum_value=amin, typeof=linkmltype, repr=repr_string)
+        atype = TypeDefinition(
+            name=nwbtype, minimum_value=amin, typeof=linkmltype, repr=repr_string
+        )
         DTypeTypes.append(atype)
     return DTypeTypes
+
 
 DTypeTypes = _make_dtypes()
 

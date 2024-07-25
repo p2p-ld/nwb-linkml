@@ -32,6 +32,7 @@ class TestModules(TypedDict):
 
 TestModules.__test__ = False
 
+
 @pytest.mark.xfail()
 def generate_and_import(
     linkml_schema: TestSchemas, split: bool, generator_kwargs: Optional[dict] = None
@@ -77,6 +78,7 @@ def generate_and_import(
 
     return TestModules(core=core, imported=imported, namespace=namespace, split=split)
 
+
 @pytest.mark.xfail()
 @pytest.fixture(scope="module", params=["split", "unsplit"])
 def imported_schema(linkml_schema, request) -> TestModules:
@@ -105,6 +107,7 @@ def _model_correctness(modules: TestModules):
     assert issubclass(modules["core"].StillAnotherClass, BaseModel)
     assert issubclass(modules["imported"].MainThing, BaseModel)
 
+
 @pytest.mark.xfail()
 def test_generate(linkml_schema):
     """
@@ -130,6 +133,7 @@ def test_generate(linkml_schema):
     del sys.modules["test_schema.imported"]
     del sys.modules["test_schema.namespace"]
 
+
 @pytest.mark.xfail()
 def test_generate_split(linkml_schema):
     """
@@ -150,6 +154,7 @@ def test_generate_split(linkml_schema):
     del sys.modules["test_schema.core"]
     del sys.modules["test_schema.imported"]
     del sys.modules["test_schema.namespace"]
+
 
 @pytest.mark.xfail()
 def test_versions(linkml_schema):
@@ -195,6 +200,7 @@ def test_arraylike(imported_schema):
     assert not hasattr(imported_schema["core"], "MainTopLevel__Array")
     assert not hasattr(imported_schema["core"], "MainTopLevelArray")
 
+
 @pytest.mark.xfail()
 def test_inject_fields(imported_schema):
     """
@@ -214,6 +220,7 @@ def test_linkml_meta(imported_schema):
     assert "tree_root" in meta.model_fields
     assert imported_schema["core"].MainTopLevel.linkml_meta.default.tree_root
     assert not imported_schema["core"].OtherClass.linkml_meta.default.tree_root
+
 
 @pytest.mark.xfail()
 def test_skip(linkml_schema):
@@ -245,6 +252,7 @@ def test_inline_with_identifier(imported_schema):
     otherclass, stillanother = typing.get_args(typing.get_args(typing.get_args(inline)[0])[1])
     assert otherclass is imported_schema["core"].OtherClass
     assert stillanother is imported_schema["core"].StillAnotherClass
+
 
 @pytest.mark.xfail()
 def test_namespace(imported_schema):
