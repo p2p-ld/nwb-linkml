@@ -62,7 +62,7 @@ from pydantic import BaseModel
 
 from nwb_linkml.maps import flat_to_nptyping
 from nwb_linkml.maps.naming import module_case, version_module_case
-from nwb_linkml.includes import ModelTypeString, _get_name, NamedString, NamedImports
+from nwb_linkml.includes.types import ModelTypeString, _get_name, NamedString, NamedImports
 
 OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
 

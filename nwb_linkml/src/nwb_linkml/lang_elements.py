@@ -7,20 +7,12 @@ from typing import List
 
 from linkml_runtime.linkml_model import (
     ClassDefinition,
-    EnumDefinition,
-    PermissibleValue,
     Prefix,
     SchemaDefinition,
     TypeDefinition,
 )
 
 from nwb_linkml.maps import flat_to_linkml, flat_to_np
-from nwb_schema_language.datamodel.nwb_schema_pydantic import FlatDtype as FlatDtype_source
-
-FlatDType = EnumDefinition(
-    name="FlatDType",
-    permissible_values=[PermissibleValue(p) for p in FlatDtype_source.__members__],
-)
 
 
 def _make_dtypes() -> List[TypeDefinition]:
@@ -59,7 +51,6 @@ NwbLangSchema = SchemaDefinition(
     name="nwb.language",
     id="nwb.language",
     description="Adapter objects to mimic the behavior of elements in the nwb-schema-language",
-    enums=[FlatDType],
     classes=[AnyType],
     types=DTypeTypes,
     imports=["linkml:types"],
