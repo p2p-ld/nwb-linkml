@@ -248,7 +248,7 @@ class ClassAdapter(Adapter):
                 range="string",
             )
         else:
-            name_slot = SlotDefinition(name="name", required=True, range="string", identifier=True)
+            name_slot = SlotDefinition(name="name", required=True, range="string")
         return name_slot
 
     def build_self_slot(self) -> SlotDefinition:

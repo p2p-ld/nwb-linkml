@@ -62,6 +62,7 @@ from pydantic import BaseModel
 
 from nwb_linkml.maps import flat_to_nptyping
 from nwb_linkml.maps.naming import module_case, version_module_case
+from nwb_linkml.includes import ModelTypeString, _get_name, NamedString, NamedImports
 
 OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
 
@@ -119,35 +120,16 @@ class NWBPydanticGenerator(PydanticGenerator):
         - strip unwanted metadata
         - generate range with any_of
         """
-        for key in self.skip_meta:
-            if key in slot.attribute.meta:
-                del slot.attribute.meta[key]
-
-        # make array ranges in any_of
-        if "any_of" in slot.attribute.meta:
-            any_ofs = slot.attribute.meta["any_of"]
-            if all(["array" in expr for expr in any_ofs]):
-                ranges = []
-                is_optional = False
-                for expr in any_ofs:
-                    # remove optional from inner type
-                    pyrange = slot.attribute.range
-                    is_optional = OPTIONAL_PATTERN.match(pyrange)
-                    if is_optional:
-                        pyrange = is_optional.groups()[0]
-                    range_generator = NumpydanticArray(ArrayExpression(**expr["array"]), pyrange)
-                    ranges.append(range_generator.make().range)
-
-                slot.attribute.range = "Union[" + ", ".join(ranges) + "]"
-                if is_optional:
-                    slot.attribute.range = "Optional[" + slot.attribute.range + "]"
-                del slot.attribute.meta["any_of"]
+        slot = AfterGenerateSlot.skip_meta(slot, self.skip_meta)
+        slot = AfterGenerateSlot.make_array_anyofs(slot)
+        slot = AfterGenerateSlot.make_named_class_range(slot)
 
         return slot
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
         if "source_file" in template.meta:
             del template.meta["source_file"]
+        return template
 
     def compile_module(
         self, module_path: Path = None, module_name: str = "test", **kwargs
@@ -168,6 +150,62 @@ class NWBPydanticGenerator(PydanticGenerator):
         except NameError as e:
             raise e
 
+
+class AfterGenerateSlot:
+    """
+    Container class for slot-modification methods
+    """
+    @staticmethod
+    def skip_meta(slot: SlotResult, skip_meta: tuple[str]) -> SlotResult:
+        for key in skip_meta:
+            if key in slot.attribute.meta:
+                del slot.attribute.meta[key]
+        return slot
+
+    @staticmethod
+    def make_array_anyofs(slot: SlotResult) -> SlotResult:
+        """
+        Make a Union of array ranges if multiple array types specified in ``any_of``
+        """
+        # make array ranges in any_of
+        if "any_of" in slot.attribute.meta:
+            any_ofs = slot.attribute.meta["any_of"]
+            if all(["array" in expr for expr in any_ofs]):
+                ranges = []
+                is_optional = False
+                for expr in any_ofs:
+                    # remove optional from inner type
+                    pyrange = slot.attribute.range
+                    is_optional = OPTIONAL_PATTERN.match(pyrange)
+                    if is_optional:
+                        pyrange = is_optional.groups()[0]
+                    range_generator = NumpydanticArray(ArrayExpression(**expr["array"]), pyrange)
+                    ranges.append(range_generator.make().range)
+
+                slot.attribute.range = "Union[" + ", ".join(ranges) + "]"
+                if is_optional:
+                    slot.attribute.range = "Optional[" + slot.attribute.range + "]"
+                del slot.attribute.meta["any_of"]
+        return slot
+
+    @staticmethod
+    def make_named_class_range(slot: SlotResult) -> SlotResult:
+        """
+        When a slot has a ``named`` annotation, wrap it in :class:`.Named`
+        """
+
+        if 'named' in slot.source.annotations and slot.source.annotations['named'].value:
+            slot.attribute.range = f"Named[{slot.attribute.range}]"
+            named_injects = [ModelTypeString, _get_name, NamedString]
+            if slot.injected_classes is None:
+                slot.injected_classes = named_injects
+            else:
+                slot.injected_classes.extend([ModelTypeString, _get_name, NamedString])
+            if slot.imports:
+                slot.imports += NamedImports
+            else:
+                slot.imports = NamedImports
+        return slot
 
 def compile_python(
     text_or_fn: str, package_path: Path = None, module_name: str = "test"

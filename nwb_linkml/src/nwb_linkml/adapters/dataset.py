@@ -530,6 +530,45 @@ class MapArrayLikeAttributes(DatasetMap):
         return res
 
 
+class MapClassRange(DatasetMap):
+    """
+    Datasets that are a simple named reference to another type without any
+    additional modification to that type.
+    """
+    @classmethod
+    def check(c, cls: Dataset) -> bool:
+        """
+        Check that we are a dataset with a ``neurodata_type_inc`` and a name but nothing else
+        """
+        return (
+            cls.neurodata_type_inc
+            and not cls.neurodata_type_def
+            and not cls.attributes
+            and not cls.dims
+            and not cls.shape
+            and not cls.dtype
+            and cls.name
+        )
+
+    @classmethod
+    def apply(
+        c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
+    ) -> BuildResult:
+        """
+        Replace the base class with a slot with an annotation that indicates
+        it should use the :class:`.Named` generic when generated to pydantic
+        """
+        this_slot = SlotDefinition(
+            name=cls.name,
+            description=cls.doc,
+            range=f"{cls.neurodata_type_inc}",
+            annotations=[{'named': True}],
+            **QUANTITY_MAP[cls.quantity],
+        )
+        res = BuildResult(slots=[this_slot])
+        return res
+
+
 # --------------------------------------------------
 # DynamicTable special cases
 # --------------------------------------------------

@@ -113,6 +113,28 @@ class Adapter(BaseModel):
         Generate the corresponding linkML element for this adapter
         """
 
+    def get(self, name: str) -> Union[Group, Dataset]:
+        """
+        Get the first item whose ``neurodata_type_def`` matches ``name``
+
+        Convenience wrapper around :meth:`.walk_field_values`
+        """
+        return next(self.walk_field_values(self, 'neurodata_type_def', name))
+
+    def get_model_with_field(self, field: str) -> Generator[Union[Group, Dataset], None, None]:
+        """
+        Yield models that have a non-None value in the given field.
+
+        Useful during development to find all the ways that a given
+        field is used.
+
+        Args:
+            field (str): Field to search for
+        """
+        for model in self.walk_types(self, (Group, Dataset)):
+            if getattr(model, field, None) is not None:
+                yield model
+
     def walk(
         self, input: Union[BaseModel, dict, list]
     ) -> Generator[Union[BaseModel, Any, None], None, None]:
