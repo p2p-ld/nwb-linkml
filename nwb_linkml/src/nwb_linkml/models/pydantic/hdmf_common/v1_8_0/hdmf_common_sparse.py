@@ -23,7 +23,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -79,7 +81,9 @@ class CSRMatrix(Container):
     A compressed sparse row matrix. Data are stored in the standard CSR format, where column indices for row i are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-common.sparse", "tree_root": True}
+    )
 
     name: str = Field(...)
     shape: Optional[np.uint64] = Field(
@@ -88,12 +92,16 @@ class CSRMatrix(Container):
     indices: NDArray[Shape["* number_of_non_zero_values"], np.uint64] = Field(
         ...,
         description="""The column indices.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "number_of_non_zero_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "number_of_non_zero_values"}]}}
+        },
     )
     indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], np.uint64] = Field(
         ...,
         description="""The row index pointer.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "number_of_rows_in_the_matrix_1"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "number_of_rows_in_the_matrix_1"}]}}
+        },
     )
     data: CSRMatrixData = Field(..., description="""The non-zero values in the matrix.""")
 
@@ -106,7 +114,8 @@ class CSRMatrixData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
 
 

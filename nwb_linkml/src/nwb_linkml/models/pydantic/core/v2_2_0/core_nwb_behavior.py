@@ -44,7 +44,12 @@ from ...core.v2_2_0.core_nwb_base import (
     ProcessingModule,
     Images,
 )
-from ...hdmf_common.v1_1_0.hdmf_common_sparse import CSRMatrix, CSRMatrixIndices, CSRMatrixIndptr, CSRMatrixData
+from ...hdmf_common.v1_1_0.hdmf_common_sparse import (
+    CSRMatrix,
+    CSRMatrixIndices,
+    CSRMatrixIndptr,
+    CSRMatrixData,
+)
 from ...hdmf_common.v1_1_0.hdmf_common_table import (
     Data,
     Index,
@@ -70,7 +75,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -126,11 +133,14 @@ class SpatialSeries(TimeSeries):
     Direction, e.g., of gaze or travel, or position. The TimeSeries::data field is a 2D array storing position or direction relative to some reference frame. Array structure: [num measurements] [num dimensions]. Each SpatialSeries has a text dataset reference_frame that indicates the zero-position, or the zero-axes for direction. For example, if representing gaze direction, 'straight-ahead' might be a specific pixel on the monitor, or some other point in space. For position data, the 0,0 point might be the top-left corner of an enclosure, as viewed from the tracking camera. The unit of data will indicate how to interpret SpatialSeries values.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: SpatialSeriesData = Field(
-        ..., description="""1-D or 2-D array storing position or direction relative to some reference frame."""
+        ...,
+        description="""1-D or 2-D array storing position or direction relative to some reference frame.""",
     )
     reference_frame: Optional[str] = Field(
         None, description="""Description defining what exactly 'straight-ahead' means."""
@@ -157,7 +167,9 @@ class SpatialSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -173,14 +185,18 @@ class SpatialSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
         description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
     array: Optional[
-        Union[NDArray[Shape["* num_times"], np.number], NDArray[Shape["* num_times, * num_features"], np.number]]
+        Union[
+            NDArray[Shape["* num_times"], np.number],
+            NDArray[Shape["* num_times, * num_features"], np.number],
+        ]
     ] = Field(None)
 
 
@@ -189,7 +205,9 @@ class BehavioralEpochs(NWBDataInterface):
     TimeSeries for storing behavioral epochs.  The objective of this and the other two Behavioral interfaces (e.g. BehavioralEvents and BehavioralTimeSeries) is to provide generic hooks for software tools/scripts. This allows a tool/script to take the output one specific interface (e.g., UnitTimes) and plot that data relative to another data modality (e.g., behavioral events) without having to define all possible modalities in advance. Declaring one of these interfaces means that one or more TimeSeries of the specified type is published. These TimeSeries should reside in a group having the same name as the interface. For example, if a BehavioralTimeSeries interface is declared, the module will have one or more TimeSeries defined in the module sub-group 'BehavioralTimeSeries'. BehavioralEpochs should use IntervalSeries. BehavioralEvents is used for irregular events. BehavioralTimeSeries is for continuous data.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[IntervalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "IntervalSeries"}]}}
@@ -202,7 +220,9 @@ class BehavioralEvents(NWBDataInterface):
     TimeSeries for storing behavioral events. See description of <a href=\"#BehavioralEpochs\">BehavioralEpochs</a> for more details.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
@@ -215,7 +235,9 @@ class BehavioralTimeSeries(NWBDataInterface):
     TimeSeries for storing Behavoioral time series data. See description of <a href=\"#BehavioralEpochs\">BehavioralEpochs</a> for more details.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
@@ -228,7 +250,9 @@ class PupilTracking(NWBDataInterface):
     Eye-tracking data, representing pupil size.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
@@ -241,7 +265,9 @@ class EyeTracking(NWBDataInterface):
     Eye-tracking data, representing direction of gaze.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
@@ -254,7 +280,9 @@ class CompassDirection(NWBDataInterface):
     With a CompassDirection interface, a module publishes a SpatialSeries object representing a floating point value for theta. The SpatialSeries::reference_frame field should indicate what direction corresponds to 0 and which is the direction of rotation (this should be clockwise). The si_unit for the SpatialSeries should be radians or degrees.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
@@ -267,7 +295,9 @@ class Position(NWBDataInterface):
     Position data, whether along the x, x/y or x/y/z axis.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.behavior", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.behavior", "tree_root": True}
+    )
 
     children: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}

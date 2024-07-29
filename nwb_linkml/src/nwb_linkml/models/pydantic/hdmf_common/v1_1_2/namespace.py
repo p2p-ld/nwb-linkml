@@ -7,7 +7,12 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_common.v1_1_2.hdmf_common_sparse import CSRMatrix, CSRMatrixIndices, CSRMatrixIndptr, CSRMatrixData
+from ...hdmf_common.v1_1_2.hdmf_common_sparse import (
+    CSRMatrix,
+    CSRMatrixIndices,
+    CSRMatrixIndptr,
+    CSRMatrixData,
+)
 from ...hdmf_common.v1_1_2.hdmf_common_table import (
     Data,
     Index,
@@ -32,7 +37,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 

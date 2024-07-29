@@ -133,7 +133,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -200,10 +202,14 @@ class ScratchData(NWBData):
     Any one-off datasets
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.file", "tree_root": True}
+    )
 
     name: str = Field(...)
-    notes: Optional[str] = Field(None, description="""Any notes the user has about the dataset being stored""")
+    notes: Optional[str] = Field(
+        None, description="""Any notes the user has about the dataset being stored"""
+    )
 
 
 class NWBFile(NWBContainer):
@@ -211,10 +217,13 @@ class NWBFile(NWBContainer):
     An NWB file storing cellular-based neurophysiology data from a single experimental session.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.file", "tree_root": True}
+    )
 
     name: Literal["root"] = Field(
-        "root", json_schema_extra={"linkml_meta": {"equals_string": "root", "ifabsent": "string(root)"}}
+        "root",
+        json_schema_extra={"linkml_meta": {"equals_string": "root", "ifabsent": "string(root)"}},
     )
     nwb_version: Optional[str] = Field(
         None,
@@ -223,7 +232,9 @@ class NWBFile(NWBContainer):
     file_create_date: NDArray[Shape["* num_modifications"], np.datetime64] = Field(
         ...,
         description="""A record of the date the file was created and of subsequent modifications. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted strings: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds. The file can be created after the experiment was run, so this may differ from the experiment start time. Each modification to the nwb file adds a new entry to the array.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_modifications"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_modifications"}]}}
+        },
     )
     identifier: str = Field(
         ...,
@@ -243,17 +254,23 @@ class NWBFile(NWBContainer):
     acquisition: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
         None,
         description="""Data streams recorded from the system, including ephys, ophys, tracking, etc. This group should be read-only after the experiment is completed and timestamps are corrected to a common timebase. The data stored here may be links to raw data stored in external NWB files. This will allow keeping bulky raw data out of the file while preserving the option of keeping some/all in the file. Acquired data includes tracking and experimental data streams (i.e., everything measured from the system). If bulky data is stored in the /acquisition group, the data can exist in a separate NWB file that is linked to by the file being used for processing and analysis.""",
-        json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}},
+        json_schema_extra={
+            "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}
+        },
     )
     analysis: Optional[List[Union[DynamicTable, NWBContainer]]] = Field(
         None,
         description="""Lab-specific and custom scientific analysis of data. There is no defined format for the content of this group - the format is up to the individual user/lab. To facilitate sharing analysis data between labs, the contents here should be stored in standard types (e.g., neurodata_types) and appropriately documented. The file can store lab-specific and custom data analysis without restriction on its form or schema, reducing data formatting restrictions on end users. Such data should be placed in the analysis group. The analysis data should be documented so that it could be shared with other labs.""",
-        json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBContainer"}, {"range": "DynamicTable"}]}},
+        json_schema_extra={
+            "linkml_meta": {"any_of": [{"range": "NWBContainer"}, {"range": "DynamicTable"}]}
+        },
     )
     scratch: Optional[List[Union[DynamicTable, NWBContainer]]] = Field(
         None,
         description="""A place to store one-off analysis results. Data placed here is not intended for sharing. By placing data here, users acknowledge that there is no guarantee that their data meets any standard.""",
-        json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBContainer"}, {"range": "DynamicTable"}]}},
+        json_schema_extra={
+            "linkml_meta": {"any_of": [{"range": "NWBContainer"}, {"range": "DynamicTable"}]}
+        },
     )
     processing: Optional[List[ProcessingModule]] = Field(
         None,
@@ -293,7 +310,10 @@ class NWBFileStimulus(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file"})
 
     name: Literal["stimulus"] = Field(
-        "stimulus", json_schema_extra={"linkml_meta": {"equals_string": "stimulus", "ifabsent": "string(stimulus)"}}
+        "stimulus",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "stimulus", "ifabsent": "string(stimulus)"}
+        },
     )
     presentation: Optional[List[TimeSeries]] = Field(
         None,
@@ -303,7 +323,9 @@ class NWBFileStimulus(ConfiguredBaseModel):
     templates: Optional[List[Union[Images, TimeSeries]]] = Field(
         None,
         description="""Template stimuli. Timestamps in templates are based on stimulus design and are relative to the beginning of the stimulus. When templates are used, the stimulus instances must convert presentation times to the experiment`s time reference frame.""",
-        json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}, {"range": "Images"}]}},
+        json_schema_extra={
+            "linkml_meta": {"any_of": [{"range": "TimeSeries"}, {"range": "Images"}]}
+        },
     )
 
 
@@ -315,16 +337,27 @@ class NWBFileGeneral(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file"})
 
     name: Literal["general"] = Field(
-        "general", json_schema_extra={"linkml_meta": {"equals_string": "general", "ifabsent": "string(general)"}}
+        "general",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "general", "ifabsent": "string(general)"}
+        },
     )
-    data_collection: Optional[str] = Field(None, description="""Notes about data collection and analysis.""")
-    experiment_description: Optional[str] = Field(None, description="""General description of the experiment.""")
+    data_collection: Optional[str] = Field(
+        None, description="""Notes about data collection and analysis."""
+    )
+    experiment_description: Optional[str] = Field(
+        None, description="""General description of the experiment."""
+    )
     experimenter: Optional[NDArray[Shape["* num_experimenters"], str]] = Field(
         None,
         description="""Name of person(s) who performed the experiment. Can also specify roles of different people involved.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_experimenters"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_experimenters"}]}}
+        },
     )
-    institution: Optional[str] = Field(None, description="""Institution(s) where experiment was performed.""")
+    institution: Optional[str] = Field(
+        None, description="""Institution(s) where experiment was performed."""
+    )
     keywords: Optional[NDArray[Shape["* num_keywords"], str]] = Field(
         None,
         description="""Terms to search over.""",
@@ -337,12 +370,15 @@ class NWBFileGeneral(ConfiguredBaseModel):
         description="""Description of drugs used, including how and when they were administered. Anesthesia(s), painkiller(s), etc., plus dosage, concentration, etc.""",
     )
     protocol: Optional[str] = Field(
-        None, description="""Experimental protocol, if applicable. e.g., include IACUC protocol number."""
+        None,
+        description="""Experimental protocol, if applicable. e.g., include IACUC protocol number.""",
     )
     related_publications: Optional[NDArray[Shape["* num_publications"], str]] = Field(
         None,
         description="""Publication information. PMID, DOI, URL, etc.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_publications"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_publications"}]}}
+        },
     )
     session_id: Optional[str] = Field(None, description="""Lab-specific ID for the session.""")
     slices: Optional[str] = Field(
@@ -350,7 +386,8 @@ class NWBFileGeneral(ConfiguredBaseModel):
         description="""Description of slices, including information about preparation thickness, orientation, temperature, and bath solution.""",
     )
     source_script: Optional[NWBFileGeneralSourceScript] = Field(
-        None, description="""Script file or link to public source code used to create this NWB file."""
+        None,
+        description="""Script file or link to public source code used to create this NWB file.""",
     )
     stimulus: Optional[str] = Field(
         None, description="""Notes about stimuli, such as how and where they were presented."""
@@ -373,7 +410,8 @@ class NWBFileGeneral(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "Device"}]}},
     )
     subject: Optional[Subject] = Field(
-        None, description="""Information about the animal or person from which the data was measured."""
+        None,
+        description="""Information about the animal or person from which the data was measured.""",
     )
     extracellular_ephys: Optional[NWBFileGeneralExtracellularEphys] = Field(
         None, description="""Metadata related to extracellular electrophysiology."""
@@ -402,7 +440,9 @@ class NWBFileGeneralSourceScript(ConfiguredBaseModel):
 
     name: Literal["source_script"] = Field(
         "source_script",
-        json_schema_extra={"linkml_meta": {"equals_string": "source_script", "ifabsent": "string(source_script)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "source_script", "ifabsent": "string(source_script)"}
+        },
     )
     file_name: Optional[str] = Field(None, description="""Name of script file.""")
     value: str = Field(...)
@@ -418,10 +458,15 @@ class NWBFileGeneralExtracellularEphys(ConfiguredBaseModel):
     name: Literal["extracellular_ephys"] = Field(
         "extracellular_ephys",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "extracellular_ephys", "ifabsent": "string(extracellular_ephys)"}
+            "linkml_meta": {
+                "equals_string": "extracellular_ephys",
+                "ifabsent": "string(extracellular_ephys)",
+            }
         },
     )
-    electrode_group: Optional[List[ElectrodeGroup]] = Field(None, description="""Physical group of electrodes.""")
+    electrode_group: Optional[List[ElectrodeGroup]] = Field(
+        None, description="""Physical group of electrodes."""
+    )
     electrodes: Optional[NWBFileGeneralExtracellularEphysElectrodes] = Field(
         None, description="""A table of all electrodes (i.e. channels) used for recording."""
     )
@@ -436,48 +481,62 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
 
     name: Literal["electrodes"] = Field(
         "electrodes",
-        json_schema_extra={"linkml_meta": {"equals_string": "electrodes", "ifabsent": "string(electrodes)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "electrodes", "ifabsent": "string(electrodes)"}
+        },
     )
     x: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""x coordinate of the channel location in the brain (+x is posterior).""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     y: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""y coordinate of the channel location in the brain (+y is inferior).""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     z: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""z coordinate of the channel location in the brain (+z is right).""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     imp: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""Impedance of the channel, in ohms.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     location: NDArray[Any, str] = Field(
         ...,
         description="""Location of the electrode (channel). Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     filtering: Optional[NDArray[Any, str]] = Field(
         None,
         description="""Description of hardware filtering, including the filter name and frequency cutoffs.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     group: List[ElectrodeGroup] = Field(
@@ -487,42 +546,54 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
         ...,
         description="""Name of the ElectrodeGroup this electrode is a part of.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     rel_x: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""x coordinate in electrode group""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     rel_y: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""y coordinate in electrode group""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     rel_z: Optional[NDArray[Any, np.float32]] = Field(
         None,
         description="""z coordinate in electrode group""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     reference: Optional[NDArray[Any, str]] = Field(
         None,
         description="""Description of the reference electrode and/or reference scheme used for this electrode, e.g., \"stainless steel skull screw\" or \"online common average referencing\".""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what is in this dynamic table."""
+    )
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -543,7 +614,10 @@ class NWBFileGeneralIntracellularEphys(ConfiguredBaseModel):
     name: Literal["intracellular_ephys"] = Field(
         "intracellular_ephys",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "intracellular_ephys", "ifabsent": "string(intracellular_ephys)"}
+            "linkml_meta": {
+                "equals_string": "intracellular_ephys",
+                "ifabsent": "string(intracellular_ephys)",
+            }
         },
     )
     filtering: Optional[str] = Field(
@@ -584,7 +658,9 @@ class LabMetaData(NWBContainer):
     Lab-specific meta-data.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.file", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -594,7 +670,9 @@ class Subject(NWBContainer):
     Information about the animal or person from which the data was measured.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.file", "tree_root": True}
+    )
 
     name: str = Field(...)
     age: Optional[SubjectAge] = Field(
@@ -604,17 +682,22 @@ class Subject(NWBContainer):
         None, description="""Date of birth of subject. Can be supplied instead of 'age'."""
     )
     description: Optional[str] = Field(
-        None, description="""Description of subject and where subject came from (e.g., breeder, if animal)."""
+        None,
+        description="""Description of subject and where subject came from (e.g., breeder, if animal).""",
     )
-    genotype: Optional[str] = Field(None, description="""Genetic strain. If absent, assume Wild Type (WT).""")
+    genotype: Optional[str] = Field(
+        None, description="""Genetic strain. If absent, assume Wild Type (WT)."""
+    )
     sex: Optional[str] = Field(None, description="""Gender of subject.""")
     species: Optional[str] = Field(None, description="""Species of subject.""")
     strain: Optional[str] = Field(None, description="""Strain of subject.""")
     subject_id: Optional[str] = Field(
-        None, description="""ID of animal/person used/participating in experiment (lab convention)."""
+        None,
+        description="""ID of animal/person used/participating in experiment (lab convention).""",
     )
     weight: Optional[str] = Field(
-        None, description="""Weight at time of experiment, at time of surgery and at other important times."""
+        None,
+        description="""Weight at time of experiment, at time of surgery and at other important times.""",
     )
 
 
@@ -626,7 +709,8 @@ class SubjectAge(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file"})
 
     name: Literal["age"] = Field(
-        "age", json_schema_extra={"linkml_meta": {"equals_string": "age", "ifabsent": "string(age)"}}
+        "age",
+        json_schema_extra={"linkml_meta": {"equals_string": "age", "ifabsent": "string(age)"}},
     )
     reference: Optional[str] = Field(
         None,

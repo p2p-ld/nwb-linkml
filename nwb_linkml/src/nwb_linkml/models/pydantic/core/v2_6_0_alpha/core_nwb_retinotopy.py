@@ -23,7 +23,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -79,9 +81,14 @@ class ImagingRetinotopy(NWBDataInterface):
     Intrinsic signal optical imaging or widefield imaging for measuring retinotopy. Stores orthogonal maps (e.g., altitude/azimuth; radius/theta) of responses to specific stimuli and a combined polarity map from which to identify visual areas. This group does not store the raw responses imaged during retinotopic mapping or the stimuli presented, but rather the resulting phase and power maps after applying a Fourier transform on the averaged responses. Note: for data consistency, all images and arrays are stored in the format [row][column] and [row, col], which equates to [y][x]. Field of view and dimension arrays may appear backward (i.e., y before x).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.retinotopy", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.retinotopy", "tree_root": True}
+    )
 
-    name: str = Field("ImagingRetinotopy", json_schema_extra={"linkml_meta": {"ifabsent": "string(ImagingRetinotopy)"}})
+    name: str = Field(
+        "ImagingRetinotopy",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(ImagingRetinotopy)"}},
+    )
     axis_1_phase_map: ImagingRetinotopyAxis1PhaseMap = Field(
         ..., description="""Phase response to stimulus on the first measured axis."""
     )
@@ -100,7 +107,9 @@ class ImagingRetinotopy(NWBDataInterface):
         ...,
         description="""Two-element array describing the contents of the two response axis fields. Description should be something like ['altitude', 'azimuth'] or '['radius', 'theta'].""",
         json_schema_extra={
-            "linkml_meta": {"array": {"dimensions": [{"alias": "axis_1_axis_2", "exact_cardinality": 2}]}}
+            "linkml_meta": {
+                "array": {"dimensions": [{"alias": "axis_1_axis_2", "exact_cardinality": 2}]}
+            }
         },
     )
     focal_depth_image: Optional[ImagingRetinotopyFocalDepthImage] = Field(
@@ -108,10 +117,12 @@ class ImagingRetinotopy(NWBDataInterface):
         description="""Gray-scale image taken with same settings/parameters (e.g., focal depth, wavelength) as data collection. Array format: [rows][columns].""",
     )
     sign_map: Optional[ImagingRetinotopySignMap] = Field(
-        None, description="""Sine of the angle between the direction of the gradient in axis_1 and axis_2."""
+        None,
+        description="""Sine of the angle between the direction of the gradient in axis_1 and axis_2.""",
     )
     vasculature_image: ImagingRetinotopyVasculatureImage = Field(
-        ..., description="""Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]"""
+        ...,
+        description="""Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]""",
     )
 
 
@@ -125,18 +136,27 @@ class ImagingRetinotopyAxis1PhaseMap(ConfiguredBaseModel):
     name: Literal["axis_1_phase_map"] = Field(
         "axis_1_phase_map",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "axis_1_phase_map", "ifabsent": "string(axis_1_phase_map)"}
+            "linkml_meta": {
+                "equals_string": "axis_1_phase_map",
+                "ifabsent": "string(axis_1_phase_map)",
+            }
         },
     )
     dimension: Optional[np.int32] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
+    unit: Optional[str] = Field(
+        None, description="""Unit that axis data is stored in (e.g., degrees)."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 
@@ -150,18 +170,27 @@ class ImagingRetinotopyAxis1PowerMap(ConfiguredBaseModel):
     name: Literal["axis_1_power_map"] = Field(
         "axis_1_power_map",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "axis_1_power_map", "ifabsent": "string(axis_1_power_map)"}
+            "linkml_meta": {
+                "equals_string": "axis_1_power_map",
+                "ifabsent": "string(axis_1_power_map)",
+            }
         },
     )
     dimension: Optional[np.int32] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
+    unit: Optional[str] = Field(
+        None, description="""Unit that axis data is stored in (e.g., degrees)."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 
@@ -175,18 +204,27 @@ class ImagingRetinotopyAxis2PhaseMap(ConfiguredBaseModel):
     name: Literal["axis_2_phase_map"] = Field(
         "axis_2_phase_map",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "axis_2_phase_map", "ifabsent": "string(axis_2_phase_map)"}
+            "linkml_meta": {
+                "equals_string": "axis_2_phase_map",
+                "ifabsent": "string(axis_2_phase_map)",
+            }
         },
     )
     dimension: Optional[np.int32] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
+    unit: Optional[str] = Field(
+        None, description="""Unit that axis data is stored in (e.g., degrees)."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 
@@ -200,18 +238,27 @@ class ImagingRetinotopyAxis2PowerMap(ConfiguredBaseModel):
     name: Literal["axis_2_power_map"] = Field(
         "axis_2_power_map",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "axis_2_power_map", "ifabsent": "string(axis_2_power_map)"}
+            "linkml_meta": {
+                "equals_string": "axis_2_power_map",
+                "ifabsent": "string(axis_2_power_map)",
+            }
         },
     )
     dimension: Optional[np.int32] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
-    unit: Optional[str] = Field(None, description="""Unit that axis data is stored in (e.g., degrees).""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
+    unit: Optional[str] = Field(
+        None, description="""Unit that axis data is stored in (e.g., degrees)."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 
@@ -225,7 +272,10 @@ class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
     name: Literal["focal_depth_image"] = Field(
         "focal_depth_image",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "focal_depth_image", "ifabsent": "string(focal_depth_image)"}
+            "linkml_meta": {
+                "equals_string": "focal_depth_image",
+                "ifabsent": "string(focal_depth_image)",
+            }
         },
     )
     bits_per_pixel: Optional[np.int32] = Field(
@@ -236,12 +286,20 @@ class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
-    focal_depth: Optional[np.float32] = Field(None, description="""Focal depth offset, in meters.""")
-    format: Optional[str] = Field(None, description="""Format of image. Right now only 'raw' is supported.""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
+    focal_depth: Optional[np.float32] = Field(
+        None, description="""Focal depth offset, in meters."""
+    )
+    format: Optional[str] = Field(
+        None, description="""Format of image. Right now only 'raw' is supported."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.uint16]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 
@@ -253,16 +311,23 @@ class ImagingRetinotopySignMap(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.retinotopy"})
 
     name: Literal["sign_map"] = Field(
-        "sign_map", json_schema_extra={"linkml_meta": {"equals_string": "sign_map", "ifabsent": "string(sign_map)"}}
+        "sign_map",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "sign_map", "ifabsent": "string(sign_map)"}
+        },
     )
     dimension: Optional[np.int32] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 
@@ -276,7 +341,10 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
     name: Literal["vasculature_image"] = Field(
         "vasculature_image",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "vasculature_image", "ifabsent": "string(vasculature_image)"}
+            "linkml_meta": {
+                "equals_string": "vasculature_image",
+                "ifabsent": "string(vasculature_image)",
+            }
         },
     )
     bits_per_pixel: Optional[np.int32] = Field(
@@ -287,11 +355,17 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(None, description="""Size of viewing area, in meters.""")
-    format: Optional[str] = Field(None, description="""Format of image. Right now only 'raw' is supported.""")
+    field_of_view: Optional[np.float32] = Field(
+        None, description="""Size of viewing area, in meters."""
+    )
+    format: Optional[str] = Field(
+        None, description="""Format of image. Right now only 'raw' is supported."""
+    )
     array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.uint16]] = Field(
         None,
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
+        },
     )
 
 

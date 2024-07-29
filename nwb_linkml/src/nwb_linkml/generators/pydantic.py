@@ -156,6 +156,7 @@ class AfterGenerateSlot:
     """
     Container class for slot-modification methods
     """
+
     @staticmethod
     def skip_meta(slot: SlotResult, skip_meta: tuple[str]) -> SlotResult:
         for key in skip_meta:
@@ -195,7 +196,7 @@ class AfterGenerateSlot:
         When a slot has a ``named`` annotation, wrap it in :class:`.Named`
         """
 
-        if 'named' in slot.source.annotations and slot.source.annotations['named'].value:
+        if "named" in slot.source.annotations and slot.source.annotations["named"].value:
             slot.attribute.range = f"Named[{slot.attribute.range}]"
             named_injects = [ModelTypeString, _get_name, NamedString]
             if slot.injected_classes is None:
@@ -207,6 +208,7 @@ class AfterGenerateSlot:
             else:
                 slot.imports = NamedImports
         return slot
+
 
 def compile_python(
     text_or_fn: str, package_path: Path = None, module_name: str = "test"

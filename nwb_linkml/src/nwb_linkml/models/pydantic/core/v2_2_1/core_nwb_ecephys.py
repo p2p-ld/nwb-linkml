@@ -7,7 +7,15 @@ import sys
 import numpy as np
 from ...hdmf_common.v1_1_2.hdmf_common_table import DynamicTableRegion
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
 from ...core.v2_2_1.core_nwb_base import (
     TimeSeries,
     TimeSeriesStartingTime,
@@ -30,7 +38,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -75,7 +85,12 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "core.nwb.ecephys/",
         "id": "core.nwb.ecephys",
-        "imports": ["core.nwb.base", "../../hdmf_common/v1_1_2/namespace", "core.nwb.device", "core.nwb.language"],
+        "imports": [
+            "core.nwb.base",
+            "../../hdmf_common/v1_1_2/namespace",
+            "core.nwb.device",
+            "core.nwb.language",
+        ],
         "name": "core.nwb.ecephys",
     }
 )
@@ -86,7 +101,9 @@ class ElectricalSeries(TimeSeries):
     A time series of acquired voltage data from extracellular recordings. The data field is an int or float array storing data in volts. The first dimension should always represent time. The second dimension, if present, should represent channels.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: Union[
@@ -97,7 +114,9 @@ class ElectricalSeries(TimeSeries):
     electrodes: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     channel_conversion: Optional[NDArray[Shape["* num_channels"], np.float32]] = Field(
         None,
@@ -126,7 +145,9 @@ class ElectricalSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -139,7 +160,9 @@ class SpikeEventSeries(ElectricalSeries):
     Stores snapshots/snippets of recorded spike events (i.e., threshold crossings). This may also be raw data, as reported by ephys hardware. If so, the TimeSeries::description field should describe how events were detected. All SpikeEventSeries should reside in a module (under EventWaveform interface) even if the spikes were reported and stored by hardware. All events span the same recording channels and store snapshots of equal duration. TimeSeries::data array structure: [num events] [num channels] [num samples] (or [num events] [num samples] for single electrode).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: Union[
@@ -154,7 +177,9 @@ class SpikeEventSeries(ElectricalSeries):
     electrodes: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     channel_conversion: Optional[NDArray[Shape["* num_channels"], np.float32]] = Field(
         None,
@@ -178,7 +203,9 @@ class SpikeEventSeries(ElectricalSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -191,9 +218,14 @@ class FeatureExtraction(NWBDataInterface):
     Features, such as PC1 and PC2, that are extracted from signals stored in a SpikeEventSeries or other source.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
-    name: str = Field("FeatureExtraction", json_schema_extra={"linkml_meta": {"ifabsent": "string(FeatureExtraction)"}})
+    name: str = Field(
+        "FeatureExtraction",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(FeatureExtraction)"}},
+    )
     description: NDArray[Shape["* num_features"], str] = Field(
         ...,
         description="""Description of features (eg, ''PC1'') for each of the extracted features.""",
@@ -204,7 +236,13 @@ class FeatureExtraction(NWBDataInterface):
         description="""Multi-dimensional array of features extracted from each event.""",
         json_schema_extra={
             "linkml_meta": {
-                "array": {"dimensions": [{"alias": "num_events"}, {"alias": "num_channels"}, {"alias": "num_features"}]}
+                "array": {
+                    "dimensions": [
+                        {"alias": "num_events"},
+                        {"alias": "num_channels"},
+                        {"alias": "num_features"},
+                    ]
+                }
             }
         },
     )
@@ -216,7 +254,9 @@ class FeatureExtraction(NWBDataInterface):
     electrodes: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
 
 
@@ -225,9 +265,13 @@ class EventDetection(NWBDataInterface):
     Detected spike events from voltage trace(s).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
-    name: str = Field("EventDetection", json_schema_extra={"linkml_meta": {"ifabsent": "string(EventDetection)"}})
+    name: str = Field(
+        "EventDetection", json_schema_extra={"linkml_meta": {"ifabsent": "string(EventDetection)"}}
+    )
     detection_method: str = Field(
         ...,
         description="""Description of how events were detected, such as voltage threshold, or dV/dT threshold, as well as relevant values.""",
@@ -249,7 +293,9 @@ class EventWaveform(NWBDataInterface):
     Represents either the waveforms of detected events, as extracted from a raw data trace in /acquisition, or the event waveforms that were stored during experiment acquisition.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
     children: Optional[List[SpikeEventSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpikeEventSeries"}]}}
@@ -262,7 +308,9 @@ class FilteredEphys(NWBDataInterface):
     Electrophysiology data from one or more channels that has been subjected to filtering. Examples of filtered data include Theta and Gamma (LFP has its own interface). FilteredEphys modules publish an ElectricalSeries for each filtered channel or set of channels. The name of each ElectricalSeries is arbitrary but should be informative. The source of the filtered data, whether this is from analysis of another time series or as acquired by hardware, should be noted in each's TimeSeries::description field. There is no assumed 1::1 correspondence between filtered ephys signals and electrodes, as a single signal can apply to many nearby electrodes, and one electrode may have different filtered (e.g., theta and/or gamma) signals represented. Filter properties should be noted in the ElectricalSeries.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
     children: Optional[List[ElectricalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "ElectricalSeries"}]}}
@@ -275,7 +323,9 @@ class LFP(NWBDataInterface):
     LFP data from one or more channels. The electrode map in each published ElectricalSeries will identify which channels are providing LFP data. Filter properties should be noted in the ElectricalSeries description or comments field.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
     children: Optional[List[ElectricalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "ElectricalSeries"}]}}
@@ -288,7 +338,9 @@ class ElectrodeGroup(NWBContainer):
     A physical grouping of electrodes, e.g. a shank of an array.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     description: Optional[str] = Field(None, description="""Description of this electrode group.""")
@@ -309,7 +361,10 @@ class ElectrodeGroupPosition(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys"})
 
     name: Literal["position"] = Field(
-        "position", json_schema_extra={"linkml_meta": {"equals_string": "position", "ifabsent": "string(position)"}}
+        "position",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "position", "ifabsent": "string(position)"}
+        },
     )
     x: Optional[np.float32] = Field(None, description="""x coordinate""")
     y: Optional[np.float32] = Field(None, description="""y coordinate""")
@@ -321,22 +376,33 @@ class ClusterWaveforms(NWBDataInterface):
     DEPRECATED The mean waveform shape, including standard deviation, of the different clusters. Ideally, the waveform analysis should be performed on data that is only high-pass filtered. This is a separate module because it is expected to require updating. For example, IMEC probes may require different storage requirements to store/display mean waveforms, requiring a new interface or an extension of this one.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
-    name: str = Field("ClusterWaveforms", json_schema_extra={"linkml_meta": {"ifabsent": "string(ClusterWaveforms)"}})
-    waveform_filtering: str = Field(..., description="""Filtering applied to data before generating mean/sd""")
+    name: str = Field(
+        "ClusterWaveforms",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(ClusterWaveforms)"}},
+    )
+    waveform_filtering: str = Field(
+        ..., description="""Filtering applied to data before generating mean/sd"""
+    )
     waveform_mean: NDArray[Shape["* num_clusters, * num_samples"], np.float32] = Field(
         ...,
         description="""The mean waveform for each cluster, using the same indices for each wave as cluster numbers in the associated Clustering module (i.e, cluster 3 is in array slot [3]). Waveforms corresponding to gaps in cluster sequence should be empty (e.g., zero- filled)""",
         json_schema_extra={
-            "linkml_meta": {"array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}}
+            "linkml_meta": {
+                "array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}
+            }
         },
     )
     waveform_sd: NDArray[Shape["* num_clusters, * num_samples"], np.float32] = Field(
         ...,
         description="""Stdev of waveforms for each cluster, using the same indices as in mean""",
         json_schema_extra={
-            "linkml_meta": {"array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}}
+            "linkml_meta": {
+                "array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}
+            }
         },
     )
 
@@ -346,9 +412,13 @@ class Clustering(NWBDataInterface):
     DEPRECATED Clustered spike data, whether from automatic clustering tools (e.g., klustakwik) or as a result of manual sorting.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
 
-    name: str = Field("Clustering", json_schema_extra={"linkml_meta": {"ifabsent": "string(Clustering)"}})
+    name: str = Field(
+        "Clustering", json_schema_extra={"linkml_meta": {"ifabsent": "string(Clustering)"}}
+    )
     description: str = Field(
         ...,
         description="""Description of clusters or clustering, (e.g. cluster 0 is noise, clusters curated using Klusters, etc)""",

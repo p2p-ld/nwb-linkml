@@ -2,12 +2,17 @@
 Special types for mimicking HDMF special case behavior
 """
 
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, model_validator
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 
 class DynamicTableMixin(BaseModel):
-    model_config = ConfigDict(extra='allow')
+    """
+    Mixin to make DynamicTable subclasses behave like tables/dataframes
+    """
+
+    model_config = ConfigDict(extra="allow")
 
     # @model_validator(mode='after')
     # def ensure_equal_length(cls, model: 'DynamicTableMixin') -> 'DynamicTableMixin':
@@ -23,15 +28,12 @@ class DynamicTableMixin(BaseModel):
     #     """
     #     raise NotImplementedError('TODO')
 
-    def __getitem__(self, item):
-        raise NotImplementedError('TODO')
+    def __getitem__(self, item: str) -> Any:
+        raise NotImplementedError("TODO")
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError('TODO')
-
-
-
-class VectorDataMixin(BaseModel):
-    index: Optional[BaseModel] = None
+    def __setitem__(self, key: str, value: Any) -> None:
+        raise NotImplementedError("TODO")
 
 
+# class VectorDataMixin(BaseModel):
+#     index: Optional[BaseModel] = None

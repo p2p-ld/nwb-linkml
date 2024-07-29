@@ -9,7 +9,15 @@ from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container
 from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData, DynamicTable
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
 
 metamodel_version = "None"
 version = "2.5.0"
@@ -24,7 +32,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -69,7 +79,11 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "core.nwb.base/",
         "id": "core.nwb.base",
-        "imports": ["../../hdmf_common/v1_5_0/namespace", "../../hdmf_common/v1_5_0/namespace", "core.nwb.language"],
+        "imports": [
+            "../../hdmf_common/v1_5_0/namespace",
+            "../../hdmf_common/v1_5_0/namespace",
+            "core.nwb.language",
+        ],
         "name": "core.nwb.base",
     }
 )
@@ -80,7 +94,9 @@ class NWBData(Data):
     An abstract data type for a dataset.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -90,18 +106,25 @@ class TimeSeriesReferenceVectorData(VectorData):
     Column storing references to a TimeSeries (rows). For each TimeSeries this VectorData column stores the start_index and count to indicate the range in time to be selected as well as an object reference to the TimeSeries.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
-    name: str = Field("timeseries", json_schema_extra={"linkml_meta": {"ifabsent": "string(timeseries)"}})
+    name: str = Field(
+        "timeseries", json_schema_extra={"linkml_meta": {"ifabsent": "string(timeseries)"}}
+    )
     idx_start: np.int32 = Field(
         ...,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
     )
     count: np.int32 = Field(
-        ..., description="""Number of data samples available in this time series, during this epoch"""
+        ...,
+        description="""Number of data samples available in this time series, during this epoch""",
     )
     timeseries: TimeSeries = Field(..., description="""The TimeSeries that this index applies to""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -117,7 +140,9 @@ class Image(NWBData):
     An abstract data type for an image. Shape can be 2-D (x, y), or 3-D where the third dimension can have three or four elements, e.g. (x, y, (r, g, b)) or (x, y, (r, g, b, a)).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
     resolution: Optional[np.float32] = Field(
@@ -138,7 +163,9 @@ class ImageReferences(NWBData):
     Ordered dataset of references to Image objects.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -148,7 +175,9 @@ class NWBContainer(Container):
     An abstract data type for a generic container storing collections of data and metadata. Base type for all data and metadata containers.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -158,7 +187,9 @@ class NWBDataInterface(NWBContainer):
     An abstract data type for a generic container storing collections of data, as opposed to metadata.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -168,7 +199,9 @@ class TimeSeries(NWBDataInterface):
     General purpose time series.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
     description: Optional[str] = Field(None, description="""Description of the time series.""")
@@ -197,7 +230,9 @@ class TimeSeries(NWBDataInterface):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -213,7 +248,8 @@ class TimeSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     conversion: Optional[np.float32] = Field(
         None,
@@ -254,10 +290,14 @@ class TimeSeriesStartingTime(ConfiguredBaseModel):
 
     name: Literal["starting_time"] = Field(
         "starting_time",
-        json_schema_extra={"linkml_meta": {"equals_string": "starting_time", "ifabsent": "string(starting_time)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "starting_time", "ifabsent": "string(starting_time)"}
+        },
     )
     rate: Optional[np.float32] = Field(None, description="""Sampling rate, in Hz.""")
-    unit: Optional[str] = Field(None, description="""Unit of measurement for time, which is fixed to 'seconds'.""")
+    unit: Optional[str] = Field(
+        None, description="""Unit of measurement for time, which is fixed to 'seconds'."""
+    )
     value: np.float64 = Field(...)
 
 
@@ -269,7 +309,8 @@ class TimeSeriesSync(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base"})
 
     name: Literal["sync"] = Field(
-        "sync", json_schema_extra={"linkml_meta": {"equals_string": "sync", "ifabsent": "string(sync)"}}
+        "sync",
+        json_schema_extra={"linkml_meta": {"equals_string": "sync", "ifabsent": "string(sync)"}},
     )
 
 
@@ -278,10 +319,15 @@ class ProcessingModule(NWBContainer):
     A collection of processed data.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     children: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
-        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}}
+        None,
+        json_schema_extra={
+            "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}
+        },
     )
     name: str = Field(...)
 
@@ -291,15 +337,21 @@ class Images(NWBDataInterface):
     A collection of images with an optional way to specify the order of the images using the \"order_of_images\" dataset. An order must be specified if the images are referenced by index, e.g., from an IndexSeries.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field("Images", json_schema_extra={"linkml_meta": {"ifabsent": "string(Images)"}})
-    description: Optional[str] = Field(None, description="""Description of this collection of images.""")
+    description: Optional[str] = Field(
+        None, description="""Description of this collection of images."""
+    )
     image: List[Image] = Field(..., description="""Images stored in this collection.""")
     order_of_images: Named[Optional[ImageReferences]] = Field(
         None,
         description="""Ordered dataset of references to Image objects stored in the parent group. Each Image object in the Images group should be stored once and only once, so the dataset should have the same length as the number of images.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
 
 

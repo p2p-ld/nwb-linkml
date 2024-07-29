@@ -19,7 +19,12 @@ from ...core.v2_2_1.core_nwb_base import (
     ProcessingModule,
     Images,
 )
-from ...hdmf_common.v1_1_2.hdmf_common_sparse import CSRMatrix, CSRMatrixIndices, CSRMatrixIndptr, CSRMatrixData
+from ...hdmf_common.v1_1_2.hdmf_common_sparse import (
+    CSRMatrix,
+    CSRMatrixIndices,
+    CSRMatrixIndptr,
+    CSRMatrixData,
+)
 from ...hdmf_common.v1_1_2.hdmf_common_table import (
     Data,
     Index,
@@ -45,7 +50,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -101,7 +108,9 @@ class GrayscaleImage(Image):
     A grayscale image.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
     resolution: Optional[np.float32] = Field(
@@ -122,7 +131,9 @@ class RGBImage(Image):
     A color image.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
     resolution: Optional[np.float32] = Field(
@@ -143,7 +154,9 @@ class RGBAImage(Image):
     A color image with transparency.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
     resolution: Optional[np.float32] = Field(
@@ -164,11 +177,16 @@ class ImageSeries(TimeSeries):
     General image data that is common between acquisition and stimulus time series. Sometimes the image data is stored in the file in a raw format while other times it will be stored as a series of external image files in the host file system. The data field will either be binary data, if the data is stored in the NWB file, or empty, if the data is stored in an external image stack. [frame][x][y] or [frame][x][y][z].
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: Optional[
-        Union[NDArray[Shape["* frame, * x, * y"], np.number], NDArray[Shape["* frame, * x, * y, * z"], np.number]]
+        Union[
+            NDArray[Shape["* frame, * x, * y"], np.number],
+            NDArray[Shape["* frame, * x, * y, * z"], np.number],
+        ]
     ] = Field(None, description="""Binary data representing images across frames.""")
     dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
         None,
@@ -205,7 +223,9 @@ class ImageSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -222,7 +242,9 @@ class ImageSeriesExternalFile(ConfiguredBaseModel):
 
     name: Literal["external_file"] = Field(
         "external_file",
-        json_schema_extra={"linkml_meta": {"equals_string": "external_file", "ifabsent": "string(external_file)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "external_file", "ifabsent": "string(external_file)"}
+        },
     )
     starting_frame: Optional[np.int32] = Field(
         None,
@@ -238,11 +260,16 @@ class ImageMaskSeries(ImageSeries):
     An alpha mask that is applied to a presented visual stimulus. The 'data' array contains an array of mask values that are applied to the displayed image. Mask values are stored as RGBA. Mask can vary with time. The timestamps array indicates the starting time of a mask, and that mask pattern continues until it's explicitly changed.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: Optional[
-        Union[NDArray[Shape["* frame, * x, * y"], np.number], NDArray[Shape["* frame, * x, * y, * z"], np.number]]
+        Union[
+            NDArray[Shape["* frame, * x, * y"], np.number],
+            NDArray[Shape["* frame, * x, * y, * z"], np.number],
+        ]
     ] = Field(None, description="""Binary data representing images across frames.""")
     dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
         None,
@@ -279,7 +306,9 @@ class ImageMaskSeries(ImageSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -292,19 +321,29 @@ class OpticalSeries(ImageSeries):
     Image data that is presented or recorded. A stimulus template movie will be stored only as an image. When the image is presented as stimulus, additional data is required, such as field of view (e.g., how much of the visual field the image covers, or how what is the area of the target being imaged). If the OpticalSeries represents acquired imaging data, orientation is also important.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
-    distance: Optional[np.float32] = Field(None, description="""Distance from camera/monitor to target/eye.""")
+    distance: Optional[np.float32] = Field(
+        None, description="""Distance from camera/monitor to target/eye."""
+    )
     field_of_view: Optional[
-        Union[NDArray[Shape["2 width_height"], np.float32], NDArray[Shape["3 width_height_depth"], np.float32]]
+        Union[
+            NDArray[Shape["2 width_height"], np.float32],
+            NDArray[Shape["3 width_height_depth"], np.float32],
+        ]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
     orientation: Optional[str] = Field(
         None,
         description="""Description of image relative to some reference frame (e.g., which way is up). Must also specify frame of reference.""",
     )
     data: Optional[
-        Union[NDArray[Shape["* frame, * x, * y"], np.number], NDArray[Shape["* frame, * x, * y, * z"], np.number]]
+        Union[
+            NDArray[Shape["* frame, * x, * y"], np.number],
+            NDArray[Shape["* frame, * x, * y, * z"], np.number],
+        ]
     ] = Field(None, description="""Binary data representing images across frames.""")
     dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
         None,
@@ -341,7 +380,9 @@ class OpticalSeries(ImageSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -354,7 +395,9 @@ class IndexSeries(TimeSeries):
     Stores indices to image frames stored in an ImageSeries. The purpose of the ImageIndexSeries is to allow a static image stack to be stored somewhere, and the images in the stack to be referenced out-of-order. This can be for the display of individual images, or of movie segments (as a movie is simply a series of images). The data field stores the index of the frame in the referenced ImageSeries, and the timestamps array indicates when that image was displayed.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.image", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: NDArray[Shape["* num_times"], np.int32] = Field(
@@ -384,7 +427,9 @@ class IndexSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,

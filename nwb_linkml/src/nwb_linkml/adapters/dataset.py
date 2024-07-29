@@ -1,12 +1,11 @@
 """
 Adapter for NWB datasets to linkml Classes
 """
+
 from abc import abstractmethod
 from typing import ClassVar, Optional, Type
 
-from linkml_runtime.linkml_model.meta import (
-    SlotDefinition, ArrayExpression
-)
+from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
 from nwb_linkml.adapters.adapter import BuildResult
 from nwb_linkml.adapters.array import ArrayAdapter
@@ -276,7 +275,7 @@ class MapListlike(DatasetMap):
         """
         dtype = ClassAdapter.handle_dtype(cls.dtype)
         return (
-            not cls.neurodata_type_inc != 'VectorData'
+            cls.neurodata_type_inc != "VectorData"
             and is_1d(cls)
             and dtype != "AnyType"
             and dtype not in flat_to_linkml
@@ -383,7 +382,7 @@ class MapArraylike(DatasetMap):
         dtype = ClassAdapter.handle_dtype(cls.dtype)
         return (
             cls.name
-            and (all([cls.dims, cls.shape]) or cls.neurodata_type_inc == 'VectorData')
+            and (all([cls.dims, cls.shape]) or cls.neurodata_type_inc == "VectorData")
             and not has_attrs(cls)
             and not is_compound(cls)
             and dtype in flat_to_linkml
@@ -398,7 +397,9 @@ class MapArraylike(DatasetMap):
         """
         if cls.neurodata_type_inc == "VectorData" and not (cls.dims and cls.shape):
             expressions = {
-                "array": ArrayExpression(minimum_number_dimensions=1, maximum_number_dimensions=False)
+                "array": ArrayExpression(
+                    minimum_number_dimensions=1, maximum_number_dimensions=False
+                )
             }
         else:
             array_adapter = ArrayAdapter(cls.dims, cls.shape)
@@ -545,6 +546,7 @@ class MapClassRange(DatasetMap):
     Datasets that are a simple named reference to another type without any
     additional modification to that type.
     """
+
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
@@ -572,7 +574,7 @@ class MapClassRange(DatasetMap):
             name=cls.name,
             description=cls.doc,
             range=f"{cls.neurodata_type_inc}",
-            annotations=[{'named': True}],
+            annotations=[{"named": True}],
             **QUANTITY_MAP[cls.quantity],
         )
         res = BuildResult(slots=[this_slot])
@@ -583,6 +585,7 @@ class MapClassRange(DatasetMap):
 # DynamicTable special cases
 # --------------------------------------------------
 
+
 class MapVectorClassRange(DatasetMap):
     """
     Map a ``VectorData`` class that is a reference to another class as simply
@@ -591,6 +594,10 @@ class MapVectorClassRange(DatasetMap):
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
+        """
+        Check that we are a VectorData object without any additional attributes
+        with a dtype that refers to another class
+        """
         dtype = ClassAdapter.handle_dtype(cls.dtype)
         return (
             cls.neurodata_type_inc == "VectorData"
@@ -605,6 +612,9 @@ class MapVectorClassRange(DatasetMap):
     def apply(
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
+        """
+        Create a slot that replaces the base class just as a list[ClassRef]
+        """
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,

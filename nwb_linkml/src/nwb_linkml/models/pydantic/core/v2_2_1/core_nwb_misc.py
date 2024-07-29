@@ -7,10 +7,23 @@ import sys
 import numpy as np
 from ...core.v2_2_1.core_nwb_base import TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
 from ...core.v2_2_1.core_nwb_ecephys import ElectrodeGroup
 from numpydantic import NDArray, Shape
-from ...hdmf_common.v1_1_2.hdmf_common_table import DynamicTable, VectorData, VectorIndex, DynamicTableRegion
+from ...hdmf_common.v1_1_2.hdmf_common_table import (
+    DynamicTable,
+    VectorData,
+    VectorIndex,
+    DynamicTableRegion,
+)
 
 metamodel_version = "None"
 version = "2.2.1"
@@ -25,7 +38,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -70,7 +85,12 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "core.nwb.misc/",
         "id": "core.nwb.misc",
-        "imports": ["core.nwb.base", "../../hdmf_common/v1_1_2/namespace", "core.nwb.ecephys", "core.nwb.language"],
+        "imports": [
+            "core.nwb.base",
+            "../../hdmf_common/v1_1_2/namespace",
+            "core.nwb.ecephys",
+            "core.nwb.language",
+        ],
         "name": "core.nwb.misc",
     }
 )
@@ -81,10 +101,14 @@ class AbstractFeatureSeries(TimeSeries):
     Abstract features, such as quantitative descriptions of sensory stimuli. The TimeSeries::data field is a 2D array, storing those features (e.g., for visual grating stimulus this might be orientation, spatial frequency and contrast). Null stimuli (eg, uniform gray) can be marked as being an independent feature (eg, 1.0 for gray, 0.0 for actual stimulus) or by storing NaNs for feature values, or through use of the TimeSeries::control fields. A set of features is considered to persist until the next set of features is defined. The final set of features stored should be the null set. This is useful when storing the raw stimulus is impractical.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.misc", "tree_root": True}
+    )
 
     name: str = Field(...)
-    data: AbstractFeatureSeriesData = Field(..., description="""Values of each feature at each time.""")
+    data: AbstractFeatureSeriesData = Field(
+        ..., description="""Values of each feature at each time."""
+    )
     feature_units: Optional[NDArray[Shape["* num_features"], str]] = Field(
         None,
         description="""Units of each feature.""",
@@ -117,7 +141,9 @@ class AbstractFeatureSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -133,14 +159,18 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
         description="""Since there can be different units for different features, store the units in 'feature_units'. The default value for this attribute is \"see 'feature_units'\".""",
     )
     array: Optional[
-        Union[NDArray[Shape["* num_times"], np.number], NDArray[Shape["* num_times, * num_features"], np.number]]
+        Union[
+            NDArray[Shape["* num_times"], np.number],
+            NDArray[Shape["* num_times, * num_features"], np.number],
+        ]
     ] = Field(None)
 
 
@@ -149,7 +179,9 @@ class AnnotationSeries(TimeSeries):
     Stores user annotations made during an experiment. The data[] field stores a text array, and timestamps are stored for each annotation (ie, interval=1). This is largely an alias to a standard TimeSeries storing a text array but that is identifiable as storing annotations in a machine-readable way.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.misc", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: NDArray[Shape["* num_times"], str] = Field(
@@ -179,7 +211,9 @@ class AnnotationSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -192,7 +226,9 @@ class IntervalSeries(TimeSeries):
     Stores intervals of data. The timestamps field stores the beginning and end of intervals. The data field stores whether the interval just started (>0 value) or ended (<0 value). Different interval types can be represented in the same series by using multiple key values (eg, 1 for feature A, 2 for feature B, 3 for feature C, etc). The field data stores an 8-bit integer. This is largely an alias of a standard TimeSeries but that is identifiable as representing time intervals in a machine-readable way.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.misc", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: NDArray[Shape["* num_times"], np.int8] = Field(
@@ -222,7 +258,9 @@ class IntervalSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -235,10 +273,14 @@ class DecompositionSeries(TimeSeries):
     Spectral analysis of a time series, e.g. of an LFP or a speech signal.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.misc", "tree_root": True}
+    )
 
     name: str = Field(...)
-    data: DecompositionSeriesData = Field(..., description="""Data decomposed into frequency bands.""")
+    data: DecompositionSeriesData = Field(
+        ..., description="""Data decomposed into frequency bands."""
+    )
     metric: str = Field(..., description="""The metric used, e.g. phase, amplitude, power.""")
     bands: DecompositionSeriesBands = Field(
         ...,
@@ -266,7 +308,9 @@ class DecompositionSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -282,7 +326,8 @@ class DecompositionSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
@@ -292,7 +337,13 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         None,
         json_schema_extra={
             "linkml_meta": {
-                "array": {"dimensions": [{"alias": "num_times"}, {"alias": "num_channels"}, {"alias": "num_bands"}]}
+                "array": {
+                    "dimensions": [
+                        {"alias": "num_times"},
+                        {"alias": "num_channels"},
+                        {"alias": "num_bands"},
+                    ]
+                }
             }
         },
     )
@@ -306,13 +357,16 @@ class DecompositionSeriesBands(DynamicTable):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
 
     name: Literal["bands"] = Field(
-        "bands", json_schema_extra={"linkml_meta": {"equals_string": "bands", "ifabsent": "string(bands)"}}
+        "bands",
+        json_schema_extra={"linkml_meta": {"equals_string": "bands", "ifabsent": "string(bands)"}},
     )
     band_name: NDArray[Any, str] = Field(
         ...,
         description="""Name of the band, e.g. theta.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     band_limits: NDArray[Shape["* num_bands, 2 low_high"], np.float32] = Field(
@@ -320,7 +374,12 @@ class DecompositionSeriesBands(DynamicTable):
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
         json_schema_extra={
             "linkml_meta": {
-                "array": {"dimensions": [{"alias": "num_bands"}, {"alias": "low_high", "exact_cardinality": 2}]}
+                "array": {
+                    "dimensions": [
+                        {"alias": "num_bands"},
+                        {"alias": "low_high", "exact_cardinality": 2},
+                    ]
+                }
             }
         },
     )
@@ -338,13 +397,17 @@ class DecompositionSeriesBands(DynamicTable):
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what is in this dynamic table."""
+    )
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(None, description="""Vector columns of this dynamic table.""")
+    vector_data: Optional[List[VectorData]] = Field(
+        None, description="""Vector columns of this dynamic table."""
+    )
     vector_index: Optional[List[VectorIndex]] = Field(
         None, description="""Indices for the vector columns of this dynamic table."""
     )
@@ -355,38 +418,55 @@ class Units(DynamicTable):
     Data about spiking units. Event times of observed units (e.g. cell, synapse, etc.) should be concatenated and stored in spike_times.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.misc", "tree_root": True}
+    )
 
     name: str = Field("Units", json_schema_extra={"linkml_meta": {"ifabsent": "string(Units)"}})
     spike_times_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index into the spike_times dataset.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
-    spike_times: Optional[UnitsSpikeTimes] = Field(None, description="""Spike times for each unit.""")
+    spike_times: Optional[UnitsSpikeTimes] = Field(
+        None, description="""Spike times for each unit."""
+    )
     obs_intervals_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index into the obs_intervals dataset.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], np.float64]] = Field(
         None,
         description="""Observation intervals for each unit.""",
         json_schema_extra={
             "linkml_meta": {
-                "array": {"dimensions": [{"alias": "num_intervals"}, {"alias": "start_end", "exact_cardinality": 2}]}
+                "array": {
+                    "dimensions": [
+                        {"alias": "num_intervals"},
+                        {"alias": "start_end", "exact_cardinality": 2},
+                    ]
+                }
             }
         },
     )
     electrodes_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index into electrodes.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     electrodes: Named[Optional[DynamicTableRegion]] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Electrode group that each spike unit came from."""
@@ -407,13 +487,17 @@ class Units(DynamicTable):
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what is in this dynamic table."""
+    )
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(None, description="""Vector columns of this dynamic table.""")
+    vector_data: Optional[List[VectorData]] = Field(
+        None, description="""Vector columns of this dynamic table."""
+    )
     vector_index: Optional[List[VectorIndex]] = Field(
         None, description="""Indices for the vector columns of this dynamic table."""
     )
@@ -428,13 +512,17 @@ class UnitsSpikeTimes(VectorData):
 
     name: Literal["spike_times"] = Field(
         "spike_times",
-        json_schema_extra={"linkml_meta": {"equals_string": "spike_times", "ifabsent": "string(spike_times)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "spike_times", "ifabsent": "string(spike_times)"}
+        },
     )
     resolution: Optional[np.float64] = Field(
         None,
         description="""The smallest possible difference between two spike times. Usually 1 divided by the acquisition sampling rate from which spike times were extracted, but could be larger if the acquisition time series was downsampled or smaller if the acquisition time series was smoothed/interpolated and it is possible for the spike time to be between samples.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
 
 
 # Model rebuild

@@ -119,7 +119,7 @@ class Adapter(BaseModel):
 
         Convenience wrapper around :meth:`.walk_field_values`
         """
-        return next(self.walk_field_values(self, 'neurodata_type_def', name))
+        return next(self.walk_field_values(self, "neurodata_type_def", name))
 
     def get_model_with_field(self, field: str) -> Generator[Union[Group, Dataset], None, None]:
         """

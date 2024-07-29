@@ -40,7 +40,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -68,10 +70,16 @@ linkml_meta = LinkMLMeta(
             "namespace": {"tag": "namespace", "value": "hdmf-experimental"},
         },
         "default_prefix": "hdmf-experimental/",
-        "description": "Experimental data structures provided by HDMF. These are not "
-        "guaranteed to be available in the future",
+        "description": (
+            "Experimental data structures provided by HDMF. These are not "
+            "guaranteed to be available in the future"
+        ),
         "id": "hdmf-experimental",
-        "imports": ["hdmf-experimental.experimental", "hdmf-experimental.resources", "hdmf-experimental.nwb.language"],
+        "imports": [
+            "hdmf-experimental.experimental",
+            "hdmf-experimental.resources",
+            "hdmf-experimental.nwb.language",
+        ],
         "name": "hdmf-experimental",
     }
 )

@@ -41,7 +41,15 @@ from ...core.v2_7_0.core_nwb_image import (
     IndexSeries,
 )
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
 from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
@@ -57,7 +65,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -119,7 +129,9 @@ class OnePhotonSeries(ImageSeries):
     Image stack recorded over time from 1-photon microscope.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     name: str = Field(...)
     pmt_gain: Optional[np.float32] = Field(None, description="""Photomultiplier gain.""")
@@ -133,13 +145,18 @@ class OnePhotonSeries(ImageSeries):
     binning: Optional[np.uint8] = Field(
         None, description="""Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc."""
     )
-    power: Optional[np.float32] = Field(None, description="""Power of the excitation in mW, if known.""")
-    intensity: Optional[np.float32] = Field(None, description="""Intensity of the excitation in mW/mm^2, if known.""")
-    data: Union[NDArray[Shape["* frame, * x, * y"], np.number], NDArray[Shape["* frame, * x, * y, * z"], np.number]] = (
-        Field(
-            ...,
-            description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
-        )
+    power: Optional[np.float32] = Field(
+        None, description="""Power of the excitation in mW, if known."""
+    )
+    intensity: Optional[np.float32] = Field(
+        None, description="""Intensity of the excitation in mW/mm^2, if known."""
+    )
+    data: Union[
+        NDArray[Shape["* frame, * x, * y"], np.number],
+        NDArray[Shape["* frame, * x, * y, * z"], np.number],
+    ] = Field(
+        ...,
+        description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
     dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
         None,
@@ -176,7 +193,9 @@ class OnePhotonSeries(ImageSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -189,7 +208,9 @@ class TwoPhotonSeries(ImageSeries):
     Image stack recorded over time from 2-photon microscope.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     name: str = Field(...)
     pmt_gain: Optional[np.float32] = Field(None, description="""Photomultiplier gain.""")
@@ -198,13 +219,17 @@ class TwoPhotonSeries(ImageSeries):
         description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     field_of_view: Optional[
-        Union[NDArray[Shape["2 width_height"], np.float32], NDArray[Shape["3 width_height_depth"], np.float32]]
+        Union[
+            NDArray[Shape["2 width_height"], np.float32],
+            NDArray[Shape["3 width_height_depth"], np.float32],
+        ]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
-    data: Union[NDArray[Shape["* frame, * x, * y"], np.number], NDArray[Shape["* frame, * x, * y, * z"], np.number]] = (
-        Field(
-            ...,
-            description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
-        )
+    data: Union[
+        NDArray[Shape["* frame, * x, * y"], np.number],
+        NDArray[Shape["* frame, * x, * y, * z"], np.number],
+    ] = Field(
+        ...,
+        description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
     dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
         None,
@@ -241,7 +266,9 @@ class TwoPhotonSeries(ImageSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -254,16 +281,21 @@ class RoiResponseSeries(TimeSeries):
     ROI responses over an imaging plane. The first dimension represents time. The second dimension, if present, represents ROIs.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     name: str = Field(...)
-    data: Union[NDArray[Shape["* num_times"], np.number], NDArray[Shape["* num_times, * num_rois"], np.number]] = Field(
-        ..., description="""Signals from ROIs."""
-    )
+    data: Union[
+        NDArray[Shape["* num_times"], np.number],
+        NDArray[Shape["* num_times, * num_rois"], np.number],
+    ] = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -287,7 +319,9 @@ class RoiResponseSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -300,7 +334,9 @@ class DfOverF(NWBDataInterface):
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     children: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
@@ -313,7 +349,9 @@ class Fluorescence(NWBDataInterface):
     Fluorescence information about a region of interest (ROI). Storage hierarchy of fluorescence should be the same as for segmentation (ie, same names for ROIs and for image planes).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     children: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
@@ -326,7 +364,9 @@ class ImageSegmentation(NWBDataInterface):
     Stores pixels in an image that represent different regions of interest (ROIs) or masks. All segmentation for a given imaging plane is stored together, with storage for multiple imaging planes (masks) supported. Each ROI is stored in its own subgroup, with the ROI group containing both a 2D mask and a list of pixels that make up this mask. Segments can also be used for masking neuropil. If segmentation is allowed to change with time, a new imaging plane (or module) is required and ROI names should remain consistent between them.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     children: Optional[List[PlaneSegmentation]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "PlaneSegmentation"}]}}
@@ -339,7 +379,9 @@ class PlaneSegmentation(DynamicTable):
     Results from image segmentation of a specific imaging plane.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     name: str = Field(...)
     image_mask: Optional[PlaneSegmentationImageMask] = Field(
@@ -349,7 +391,9 @@ class PlaneSegmentation(DynamicTable):
     pixel_mask_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index into pixel_mask.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
         None,
@@ -358,7 +402,9 @@ class PlaneSegmentation(DynamicTable):
     voxel_mask_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index into voxel_mask.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
         None,
@@ -373,7 +419,9 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what is in this dynamic table."""
+    )
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -393,9 +441,13 @@ class PlaneSegmentationImageMask(VectorData):
 
     name: Literal["image_mask"] = Field(
         "image_mask",
-        json_schema_extra={"linkml_meta": {"equals_string": "image_mask", "ifabsent": "string(image_mask)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "image_mask", "ifabsent": "string(image_mask)"}
+        },
     )
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -415,12 +467,16 @@ class PlaneSegmentationPixelMask(VectorData):
 
     name: Literal["pixel_mask"] = Field(
         "pixel_mask",
-        json_schema_extra={"linkml_meta": {"equals_string": "pixel_mask", "ifabsent": "string(pixel_mask)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "pixel_mask", "ifabsent": "string(pixel_mask)"}
+        },
     )
     x: Optional[np.uint32] = Field(None, description="""Pixel x-coordinate.""")
     y: Optional[np.uint32] = Field(None, description="""Pixel y-coordinate.""")
     weight: Optional[np.float32] = Field(None, description="""Weight of the pixel.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -440,13 +496,17 @@ class PlaneSegmentationVoxelMask(VectorData):
 
     name: Literal["voxel_mask"] = Field(
         "voxel_mask",
-        json_schema_extra={"linkml_meta": {"equals_string": "voxel_mask", "ifabsent": "string(voxel_mask)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "voxel_mask", "ifabsent": "string(voxel_mask)"}
+        },
     )
     x: Optional[np.uint32] = Field(None, description="""Voxel x-coordinate.""")
     y: Optional[np.uint32] = Field(None, description="""Voxel y-coordinate.""")
     z: Optional[np.uint32] = Field(None, description="""Voxel z-coordinate.""")
     weight: Optional[np.float32] = Field(None, description="""Weight of the voxel.""")
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -462,7 +522,9 @@ class ImagingPlane(NWBContainer):
     An imaging plane and its metadata.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     children: Optional[List[OpticalChannel]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "OpticalChannel"}]}}
@@ -475,11 +537,15 @@ class OpticalChannel(NWBContainer):
     An optical channel used to record from an imaging plane.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     name: str = Field(...)
     description: str = Field(..., description="""Description or other notes about the channel.""")
-    emission_lambda: np.float32 = Field(..., description="""Emission wavelength for channel, in nm.""")
+    emission_lambda: np.float32 = Field(
+        ..., description="""Emission wavelength for channel, in nm."""
+    )
 
 
 class MotionCorrection(NWBDataInterface):
@@ -487,7 +553,9 @@ class MotionCorrection(NWBDataInterface):
     An image stack where all frames are shifted (registered) to a common coordinate system, to account for movement and drift between frames. Note: each frame at each point in time is assumed to be 2-D (has only x & y dimensions).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     children: Optional[List[CorrectedImageStack]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "CorrectedImageStack"}]}}
@@ -500,10 +568,14 @@ class CorrectedImageStack(NWBDataInterface):
     Results from motion correction of an image stack.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ophys", "tree_root": True}
+    )
 
     name: str = Field(...)
-    corrected: ImageSeries = Field(..., description="""Image stack with frames shifted to the common coordinates.""")
+    corrected: ImageSeries = Field(
+        ..., description="""Image stack with frames shifted to the common coordinates."""
+    )
     xy_translation: TimeSeries = Field(
         ...,
         description="""Stores the x,y delta necessary to align each frame to the common coordinates, for example, to align each frame to a reference image.""",

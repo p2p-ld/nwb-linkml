@@ -22,7 +22,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -62,14 +64,18 @@ class Device(NWBContainer):
     Metadata about a data acquisition device, e.g., recording system, electrode, microscope.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.device", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.device", "tree_root": True}
+    )
 
     name: str = Field(...)
     description: Optional[str] = Field(
         None,
         description="""Description of the device (e.g., model, firmware version, processing software version, etc.) as free-form text.""",
     )
-    manufacturer: Optional[str] = Field(None, description="""The name of the manufacturer of the device.""")
+    manufacturer: Optional[str] = Field(
+        None, description="""The name of the manufacturer of the device."""
+    )
 
 
 # Model rebuild

@@ -21,7 +21,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -61,7 +63,9 @@ class CSRMatrix(ConfiguredBaseModel):
     a compressed sparse row matrix
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-common.sparse", "tree_root": True}
+    )
 
     name: str = Field(...)
     shape: Optional[int] = Field(None, description="""the shape of this sparse matrix""")
@@ -78,7 +82,10 @@ class CSRMatrixIndices(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse"})
 
     name: Literal["indices"] = Field(
-        "indices", json_schema_extra={"linkml_meta": {"equals_string": "indices", "ifabsent": "string(indices)"}}
+        "indices",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "indices", "ifabsent": "string(indices)"}
+        },
     )
 
 
@@ -90,7 +97,10 @@ class CSRMatrixIndptr(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse"})
 
     name: Literal["indptr"] = Field(
-        "indptr", json_schema_extra={"linkml_meta": {"equals_string": "indptr", "ifabsent": "string(indptr)"}}
+        "indptr",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "indptr", "ifabsent": "string(indptr)"}
+        },
     )
 
 
@@ -102,7 +112,8 @@ class CSRMatrixData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
 
 

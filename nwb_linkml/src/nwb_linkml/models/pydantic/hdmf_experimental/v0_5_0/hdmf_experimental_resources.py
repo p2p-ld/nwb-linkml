@@ -31,7 +31,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -71,21 +73,31 @@ class HERD(Container):
     HDMF External Resources Data Structure. A set of six tables for tracking external resource references in a file or across multiple files.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.resources", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-experimental.resources", "tree_root": True}
+    )
 
     name: str = Field(...)
     keys: HERDKeys = Field(
-        ..., description="""A table for storing user terms that are used to refer to external resources."""
+        ...,
+        description="""A table for storing user terms that are used to refer to external resources.""",
     )
-    files: HERDFiles = Field(..., description="""A table for storing object ids of files used in external resources.""")
+    files: HERDFiles = Field(
+        ..., description="""A table for storing object ids of files used in external resources."""
+    )
     entities: HERDEntities = Field(
         ..., description="""A table for mapping user terms (i.e., keys) to resource entities."""
     )
     objects: HERDObjects = Field(
-        ..., description="""A table for identifying which objects in a file contain references to external resources."""
+        ...,
+        description="""A table for identifying which objects in a file contain references to external resources.""",
     )
-    object_keys: HERDObjectKeys = Field(..., description="""A table for identifying which objects use which keys.""")
-    entity_keys: HERDEntityKeys = Field(..., description="""A table for identifying which keys use which entity.""")
+    object_keys: HERDObjectKeys = Field(
+        ..., description="""A table for identifying which objects use which keys."""
+    )
+    entity_keys: HERDEntityKeys = Field(
+        ..., description="""A table for identifying which keys use which entity."""
+    )
 
 
 class HERDKeys(Data):
@@ -96,7 +108,8 @@ class HERDKeys(Data):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.resources"})
 
     name: Literal["keys"] = Field(
-        "keys", json_schema_extra={"linkml_meta": {"equals_string": "keys", "ifabsent": "string(keys)"}}
+        "keys",
+        json_schema_extra={"linkml_meta": {"equals_string": "keys", "ifabsent": "string(keys)"}},
     )
     key: str = Field(
         ...,
@@ -112,10 +125,12 @@ class HERDFiles(Data):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.resources"})
 
     name: Literal["files"] = Field(
-        "files", json_schema_extra={"linkml_meta": {"equals_string": "files", "ifabsent": "string(files)"}}
+        "files",
+        json_schema_extra={"linkml_meta": {"equals_string": "files", "ifabsent": "string(files)"}},
     )
     file_object_id: str = Field(
-        ..., description="""The object id (UUID) of a file that contains objects that refers to external resources."""
+        ...,
+        description="""The object id (UUID) of a file that contains objects that refers to external resources.""",
     )
 
 
@@ -127,7 +142,10 @@ class HERDEntities(Data):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.resources"})
 
     name: Literal["entities"] = Field(
-        "entities", json_schema_extra={"linkml_meta": {"equals_string": "entities", "ifabsent": "string(entities)"}}
+        "entities",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "entities", "ifabsent": "string(entities)"}
+        },
     )
     entity_id: str = Field(
         ...,
@@ -147,7 +165,10 @@ class HERDObjects(Data):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.resources"})
 
     name: Literal["objects"] = Field(
-        "objects", json_schema_extra={"linkml_meta": {"equals_string": "objects", "ifabsent": "string(objects)"}}
+        "objects",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "objects", "ifabsent": "string(objects)"}
+        },
     )
     files_idx: np.uint64 = Field(
         ..., description="""The row index to the file in the `files` table containing the object."""
@@ -173,12 +194,16 @@ class HERDObjectKeys(Data):
 
     name: Literal["object_keys"] = Field(
         "object_keys",
-        json_schema_extra={"linkml_meta": {"equals_string": "object_keys", "ifabsent": "string(object_keys)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "object_keys", "ifabsent": "string(object_keys)"}
+        },
     )
     objects_idx: np.uint64 = Field(
         ..., description="""The row index to the object in the `objects` table that holds the key"""
     )
-    keys_idx: np.uint64 = Field(..., description="""The row index to the key in the `keys` table.""")
+    keys_idx: np.uint64 = Field(
+        ..., description="""The row index to the key in the `keys` table."""
+    )
 
 
 class HERDEntityKeys(Data):
@@ -190,10 +215,16 @@ class HERDEntityKeys(Data):
 
     name: Literal["entity_keys"] = Field(
         "entity_keys",
-        json_schema_extra={"linkml_meta": {"equals_string": "entity_keys", "ifabsent": "string(entity_keys)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "entity_keys", "ifabsent": "string(entity_keys)"}
+        },
     )
-    entities_idx: np.uint64 = Field(..., description="""The row index to the entity in the `entities` table.""")
-    keys_idx: np.uint64 = Field(..., description="""The row index to the key in the `keys` table.""")
+    entities_idx: np.uint64 = Field(
+        ..., description="""The row index to the entity in the `entities` table."""
+    )
+    keys_idx: np.uint64 = Field(
+        ..., description="""The row index to the key in the `keys` table."""
+    )
 
 
 # Model rebuild

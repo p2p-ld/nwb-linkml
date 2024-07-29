@@ -23,7 +23,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -79,7 +81,9 @@ class NWBData(Data):
     An abstract data type for a dataset.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -89,7 +93,9 @@ class Image(NWBData):
     An abstract data type for an image. Shape can be 2-D (x, y), or 3-D where the third dimension can have three or four elements, e.g. (x, y, (r, g, b)) or (x, y, (r, g, b, a)).
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
     resolution: Optional[np.float32] = Field(
@@ -110,7 +116,9 @@ class NWBContainer(Container):
     An abstract data type for a generic container storing collections of data and metadata. Base type for all data and metadata containers.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -120,7 +128,9 @@ class NWBDataInterface(NWBContainer):
     An abstract data type for a generic container storing collections of data, as opposed to metadata.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -130,7 +140,9 @@ class TimeSeries(NWBDataInterface):
     General purpose time series.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field(...)
     description: Optional[str] = Field(None, description="""Description of the time series.""")
@@ -159,7 +171,9 @@ class TimeSeries(NWBDataInterface):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -175,7 +189,8 @@ class TimeSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     conversion: Optional[np.float32] = Field(
         None,
@@ -208,10 +223,14 @@ class TimeSeriesStartingTime(ConfiguredBaseModel):
 
     name: Literal["starting_time"] = Field(
         "starting_time",
-        json_schema_extra={"linkml_meta": {"equals_string": "starting_time", "ifabsent": "string(starting_time)"}},
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "starting_time", "ifabsent": "string(starting_time)"}
+        },
     )
     rate: Optional[np.float32] = Field(None, description="""Sampling rate, in Hz.""")
-    unit: Optional[str] = Field(None, description="""Unit of measurement for time, which is fixed to 'seconds'.""")
+    unit: Optional[str] = Field(
+        None, description="""Unit of measurement for time, which is fixed to 'seconds'."""
+    )
     value: np.float64 = Field(...)
 
 
@@ -223,7 +242,8 @@ class TimeSeriesSync(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base"})
 
     name: Literal["sync"] = Field(
-        "sync", json_schema_extra={"linkml_meta": {"equals_string": "sync", "ifabsent": "string(sync)"}}
+        "sync",
+        json_schema_extra={"linkml_meta": {"equals_string": "sync", "ifabsent": "string(sync)"}},
     )
 
 
@@ -232,10 +252,15 @@ class ProcessingModule(NWBContainer):
     A collection of processed data.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     children: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
-        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}}
+        None,
+        json_schema_extra={
+            "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}
+        },
     )
     name: str = Field(...)
 
@@ -245,10 +270,14 @@ class Images(NWBDataInterface):
     A collection of images.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.base", "tree_root": True}
+    )
 
     name: str = Field("Images", json_schema_extra={"linkml_meta": {"ifabsent": "string(Images)"}})
-    description: Optional[str] = Field(None, description="""Description of this collection of images.""")
+    description: Optional[str] = Field(
+        None, description="""Description of this collection of images."""
+    )
     image: List[Image] = Field(..., description="""Images stored in this collection.""")
 
 

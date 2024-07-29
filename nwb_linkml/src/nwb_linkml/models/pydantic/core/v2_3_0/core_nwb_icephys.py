@@ -29,7 +29,15 @@ from ...core.v2_3_0.core_nwb_base import (
     Images,
 )
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
 from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
@@ -45,7 +53,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -90,7 +100,12 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "core.nwb.icephys/",
         "id": "core.nwb.icephys",
-        "imports": ["core.nwb.base", "core.nwb.device", "../../hdmf_common/v1_5_0/namespace", "core.nwb.language"],
+        "imports": [
+            "core.nwb.base",
+            "core.nwb.device",
+            "../../hdmf_common/v1_5_0/namespace",
+            "core.nwb.language",
+        ],
         "name": "core.nwb.icephys",
     }
 )
@@ -101,7 +116,9 @@ class PatchClampSeries(TimeSeries):
     An abstract base class for patch-clamp data - stimulus or response, current or voltage.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     stimulus_description: Optional[str] = Field(
@@ -112,7 +129,8 @@ class PatchClampSeries(TimeSeries):
     )
     data: PatchClampSeriesData = Field(..., description="""Recorded voltage or current.""")
     gain: Optional[np.float32] = Field(
-        None, description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp)."""
+        None,
+        description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -136,7 +154,9 @@ class PatchClampSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -152,7 +172,8 @@ class PatchClampSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
@@ -168,13 +189,17 @@ class CurrentClampSeries(PatchClampSeries):
     Voltage data from an intracellular current-clamp recording. A corresponding CurrentClampStimulusSeries (stored separately as a stimulus) is used to store the current injected.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
     bias_current: Optional[np.float32] = Field(None, description="""Bias current, in amps.""")
     bridge_balance: Optional[np.float32] = Field(None, description="""Bridge balance, in ohms.""")
-    capacitance_compensation: Optional[np.float32] = Field(None, description="""Capacitance compensation, in farads.""")
+    capacitance_compensation: Optional[np.float32] = Field(
+        None, description="""Capacitance compensation, in farads."""
+    )
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
@@ -182,7 +207,8 @@ class CurrentClampSeries(PatchClampSeries):
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     gain: Optional[np.float32] = Field(
-        None, description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp)."""
+        None,
+        description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -206,7 +232,9 @@ class CurrentClampSeries(PatchClampSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -222,7 +250,8 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
@@ -236,14 +265,19 @@ class IZeroClampSeries(CurrentClampSeries):
     Voltage data from an intracellular recording when all current and amplifier settings are off (i.e., CurrentClampSeries fields will be zero). There is no CurrentClampStimulusSeries associated with an IZero series because the amplifier is disconnected and no stimulus can reach the cell.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     stimulus_description: Optional[str] = Field(
-        None, description="""An IZeroClampSeries has no stimulus, so this attribute is automatically set to \"N/A\""""
+        None,
+        description="""An IZeroClampSeries has no stimulus, so this attribute is automatically set to \"N/A\"""",
     )
     bias_current: np.float32 = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
-    bridge_balance: np.float32 = Field(..., description="""Bridge balance, in ohms, fixed to 0.0.""")
+    bridge_balance: np.float32 = Field(
+        ..., description="""Bridge balance, in ohms, fixed to 0.0."""
+    )
     capacitance_compensation: np.float32 = Field(
         ..., description="""Capacitance compensation, in farads, fixed to 0.0."""
     )
@@ -252,7 +286,8 @@ class IZeroClampSeries(CurrentClampSeries):
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     gain: Optional[np.float32] = Field(
-        None, description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp)."""
+        None,
+        description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -276,7 +311,9 @@ class IZeroClampSeries(CurrentClampSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -289,7 +326,9 @@ class CurrentClampStimulusSeries(PatchClampSeries):
     Stimulus current applied during current clamp recording.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: CurrentClampStimulusSeriesData = Field(..., description="""Stimulus current applied.""")
@@ -300,7 +339,8 @@ class CurrentClampStimulusSeries(PatchClampSeries):
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     gain: Optional[np.float32] = Field(
-        None, description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp)."""
+        None,
+        description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -324,7 +364,9 @@ class CurrentClampStimulusSeries(PatchClampSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -340,7 +382,8 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
@@ -354,7 +397,9 @@ class VoltageClampSeries(PatchClampSeries):
     Current data from an intracellular voltage-clamp recording. A corresponding VoltageClampStimulusSeries (stored separately as a stimulus) is used to store the voltage injected.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: VoltageClampSeriesData = Field(..., description="""Recorded current.""")
@@ -376,8 +421,8 @@ class VoltageClampSeries(PatchClampSeries):
     whole_cell_capacitance_comp: Optional[VoltageClampSeriesWholeCellCapacitanceComp] = Field(
         None, description="""Whole cell capacitance compensation, in farads."""
     )
-    whole_cell_series_resistance_comp: Optional[VoltageClampSeriesWholeCellSeriesResistanceComp] = Field(
-        None, description="""Whole cell series resistance compensation, in ohms."""
+    whole_cell_series_resistance_comp: Optional[VoltageClampSeriesWholeCellSeriesResistanceComp] = (
+        Field(None, description="""Whole cell series resistance compensation, in ohms.""")
     )
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
@@ -386,7 +431,8 @@ class VoltageClampSeries(PatchClampSeries):
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     gain: Optional[np.float32] = Field(
-        None, description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp)."""
+        None,
+        description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -410,7 +456,9 @@ class VoltageClampSeries(PatchClampSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -426,7 +474,8 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
@@ -445,11 +494,15 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
     name: Literal["capacitance_fast"] = Field(
         "capacitance_fast",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "capacitance_fast", "ifabsent": "string(capacitance_fast)"}
+            "linkml_meta": {
+                "equals_string": "capacitance_fast",
+                "ifabsent": "string(capacitance_fast)",
+            }
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'."""
+        None,
+        description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
     )
     value: np.float32 = Field(...)
 
@@ -464,11 +517,15 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
     name: Literal["capacitance_slow"] = Field(
         "capacitance_slow",
         json_schema_extra={
-            "linkml_meta": {"equals_string": "capacitance_slow", "ifabsent": "string(capacitance_slow)"}
+            "linkml_meta": {
+                "equals_string": "capacitance_slow",
+                "ifabsent": "string(capacitance_slow)",
+            }
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'."""
+        None,
+        description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
     )
     value: np.float32 = Field(...)
 
@@ -490,7 +547,8 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'."""
+        None,
+        description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""",
     )
     value: np.float32 = Field(...)
 
@@ -512,7 +570,8 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'."""
+        None,
+        description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""",
     )
     value: np.float32 = Field(...)
 
@@ -534,7 +593,8 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'."""
+        None,
+        description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""",
     )
     value: np.float32 = Field(...)
 
@@ -556,7 +616,8 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'."""
+        None,
+        description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""",
     )
     value: np.float32 = Field(...)
 
@@ -578,7 +639,8 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
         },
     )
     unit: Optional[str] = Field(
-        None, description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'."""
+        None,
+        description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""",
     )
     value: np.float32 = Field(...)
 
@@ -588,7 +650,9 @@ class VoltageClampStimulusSeries(PatchClampSeries):
     Stimulus voltage applied during a voltage clamp recording.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     data: VoltageClampStimulusSeriesData = Field(..., description="""Stimulus voltage applied.""")
@@ -599,7 +663,8 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     gain: Optional[np.float32] = Field(
-        None, description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp)."""
+        None,
+        description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -623,7 +688,9 @@ class VoltageClampStimulusSeries(PatchClampSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -639,7 +706,8 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
 
     name: Literal["data"] = Field(
-        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
         None,
@@ -653,19 +721,27 @@ class IntracellularElectrode(NWBContainer):
     An intracellular electrode and its metadata.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
-    description: str = Field(..., description="""Description of electrode (e.g.,  whole-cell, sharp, etc.).""")
+    description: str = Field(
+        ..., description="""Description of electrode (e.g.,  whole-cell, sharp, etc.)."""
+    )
     filtering: Optional[str] = Field(None, description="""Electrode specific filtering.""")
-    initial_access_resistance: Optional[str] = Field(None, description="""Initial access resistance.""")
+    initial_access_resistance: Optional[str] = Field(
+        None, description="""Initial access resistance."""
+    )
     location: Optional[str] = Field(
         None,
         description="""Location of the electrode. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
     )
     resistance: Optional[str] = Field(None, description="""Electrode resistance, in ohms.""")
     seal: Optional[str] = Field(None, description="""Information about seal used for recording.""")
-    slice: Optional[str] = Field(None, description="""Information about slice used for recording.""")
+    slice: Optional[str] = Field(
+        None, description="""Information about slice used for recording."""
+    )
 
 
 class SweepTable(DynamicTable):
@@ -673,14 +749,18 @@ class SweepTable(DynamicTable):
     The table which groups different PatchClampSeries together.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.icephys", "tree_root": True}
+    )
 
     name: str = Field(...)
     sweep_number: NDArray[Any, np.uint32] = Field(
         ...,
         description="""Sweep number of the PatchClampSeries in that row.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     series: List[PatchClampSeries] = Field(
@@ -689,13 +769,17 @@ class SweepTable(DynamicTable):
     series_index: Named[VectorIndex] = Field(
         ...,
         description="""Index for series.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what is in this dynamic table."""
+    )
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",

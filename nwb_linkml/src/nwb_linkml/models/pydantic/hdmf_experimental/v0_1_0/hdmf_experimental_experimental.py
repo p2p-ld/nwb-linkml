@@ -31,7 +31,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -71,13 +73,18 @@ class EnumData(VectorData):
     Data that come from a fixed set of values. A data value of i corresponds to the i-th value in the VectorData referenced by the 'elements' attribute.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.experimental", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-experimental.experimental", "tree_root": True}
+    )
 
     name: str = Field(...)
     elements: Optional[VectorData] = Field(
-        None, description="""Reference to the VectorData object that contains the enumerable elements"""
+        None,
+        description="""Reference to the VectorData object that contains the enumerable elements""",
     )
-    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what these vectors represent."""
+    )
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],

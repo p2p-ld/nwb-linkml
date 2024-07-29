@@ -21,7 +21,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -61,7 +63,9 @@ class Data(ConfiguredBaseModel):
     An abstract data type for a dataset.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-common.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -71,7 +75,9 @@ class Container(ConfiguredBaseModel):
     An abstract data type for a group storing collections of data and metadata. Base type for all data and metadata containers.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-common.base", "tree_root": True}
+    )
 
     name: str = Field(...)
 
@@ -81,7 +87,9 @@ class SimpleMultiContainer(Container):
     A simple Container for holding onto multiple containers.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.base", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "hdmf-common.base", "tree_root": True}
+    )
 
     children: Optional[List[Container]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "Container"}]}}

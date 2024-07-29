@@ -7,7 +7,15 @@ import sys
 import numpy as np
 from ...core.v2_7_0.core_nwb_base import TimeSeriesReferenceVectorData
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
 from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_8_0.hdmf_common_table import DynamicTable, VectorIndex, VectorData
 
@@ -24,7 +32,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -80,50 +90,66 @@ class TimeIntervals(DynamicTable):
     A container for aggregating epoch data and the TimeSeries that each epoch applies to.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.epoch", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.epoch", "tree_root": True}
+    )
 
     name: str = Field(...)
     start_time: NDArray[Any, np.float32] = Field(
         ...,
         description="""Start time of epoch, in seconds.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     stop_time: NDArray[Any, np.float32] = Field(
         ...,
         description="""Stop time of epoch, in seconds.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     tags: Optional[NDArray[Any, str]] = Field(
         None,
         description="""User-defined tags that identify or categorize events.""",
         json_schema_extra={
-            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
         },
     )
     tags_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index for tags.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     timeseries: Named[Optional[TimeSeriesReferenceVectorData]] = Field(
         None,
         description="""An index into a TimeSeries object.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     timeseries_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index for timeseries.""",
-        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
+    description: Optional[str] = Field(
+        None, description="""Description of what is in this dynamic table."""
+    )
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",

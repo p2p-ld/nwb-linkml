@@ -31,7 +31,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -61,7 +63,12 @@ linkml_meta = LinkMLMeta(
         "default_prefix": "hdmf-common/",
         "description": "Common data structures provided by HDMF",
         "id": "hdmf-common",
-        "imports": ["hdmf-common.base", "hdmf-common.table", "hdmf-common.sparse", "hdmf-common.nwb.language"],
+        "imports": [
+            "hdmf-common.base",
+            "hdmf-common.table",
+            "hdmf-common.sparse",
+            "hdmf-common.nwb.language",
+        ],
         "name": "hdmf-common",
     }
 )

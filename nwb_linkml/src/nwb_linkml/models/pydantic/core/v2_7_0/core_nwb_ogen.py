@@ -8,7 +8,12 @@ from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
 from numpydantic import NDArray, Shape
-from ...core.v2_7_0.core_nwb_base import TimeSeries, TimeSeriesStartingTime, TimeSeriesSync, NWBContainer
+from ...core.v2_7_0.core_nwb_base import (
+    TimeSeries,
+    TimeSeriesStartingTime,
+    TimeSeriesSync,
+    NWBContainer,
+)
 
 metamodel_version = "None"
 version = "2.7.0"
@@ -23,7 +28,9 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
+    hdf5_path: Optional[str] = Field(
+        None, description="The absolute path that this object is stored in an NWB file"
+    )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
@@ -79,10 +86,15 @@ class OptogeneticSeries(TimeSeries):
     An optogenetic stimulus.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ogen", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ogen", "tree_root": True}
+    )
 
     name: str = Field(...)
-    data: Union[NDArray[Shape["* num_times"], np.number], NDArray[Shape["* num_times, * num_rois"], np.number]] = Field(
+    data: Union[
+        NDArray[Shape["* num_times"], np.number],
+        NDArray[Shape["* num_times, * num_rois"], np.number],
+    ] = Field(
         ...,
         description="""Applied power for optogenetic stimulus, in watts. Shape can be 1D or 2D. 2D data is meant to be used in an extension of OptogeneticSeries that defines what the second dimension represents.""",
     )
@@ -108,7 +120,9 @@ class OptogeneticSeries(TimeSeries):
     control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
         None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}},
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -121,7 +135,9 @@ class OptogeneticStimulusSite(NWBContainer):
     A site of optogenetic stimulation.
     """
 
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ogen", "tree_root": True})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ogen", "tree_root": True}
+    )
 
     name: str = Field(...)
     description: str = Field(..., description="""Description of stimulation site.""")
