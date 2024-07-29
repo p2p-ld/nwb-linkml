@@ -12,7 +12,7 @@ Cleanup
 - [ ] Update pydantic generator
 - [ ] Restore regressions from stripping the generator
 - [x] Make any_of with array ranges work
-- [ ] PR upstream `equals_string` and `ifabsent` (if existing PR doesnt fix)
+- [ ] PR upstream `equals_string` and `ifabsent` (if existing PR doesn't fix)
 - [ ] Use the class rather than a string in _get_class_slot_range_origin:
       ```
       or inlined_as_list
