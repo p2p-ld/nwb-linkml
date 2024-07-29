@@ -42,7 +42,7 @@ from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.build import SlotResult
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
-from linkml.generators.pydanticgen.template import PydanticModule
+from linkml.generators.pydanticgen.template import PydanticModule, Import, ObjectImport
 from linkml_runtime.linkml_model.meta import (
     Annotation,
     AnonymousSlotExpression,
@@ -78,6 +78,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
     )
     split: bool = True
+    imports: list[Import] = field(default_factory=lambda: [Import(module="numpy", alias="np")])
 
     schema_map: Optional[Dict[str, SchemaDefinition]] = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""

@@ -1,32 +1,12 @@
 from __future__ import annotations
 from datetime import datetime, date
+from decimal import Decimal
 from enum import Enum
-from typing import (
-    Dict,
-    Optional,
-    Any,
-    Union,
-    ClassVar,
-    Annotated,
-    TypeVar,
-    List,
-    TYPE_CHECKING,
-)
-from pydantic import BaseModel as BaseModel, Field
-from pydantic import ConfigDict, BeforeValidator
-
-from numpydantic import Shape, NDArray
-from numpydantic.dtype import *
+import re
 import sys
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
-if TYPE_CHECKING:
-    import numpy as np
-
-
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+import numpy as np
 from ...hdmf_experimental.v0_1_0.hdmf_experimental_resources import (
     ExternalResources,
     ExternalResourcesKeys,
@@ -35,11 +15,8 @@ from ...hdmf_experimental.v0_1_0.hdmf_experimental_resources import (
     ExternalResourcesObjects,
     ExternalResourcesObjectKeys,
 )
-
-from ...hdmf_common.v1_5_0.hdmf_common_sparse import CSRMatrix
-
+from ...hdmf_common.v1_5_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
 from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container, SimpleMultiContainer
-
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     VectorData,
     VectorIndex,
@@ -48,10 +25,8 @@ from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTable,
     AlignedDynamicTable,
 )
-
 from ...hdmf_experimental.v0_1_0.hdmf_experimental_experimental import EnumData
-
-from .core_nwb_retinotopy import (
+from ...core.v2_6_0_alpha.core_nwb_retinotopy import (
     ImagingRetinotopy,
     ImagingRetinotopyAxis1PhaseMap,
     ImagingRetinotopyAxis1PowerMap,
@@ -61,8 +36,7 @@ from .core_nwb_retinotopy import (
     ImagingRetinotopySignMap,
     ImagingRetinotopyVasculatureImage,
 )
-
-from .core_nwb_base import (
+from ...core.v2_6_0_alpha.core_nwb_base import (
     NWBData,
     TimeSeriesReferenceVectorData,
     Image,
@@ -75,31 +49,25 @@ from .core_nwb_base import (
     TimeSeriesSync,
     ProcessingModule,
     Images,
-    ImagesOrderOfImages,
 )
-
-from .core_nwb_ophys import (
+from ...core.v2_6_0_alpha.core_nwb_ophys import (
     OnePhotonSeries,
     TwoPhotonSeries,
     RoiResponseSeries,
-    RoiResponseSeriesRois,
     DfOverF,
     Fluorescence,
     ImageSegmentation,
     PlaneSegmentation,
-    PlaneSegmentationPixelMaskIndex,
+    PlaneSegmentationImageMask,
     PlaneSegmentationPixelMask,
-    PlaneSegmentationVoxelMaskIndex,
     PlaneSegmentationVoxelMask,
     ImagingPlane,
     OpticalChannel,
     MotionCorrection,
     CorrectedImageStack,
 )
-
-from .core_nwb_device import Device
-
-from .core_nwb_image import (
+from ...core.v2_6_0_alpha.core_nwb_device import Device
+from ...core.v2_6_0_alpha.core_nwb_image import (
     GrayscaleImage,
     RGBImage,
     RGBAImage,
@@ -109,10 +77,8 @@ from .core_nwb_image import (
     OpticalSeries,
     IndexSeries,
 )
-
-from .core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
-
-from .core_nwb_icephys import (
+from ...core.v2_6_0_alpha.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
+from ...core.v2_6_0_alpha.core_nwb_icephys import (
     PatchClampSeries,
     PatchClampSeriesData,
     CurrentClampSeries,
@@ -133,33 +99,23 @@ from .core_nwb_icephys import (
     VoltageClampStimulusSeriesData,
     IntracellularElectrode,
     SweepTable,
-    SweepTableSeriesIndex,
     IntracellularElectrodesTable,
     IntracellularStimuliTable,
-    IntracellularStimuliTableStimulus,
     IntracellularResponsesTable,
-    IntracellularResponsesTableResponse,
     IntracellularRecordingsTable,
     SimultaneousRecordingsTable,
     SimultaneousRecordingsTableRecordings,
-    SimultaneousRecordingsTableRecordingsIndex,
     SequentialRecordingsTable,
     SequentialRecordingsTableSimultaneousRecordings,
-    SequentialRecordingsTableSimultaneousRecordingsIndex,
     RepetitionsTable,
     RepetitionsTableSequentialRecordings,
-    RepetitionsTableSequentialRecordingsIndex,
     ExperimentalConditionsTable,
     ExperimentalConditionsTableRepetitions,
-    ExperimentalConditionsTableRepetitionsIndex,
 )
-
-from .core_nwb_ecephys import (
+from ...core.v2_6_0_alpha.core_nwb_ecephys import (
     ElectricalSeries,
-    ElectricalSeriesElectrodes,
     SpikeEventSeries,
     FeatureExtraction,
-    FeatureExtractionElectrodes,
     EventDetection,
     EventWaveform,
     FilteredEphys,
@@ -169,8 +125,7 @@ from .core_nwb_ecephys import (
     ClusterWaveforms,
     Clustering,
 )
-
-from .core_nwb_behavior import (
+from ...core.v2_6_0_alpha.core_nwb_behavior import (
     SpatialSeries,
     SpatialSeriesData,
     BehavioralEpochs,
@@ -181,27 +136,18 @@ from .core_nwb_behavior import (
     CompassDirection,
     Position,
 )
-
-from .core_nwb_misc import (
+from ...core.v2_6_0_alpha.core_nwb_misc import (
     AbstractFeatureSeries,
     AbstractFeatureSeriesData,
     AnnotationSeries,
     IntervalSeries,
     DecompositionSeries,
     DecompositionSeriesData,
-    DecompositionSeriesSourceChannels,
     DecompositionSeriesBands,
     Units,
-    UnitsSpikeTimesIndex,
     UnitsSpikeTimes,
-    UnitsObsIntervalsIndex,
-    UnitsElectrodesIndex,
-    UnitsElectrodes,
-    UnitsWaveformsIndex,
-    UnitsWaveformsIndexIndex,
 )
-
-from .core_nwb_file import (
+from ...core.v2_6_0_alpha.core_nwb_file import (
     ScratchData,
     NWBFile,
     NWBFileStimulus,
@@ -214,34 +160,72 @@ from .core_nwb_file import (
     Subject,
     SubjectAge,
 )
-
-from .core_nwb_epoch import (
-    TimeIntervals,
-    TimeIntervalsTagsIndex,
-    TimeIntervalsTimeseries,
-    TimeIntervalsTimeseriesIndex,
-)
-
+from ...core.v2_6_0_alpha.core_nwb_epoch import TimeIntervals
 
 metamodel_version = "None"
 version = "2.6.0-alpha"
 
 
 class ConfiguredBaseModel(BaseModel):
-    hdf5_path: Optional[str] = Field(
-        None, description="The absolute path that this object is stored in an NWB file"
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        strict=False,
     )
-
+    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> "np.ndarray":
-        if hasattr(self, "array"):
-            return self.array[i]
-        else:
-            return super().__getitem__(i)
 
-    def __setitem__(self, i: slice | int, value: Any):
-        if hasattr(self, "array"):
-            self.array[i] = value
-        else:
-            super().__setitem__(i, value)
+class LinkMLMeta(RootModel):
+    root: Dict[str, Any] = {}
+    model_config = ConfigDict(frozen=True)
+
+    def __getattr__(self, key: str):
+        return getattr(self.root, key)
+
+    def __getitem__(self, key: str):
+        return self.root[key]
+
+    def __setitem__(self, key: str, value):
+        self.root[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.root
+
+
+linkml_meta = LinkMLMeta(
+    {
+        "annotations": {
+            "is_namespace": {"tag": "is_namespace", "value": True},
+            "namespace": {"tag": "namespace", "value": "core"},
+        },
+        "default_prefix": "core/",
+        "description": "NWB namespace",
+        "id": "core",
+        "imports": [
+            "core.nwb.base",
+            "core.nwb.device",
+            "core.nwb.epoch",
+            "core.nwb.image",
+            "core.nwb.file",
+            "core.nwb.misc",
+            "core.nwb.behavior",
+            "core.nwb.ecephys",
+            "core.nwb.icephys",
+            "core.nwb.ogen",
+            "core.nwb.ophys",
+            "core.nwb.retinotopy",
+            "core.nwb.language",
+            "../../hdmf_common/v1_5_0/namespace",
+            "../../hdmf_experimental/v0_1_0/namespace",
+        ],
+        "name": "core",
+    }
+)
+
+
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model

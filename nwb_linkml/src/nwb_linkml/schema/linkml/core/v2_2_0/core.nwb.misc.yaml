@@ -30,33 +30,32 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Values of each feature at each time.
-        multivalued: false
         range: AbstractFeatureSeries__data
         required: true
+        multivalued: false
       feature_units:
         name: feature_units
         description: Units of each feature.
-        multivalued: false
         array:
           dimensions:
           - alias: num_features
         range: text
         required: false
+        multivalued: false
       features:
         name: features
         description: Description of the features represented in TimeSeries::data.
-        multivalued: false
         array:
           dimensions:
           - alias: num_features
         range: text
         required: true
+        multivalued: false
     tree_root: true
   AbstractFeatureSeries__data:
     name: AbstractFeatureSeries__data
@@ -65,7 +64,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -96,18 +94,17 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Annotations made during an experiment.
-        multivalued: false
         array:
           dimensions:
           - alias: num_times
         range: text
         required: true
+        multivalued: false
     tree_root: true
   IntervalSeries:
     name: IntervalSeries
@@ -122,18 +119,17 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Use values >0 if interval started, <0 if interval ended.
-        multivalued: false
         array:
           dimensions:
           - alias: num_times
         range: int8
         required: true
+        multivalued: false
     tree_root: true
   DecompositionSeries:
     name: DecompositionSeries
@@ -142,28 +138,27 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Data decomposed into frequency bands.
-        multivalued: false
         range: DecompositionSeries__data
         required: true
+        multivalued: false
       metric:
         name: metric
         description: The metric used, e.g. phase, amplitude, power.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       bands:
         name: bands
         description: Table for describing the bands that this series was generated
           from. There should be one row in this table for each band.
-        multivalued: false
         range: DecompositionSeries__bands
         required: true
+        multivalued: false
     tree_root: true
   DecompositionSeries__data:
     name: DecompositionSeries__data
@@ -172,7 +167,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -199,20 +193,22 @@ classes:
       name:
         name: name
         ifabsent: string(bands)
-        identifier: true
         range: string
         required: true
         equals_string: bands
       band_name:
         name: band_name
         description: Name of the band, e.g. theta.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: true
+        multivalued: false
       band_limits:
         name: band_limits
         description: Low and high limit of each band in Hz. If it is a Gaussian filter,
           use 2 SD on either side of the center.
-        multivalued: false
         array:
           dimensions:
           - alias: num_bands
@@ -220,24 +216,25 @@ classes:
             exact_cardinality: 2
         range: float32
         required: true
+        multivalued: false
       band_mean:
         name: band_mean
         description: The mean Gaussian filters, in Hz.
-        multivalued: false
         array:
           dimensions:
           - alias: num_bands
         range: float32
         required: true
+        multivalued: false
       band_stdev:
         name: band_stdev
         description: The standard deviation of Gaussian filters, in Hz.
-        multivalued: false
         array:
           dimensions:
           - alias: num_bands
         range: float32
         required: true
+        multivalued: false
   Units:
     name: Units
     description: Data about spiking units. Event times of observed units (e.g. cell,
@@ -247,31 +244,37 @@ classes:
       name:
         name: name
         ifabsent: string(Units)
-        identifier: true
         range: string
         required: true
       spike_times_index:
         name: spike_times_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into the spike_times dataset.
-        multivalued: false
-        range: Units__spike_times_index
+        range: VectorIndex
         required: false
+        multivalued: false
       spike_times:
         name: spike_times
         description: Spike times for each unit.
-        multivalued: false
         range: Units__spike_times
         required: false
+        multivalued: false
       obs_intervals_index:
         name: obs_intervals_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into the obs_intervals dataset.
-        multivalued: false
-        range: Units__obs_intervals_index
+        range: VectorIndex
         required: false
+        multivalued: false
       obs_intervals:
         name: obs_intervals
         description: Observation intervals for each unit.
-        multivalued: false
         array:
           dimensions:
           - alias: num_intervals
@@ -279,29 +282,39 @@ classes:
             exact_cardinality: 2
         range: float64
         required: false
+        multivalued: false
       electrodes_index:
         name: electrodes_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into electrodes.
-        multivalued: false
-        range: Units__electrodes_index
+        range: VectorIndex
         required: false
+        multivalued: false
       electrodes:
         name: electrodes
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
-        multivalued: false
-        range: Units__electrodes
+        range: DynamicTableRegion
         required: false
+        multivalued: false
       electrode_group:
         name: electrode_group
         description: Electrode group that each spike unit came from.
-        multivalued: true
         range: ElectrodeGroup
+        required: false
+        multivalued: true
       waveform_mean:
         name: waveform_mean
         description: Spike waveform mean for each spike unit.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
         any_of:
         - array:
             dimensions:
@@ -315,9 +328,9 @@ classes:
       waveform_sd:
         name: waveform_sd
         description: Spike waveform standard deviation for each spike unit.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
         any_of:
         - array:
             dimensions:
@@ -329,18 +342,6 @@ classes:
             - alias: num_samples
             - alias: num_electrodes
     tree_root: true
-  Units__spike_times_index:
-    name: Units__spike_times_index
-    description: Index into the spike_times dataset.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(spike_times_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: spike_times_index
   Units__spike_times:
     name: Units__spike_times
     description: Spike times for each unit.
@@ -349,7 +350,6 @@ classes:
       name:
         name: name
         ifabsent: string(spike_times)
-        identifier: true
         range: string
         required: true
         equals_string: spike_times
@@ -361,39 +361,3 @@ classes:
           if the acquisition time series was smoothed/interpolated and it is possible
           for the spike time to be between samples.
         range: float64
-  Units__obs_intervals_index:
-    name: Units__obs_intervals_index
-    description: Index into the obs_intervals dataset.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(obs_intervals_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: obs_intervals_index
-  Units__electrodes_index:
-    name: Units__electrodes_index
-    description: Index into electrodes.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(electrodes_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: electrodes_index
-  Units__electrodes:
-    name: Units__electrodes
-    description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
-    is_a: DynamicTableRegion
-    attributes:
-      name:
-        name: name
-        ifabsent: string(electrodes)
-        identifier: true
-        range: string
-        required: true
-        equals_string: electrodes

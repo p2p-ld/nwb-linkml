@@ -1,57 +1,77 @@
 from __future__ import annotations
 from datetime import datetime, date
+from decimal import Decimal
 from enum import Enum
-from typing import (
-    Dict,
-    Optional,
-    Any,
-    Union,
-    ClassVar,
-    Annotated,
-    TypeVar,
-    List,
-    TYPE_CHECKING,
-)
-from pydantic import BaseModel as BaseModel, Field
-from pydantic import ConfigDict, BeforeValidator
-
-from numpydantic import Shape, NDArray
-from numpydantic.dtype import *
+import re
 import sys
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
-if TYPE_CHECKING:
-    import numpy as np
-
-
-from .hdmf_common_base import Container
-
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+import numpy as np
+from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container, SimpleMultiContainer
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "1.5.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    hdf5_path: Optional[str] = Field(
-        None, description="The absolute path that this object is stored in an NWB file"
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        strict=False,
     )
-
+    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> "np.ndarray":
-        if hasattr(self, "array"):
-            return self.array[i]
-        else:
-            return super().__getitem__(i)
 
-    def __setitem__(self, i: slice | int, value: Any):
-        if hasattr(self, "array"):
-            self.array[i] = value
-        else:
-            super().__setitem__(i, value)
+class LinkMLMeta(RootModel):
+    root: Dict[str, Any] = {}
+    model_config = ConfigDict(frozen=True)
+
+    def __getattr__(self, key: str):
+        return getattr(self.root, key)
+
+    def __getitem__(self, key: str):
+        return self.root[key]
+
+    def __setitem__(self, key: str, value):
+        self.root[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.root
+
+
+NUMPYDANTIC_VERSION = "1.2.1"
+
+ModelType = TypeVar("ModelType", bound=Type[BaseModel])
+
+
+def _get_name(item: BaseModel | dict, info: ValidationInfo):
+    assert isinstance(item, (BaseModel, dict))
+    name = info.field_name
+    if isinstance(item, BaseModel):
+        item.name = name
+    else:
+        item["name"] = name
+    return item
+
+
+Named = Annotated[ModelType, BeforeValidator(_get_name)]
+linkml_meta = LinkMLMeta(
+    {
+        "annotations": {
+            "is_namespace": {"tag": "is_namespace", "value": False},
+            "namespace": {"tag": "namespace", "value": "hdmf-common"},
+        },
+        "default_prefix": "hdmf-common.sparse/",
+        "id": "hdmf-common.sparse",
+        "imports": ["hdmf-common.base", "hdmf-common.nwb.language"],
+        "name": "hdmf-common.sparse",
+    }
+)
 
 
 class CSRMatrix(Container):
@@ -59,17 +79,38 @@ class CSRMatrix(Container):
     A compressed sparse row matrix. Data are stored in the standard CSR format, where column indices for row i are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
     """
 
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse", "tree_root": True})
+
     name: str = Field(...)
-    shape: Optional[int] = Field(
-        None,
-        description="""The shape (number of rows, number of columns) of this sparse matrix.""",
+    shape: Optional[np.uint64] = Field(
+        None, description="""The shape (number of rows, number of columns) of this sparse matrix."""
     )
-    indices: NDArray[Shape["* number_of_non_zero_values"], int] = Field(
-        ..., description="""The column indices."""
+    indices: NDArray[Shape["* number_of_non_zero_values"], np.uint64] = Field(
+        ...,
+        description="""The column indices.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "number_of_non_zero_values"}]}}},
     )
-    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], int] = Field(
-        ..., description="""The row index pointer."""
+    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], np.uint64] = Field(
+        ...,
+        description="""The row index pointer.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "number_of_rows_in_the_matrix_1"}]}}},
     )
-    data: NDArray[Shape["* number_of_non_zero_values"], Any] = Field(
-        ..., description="""The non-zero values in the matrix."""
+    data: CSRMatrixData = Field(..., description="""The non-zero values in the matrix.""")
+
+
+class CSRMatrixData(ConfiguredBaseModel):
+    """
+    The non-zero values in the matrix.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse"})
+
+    name: Literal["data"] = Field(
+        "data", json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}}
     )
+
+
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+CSRMatrix.model_rebuild()
+CSRMatrixData.model_rebuild()
