@@ -1,57 +1,69 @@
 from __future__ import annotations
 from datetime import datetime, date
+from decimal import Decimal
 from enum import Enum
-from typing import (
-    Dict,
-    Optional,
-    Any,
-    Union,
-    ClassVar,
-    Annotated,
-    TypeVar,
-    List,
-    TYPE_CHECKING,
-)
-from pydantic import BaseModel as BaseModel, Field
-from pydantic import ConfigDict, BeforeValidator
-
-from numpydantic import Shape, NDArray
-from numpydantic.dtype import *
+import re
 import sys
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
-if TYPE_CHECKING:
-    import numpy as np
-
-
-from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData
-
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+import numpy as np
+from ...hdmf_common.v1_5_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container, SimpleMultiContainer
+from ...hdmf_common.v1_5_0.hdmf_common_table import (
+    VectorData,
+    VectorIndex,
+    ElementIdentifiers,
+    DynamicTableRegion,
+    DynamicTable,
+    AlignedDynamicTable,
+)
 
 metamodel_version = "None"
 version = "0.1.0"
 
 
 class ConfiguredBaseModel(BaseModel):
-    hdf5_path: Optional[str] = Field(
-        None, description="The absolute path that this object is stored in an NWB file"
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        strict=False,
     )
-
+    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> "np.ndarray":
-        if hasattr(self, "array"):
-            return self.array[i]
-        else:
-            return super().__getitem__(i)
 
-    def __setitem__(self, i: slice | int, value: Any):
-        if hasattr(self, "array"):
-            self.array[i] = value
-        else:
-            super().__setitem__(i, value)
+class LinkMLMeta(RootModel):
+    root: Dict[str, Any] = {}
+    model_config = ConfigDict(frozen=True)
+
+    def __getattr__(self, key: str):
+        return getattr(self.root, key)
+
+    def __getitem__(self, key: str):
+        return self.root[key]
+
+    def __setitem__(self, key: str, value):
+        self.root[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.root
+
+
+linkml_meta = LinkMLMeta(
+    {
+        "annotations": {
+            "is_namespace": {"tag": "is_namespace", "value": False},
+            "namespace": {"tag": "namespace", "value": "hdmf-experimental"},
+        },
+        "default_prefix": "hdmf-experimental.experimental/",
+        "id": "hdmf-experimental.experimental",
+        "imports": ["../../hdmf_common/v1_5_0/namespace", "hdmf-experimental.nwb.language"],
+        "name": "hdmf-experimental.experimental",
+    }
+)
 
 
 class EnumData(VectorData):
@@ -59,14 +71,13 @@ class EnumData(VectorData):
     Data that come from a fixed set of values. A data value of i corresponds to the i-th value in the VectorData referenced by the 'elements' attribute.
     """
 
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-experimental.experimental", "tree_root": True})
+
     name: str = Field(...)
-    elements: Optional[str] = Field(
-        None,
-        description="""Reference to the VectorData object that contains the enumerable elements""",
+    elements: Optional[VectorData] = Field(
+        None, description="""Reference to the VectorData object that contains the enumerable elements"""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -75,3 +86,8 @@ class EnumData(VectorData):
             NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
         ]
     ] = Field(None)
+
+
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+EnumData.model_rebuild()

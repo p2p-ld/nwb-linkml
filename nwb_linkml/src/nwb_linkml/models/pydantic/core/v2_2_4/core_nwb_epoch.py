@@ -1,63 +1,78 @@
 from __future__ import annotations
 from datetime import datetime, date
+from decimal import Decimal
 from enum import Enum
-from typing import (
-    Dict,
-    Optional,
-    Any,
-    Union,
-    ClassVar,
-    Annotated,
-    TypeVar,
-    List,
-    TYPE_CHECKING,
-)
-from pydantic import BaseModel as BaseModel, Field
-from pydantic import ConfigDict, BeforeValidator
-
-from numpydantic import Shape, NDArray
-from numpydantic.dtype import *
+import re
 import sys
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
-if TYPE_CHECKING:
-    import numpy as np
-
-
-from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    VectorIndex,
-    DynamicTable,
-    VectorData,
-)
-
-from .core_nwb_base import TimeSeries
-
+import numpy as np
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, ValidationInfo, BeforeValidator
+from numpydantic import NDArray, Shape
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, VectorIndex, VectorData
+from ...core.v2_2_4.core_nwb_base import TimeSeries
 
 metamodel_version = "None"
 version = "2.2.4"
 
 
 class ConfiguredBaseModel(BaseModel):
-    hdf5_path: Optional[str] = Field(
-        None, description="The absolute path that this object is stored in an NWB file"
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        strict=False,
     )
-
+    hdf5_path: Optional[str] = Field(None, description="The absolute path that this object is stored in an NWB file")
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, i: slice | int) -> "np.ndarray":
-        if hasattr(self, "array"):
-            return self.array[i]
-        else:
-            return super().__getitem__(i)
 
-    def __setitem__(self, i: slice | int, value: Any):
-        if hasattr(self, "array"):
-            self.array[i] = value
-        else:
-            super().__setitem__(i, value)
+class LinkMLMeta(RootModel):
+    root: Dict[str, Any] = {}
+    model_config = ConfigDict(frozen=True)
+
+    def __getattr__(self, key: str):
+        return getattr(self.root, key)
+
+    def __getitem__(self, key: str):
+        return self.root[key]
+
+    def __setitem__(self, key: str, value):
+        self.root[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.root
+
+
+NUMPYDANTIC_VERSION = "1.2.1"
+
+ModelType = TypeVar("ModelType", bound=Type[BaseModel])
+
+
+def _get_name(item: BaseModel | dict, info: ValidationInfo):
+    assert isinstance(item, (BaseModel, dict))
+    name = info.field_name
+    if isinstance(item, BaseModel):
+        item.name = name
+    else:
+        item["name"] = name
+    return item
+
+
+Named = Annotated[ModelType, BeforeValidator(_get_name)]
+linkml_meta = LinkMLMeta(
+    {
+        "annotations": {
+            "is_namespace": {"tag": "is_namespace", "value": False},
+            "namespace": {"tag": "namespace", "value": "core"},
+        },
+        "default_prefix": "core.nwb.epoch/",
+        "id": "core.nwb.epoch",
+        "imports": ["../../hdmf_common/v1_1_3/namespace", "core.nwb.base", "core.nwb.language"],
+        "name": "core.nwb.epoch",
+    }
+)
 
 
 class TimeIntervals(DynamicTable):
@@ -65,51 +80,55 @@ class TimeIntervals(DynamicTable):
     A container for aggregating epoch data and the TimeSeries that each epoch applies to.
     """
 
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.epoch", "tree_root": True})
+
     name: str = Field(...)
-    start_time: Optional[List[float] | float] = Field(
-        default_factory=list, description="""Start time of epoch, in seconds."""
+    start_time: NDArray[Any, np.float32] = Field(
+        ...,
+        description="""Start time of epoch, in seconds.""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+        },
     )
-    stop_time: Optional[List[float] | float] = Field(
-        default_factory=list, description="""Stop time of epoch, in seconds."""
+    stop_time: NDArray[Any, np.float32] = Field(
+        ...,
+        description="""Stop time of epoch, in seconds.""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+        },
     )
-    tags: Optional[List[str] | str] = Field(
-        default_factory=list,
+    tags: Optional[NDArray[Any, str]] = Field(
+        None,
         description="""User-defined tags that identify or categorize events.""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}}
+        },
     )
-    tags_index: Optional[str] = Field(None, description="""Index for tags.""")
-    timeseries: Optional[str] = Field(None, description="""An index into a TimeSeries object.""")
-    timeseries_index: Optional[str] = Field(None, description="""Index for timeseries.""")
+    tags_index: Named[Optional[VectorIndex]] = Field(
+        None,
+        description="""Index for tags.""",
+        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+    )
+    timeseries: Optional[TimeIntervalsTimeseries] = Field(None, description="""An index into a TimeSeries object.""")
+    timeseries_index: Named[Optional[VectorIndex]] = Field(
+        None,
+        description="""Index for timeseries.""",
+        json_schema_extra={"linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}},
+    )
     colnames: Optional[str] = Field(
         None,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: Optional[str] = Field(None, description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[str] | str] = Field(
-        default_factory=list, description="""Vector columns of this dynamic table."""
+    vector_data: Optional[List[VectorData]] = Field(None, description="""Vector columns of this dynamic table.""")
+    vector_index: Optional[List[VectorIndex]] = Field(
+        None, description="""Indices for the vector columns of this dynamic table."""
     )
-    vector_index: Optional[List[str] | str] = Field(
-        default_factory=list,
-        description="""Indices for the vector columns of this dynamic table.""",
-    )
-
-
-class TimeIntervalsTagsIndex(VectorIndex):
-    """
-    Index for tags.
-    """
-
-    name: Literal["tags_index"] = Field("tags_index")
-    target: Optional[str] = Field(
-        None,
-        description="""Reference to the target dataset that this index applies to.""",
-    )
-    array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
 
 
 class TimeIntervalsTimeseries(VectorData):
@@ -117,21 +136,21 @@ class TimeIntervalsTimeseries(VectorData):
     An index into a TimeSeries object.
     """
 
-    name: Literal["timeseries"] = Field("timeseries")
-    idx_start: Optional[int] = Field(
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.epoch"})
+
+    name: Literal["timeseries"] = Field(
+        "timeseries",
+        json_schema_extra={"linkml_meta": {"equals_string": "timeseries", "ifabsent": "string(timeseries)"}},
+    )
+    idx_start: Optional[np.int32] = Field(
         None,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
     )
-    count: Optional[int] = Field(
-        None,
-        description="""Number of data samples available in this time series, during this epoch.""",
+    count: Optional[np.int32] = Field(
+        None, description="""Number of data samples available in this time series, during this epoch."""
     )
-    timeseries: Optional[str] = Field(
-        None, description="""the TimeSeries that this index applies to."""
-    )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    timeseries: Optional[TimeSeries] = Field(None, description="""the TimeSeries that this index applies to.""")
+    description: Optional[str] = Field(None, description="""Description of what these vectors represent.""")
     array: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -142,14 +161,7 @@ class TimeIntervalsTimeseries(VectorData):
     ] = Field(None)
 
 
-class TimeIntervalsTimeseriesIndex(VectorIndex):
-    """
-    Index for timeseries.
-    """
-
-    name: Literal["timeseries_index"] = Field("timeseries_index")
-    target: Optional[str] = Field(
-        None,
-        description="""Reference to the target dataset that this index applies to.""",
-    )
-    array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(None)
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+TimeIntervals.model_rebuild()
+TimeIntervalsTimeseries.model_rebuild()
