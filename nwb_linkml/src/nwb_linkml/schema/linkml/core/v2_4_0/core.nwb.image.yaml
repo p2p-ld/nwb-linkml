@@ -21,7 +21,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -32,7 +31,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -43,7 +41,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -59,16 +56,15 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Binary data representing images across frames. If data are stored
           in an external file, this should be an empty 3D array.
-        multivalued: false
         range: numeric
         required: true
+        multivalued: false
         any_of:
         - array:
             dimensions:
@@ -84,12 +80,12 @@ classes:
       dimension:
         name: dimension
         description: Number of pixels on x, y, (and z) axes.
-        multivalued: false
         array:
           dimensions:
           - alias: rank
         range: int32
         required: false
+        multivalued: false
       external_file:
         name: external_file
         description: Paths to one or more external file(s). The field is only present
@@ -97,18 +93,18 @@ classes:
           in the file system as one or more image file(s). This field should NOT be
           used if the image is stored in another NWB file and that file is linked
           to this file.
-        multivalued: false
         range: ImageSeries__external_file
         required: false
+        multivalued: false
       format:
         name: format
         description: Format of image. If this is 'external', then the attribute 'external_file'
           contains the path information to the image files. If this is 'raw', then
           the raw (single-channel) binary data is stored in the 'data' dataset. If
           this attribute is not present, then the default format='raw' case is assumed.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
     tree_root: true
   ImageSeries__external_file:
     name: ImageSeries__external_file
@@ -120,7 +116,6 @@ classes:
       name:
         name: name
         ifabsent: string(external_file)
-        identifier: true
         range: string
         required: true
         equals_string: external_file
@@ -156,7 +151,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -171,21 +165,20 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       distance:
         name: distance
         description: Distance from camera/monitor to target/eye.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
       field_of_view:
         name: field_of_view
         description: Width, height and depth of image, or imaged area, in meters.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
         any_of:
         - array:
             dimensions:
@@ -198,9 +191,9 @@ classes:
       data:
         name: data
         description: Images presented to subject, either grayscale or RGB
-        multivalued: false
         range: numeric
         required: true
+        multivalued: false
         any_of:
         - array:
             dimensions:
@@ -218,9 +211,9 @@ classes:
         name: orientation
         description: Description of image relative to some reference frame (e.g.,
           which way is up). Must also specify frame of reference.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
     tree_root: true
   IndexSeries:
     name: IndexSeries
@@ -234,16 +227,15 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Index of the frame in the referenced ImageSeries.
-        multivalued: false
         array:
           dimensions:
           - alias: num_times
         range: int32
         required: true
+        multivalued: false
     tree_root: true

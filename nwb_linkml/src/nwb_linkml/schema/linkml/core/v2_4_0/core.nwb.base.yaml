@@ -21,7 +21,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -35,7 +34,6 @@ classes:
       name:
         name: name
         ifabsent: string(timeseries)
-        identifier: true
         range: string
         required: true
       idx_start:
@@ -43,22 +41,22 @@ classes:
         description: Start index into the TimeSeries 'data' and 'timestamp' datasets
           of the referenced TimeSeries. The first dimension of those arrays is always
           time.
-        multivalued: false
         range: int32
         required: true
+        multivalued: false
       count:
         name: count
         description: Number of data samples available in this time series, during
           this epoch
-        multivalued: false
         range: int32
         required: true
+        multivalued: false
       timeseries:
         name: timeseries
         description: The TimeSeries that this index applies to
-        multivalued: false
         range: TimeSeries
         required: true
+        multivalued: false
     tree_root: true
   Image:
     name: Image
@@ -69,7 +67,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       resolution:
@@ -109,7 +106,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -121,7 +117,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -132,7 +127,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -151,49 +145,49 @@ classes:
           dimension should always represent time. This can also be used to store binary
           data (e.g., image frames). This can also be a link to data stored in an
           external file.
-        multivalued: false
         range: TimeSeries__data
         required: true
+        multivalued: false
       starting_time:
         name: starting_time
         description: Timestamp of the first sample in seconds. When timestamps are
           uniformly spaced, the timestamp of the first sample can be specified and
           all subsequent ones calculated from the sampling rate attribute.
-        multivalued: false
         range: TimeSeries__starting_time
         required: false
+        multivalued: false
       timestamps:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
           the common experiment master-clock stored in NWBFile.timestamps_reference_time.
-        multivalued: false
         array:
           dimensions:
           - alias: num_times
         range: float64
         required: false
+        multivalued: false
       control:
         name: control
         description: Numerical labels that apply to each time point in data for the
           purpose of querying and slicing data by these values. If present, the length
           of this array should be the same size as the first dimension of data.
-        multivalued: false
         array:
           dimensions:
           - alias: num_times
         range: uint8
         required: false
+        multivalued: false
       control_description:
         name: control_description
         description: Description of each control value. Must be present if control
           is present. If present, control_description[0] should describe time points
           where control == 0.
-        multivalued: false
         array:
           dimensions:
           - alias: num_control_values
         range: text
         required: false
+        multivalued: false
       sync:
         name: sync
         description: Lab-specific time and sync information as provided directly from
@@ -202,9 +196,9 @@ classes:
           This group will usually only be populated in TimeSeries that are stored
           external to the NWB file, in files storing raw data. Once timestamp data
           is calculated, the contents of 'sync' are mostly for archival purposes.
-        multivalued: false
         range: TimeSeries__sync
         required: false
+        multivalued: false
     tree_root: true
   TimeSeries__data:
     name: TimeSeries__data
@@ -215,7 +209,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -287,7 +280,6 @@ classes:
       name:
         name: name
         ifabsent: string(starting_time)
-        identifier: true
         range: string
         required: true
         equals_string: starting_time
@@ -315,7 +307,6 @@ classes:
       name:
         name: name
         ifabsent: string(sync)
-        identifier: true
         range: string
         required: true
         equals_string: sync
@@ -341,7 +332,6 @@ classes:
       name:
         name: name
         ifabsent: string(Images)
-        identifier: true
         range: string
         required: true
       description:
@@ -351,7 +341,7 @@ classes:
       image:
         name: image
         description: Images stored in this collection.
-        multivalued: true
         range: Image
         required: true
+        multivalued: true
     tree_root: true

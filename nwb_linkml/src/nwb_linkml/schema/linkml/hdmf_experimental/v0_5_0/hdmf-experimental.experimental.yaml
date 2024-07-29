@@ -21,7 +21,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       elements:

@@ -18,7 +18,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       shape:
@@ -28,21 +27,21 @@ classes:
       indices:
         name: indices
         description: column indices
-        multivalued: false
         range: CSRMatrix__indices
         required: true
+        multivalued: false
       indptr:
         name: indptr
         description: index pointer
-        multivalued: false
         range: CSRMatrix__indptr
         required: true
+        multivalued: false
       data:
         name: data
         description: values in the matrix
-        multivalued: false
         range: CSRMatrix__data
         required: true
+        multivalued: false
     tree_root: true
   CSRMatrix__indices:
     name: CSRMatrix__indices
@@ -51,7 +50,6 @@ classes:
       name:
         name: name
         ifabsent: string(indices)
-        identifier: true
         range: string
         required: true
         equals_string: indices
@@ -62,7 +60,6 @@ classes:
       name:
         name: name
         ifabsent: string(indptr)
-        identifier: true
         range: string
         required: true
         equals_string: indptr
@@ -73,7 +70,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data

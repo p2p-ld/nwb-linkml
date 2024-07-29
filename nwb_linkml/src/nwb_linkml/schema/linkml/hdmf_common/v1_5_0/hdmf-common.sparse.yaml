@@ -22,7 +22,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       shape:
@@ -33,28 +32,35 @@ classes:
       indices:
         name: indices
         description: The column indices.
-        multivalued: false
         array:
           dimensions:
           - alias: number_of_non_zero_values
         range: uint
         required: true
+        multivalued: false
       indptr:
         name: indptr
         description: The row index pointer.
-        multivalued: false
         array:
           dimensions:
           - alias: number_of_rows_in_the_matrix_1
         range: uint
         required: true
+        multivalued: false
       data:
         name: data
         description: The non-zero values in the matrix.
-        multivalued: false
-        array:
-          dimensions:
-          - alias: number_of_non_zero_values
-        range: AnyType
+        range: CSRMatrix__data
         required: true
+        multivalued: false
     tree_root: true
+  CSRMatrix__data:
+    name: CSRMatrix__data
+    description: The non-zero values in the matrix.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data

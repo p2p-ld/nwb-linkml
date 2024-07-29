@@ -18,7 +18,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -29,7 +28,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true

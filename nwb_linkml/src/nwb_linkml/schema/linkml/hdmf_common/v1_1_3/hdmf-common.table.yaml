@@ -18,7 +18,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -29,7 +28,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       target:
@@ -51,7 +49,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -90,7 +87,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       target:
@@ -113,7 +109,6 @@ classes:
       name:
         name: name
         ifabsent: string(element_id)
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -132,7 +127,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       table:
@@ -152,7 +146,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -183,7 +176,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       colnames:
@@ -198,22 +190,22 @@ classes:
       id:
         name: id
         description: Array of unique identifiers for the rows of this dynamic table.
-        multivalued: false
         array:
           dimensions:
           - alias: num_rows
         range: int
         required: true
+        multivalued: false
       vector_data:
         name: vector_data
         description: Vector columns of this dynamic table.
-        multivalued: true
         range: VectorData
         required: false
+        multivalued: true
       vector_index:
         name: vector_index
         description: Indices for the vector columns of this dynamic table.
-        multivalued: true
         range: VectorIndex
         required: false
+        multivalued: true
     tree_root: true
