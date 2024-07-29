@@ -236,5 +236,5 @@ class Adapter(BaseModel):
             get_type = [get_type]
 
         for item in self.walk(input):
-            if any([type(item) == atype for atype in get_type]):
+            if any([type(item) is atype for atype in get_type]):
                 yield item
