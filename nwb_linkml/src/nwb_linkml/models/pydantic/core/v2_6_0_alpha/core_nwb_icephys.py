@@ -22,7 +22,6 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTable,
     VectorIndex,
@@ -30,6 +29,7 @@ from ...hdmf_common.v1_5_0.hdmf_common_table import (
     AlignedDynamicTable,
     DynamicTableRegion,
 )
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "2.6.0-alpha"

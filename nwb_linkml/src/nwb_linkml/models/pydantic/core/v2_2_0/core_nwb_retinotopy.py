@@ -7,7 +7,6 @@ import sys
 import numpy as np
 from ...core.v2_2_0.core_nwb_image import GrayscaleImage
 from ...core.v2_2_0.core_nwb_base import NWBData, NWBDataInterface
-from numpydantic import NDArray, Shape
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
 from pydantic import (
     BaseModel,
@@ -18,6 +17,7 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "2.2.0"

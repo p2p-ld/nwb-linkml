@@ -61,6 +61,8 @@ class LinkMLMeta(RootModel):
         return key in self.root
 
 
+NUMPYDANTIC_VERSION = "1.2.1"
+
 ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 
@@ -76,8 +78,6 @@ def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, 
 
 
 Named = Annotated[ModelType, BeforeValidator(_get_name)]
-
-NUMPYDANTIC_VERSION = "1.2.1"
 linkml_meta = LinkMLMeta(
     {
         "annotations": {

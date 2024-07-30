@@ -17,13 +17,13 @@ from pydantic import (
     BeforeValidator,
 )
 from ...core.v2_2_5.core_nwb_ecephys import ElectrodeGroup
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_1_3.hdmf_common_table import (
     DynamicTable,
     VectorData,
     VectorIndex,
     DynamicTableRegion,
 )
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "2.2.5"

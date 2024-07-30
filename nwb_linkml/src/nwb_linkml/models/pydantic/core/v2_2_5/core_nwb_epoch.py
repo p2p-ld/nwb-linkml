@@ -15,9 +15,9 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, VectorIndex, VectorData
 from ...core.v2_2_5.core_nwb_base import TimeSeries
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "2.2.5"

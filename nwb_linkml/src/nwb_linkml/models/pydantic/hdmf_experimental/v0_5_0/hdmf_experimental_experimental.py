@@ -8,6 +8,7 @@ from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
 from ...hdmf_common.v1_8_0.hdmf_common_table import VectorData
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "0.5.0"
@@ -45,6 +46,7 @@ class LinkMLMeta(RootModel):
         return key in self.root
 
 
+NUMPYDANTIC_VERSION = "1.2.1"
 linkml_meta = LinkMLMeta(
     {
         "annotations": {

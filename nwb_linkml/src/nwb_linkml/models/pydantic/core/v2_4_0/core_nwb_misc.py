@@ -17,13 +17,13 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTableRegion,
     DynamicTable,
     VectorData,
     VectorIndex,
 )
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "2.4.0"

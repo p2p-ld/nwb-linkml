@@ -15,13 +15,13 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTableRegion,
     DynamicTable,
     VectorIndex,
     VectorData,
 )
+from numpydantic import NDArray, Shape
 from ...core.v2_3_0.core_nwb_image import ImageSeries, ImageSeriesExternalFile
 from ...core.v2_3_0.core_nwb_base import (
     TimeSeriesStartingTime,
