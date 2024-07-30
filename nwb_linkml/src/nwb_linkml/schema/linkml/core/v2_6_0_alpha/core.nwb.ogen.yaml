@@ -1,4 +1,11 @@
 name: core.nwb.ogen
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.ogen
 version: 2.6.0-alpha
 imports:
@@ -14,15 +21,17 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Applied power for optogenetic stimulus, in watts.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_times
         range: numeric
         required: true
+        multivalued: false
     tree_root: true
   OptogeneticStimulusSite:
     name: OptogeneticStimulusSite
@@ -31,27 +40,26 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
         name: description
         description: Description of stimulation site.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       excitation_lambda:
         name: excitation_lambda
         description: Excitation wavelength, in nm.
-        multivalued: false
         range: float32
         required: true
+        multivalued: false
       location:
         name: location
         description: Location of the stimulation site. Specify the area, layer, comments
           on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
           standard atlas names for anatomical regions when possible.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
     tree_root: true

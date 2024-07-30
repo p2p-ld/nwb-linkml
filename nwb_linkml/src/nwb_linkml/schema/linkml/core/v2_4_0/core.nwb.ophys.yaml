@@ -1,4 +1,11 @@
 name: core.nwb.ophys
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.ophys
 version: 2.4.0
 imports:
@@ -16,7 +23,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       pmt_gain:
@@ -32,40 +38,19 @@ classes:
       field_of_view:
         name: field_of_view
         description: Width, height and depth of image, or imaged area, in meters.
+        range: float32
+        required: false
         multivalued: false
-        range: TwoPhotonSeries__field_of_view
-        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: width_height
+              exact_cardinality: 2
+        - array:
+            dimensions:
+            - alias: width_height_depth
+              exact_cardinality: 3
     tree_root: true
-  TwoPhotonSeries__field_of_view:
-    name: TwoPhotonSeries__field_of_view
-    description: Width, height and depth of image, or imaged area, in meters.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(field_of_view)
-        identifier: true
-        range: string
-        required: true
-        equals_string: field_of_view
-      array:
-        name: array
-        range: TwoPhotonSeries__field_of_view__Array
-  TwoPhotonSeries__field_of_view__Array:
-    name: TwoPhotonSeries__field_of_view__Array
-    is_a: Arraylike
-    attributes:
-      width|height:
-        name: width|height
-        range: float32
-        required: false
-        minimum_cardinality: 2
-        maximum_cardinality: 2
-      width|height|depth:
-        name: width|height|depth
-        range: float32
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
   RoiResponseSeries:
     name: RoiResponseSeries
     description: ROI responses over an imaging plane. The first dimension represents
@@ -74,62 +59,34 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Signals from ROIs.
-        multivalued: false
-        range: RoiResponseSeries__data
+        range: numeric
         required: true
+        multivalued: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_rois
       rois:
         name: rois
+        annotations:
+          named:
+            tag: named
+            value: true
         description: DynamicTableRegion referencing into an ROITable containing information
           on the ROIs stored in this timeseries.
+        range: DynamicTableRegion
+        required: true
         multivalued: false
-        range: RoiResponseSeries__rois
-        required: true
     tree_root: true
-  RoiResponseSeries__data:
-    name: RoiResponseSeries__data
-    description: Signals from ROIs.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(data)
-        identifier: true
-        range: string
-        required: true
-        equals_string: data
-      array:
-        name: array
-        range: RoiResponseSeries__data__Array
-  RoiResponseSeries__data__Array:
-    name: RoiResponseSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
-        range: numeric
-        required: true
-      num_ROIs:
-        name: num_ROIs
-        range: numeric
-        required: false
-  RoiResponseSeries__rois:
-    name: RoiResponseSeries__rois
-    description: DynamicTableRegion referencing into an ROITable containing information
-      on the ROIs stored in this timeseries.
-    is_a: DynamicTableRegion
-    attributes:
-      name:
-        name: name
-        ifabsent: string(rois)
-        identifier: true
-        range: string
-        required: true
-        equals_string: rois
   DfOverF:
     name: DfOverF
     description: dF/F information about a region of interest (ROI). Storage hierarchy
@@ -137,12 +94,13 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: RoiResponseSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
     tree_root: true
   Fluorescence:
     name: Fluorescence
@@ -151,12 +109,13 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: RoiResponseSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
     tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
@@ -169,12 +128,13 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: PlaneSegmentation
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: PlaneSegmentation
     tree_root: true
   PlaneSegmentation:
     name: PlaneSegmentation
@@ -183,42 +143,51 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       image_mask:
         name: image_mask
         description: ROI masks for each ROI. Each image mask is the size of the original
           imaging plane (or volume) and members of the ROI are finite non-zero.
-        multivalued: false
         range: PlaneSegmentation__image_mask
         required: false
+        multivalued: false
       pixel_mask_index:
         name: pixel_mask_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into pixel_mask.
-        multivalued: false
-        range: PlaneSegmentation__pixel_mask_index
+        range: VectorIndex
         required: false
+        multivalued: false
       pixel_mask:
         name: pixel_mask
         description: 'Pixel masks for each ROI: a list of indices and weights for
           the ROI. Pixel masks are concatenated and parsing of this dataset is maintained
           by the PlaneSegmentation'
-        multivalued: true
-        range: AnyType
+        range: PlaneSegmentation__pixel_mask
+        required: false
+        multivalued: false
       voxel_mask_index:
         name: voxel_mask_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into voxel_mask.
-        multivalued: false
-        range: PlaneSegmentation__voxel_mask_index
+        range: VectorIndex
         required: false
+        multivalued: false
       voxel_mask:
         name: voxel_mask
         description: 'Voxel masks for each ROI: a list of indices and weights for
           the ROI. Voxel masks are concatenated and parsing of this dataset is maintained
           by the PlaneSegmentation'
-        multivalued: true
-        range: AnyType
+        range: PlaneSegmentation__voxel_mask
+        required: false
+        multivalued: false
       reference_images:
         name: reference_images
         description: Image stacks that the segmentation masks apply to.
@@ -237,45 +206,89 @@ classes:
       name:
         name: name
         ifabsent: string(image_mask)
-        identifier: true
         range: string
         required: true
         equals_string: image_mask
-  PlaneSegmentation__pixel_mask_index:
-    name: PlaneSegmentation__pixel_mask_index
-    description: Index into pixel_mask.
-    is_a: VectorIndex
+  PlaneSegmentation__pixel_mask:
+    name: PlaneSegmentation__pixel_mask
+    description: 'Pixel masks for each ROI: a list of indices and weights for the
+      ROI. Pixel masks are concatenated and parsing of this dataset is maintained
+      by the PlaneSegmentation'
+    is_a: VectorData
     attributes:
       name:
         name: name
-        ifabsent: string(pixel_mask_index)
-        identifier: true
+        ifabsent: string(pixel_mask)
         range: string
         required: true
-        equals_string: pixel_mask_index
-  PlaneSegmentation__voxel_mask_index:
-    name: PlaneSegmentation__voxel_mask_index
-    description: Index into voxel_mask.
-    is_a: VectorIndex
+        equals_string: pixel_mask
+      x:
+        name: x
+        description: Pixel x-coordinate.
+        range: uint32
+        required: false
+        multivalued: false
+      y:
+        name: y
+        description: Pixel y-coordinate.
+        range: uint32
+        required: false
+        multivalued: false
+      weight:
+        name: weight
+        description: Weight of the pixel.
+        range: float32
+        required: false
+        multivalued: false
+  PlaneSegmentation__voxel_mask:
+    name: PlaneSegmentation__voxel_mask
+    description: 'Voxel masks for each ROI: a list of indices and weights for the
+      ROI. Voxel masks are concatenated and parsing of this dataset is maintained
+      by the PlaneSegmentation'
+    is_a: VectorData
     attributes:
       name:
         name: name
-        ifabsent: string(voxel_mask_index)
-        identifier: true
+        ifabsent: string(voxel_mask)
         range: string
         required: true
-        equals_string: voxel_mask_index
+        equals_string: voxel_mask
+      x:
+        name: x
+        description: Voxel x-coordinate.
+        range: uint32
+        required: false
+        multivalued: false
+      y:
+        name: y
+        description: Voxel y-coordinate.
+        range: uint32
+        required: false
+        multivalued: false
+      z:
+        name: z
+        description: Voxel z-coordinate.
+        range: uint32
+        required: false
+        multivalued: false
+      weight:
+        name: weight
+        description: Weight of the voxel.
+        range: float32
+        required: false
+        multivalued: false
   ImagingPlane:
     name: ImagingPlane
     description: An imaging plane and its metadata.
     is_a: NWBContainer
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: OpticalChannel
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: OpticalChannel
     tree_root: true
   OpticalChannel:
     name: OpticalChannel
@@ -284,21 +297,20 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
         name: description
         description: Description or other notes about the channel.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       emission_lambda:
         name: emission_lambda
         description: Emission wavelength for channel, in nm.
-        multivalued: false
         range: float32
         required: true
+        multivalued: false
     tree_root: true
   MotionCorrection:
     name: MotionCorrection
@@ -307,12 +319,13 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: CorrectedImageStack
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: CorrectedImageStack
     tree_root: true
   CorrectedImageStack:
     name: CorrectedImageStack
@@ -321,20 +334,19 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       corrected:
         name: corrected
         description: Image stack with frames shifted to the common coordinates.
-        multivalued: false
         range: ImageSeries
         required: true
+        multivalued: false
       xy_translation:
         name: xy_translation
         description: Stores the x,y delta necessary to align each frame to the common
           coordinates, for example, to align each frame to a reference image.
-        multivalued: false
         range: TimeSeries
         required: true
+        multivalued: false
     tree_root: true

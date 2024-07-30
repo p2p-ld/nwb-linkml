@@ -5,12 +5,12 @@ from typing import Optional
 
 import pytest
 from nptyping import Shape, UByte
+from numpydantic import NDArray
 
 import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
+from nwb_linkml.providers import LinkMLProvider, PydanticProvider
 from nwb_linkml.providers.git import DEFAULT_REPOS
-from nwb_linkml.providers.schema import LinkMLProvider, PydanticProvider
-from nwb_linkml.types.ndarray import NDArray
 
 CORE_MODULES = (
     "core.nwb.base",
@@ -64,8 +64,8 @@ def test_linkml_build_from_yaml(tmp_output_dir):
     res = provider.build_from_yaml(ns_file)
 
 
-@pytest.mark.skip()
-@pytest.mark.depends(on=["test_linkml_provider"])
+# @pytest.mark.depends(on=["test_linkml_provider"])
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     ["class_name", "test_fields"],
     [

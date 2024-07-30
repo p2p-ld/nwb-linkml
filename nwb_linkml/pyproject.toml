@@ -13,15 +13,17 @@ dependencies = [
     "linkml-runtime>=1.7.7",
     "nwb-schema-language>=0.1.3",
     "rich>=13.5.2",
-    "linkml>=1.7.10",
+    #"linkml>=1.7.10",
+    "linkml @ git+https://github.com/sneakers-the-rat/linkml@nwb-linkml",
     "nptyping>=2.5.0",
     "pydantic>=2.3.0",
     "h5py>=3.9.0",
     "pydantic-settings>=2.0.3",
     "dask>=2023.9.2",
-    "blosc2>=2.2.7",
     "tqdm>=4.66.1",
     'typing-extensions>=4.12.2;python_version<"3.11"',
+    "numpydantic>=1.2.1",
+    "black>=24.4.2",
 ]
 
 [project.urls]
@@ -35,6 +37,7 @@ plot = [
     "dash-cytoscape<1.0.0,>=0.3.0",
 ]
 tests = [
+    "nwb-linkml[plot]",
     "pytest<8.0.0,>=7.4.0",
     "pytest-depends<2.0.0,>=1.0.1",
     "coverage<7.0.0,>=6.1.1",
@@ -66,14 +69,18 @@ addopts = [
     "--cov-append",
     "--cov-config=.coveragerc",
     "-p no:doctest",
-    "--ignore=tests/__tmp__"
+    "--ignore=tests/__tmp__",
+    "--ignore=src/nwb_linkml/models",
+    "--ignore=src/nwb_linkml/schema"
+]
+markers = [
+    "dev: tests that are just for development rather than testing correctness",
+    "provider: tests for providers!"
 ]
 testpaths = [
+    "src/nwb_linkml",
     "tests",
-    'nwb_linkml/tests',
-    'src/nwb_linkml'
 ]
-doctest_optionflags = "NORMALIZE_WHITESPACE"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore:parse_obj:pydantic.PydanticDeprecatedSince20"

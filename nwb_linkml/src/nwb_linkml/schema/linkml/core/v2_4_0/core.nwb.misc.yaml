@@ -1,4 +1,11 @@
 name: core.nwb.misc
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.misc
 version: 2.4.0
 imports:
@@ -23,27 +30,32 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Values of each feature at each time.
-        multivalued: false
         range: AbstractFeatureSeries__data
         required: true
+        multivalued: false
       feature_units:
         name: feature_units
         description: Units of each feature.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_features
         range: text
         required: false
+        multivalued: false
       features:
         name: features
         description: Description of the features represented in TimeSeries::data.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_features
         range: text
         required: true
+        multivalued: false
     tree_root: true
   AbstractFeatureSeries__data:
     name: AbstractFeatureSeries__data
@@ -52,7 +64,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -64,19 +75,15 @@ classes:
         range: text
       array:
         name: array
-        range: AbstractFeatureSeries__data__Array
-  AbstractFeatureSeries__data__Array:
-    name: AbstractFeatureSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
         range: numeric
-        required: true
-      num_features:
-        name: num_features
-        range: numeric
-        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_features
   AnnotationSeries:
     name: AnnotationSeries
     description: Stores user annotations made during an experiment. The data[] field
@@ -87,15 +94,17 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Annotations made during an experiment.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_times
         range: text
         required: true
+        multivalued: false
     tree_root: true
   IntervalSeries:
     name: IntervalSeries
@@ -110,15 +119,17 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Use values >0 if interval started, <0 if interval ended.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_times
         range: int8
         required: true
+        multivalued: false
     tree_root: true
   DecompositionSeries:
     name: DecompositionSeries
@@ -127,35 +138,38 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Data decomposed into frequency bands.
-        multivalued: false
         range: DecompositionSeries__data
         required: true
+        multivalued: false
       metric:
         name: metric
         description: The metric used, e.g. phase, amplitude, power.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       source_channels:
         name: source_channels
+        annotations:
+          named:
+            tag: named
+            value: true
         description: DynamicTableRegion pointer to the channels that this decomposition
           series was generated from.
-        multivalued: false
-        range: DecompositionSeries__source_channels
+        range: DynamicTableRegion
         required: false
+        multivalued: false
       bands:
         name: bands
         description: Table for describing the bands that this series was generated
           from. There should be one row in this table for each band.
-        multivalued: false
         range: DecompositionSeries__bands
         required: true
+        multivalued: false
     tree_root: true
   DecompositionSeries__data:
     name: DecompositionSeries__data
@@ -164,7 +178,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -176,36 +189,12 @@ classes:
         range: text
       array:
         name: array
-        range: DecompositionSeries__data__Array
-  DecompositionSeries__data__Array:
-    name: DecompositionSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
+        array:
+          dimensions:
+          - alias: num_times
+          - alias: num_channels
+          - alias: num_bands
         range: numeric
-        required: true
-      num_channels:
-        name: num_channels
-        range: numeric
-        required: true
-      num_bands:
-        name: num_bands
-        range: numeric
-        required: true
-  DecompositionSeries__source_channels:
-    name: DecompositionSeries__source_channels
-    description: DynamicTableRegion pointer to the channels that this decomposition
-      series was generated from.
-    is_a: DynamicTableRegion
-    attributes:
-      name:
-        name: name
-        ifabsent: string(source_channels)
-        identifier: true
-        range: string
-        required: true
-        equals_string: source_channels
   DecompositionSeries__bands:
     name: DecompositionSeries__bands
     description: Table for describing the bands that this series was generated from.
@@ -215,47 +204,48 @@ classes:
       name:
         name: name
         ifabsent: string(bands)
-        identifier: true
         range: string
         required: true
         equals_string: bands
       band_name:
         name: band_name
         description: Name of the band, e.g. theta.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: true
+        multivalued: false
       band_limits:
         name: band_limits
         description: Low and high limit of each band in Hz. If it is a Gaussian filter,
           use 2 SD on either side of the center.
-        multivalued: false
-        range: DecompositionSeries__bands__band_limits
+        array:
+          dimensions:
+          - alias: num_bands
+          - alias: low_high
+            exact_cardinality: 2
+        range: float32
         required: true
+        multivalued: false
       band_mean:
         name: band_mean
         description: The mean Gaussian filters, in Hz.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_bands
         range: float32
         required: true
+        multivalued: false
       band_stdev:
         name: band_stdev
         description: The standard deviation of Gaussian filters, in Hz.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_bands
         range: float32
         required: true
-  DecompositionSeries__bands__band_limits:
-    name: DecompositionSeries__bands__band_limits
-    description: Low and high limit of each band in Hz. If it is a Gaussian filter,
-      use 2 SD on either side of the center.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(band_limits)
-        identifier: true
-        range: string
-        required: true
-        equals_string: band_limits
+        multivalued: false
   Units:
     name: Units
     description: Data about spiking units. Event times of observed units (e.g. cell,
@@ -264,62 +254,104 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
+        ifabsent: string(Units)
         range: string
         required: true
       spike_times_index:
         name: spike_times_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into the spike_times dataset.
-        multivalued: false
-        range: Units__spike_times_index
+        range: VectorIndex
         required: false
+        multivalued: false
       spike_times:
         name: spike_times
         description: Spike times for each unit.
-        multivalued: false
         range: Units__spike_times
         required: false
+        multivalued: false
       obs_intervals_index:
         name: obs_intervals_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into the obs_intervals dataset.
-        multivalued: false
-        range: Units__obs_intervals_index
+        range: VectorIndex
         required: false
+        multivalued: false
       obs_intervals:
         name: obs_intervals
         description: Observation intervals for each unit.
-        multivalued: false
-        range: Units__obs_intervals
+        array:
+          dimensions:
+          - alias: num_intervals
+          - alias: start_end
+            exact_cardinality: 2
+        range: float64
         required: false
+        multivalued: false
       electrodes_index:
         name: electrodes_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into electrodes.
-        multivalued: false
-        range: Units__electrodes_index
+        range: VectorIndex
         required: false
+        multivalued: false
       electrodes:
         name: electrodes
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
-        multivalued: false
-        range: Units__electrodes
+        range: DynamicTableRegion
         required: false
+        multivalued: false
       electrode_group:
         name: electrode_group
         description: Electrode group that each spike unit came from.
-        multivalued: true
         range: ElectrodeGroup
+        required: false
+        multivalued: true
       waveform_mean:
         name: waveform_mean
         description: Spike waveform mean for each spike unit.
-        multivalued: false
-        range: Units__waveform_mean
+        range: float32
         required: false
+        multivalued: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+            - alias: num_electrodes
       waveform_sd:
         name: waveform_sd
         description: Spike waveform standard deviation for each spike unit.
-        multivalued: false
-        range: Units__waveform_sd
+        range: float32
         required: false
+        multivalued: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+        - array:
+            dimensions:
+            - alias: num_units
+            - alias: num_samples
+            - alias: num_electrodes
       waveforms:
         name: waveforms
         description: Individual waveforms for each spike on each electrode. This is
@@ -345,36 +377,36 @@ classes:
           order of the waveforms within a given unit x spike event should be in the
           same order as the electrodes referenced in the 'electrodes' column of this
           table. The number of samples for each waveform must be the same.
-        multivalued: false
-        range: Units__waveforms
+        array:
+          dimensions:
+          - alias: num_waveforms
+          - alias: num_samples
+        range: numeric
         required: false
+        multivalued: false
       waveforms_index:
         name: waveforms_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into the waveforms dataset. One value for every spike event.
           See 'waveforms' for more detail.
-        multivalued: false
-        range: Units__waveforms_index
+        range: VectorIndex
         required: false
+        multivalued: false
       waveforms_index_index:
         name: waveforms_index_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index into the waveforms_index dataset. One value for every unit
           (row in the table). See 'waveforms' for more detail.
-        multivalued: false
-        range: Units__waveforms_index_index
+        range: VectorIndex
         required: false
+        multivalued: false
     tree_root: true
-  Units__spike_times_index:
-    name: Units__spike_times_index
-    description: Index into the spike_times dataset.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(spike_times_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: spike_times_index
   Units__spike_times:
     name: Units__spike_times
     description: Spike times for each unit.
@@ -383,7 +415,6 @@ classes:
       name:
         name: name
         ifabsent: string(spike_times)
-        identifier: true
         range: string
         required: true
         equals_string: spike_times
@@ -395,159 +426,3 @@ classes:
           if the acquisition time series was smoothed/interpolated and it is possible
           for the spike time to be between samples.
         range: float64
-  Units__obs_intervals_index:
-    name: Units__obs_intervals_index
-    description: Index into the obs_intervals dataset.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(obs_intervals_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: obs_intervals_index
-  Units__obs_intervals:
-    name: Units__obs_intervals
-    description: Observation intervals for each unit.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(obs_intervals)
-        identifier: true
-        range: string
-        required: true
-        equals_string: obs_intervals
-  Units__electrodes_index:
-    name: Units__electrodes_index
-    description: Index into electrodes.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(electrodes_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: electrodes_index
-  Units__electrodes:
-    name: Units__electrodes
-    description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
-    is_a: DynamicTableRegion
-    attributes:
-      name:
-        name: name
-        ifabsent: string(electrodes)
-        identifier: true
-        range: string
-        required: true
-        equals_string: electrodes
-  Units__waveform_mean:
-    name: Units__waveform_mean
-    description: Spike waveform mean for each spike unit.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveform_mean)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveform_mean
-      sampling_rate:
-        name: sampling_rate
-        description: Sampling rate, in hertz.
-        range: float32
-      unit:
-        name: unit
-        description: Unit of measurement. This value is fixed to 'volts'.
-        range: text
-  Units__waveform_sd:
-    name: Units__waveform_sd
-    description: Spike waveform standard deviation for each spike unit.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveform_sd)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveform_sd
-      sampling_rate:
-        name: sampling_rate
-        description: Sampling rate, in hertz.
-        range: float32
-      unit:
-        name: unit
-        description: Unit of measurement. This value is fixed to 'volts'.
-        range: text
-  Units__waveforms:
-    name: Units__waveforms
-    description: Individual waveforms for each spike on each electrode. This is a
-      doubly indexed column. The 'waveforms_index' column indexes which waveforms
-      in this column belong to the same spike event for a given unit, where each waveform
-      was recorded from a different electrode. The 'waveforms_index_index' column
-      indexes the 'waveforms_index' column to indicate which spike events belong to
-      a given unit. For example, if the 'waveforms_index_index' column has values
-      [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond
-      to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index'
-      column correspond to the 3 spike events of the second unit, and the next 1 element
-      of the 'waveforms_index' column corresponds to the 1 spike event of the third
-      unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then
-      the first 3 elements of the 'waveforms' column contain the 3 spike waveforms
-      that were recorded from 3 different electrodes for the first spike time of the
-      first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays
-      for a graphical representation of this example. When there is only one electrode
-      for each unit (i.e., each spike time is associated with a single waveform),
-      then the 'waveforms_index' column will have values 1, 2, ..., N, where N is
-      the number of spike events. The number of electrodes for each spike event should
-      be the same within a given unit. The 'electrodes' column should be used to indicate
-      which electrodes are associated with each unit, and the order of the waveforms
-      within a given unit x spike event should be in the same order as the electrodes
-      referenced in the 'electrodes' column of this table. The number of samples for
-      each waveform must be the same.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveforms)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveforms
-      sampling_rate:
-        name: sampling_rate
-        description: Sampling rate, in hertz.
-        range: float32
-      unit:
-        name: unit
-        description: Unit of measurement. This value is fixed to 'volts'.
-        range: text
-  Units__waveforms_index:
-    name: Units__waveforms_index
-    description: Index into the waveforms dataset. One value for every spike event.
-      See 'waveforms' for more detail.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveforms_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveforms_index
-  Units__waveforms_index_index:
-    name: Units__waveforms_index_index
-    description: Index into the waveforms_index dataset. One value for every unit
-      (row in the table). See 'waveforms' for more detail.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(waveforms_index_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: waveforms_index_index

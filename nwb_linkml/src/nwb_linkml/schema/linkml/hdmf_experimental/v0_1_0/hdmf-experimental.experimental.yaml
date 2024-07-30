@@ -1,4 +1,11 @@
 name: hdmf-experimental.experimental
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-experimental
 id: hdmf-experimental.experimental
 version: 0.1.0
 imports:
@@ -14,7 +21,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       elements:

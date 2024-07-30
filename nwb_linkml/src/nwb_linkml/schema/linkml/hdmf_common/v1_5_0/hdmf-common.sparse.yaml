@@ -1,4 +1,11 @@
 name: hdmf-common.sparse
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
 id: hdmf-common.sparse
 version: 1.5.0
 imports:
@@ -15,7 +22,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       shape:
@@ -26,19 +32,35 @@ classes:
       indices:
         name: indices
         description: The column indices.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: number_of_non_zero_values
         range: uint
         required: true
+        multivalued: false
       indptr:
         name: indptr
         description: The row index pointer.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: number_of_rows_in_the_matrix_1
         range: uint
         required: true
+        multivalued: false
       data:
         name: data
         description: The non-zero values in the matrix.
-        multivalued: true
-        range: AnyType
+        range: CSRMatrix__data
         required: true
+        multivalued: false
     tree_root: true
+  CSRMatrix__data:
+    name: CSRMatrix__data
+    description: The non-zero values in the matrix.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data

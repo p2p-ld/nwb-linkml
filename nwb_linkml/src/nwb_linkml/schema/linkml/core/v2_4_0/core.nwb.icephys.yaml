@@ -1,4 +1,11 @@
 name: core.nwb.icephys
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.icephys
 version: 2.4.0
 imports:
@@ -16,7 +23,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -30,17 +36,39 @@ classes:
       data:
         name: data
         description: Recorded voltage or current.
-        multivalued: true
-        range: numeric
+        range: PatchClampSeries__data
         required: true
+        multivalued: false
       gain:
         name: gain
         description: Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt
           (c-clamp).
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
     tree_root: true
+  PatchClampSeries__data:
+    name: PatchClampSeries__data
+    description: Recorded voltage or current.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+      array:
+        name: array
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   CurrentClampSeries:
     name: CurrentClampSeries
     description: Voltage data from an intracellular current-clamp recording. A corresponding
@@ -50,33 +78,32 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Recorded voltage.
-        multivalued: false
         range: CurrentClampSeries__data
         required: true
+        multivalued: false
       bias_current:
         name: bias_current
         description: Bias current, in amps.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
       bridge_balance:
         name: bridge_balance
         description: Bridge balance, in ohms.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
       capacitance_compensation:
         name: capacitance_compensation
         description: Capacitance compensation, in farads.
-        multivalued: false
         range: float32
         required: false
+        multivalued: false
     tree_root: true
   CurrentClampSeries__data:
     name: CurrentClampSeries__data
@@ -85,7 +112,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -109,7 +135,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -120,21 +145,21 @@ classes:
       bias_current:
         name: bias_current
         description: Bias current, in amps, fixed to 0.0.
-        multivalued: false
         range: float32
         required: true
+        multivalued: false
       bridge_balance:
         name: bridge_balance
         description: Bridge balance, in ohms, fixed to 0.0.
-        multivalued: false
         range: float32
         required: true
+        multivalued: false
       capacitance_compensation:
         name: capacitance_compensation
         description: Capacitance compensation, in farads, fixed to 0.0.
-        multivalued: false
         range: float32
         required: true
+        multivalued: false
     tree_root: true
   CurrentClampStimulusSeries:
     name: CurrentClampStimulusSeries
@@ -143,15 +168,14 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Stimulus current applied.
-        multivalued: false
         range: CurrentClampStimulusSeries__data
         required: true
+        multivalued: false
     tree_root: true
   CurrentClampStimulusSeries__data:
     name: CurrentClampStimulusSeries__data
@@ -160,7 +184,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -183,57 +206,56 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Recorded current.
-        multivalued: false
         range: VoltageClampSeries__data
         required: true
+        multivalued: false
       capacitance_fast:
         name: capacitance_fast
         description: Fast capacitance, in farads.
-        multivalued: false
         range: VoltageClampSeries__capacitance_fast
         required: false
+        multivalued: false
       capacitance_slow:
         name: capacitance_slow
         description: Slow capacitance, in farads.
-        multivalued: false
         range: VoltageClampSeries__capacitance_slow
         required: false
+        multivalued: false
       resistance_comp_bandwidth:
         name: resistance_comp_bandwidth
         description: Resistance compensation bandwidth, in hertz.
-        multivalued: false
         range: VoltageClampSeries__resistance_comp_bandwidth
         required: false
+        multivalued: false
       resistance_comp_correction:
         name: resistance_comp_correction
         description: Resistance compensation correction, in percent.
-        multivalued: false
         range: VoltageClampSeries__resistance_comp_correction
         required: false
+        multivalued: false
       resistance_comp_prediction:
         name: resistance_comp_prediction
         description: Resistance compensation prediction, in percent.
-        multivalued: false
         range: VoltageClampSeries__resistance_comp_prediction
         required: false
+        multivalued: false
       whole_cell_capacitance_comp:
         name: whole_cell_capacitance_comp
         description: Whole cell capacitance compensation, in farads.
-        multivalued: false
         range: VoltageClampSeries__whole_cell_capacitance_comp
         required: false
+        multivalued: false
       whole_cell_series_resistance_comp:
         name: whole_cell_series_resistance_comp
         description: Whole cell series resistance compensation, in ohms.
-        multivalued: false
         range: VoltageClampSeries__whole_cell_series_resistance_comp
         required: false
+        multivalued: false
     tree_root: true
   VoltageClampSeries__data:
     name: VoltageClampSeries__data
@@ -242,7 +264,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -263,7 +284,6 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_fast)
-        identifier: true
         range: string
         required: true
         equals_string: capacitance_fast
@@ -282,7 +302,6 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_slow)
-        identifier: true
         range: string
         required: true
         equals_string: capacitance_slow
@@ -301,7 +320,6 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_bandwidth)
-        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_bandwidth
@@ -321,7 +339,6 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_correction)
-        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_correction
@@ -341,7 +358,6 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_prediction)
-        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_prediction
@@ -361,7 +377,6 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_capacitance_comp)
-        identifier: true
         range: string
         required: true
         equals_string: whole_cell_capacitance_comp
@@ -381,7 +396,6 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_series_resistance_comp)
-        identifier: true
         range: string
         required: true
         equals_string: whole_cell_series_resistance_comp
@@ -401,15 +415,14 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Stimulus voltage applied.
-        multivalued: false
         range: VoltageClampStimulusSeries__data
         required: true
+        multivalued: false
     tree_root: true
   VoltageClampStimulusSeries__data:
     name: VoltageClampStimulusSeries__data
@@ -418,7 +431,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -439,53 +451,52 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
         name: description
         description: Description of electrode (e.g.,  whole-cell, sharp, etc.).
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       filtering:
         name: filtering
         description: Electrode specific filtering.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       initial_access_resistance:
         name: initial_access_resistance
         description: Initial access resistance.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       location:
         name: location
         description: Location of the electrode. Specify the area, layer, comments
           on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
           standard atlas names for anatomical regions when possible.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       resistance:
         name: resistance
         description: Electrode resistance, in ohms.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       seal:
         name: seal
         description: Information about seal used for recording.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       slice:
         name: slice
         description: Information about slice used for recording.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
     tree_root: true
   SweepTable:
     name: SweepTable
@@ -497,38 +508,34 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       sweep_number:
         name: sweep_number
         description: Sweep number of the PatchClampSeries in that row.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: uint32
+        required: true
+        multivalued: false
       series:
         name: series
         description: The PatchClampSeries with the sweep number in that row.
-        multivalued: true
         range: PatchClampSeries
+        required: true
+        multivalued: true
       series_index:
         name: series_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index for series.
+        range: VectorIndex
+        required: true
         multivalued: false
-        range: SweepTable__series_index
-        required: true
     tree_root: true
-  SweepTable__series_index:
-    name: SweepTable__series_index
-    description: Index for series.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(series_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: series_index
   IntracellularElectrodesTable:
     name: IntracellularElectrodesTable
     description: Table for storing intracellular electrode related metadata.
@@ -536,7 +543,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -546,8 +552,9 @@ classes:
       electrode:
         name: electrode
         description: Column for storing the reference to the intracellular electrode.
-        multivalued: true
         range: IntracellularElectrode
+        required: true
+        multivalued: true
     tree_root: true
   IntracellularStimuliTable:
     name: IntracellularStimuliTable
@@ -556,7 +563,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -565,25 +571,16 @@ classes:
         range: text
       stimulus:
         name: stimulus
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Column storing the reference to the recorded stimulus for the
           recording (rows).
+        range: TimeSeriesReferenceVectorData
+        required: true
         multivalued: false
-        range: IntracellularStimuliTable__stimulus
-        required: true
     tree_root: true
-  IntracellularStimuliTable__stimulus:
-    name: IntracellularStimuliTable__stimulus
-    description: Column storing the reference to the recorded stimulus for the recording
-      (rows).
-    is_a: TimeSeriesReferenceVectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(stimulus)
-        identifier: true
-        range: string
-        required: true
-        equals_string: stimulus
   IntracellularResponsesTable:
     name: IntracellularResponsesTable
     description: Table for storing intracellular response related metadata.
@@ -591,7 +588,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -600,25 +596,16 @@ classes:
         range: text
       response:
         name: response
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Column storing the reference to the recorded response for the
           recording (rows)
+        range: TimeSeriesReferenceVectorData
+        required: true
         multivalued: false
-        range: IntracellularResponsesTable__response
-        required: true
     tree_root: true
-  IntracellularResponsesTable__response:
-    name: IntracellularResponsesTable__response
-    description: Column storing the reference to the recorded response for the recording
-      (rows)
-    is_a: TimeSeriesReferenceVectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(response)
-        identifier: true
-        range: string
-        required: true
-        equals_string: response
   IntracellularRecordingsTable:
     name: IntracellularRecordingsTable
     description: A table to group together a stimulus and response from a single electrode
@@ -637,7 +624,6 @@ classes:
       name:
         name: name
         ifabsent: string(intracellular_recordings)
-        identifier: true
         range: string
         required: true
         equals_string: intracellular_recordings
@@ -649,21 +635,21 @@ classes:
       electrodes:
         name: electrodes
         description: Table for storing intracellular electrode related metadata.
-        multivalued: false
         range: IntracellularElectrodesTable
         required: true
+        multivalued: false
       stimuli:
         name: stimuli
         description: Table for storing intracellular stimulus related metadata.
-        multivalued: false
         range: IntracellularStimuliTable
         required: true
+        multivalued: false
       responses:
         name: responses
         description: Table for storing intracellular response related metadata.
-        multivalued: false
         range: IntracellularResponsesTable
         required: true
+        multivalued: false
     tree_root: true
   SimultaneousRecordingsTable:
     name: SimultaneousRecordingsTable
@@ -675,7 +661,6 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings)
-        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings
@@ -683,15 +668,19 @@ classes:
         name: recordings
         description: A reference to one or more rows in the IntracellularRecordingsTable
           table.
-        multivalued: false
         range: SimultaneousRecordingsTable__recordings
         required: true
+        multivalued: false
       recordings_index:
         name: recordings_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index dataset for the recordings column.
-        multivalued: false
-        range: SimultaneousRecordingsTable__recordings_index
+        range: VectorIndex
         required: true
+        multivalued: false
     tree_root: true
   SimultaneousRecordingsTable__recordings:
     name: SimultaneousRecordingsTable__recordings
@@ -702,7 +691,6 @@ classes:
       name:
         name: name
         ifabsent: string(recordings)
-        identifier: true
         range: string
         required: true
         equals_string: recordings
@@ -712,18 +700,6 @@ classes:
           table region applies to. This specializes the attribute inherited from DynamicTableRegion
           to fix the type of table that can be referenced here.
         range: IntracellularRecordingsTable
-  SimultaneousRecordingsTable__recordings_index:
-    name: SimultaneousRecordingsTable__recordings_index
-    description: Index dataset for the recordings column.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(recordings_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: recordings_index
   SequentialRecordingsTable:
     name: SequentialRecordingsTable
     description: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
@@ -735,7 +711,6 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings)
-        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings
@@ -743,20 +718,28 @@ classes:
         name: simultaneous_recordings
         description: A reference to one or more rows in the SimultaneousRecordingsTable
           table.
-        multivalued: false
         range: SequentialRecordingsTable__simultaneous_recordings
         required: true
+        multivalued: false
       simultaneous_recordings_index:
         name: simultaneous_recordings_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index dataset for the simultaneous_recordings column.
-        multivalued: false
-        range: SequentialRecordingsTable__simultaneous_recordings_index
+        range: VectorIndex
         required: true
+        multivalued: false
       stimulus_type:
         name: stimulus_type
         description: The type of stimulus used for the sequential recording.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: true
+        multivalued: false
     tree_root: true
   SequentialRecordingsTable__simultaneous_recordings:
     name: SequentialRecordingsTable__simultaneous_recordings
@@ -767,7 +750,6 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings)
-        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings
@@ -777,18 +759,6 @@ classes:
           table region applies to. This specializes the attribute inherited from DynamicTableRegion
           to fix the type of table that can be referenced here.
         range: SimultaneousRecordingsTable
-  SequentialRecordingsTable__simultaneous_recordings_index:
-    name: SequentialRecordingsTable__simultaneous_recordings_index
-    description: Index dataset for the simultaneous_recordings column.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(simultaneous_recordings_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: simultaneous_recordings_index
   RepetitionsTable:
     name: RepetitionsTable
     description: A table for grouping different sequential intracellular recordings
@@ -800,7 +770,6 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions)
-        identifier: true
         range: string
         required: true
         equals_string: repetitions
@@ -808,15 +777,19 @@ classes:
         name: sequential_recordings
         description: A reference to one or more rows in the SequentialRecordingsTable
           table.
-        multivalued: false
         range: RepetitionsTable__sequential_recordings
         required: true
+        multivalued: false
       sequential_recordings_index:
         name: sequential_recordings_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index dataset for the sequential_recordings column.
-        multivalued: false
-        range: RepetitionsTable__sequential_recordings_index
+        range: VectorIndex
         required: true
+        multivalued: false
     tree_root: true
   RepetitionsTable__sequential_recordings:
     name: RepetitionsTable__sequential_recordings
@@ -827,7 +800,6 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings)
-        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings
@@ -837,18 +809,6 @@ classes:
           region applies to. This specializes the attribute inherited from DynamicTableRegion
           to fix the type of table that can be referenced here.
         range: SequentialRecordingsTable
-  RepetitionsTable__sequential_recordings_index:
-    name: RepetitionsTable__sequential_recordings_index
-    description: Index dataset for the sequential_recordings column.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(sequential_recordings_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: sequential_recordings_index
   ExperimentalConditionsTable:
     name: ExperimentalConditionsTable
     description: A table for grouping different intracellular recording repetitions
@@ -858,22 +818,25 @@ classes:
       name:
         name: name
         ifabsent: string(experimental_conditions)
-        identifier: true
         range: string
         required: true
         equals_string: experimental_conditions
       repetitions:
         name: repetitions
         description: A reference to one or more rows in the RepetitionsTable table.
-        multivalued: false
         range: ExperimentalConditionsTable__repetitions
         required: true
+        multivalued: false
       repetitions_index:
         name: repetitions_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index dataset for the repetitions column.
-        multivalued: false
-        range: ExperimentalConditionsTable__repetitions_index
+        range: VectorIndex
         required: true
+        multivalued: false
     tree_root: true
   ExperimentalConditionsTable__repetitions:
     name: ExperimentalConditionsTable__repetitions
@@ -883,7 +846,6 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions)
-        identifier: true
         range: string
         required: true
         equals_string: repetitions
@@ -893,15 +855,3 @@ classes:
           applies to. This specializes the attribute inherited from DynamicTableRegion
           to fix the type of table that can be referenced here.
         range: RepetitionsTable
-  ExperimentalConditionsTable__repetitions_index:
-    name: ExperimentalConditionsTable__repetitions_index
-    description: Index dataset for the repetitions column.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(repetitions_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: repetitions_index

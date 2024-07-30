@@ -69,6 +69,33 @@ flat_to_nptyping = {
     "object": "Object",
 }
 
+flat_to_np = {
+    "float": float,
+    "float32": np.float32,
+    "double": np.double,
+    "float64": np.float64,
+    "long": np.longlong,
+    "int64": np.int64,
+    "int": int,
+    "int32": np.int32,
+    "int16": np.int16,
+    "short": np.short,
+    "int8": np.int8,
+    "uint": np.uint,
+    "uint32": np.uint32,
+    "uint16": np.uint16,
+    "uint8": np.uint8,
+    "uint64": np.uint64,
+    "numeric": np.number,
+    "text": str,
+    "utf": str,
+    "utf8": str,
+    "utf_8": str,
+    "ascii": str,
+    "bool": bool,
+    "isodatetime": np.datetime64,
+}
+
 np_to_python = {
     Any: Any,
     np.number: float,

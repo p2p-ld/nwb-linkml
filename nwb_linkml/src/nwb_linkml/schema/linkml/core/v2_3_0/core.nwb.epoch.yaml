@@ -1,4 +1,11 @@
 name: core.nwb.epoch
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.epoch
 version: 2.3.0
 imports:
@@ -15,63 +22,91 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       start_time:
         name: start_time
         description: Start time of epoch, in seconds.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       stop_time:
         name: stop_time
         description: Stop time of epoch, in seconds.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       tags:
         name: tags
         description: User-defined tags that identify or categorize events.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: false
+        multivalued: false
       tags_index:
         name: tags_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index for tags.
-        multivalued: false
-        range: TimeIntervals__tags_index
+        range: VectorIndex
         required: false
+        multivalued: false
       timeseries:
         name: timeseries
         description: An index into a TimeSeries object.
-        multivalued: true
-        range: AnyType
+        range: TimeIntervals__timeseries
+        required: false
+        multivalued: false
       timeseries_index:
         name: timeseries_index
+        annotations:
+          named:
+            tag: named
+            value: true
         description: Index for timeseries.
-        multivalued: false
-        range: TimeIntervals__timeseries_index
+        range: VectorIndex
         required: false
+        multivalued: false
     tree_root: true
-  TimeIntervals__tags_index:
-    name: TimeIntervals__tags_index
-    description: Index for tags.
-    is_a: VectorIndex
+  TimeIntervals__timeseries:
+    name: TimeIntervals__timeseries
+    description: An index into a TimeSeries object.
+    is_a: VectorData
     attributes:
       name:
         name: name
-        ifabsent: string(tags_index)
-        identifier: true
+        ifabsent: string(timeseries)
         range: string
         required: true
-        equals_string: tags_index
-  TimeIntervals__timeseries_index:
-    name: TimeIntervals__timeseries_index
-    description: Index for timeseries.
-    is_a: VectorIndex
-    attributes:
-      name:
-        name: name
-        ifabsent: string(timeseries_index)
-        identifier: true
-        range: string
-        required: true
-        equals_string: timeseries_index
+        equals_string: timeseries
+      idx_start:
+        name: idx_start
+        description: Start index into the TimeSeries 'data' and 'timestamp' datasets
+          of the referenced TimeSeries. The first dimension of those arrays is always
+          time.
+        range: int32
+        required: false
+        multivalued: false
+      count:
+        name: count
+        description: Number of data samples available in this time series, during
+          this epoch.
+        range: int32
+        required: false
+        multivalued: false
+      timeseries:
+        name: timeseries
+        description: the TimeSeries that this index applies to.
+        range: TimeSeries
+        required: false
+        multivalued: false

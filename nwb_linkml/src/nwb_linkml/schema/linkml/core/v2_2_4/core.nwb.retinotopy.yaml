@@ -1,4 +1,11 @@
 name: core.nwb.retinotopy
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.retinotopy
 version: 2.2.4
 imports:
@@ -21,64 +28,68 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
+        ifabsent: string(ImagingRetinotopy)
         range: string
         required: true
       axis_1_phase_map:
         name: axis_1_phase_map
         description: Phase response to stimulus on the first measured axis.
-        multivalued: false
         range: ImagingRetinotopy__axis_1_phase_map
         required: true
+        multivalued: false
       axis_1_power_map:
         name: axis_1_power_map
         description: Power response on the first measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
-        multivalued: false
         range: ImagingRetinotopy__axis_1_power_map
         required: false
+        multivalued: false
       axis_2_phase_map:
         name: axis_2_phase_map
         description: Phase response to stimulus on the second measured axis.
-        multivalued: false
         range: ImagingRetinotopy__axis_2_phase_map
         required: true
+        multivalued: false
       axis_2_power_map:
         name: axis_2_power_map
         description: Power response on the second measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
-        multivalued: false
         range: ImagingRetinotopy__axis_2_power_map
         required: false
+        multivalued: false
       axis_descriptions:
         name: axis_descriptions
         description: Two-element array describing the contents of the two response
           axis fields. Description should be something like ['altitude', 'azimuth']
           or '['radius', 'theta'].
-        multivalued: true
+        array:
+          dimensions:
+          - alias: axis_1_axis_2
+            exact_cardinality: 2
         range: text
         required: true
+        multivalued: false
       focal_depth_image:
         name: focal_depth_image
         description: 'Gray-scale image taken with same settings/parameters (e.g.,
           focal depth, wavelength) as data collection. Array format: [rows][columns].'
-        multivalued: false
         range: ImagingRetinotopy__focal_depth_image
         required: false
+        multivalued: false
       sign_map:
         name: sign_map
         description: Sine of the angle between the direction of the gradient in axis_1
           and axis_2.
-        multivalued: false
         range: ImagingRetinotopy__sign_map
         required: false
+        multivalued: false
       vasculature_image:
         name: vasculature_image
         description: 'Gray-scale anatomical image of cortical surface. Array structure:
           [rows][columns]'
-        multivalued: false
         range: ImagingRetinotopy__vasculature_image
         required: true
+        multivalued: false
     tree_root: true
   ImagingRetinotopy__axis_1_phase_map:
     name: ImagingRetinotopy__axis_1_phase_map
@@ -87,7 +98,6 @@ classes:
       name:
         name: name
         ifabsent: string(axis_1_phase_map)
-        identifier: true
         range: string
         required: true
         equals_string: axis_1_phase_map
@@ -106,19 +116,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_1_phase_map__Array
-  ImagingRetinotopy__axis_1_phase_map__Array:
-    name: ImagingRetinotopy__axis_1_phase_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__axis_1_power_map:
     name: ImagingRetinotopy__axis_1_power_map
     description: Power response on the first measured axis. Response is scaled so
@@ -127,7 +129,6 @@ classes:
       name:
         name: name
         ifabsent: string(axis_1_power_map)
-        identifier: true
         range: string
         required: true
         equals_string: axis_1_power_map
@@ -146,19 +147,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_1_power_map__Array
-  ImagingRetinotopy__axis_1_power_map__Array:
-    name: ImagingRetinotopy__axis_1_power_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__axis_2_phase_map:
     name: ImagingRetinotopy__axis_2_phase_map
     description: Phase response to stimulus on the second measured axis.
@@ -166,7 +159,6 @@ classes:
       name:
         name: name
         ifabsent: string(axis_2_phase_map)
-        identifier: true
         range: string
         required: true
         equals_string: axis_2_phase_map
@@ -185,19 +177,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_2_phase_map__Array
-  ImagingRetinotopy__axis_2_phase_map__Array:
-    name: ImagingRetinotopy__axis_2_phase_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__axis_2_power_map:
     name: ImagingRetinotopy__axis_2_power_map
     description: Power response on the second measured axis. Response is scaled so
@@ -206,7 +190,6 @@ classes:
       name:
         name: name
         ifabsent: string(axis_2_power_map)
-        identifier: true
         range: string
         required: true
         equals_string: axis_2_power_map
@@ -225,19 +208,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__axis_2_power_map__Array
-  ImagingRetinotopy__axis_2_power_map__Array:
-    name: ImagingRetinotopy__axis_2_power_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__focal_depth_image:
     name: ImagingRetinotopy__focal_depth_image
     description: 'Gray-scale image taken with same settings/parameters (e.g., focal
@@ -246,7 +221,6 @@ classes:
       name:
         name: name
         ifabsent: string(focal_depth_image)
-        identifier: true
         range: string
         required: true
         equals_string: focal_depth_image
@@ -274,19 +248,11 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__focal_depth_image__Array
-  ImagingRetinotopy__focal_depth_image__Array:
-    name: ImagingRetinotopy__focal_depth_image__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: uint16
-        required: true
-      num_cols:
-        name: num_cols
-        range: uint16
-        required: true
   ImagingRetinotopy__sign_map:
     name: ImagingRetinotopy__sign_map
     description: Sine of the angle between the direction of the gradient in axis_1
@@ -295,7 +261,6 @@ classes:
       name:
         name: name
         ifabsent: string(sign_map)
-        identifier: true
         range: string
         required: true
         equals_string: sign_map
@@ -310,19 +275,11 @@ classes:
         range: float32
       array:
         name: array
-        range: ImagingRetinotopy__sign_map__Array
-  ImagingRetinotopy__sign_map__Array:
-    name: ImagingRetinotopy__sign_map__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: float32
-        required: true
-      num_cols:
-        name: num_cols
-        range: float32
-        required: true
   ImagingRetinotopy__vasculature_image:
     name: ImagingRetinotopy__vasculature_image
     description: 'Gray-scale anatomical image of cortical surface. Array structure:
@@ -331,7 +288,6 @@ classes:
       name:
         name: name
         ifabsent: string(vasculature_image)
-        identifier: true
         range: string
         required: true
         equals_string: vasculature_image
@@ -355,16 +311,8 @@ classes:
         range: text
       array:
         name: array
-        range: ImagingRetinotopy__vasculature_image__Array
-  ImagingRetinotopy__vasculature_image__Array:
-    name: ImagingRetinotopy__vasculature_image__Array
-    is_a: Arraylike
-    attributes:
-      num_rows:
-        name: num_rows
+        array:
+          dimensions:
+          - alias: num_rows
+          - alias: num_cols
         range: uint16
-        required: true
-      num_cols:
-        name: num_cols
-        range: uint16
-        required: true

@@ -1,21 +1,11 @@
 import os
-from doctest import ELLIPSIS, NORMALIZE_WHITESPACE
 from pathlib import Path
+from typing import List
 
 import pytest
 import requests_cache
-from sybil import Sybil
-from sybil.parsers.rest import DocTestParser, PythonCodeBlockParser
 
 from .fixtures import *  # noqa: F403
-
-pytest_collect_file = Sybil(
-    parsers=[
-        DocTestParser(optionflags=ELLIPSIS + NORMALIZE_WHITESPACE),
-        PythonCodeBlockParser(),
-    ],
-    patterns=["*.py"],
-).pytest()
 
 
 def pytest_addoption(parser):
@@ -27,6 +17,24 @@ def pytest_addoption(parser):
     parser.addoption(
         "--without-cache", action="store_true", help="Don't use a sqlite cache for network requests"
     )
+    parser.addoption(
+        "--dev",
+        action="store_true",
+        help=(
+            "run tests that are intended only for development use, eg. those that generate output"
+            " for inspection"
+        ),
+    )
+
+
+def pytest_collection_modifyitems(config, items: List[pytest.Item]):
+    # remove dev tests from collection if we're not in dev mode!
+    if config.getoption("--dev"):
+        remove_tests = [t for t in items if not t.get_closest_marker("dev")]
+    else:
+        remove_tests = [t for t in items if t.get_closest_marker("dev")]
+    for t in remove_tests:
+        items.remove(t)
 
 
 @pytest.fixture(autouse=True, scope="session")

@@ -1,4 +1,11 @@
 name: core.nwb.base
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.base
 version: 2.2.1
 imports:
@@ -13,7 +20,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -26,7 +32,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       resolution:
@@ -39,32 +44,25 @@ classes:
         range: text
       array:
         name: array
-        range: Image__Array
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+            - alias: r_g_b
+              exact_cardinality: 3
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+            - alias: r_g_b_a
+              exact_cardinality: 4
     tree_root: true
-  Image__Array:
-    name: Image__Array
-    is_a: Arraylike
-    attributes:
-      x:
-        name: x
-        range: numeric
-        required: true
-      y:
-        name: y
-        range: numeric
-        required: true
-      r, g, b:
-        name: r, g, b
-        range: numeric
-        required: false
-        minimum_cardinality: 3
-        maximum_cardinality: 3
-      r, g, b, a:
-        name: r, g, b, a
-        range: numeric
-        required: false
-        minimum_cardinality: 4
-        maximum_cardinality: 4
   NWBContainer:
     name: NWBContainer
     description: An abstract data type for a generic container storing collections
@@ -73,7 +71,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -85,7 +82,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -96,7 +92,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -115,40 +110,49 @@ classes:
           dimension should always represent time. This can also be used to store binary
           data (e.g., image frames). This can also be a link to data stored in an
           external file.
-        multivalued: false
         range: TimeSeries__data
         required: true
+        multivalued: false
       starting_time:
         name: starting_time
         description: Timestamp of the first sample in seconds. When timestamps are
           uniformly spaced, the timestamp of the first sample can be specified and
           all subsequent ones calculated from the sampling rate attribute.
-        multivalued: false
         range: TimeSeries__starting_time
         required: false
+        multivalued: false
       timestamps:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
           the common experiment master-clock stored in NWBFile.timestamps_reference_time.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_times
         range: float64
         required: false
+        multivalued: false
       control:
         name: control
         description: Numerical labels that apply to each time point in data for the
           purpose of querying and slicing data by these values. If present, the length
           of this array should be the same size as the first dimension of data.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_times
         range: uint8
         required: false
+        multivalued: false
       control_description:
         name: control_description
         description: Description of each control value. Must be present if control
           is present. If present, control_description[0] should describe time points
           where control == 0.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_control_values
         range: text
         required: false
+        multivalued: false
       sync:
         name: sync
         description: Lab-specific time and sync information as provided directly from
@@ -157,9 +161,9 @@ classes:
           This group will usually only be populated in TimeSeries that are stored
           external to the NWB file, in files storing raw data. Once timestamp data
           is calculated, the contents of 'sync' are mostly for archival purposes.
-        multivalued: false
         range: TimeSeries__sync
         required: false
+        multivalued: false
     tree_root: true
   TimeSeries__data:
     name: TimeSeries__data
@@ -170,7 +174,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -201,27 +204,26 @@ classes:
         range: text
       array:
         name: array
-        range: TimeSeries__data__Array
-  TimeSeries__data__Array:
-    name: TimeSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
         range: AnyType
-        required: true
-      num_DIM2:
-        name: num_DIM2
-        range: AnyType
-        required: false
-      num_DIM3:
-        name: num_DIM3
-        range: AnyType
-        required: false
-      num_DIM4:
-        name: num_DIM4
-        range: AnyType
-        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_dim2
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_dim2
+            - alias: num_dim3
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_dim2
+            - alias: num_dim3
+            - alias: num_dim4
   TimeSeries__starting_time:
     name: TimeSeries__starting_time
     description: Timestamp of the first sample in seconds. When timestamps are uniformly
@@ -231,7 +233,6 @@ classes:
       name:
         name: name
         ifabsent: string(starting_time)
-        identifier: true
         range: string
         required: true
         equals_string: starting_time
@@ -259,7 +260,6 @@ classes:
       name:
         name: name
         ifabsent: string(sync)
-        identifier: true
         range: string
         required: true
         equals_string: sync
@@ -268,13 +268,14 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: NWBDataInterface
-      - range: DynamicTable
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
     tree_root: true
   Images:
     name: Images
@@ -283,7 +284,7 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
+        ifabsent: string(Images)
         range: string
         required: true
       description:
@@ -293,7 +294,7 @@ classes:
       image:
         name: image
         description: Images stored in this collection.
-        multivalued: true
         range: Image
         required: true
+        multivalued: true
     tree_root: true

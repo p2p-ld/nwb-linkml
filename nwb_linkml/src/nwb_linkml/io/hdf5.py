@@ -40,7 +40,7 @@ from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf
 # from nwb_linkml.models.core_nwb_file import NWBFile
 if TYPE_CHECKING:
     from nwb_linkml.models import NWBFile
-from nwb_linkml.providers.schema import SchemaProvider
+    from nwb_linkml.providers.schema import SchemaProvider
 
 if sys.version_info.minor >= 11:
     from typing import Never
@@ -156,7 +156,7 @@ class HDF5IO:
         """
         raise NotImplementedError("Writing to HDF5 is not implemented yet!")
 
-    def make_provider(self) -> SchemaProvider:
+    def make_provider(self) -> "SchemaProvider":
         """
         Create a :class:`~.providers.schema.SchemaProvider` by
         reading specifications from the NWBFile ``/specification`` group and translating
@@ -166,6 +166,8 @@ class HDF5IO:
             :class:`~.providers.schema.SchemaProvider` : Schema Provider with correct versions
                 specified as defaults
         """
+        from nwb_linkml.providers.schema import SchemaProvider
+
         h5f = h5py.File(str(self.path))
         schema = read_specs_as_dicts(h5f.get("specifications"))
 

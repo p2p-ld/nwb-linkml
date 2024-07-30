@@ -1,4 +1,11 @@
 name: core.nwb.file
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.file
 version: 2.2.1
 imports:
@@ -23,7 +30,6 @@ classes:
       name:
         name: name
         ifabsent: string(root)
-        identifier: true
         range: string
         required: true
         equals_string: root
@@ -41,33 +47,36 @@ classes:
           The file can be created after the experiment was run, so this may differ
           from the experiment start time. Each modification to the nwb file adds a
           new entry to the array.'
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_modifications
         range: isodatetime
         required: true
+        multivalued: false
       identifier:
         name: identifier
         description: A unique text identifier for the file. For example, concatenated
           lab name, file creation date/time and experimentalist, or a hash of these
           and/or other values. The goal is that the string should be unique to all
           other files.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       session_description:
         name: session_description
         description: A description of the experimental session and data in the file.
-        multivalued: false
         range: text
         required: true
+        multivalued: false
       session_start_time:
         name: session_start_time
         description: 'Date and time of the experiment/session start. The date is stored
           in UTC with local timezone offset as ISO 8601 extended formatted string:
           2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in "Z" with no timezone
           offset. Date accuracy is up to milliseconds.'
-        multivalued: false
         range: isodatetime
         required: true
+        multivalued: false
       timestamps_reference_time:
         name: timestamps_reference_time
         description: 'Date and time corresponding to time zero of all timestamps.
@@ -75,9 +84,9 @@ classes:
           formatted string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end
           in "Z" with no timezone offset. Date accuracy is up to milliseconds. All
           times stored in the file use this time as reference (i.e., time zero).'
-        multivalued: false
         range: isodatetime
         required: true
+        multivalued: false
       acquisition:
         name: acquisition
         description: Data streams recorded from the system, including ephys, ophys,
@@ -154,9 +163,9 @@ classes:
           an experiment. The stimulus group is organized so that one version of template
           stimuli can be stored and these be used multiple times. These templates
           can exist in the present file or can be linked to a remote library file.
-        multivalued: false
         range: NWBFile__stimulus
         required: true
+        multivalued: false
       general:
         name: general
         description: Experimental metadata, including protocol, notes and description
@@ -174,24 +183,29 @@ classes:
           datasets. All entries in the below table are to be included when data is
           present. Unused groups (e.g., intracellular_ephys in an optophysiology experiment)
           should not be created unless there is data to store within them.
-        multivalued: false
         range: NWBFile__general
         required: true
+        multivalued: false
       intervals:
         name: intervals
         description: Experimental intervals, whether that be logically distinct sub-experiments
           having a particular scientific goal, trials (see trials subgroup) during
           an experiment, or epochs (see epochs subgroup) deriving from analysis of
           data.
-        multivalued: false
-        range: NWBFile__intervals
-        required: false
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeIntervals
+        - range: TimeIntervals
+        - range: TimeIntervals
+        - range: TimeIntervals
       units:
         name: units
         description: Data about sorted spike units.
-        multivalued: false
         range: Units
         required: false
+        multivalued: false
     tree_root: true
   NWBFile__stimulus:
     name: NWBFile__stimulus
@@ -211,7 +225,6 @@ classes:
       name:
         name: name
         ifabsent: string(stimulus)
-        identifier: true
         range: string
         required: true
         equals_string: stimulus
@@ -254,120 +267,128 @@ classes:
       name:
         name: name
         ifabsent: string(general)
-        identifier: true
         range: string
         required: true
         equals_string: general
       data_collection:
         name: data_collection
         description: Notes about data collection and analysis.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       experiment_description:
         name: experiment_description
         description: General description of the experiment.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       experimenter:
         name: experimenter
         description: Name of person(s) who performed the experiment. Can also specify
           roles of different people involved.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_experimenters
         range: text
         required: false
+        multivalued: false
       institution:
         name: institution
         description: Institution(s) where experiment was performed.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       keywords:
         name: keywords
         description: Terms to search over.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_keywords
         range: text
         required: false
+        multivalued: false
       lab:
         name: lab
         description: Laboratory where experiment was performed.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       notes:
         name: notes
         description: Notes about the experiment.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       pharmacology:
         name: pharmacology
         description: Description of drugs used, including how and when they were administered.
           Anesthesia(s), painkiller(s), etc., plus dosage, concentration, etc.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       protocol:
         name: protocol
         description: Experimental protocol, if applicable. e.g., include IACUC protocol
           number.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       related_publications:
         name: related_publications
         description: Publication information. PMID, DOI, URL, etc.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_publications
         range: text
         required: false
+        multivalued: false
       session_id:
         name: session_id
         description: Lab-specific ID for the session.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       slices:
         name: slices
         description: Description of slices, including information about preparation
           thickness, orientation, temperature, and bath solution.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       source_script:
         name: source_script
         description: Script file or link to public source code used to create this
           NWB file.
-        multivalued: false
         range: NWBFile__general__source_script
         required: false
+        multivalued: false
       stimulus:
         name: stimulus
         description: Notes about stimuli, such as how and where they were presented.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       surgery:
         name: surgery
         description: Narrative description about surgery/surgeries, including date(s)
           and who performed surgery.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       virus:
         name: virus
         description: Information about virus(es) used in experiments, including virus
           ID, source, date made, injection location, volume, etc.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       nwb_container:
         name: nwb_container
         description: Place-holder than can be extended so that lab-specific meta-data
           can be placed in /general.
-        multivalued: true
         range: NWBContainer
         required: false
+        multivalued: true
       devices:
         name: devices
         description: Description of hardware devices used during experiment, e.g.,
@@ -381,21 +402,21 @@ classes:
         name: subject
         description: Information about the animal or person from which the data was
           measured.
-        multivalued: false
         range: Subject
         required: false
+        multivalued: false
       extracellular_ephys:
         name: extracellular_ephys
         description: Metadata related to extracellular electrophysiology.
-        multivalued: false
         range: NWBFile__general__extracellular_ephys
         required: false
+        multivalued: false
       intracellular_ephys:
         name: intracellular_ephys
         description: Metadata related to intracellular electrophysiology.
-        multivalued: false
         range: NWBFile__general__intracellular_ephys
         required: false
+        multivalued: false
       optogenetics:
         name: optogenetics
         description: Metadata describing optogenetic stimuluation.
@@ -420,7 +441,6 @@ classes:
       name:
         name: name
         ifabsent: string(source_script)
-        identifier: true
         range: string
         required: true
         equals_string: source_script
@@ -440,60 +460,59 @@ classes:
       name:
         name: name
         ifabsent: string(subject)
-        identifier: true
         range: string
         required: true
         equals_string: subject
       age:
         name: age
         description: Age of subject. Can be supplied instead of 'date_of_birth'.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       date_of_birth:
         name: date_of_birth
         description: Date of birth of subject. Can be supplied instead of 'age'.
-        multivalued: false
         range: isodatetime
         required: false
+        multivalued: false
       description:
         name: description
         description: Description of subject and where subject came from (e.g., breeder,
           if animal).
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       genotype:
         name: genotype
         description: Genetic strain. If absent, assume Wild Type (WT).
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       sex:
         name: sex
         description: Gender of subject.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       species:
         name: species
         description: Species of subject.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       subject_id:
         name: subject_id
         description: ID of animal/person used/participating in experiment (lab convention).
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       weight:
         name: weight
         description: Weight at time of experiment, at time of surgery and at other
           important times.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
   NWBFile__general__extracellular_ephys:
     name: NWBFile__general__extracellular_ephys
     description: Metadata related to extracellular electrophysiology.
@@ -501,22 +520,21 @@ classes:
       name:
         name: name
         ifabsent: string(extracellular_ephys)
-        identifier: true
         range: string
         required: true
         equals_string: extracellular_ephys
       electrode_group:
         name: electrode_group
         description: Physical group of electrodes.
-        multivalued: true
         range: ElectrodeGroup
         required: false
+        multivalued: true
       electrodes:
         name: electrodes
         description: A table of all electrodes (i.e. channels) used for recording.
-        multivalued: false
         range: NWBFile__general__extracellular_ephys__electrodes
         required: false
+        multivalued: false
   NWBFile__general__extracellular_ephys__electrodes:
     name: NWBFile__general__extracellular_ephys__electrodes
     description: A table of all electrodes (i.e. channels) used for recording.
@@ -525,72 +543,116 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes)
-        identifier: true
         range: string
         required: true
         equals_string: electrodes
       x:
         name: x
         description: x coordinate of the channel location in the brain (+x is posterior).
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       y:
         name: y
         description: y coordinate of the channel location in the brain (+y is inferior).
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       z:
         name: z
         description: z coordinate of the channel location in the brain (+z is right).
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       imp:
         name: imp
         description: Impedance of the channel.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       location:
         name: location
         description: Location of the electrode (channel). Specify the area, layer,
           comments on estimation of area/layer, stereotaxic coordinates if in vivo,
           etc. Use standard atlas names for anatomical regions when possible.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: true
+        multivalued: false
       filtering:
         name: filtering
         description: Description of hardware filtering.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: true
+        multivalued: false
       group:
         name: group
         description: Reference to the ElectrodeGroup this electrode is a part of.
-        multivalued: true
         range: ElectrodeGroup
+        required: true
+        multivalued: true
       group_name:
         name: group_name
         description: Name of the ElectrodeGroup this electrode is a part of.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: true
+        multivalued: false
       rel_x:
         name: rel_x
         description: x coordinate in electrode group
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: false
+        multivalued: false
       rel_y:
         name: rel_y
         description: y coordinate in electrode group
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: false
+        multivalued: false
       rel_z:
         name: rel_z
         description: z coordinate in electrode group
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: float32
+        required: false
+        multivalued: false
       reference:
         name: reference
         description: Description of the reference used for this electrode.
-        multivalued: true
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: text
+        required: false
+        multivalued: false
   NWBFile__general__intracellular_ephys:
     name: NWBFile__general__intracellular_ephys
     description: Metadata related to intracellular electrophysiology.
@@ -598,7 +660,6 @@ classes:
       name:
         name: name
         ifabsent: string(intracellular_ephys)
-        identifier: true
         range: string
         required: true
         equals_string: intracellular_ephys
@@ -607,57 +668,18 @@ classes:
         description: Description of filtering used. Includes filtering type and parameters,
           frequency fall-off, etc. If this changes between TimeSeries, filter description
           should be stored as a text attribute for each TimeSeries.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
       intracellular_electrode:
         name: intracellular_electrode
         description: An intracellular electrode.
-        multivalued: true
         range: IntracellularElectrode
         required: false
+        multivalued: true
       sweep_table:
         name: sweep_table
         description: The table which groups different PatchClampSeries together.
-        multivalued: false
         range: SweepTable
         required: false
-  NWBFile__intervals:
-    name: NWBFile__intervals
-    description: Experimental intervals, whether that be logically distinct sub-experiments
-      having a particular scientific goal, trials (see trials subgroup) during an
-      experiment, or epochs (see epochs subgroup) deriving from analysis of data.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(intervals)
-        identifier: true
-        range: string
-        required: true
-        equals_string: intervals
-      epochs:
-        name: epochs
-        description: Divisions in time marking experimental stages or sub-divisions
-          of a single recording session.
         multivalued: false
-        range: TimeIntervals
-        required: false
-      trials:
-        name: trials
-        description: Repeated experimental events that have a logical grouping.
-        multivalued: false
-        range: TimeIntervals
-        required: false
-      invalid_times:
-        name: invalid_times
-        description: Time intervals that should be removed from analysis.
-        multivalued: false
-        range: TimeIntervals
-        required: false
-      time_intervals:
-        name: time_intervals
-        description: Optional additional table(s) for describing other experimental
-          time intervals.
-        multivalued: true
-        range: TimeIntervals
-        required: false

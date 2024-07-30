@@ -1,4 +1,11 @@
 name: hdmf-common.base
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
 id: hdmf-common.base
 version: 1.5.0
 imports:
@@ -11,7 +18,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -22,7 +28,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
     tree_root: true
@@ -31,10 +36,11 @@ classes:
     description: A simple Container for holding onto multiple containers.
     is_a: Container
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: Container
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: Container
     tree_root: true

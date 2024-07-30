@@ -7,11 +7,12 @@ from typing import Any, List, Optional, Type
 import dask.array as da
 import h5py
 import numpy as np
+from numpydantic import NDArray
+from numpydantic.interface.hdf5 import H5ArrayPath
 from pydantic import BaseModel, create_model
 
 from nwb_linkml.maps.dtype import struct_from_dtype
 from nwb_linkml.types.hdf5 import HDF5_Path
-from nwb_linkml.types.ndarray import NDArray, NDArrayProxy
 
 
 def model_from_dynamictable(group: h5py.Group, base: Optional[BaseModel] = None) -> Type[BaseModel]:
@@ -61,7 +62,7 @@ def dynamictable_to_model(
             try:
                 items[col] = da.from_array(group[col])
             except NotImplementedError:
-                items[col] = NDArrayProxy(h5f_file=group.file.filename, path=group[col].name)
+                items[col] = H5ArrayPath(file=group.file.filename, path=group[col].name)
 
     return model.model_construct(hdf5_path=group.name, name=group.name.split("/")[-1], **items)
 

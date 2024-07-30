@@ -1,0 +1,28 @@
+name: core
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: true
+  namespace:
+    tag: namespace
+    value: core
+description: NWB namespace
+id: core
+version: 2.7.0
+imports:
+- core.nwb.base
+- core.nwb.device
+- core.nwb.epoch
+- core.nwb.image
+- core.nwb.file
+- core.nwb.misc
+- core.nwb.behavior
+- core.nwb.ecephys
+- core.nwb.icephys
+- core.nwb.ogen
+- core.nwb.ophys
+- core.nwb.retinotopy
+- core.nwb.language
+- ../../hdmf_common/v1_8_0/namespace
+- ../../hdmf_experimental/v0_5_0/namespace
+default_prefix: core/

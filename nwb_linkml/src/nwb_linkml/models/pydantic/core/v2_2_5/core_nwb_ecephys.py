@@ -1,76 +1,100 @@
 from __future__ import annotations
 from datetime import datetime, date
+from decimal import Decimal
 from enum import Enum
-from typing import List, Dict, Optional, Any, Union, ClassVar
-from pydantic import BaseModel as BaseModel, Field
-from nptyping import (
-    Shape,
-    Float,
-    Float32,
-    Double,
-    Float64,
-    LongLong,
-    Int64,
-    Int,
-    Int32,
-    Int16,
-    Short,
-    Int8,
-    UInt,
-    UInt32,
-    UInt16,
-    UInt8,
-    UInt64,
-    Number,
-    String,
-    Unicode,
-    Unicode,
-    Unicode,
-    String,
-    Bool,
-    Datetime64,
-)
-from nwb_linkml.types import NDArray
+import re
 import sys
-
-if sys.version_info >= (3, 8):
-    from typing import Literal
-else:
-    from typing_extensions import Literal
-
-
-from .core_nwb_base import (
-    TimeSeriesSync,
-    TimeSeriesStartingTime,
-    NWBDataInterface,
+import numpy as np
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTableRegion
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    ValidationInfo,
+    BeforeValidator,
+)
+from ...core.v2_2_5.core_nwb_base import (
     TimeSeries,
+    TimeSeriesStartingTime,
+    TimeSeriesSync,
+    NWBDataInterface,
     NWBContainer,
 )
-
-from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, DynamicTableRegion
-
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "2.2.5"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        strict=False,
+    )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
     )
+    object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
 
-class LinkML_Meta(BaseModel):
-    """Extra LinkML Metadata stored as a class attribute"""
+class LinkMLMeta(RootModel):
+    root: Dict[str, Any] = {}
+    model_config = ConfigDict(frozen=True)
 
-    tree_root: bool = False
+    def __getattr__(self, key: str):
+        return getattr(self.root, key)
+
+    def __getitem__(self, key: str):
+        return self.root[key]
+
+    def __setitem__(self, key: str, value):
+        self.root[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.root
+
+
+NUMPYDANTIC_VERSION = "1.2.1"
+
+ModelType = TypeVar("ModelType", bound=Type[BaseModel])
+
+
+def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
+    """Get the name of the slot that refers to this object"""
+    assert isinstance(item, (BaseModel, dict))
+    name = info.field_name
+    if isinstance(item, BaseModel):
+        item.name = name
+    else:
+        item["name"] = name
+    return item
+
+
+Named = Annotated[ModelType, BeforeValidator(_get_name)]
+linkml_meta = LinkMLMeta(
+    {
+        "annotations": {
+            "is_namespace": {"tag": "is_namespace", "value": False},
+            "namespace": {"tag": "namespace", "value": "core"},
+        },
+        "default_prefix": "core.nwb.ecephys/",
+        "id": "core.nwb.ecephys",
+        "imports": [
+            "core.nwb.base",
+            "../../hdmf_common/v1_1_3/namespace",
+            "core.nwb.device",
+            "core.nwb.language",
+        ],
+        "name": "core.nwb.ecephys",
+    }
+)
 
 
 class ElectricalSeries(TimeSeries):
@@ -78,16 +102,27 @@ class ElectricalSeries(TimeSeries):
     A time series of acquired voltage data from extracellular recordings. The data field is an int or float array storing data in volts. The first dimension should always represent time. The second dimension, if present, should represent channels.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
     name: str = Field(...)
-    data: ElectricalSeriesData = Field(..., description="""Recorded voltage data.""")
-    electrodes: ElectricalSeriesElectrodes = Field(
+    data: Union[
+        NDArray[Shape["* num_times"], np.number],
+        NDArray[Shape["* num_times, * num_channels"], np.number],
+        NDArray[Shape["* num_times, * num_channels, * num_samples"], np.number],
+    ] = Field(..., description="""Recorded voltage data.""")
+    electrodes: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
-    channel_conversion: Optional[List[float]] = Field(
-        default_factory=list,
+    channel_conversion: Optional[NDArray[Shape["* num_channels"], np.float32]] = Field(
+        None,
         description="""Channel-specific conversion factor. Multiply the data in the 'data' dataset by these values along the channel axis (as indicated by axis attribute) AND by the global conversion factor in the 'conversion' attribute of 'data' to get the data values in Volts, i.e, data in Volts = data * data.conversion * channel_conversion. This approach allows for both global and per-channel data conversion factors needed to support the storage of electrical recordings as native values generated by data acquisition systems. If this dataset is not present, then there is no channel-specific conversion factor, i.e. it is 1 for all channels.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_channels"}]}}},
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -98,65 +133,27 @@ class ElectricalSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[List[float]] = Field(
-        default_factory=list,
+    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+        None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
-
-
-class ElectricalSeriesData(ConfiguredBaseModel):
-    """
-    Recorded voltage data.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["data"] = Field("data")
-    unit: Optional[str] = Field(
-        None,
-        description="""Base unit of measurement for working with the data. This value is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and 'channel_conversion' (if present).""",
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* num_times"], Number],
-            NDArray[Shape["* num_times, * num_channels"], Number],
-            NDArray[Shape["* num_times, * num_channels, * num_samples"], Number],
-        ]
-    ] = Field(None)
-
-
-class ElectricalSeriesElectrodes(DynamicTableRegion):
-    """
-    DynamicTableRegion pointer to the electrodes that this time series was generated from.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["electrodes"] = Field("electrodes")
-    table: Optional[DynamicTable] = Field(
-        None, description="""Reference to the DynamicTable object that this region applies to."""
-    )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
 
 
 class SpikeEventSeries(ElectricalSeries):
@@ -164,20 +161,31 @@ class SpikeEventSeries(ElectricalSeries):
     Stores snapshots/snippets of recorded spike events (i.e., threshold crossings). This may also be raw data, as reported by ephys hardware. If so, the TimeSeries::description field should describe how events were detected. All SpikeEventSeries should reside in a module (under EventWaveform interface) even if the spikes were reported and stored by hardware. All events span the same recording channels and store snapshots of equal duration. TimeSeries::data array structure: [num events] [num channels] [num samples] (or [num events] [num samples] for single electrode).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
-    data: SpikeEventSeriesData = Field(..., description="""Spike waveforms.""")
-    timestamps: List[float] = Field(
-        default_factory=list,
-        description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time. Timestamps are required for the events. Unlike for TimeSeries, timestamps are required for SpikeEventSeries and are thus re-specified here.""",
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
     )
-    electrodes: ElectricalSeriesElectrodes = Field(
+
+    name: str = Field(...)
+    data: Union[
+        NDArray[Shape["* num_events, * num_samples"], np.number],
+        NDArray[Shape["* num_events, * num_channels, * num_samples"], np.number],
+    ] = Field(..., description="""Spike waveforms.""")
+    timestamps: NDArray[Shape["* num_times"], np.float64] = Field(
+        ...,
+        description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time. Timestamps are required for the events. Unlike for TimeSeries, timestamps are required for SpikeEventSeries and are thus re-specified here.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
+    )
+    electrodes: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
-    channel_conversion: Optional[List[float]] = Field(
-        default_factory=list,
+    channel_conversion: Optional[NDArray[Shape["* num_channels"], np.float32]] = Field(
+        None,
         description="""Channel-specific conversion factor. Multiply the data in the 'data' dataset by these values along the channel axis (as indicated by axis attribute) AND by the global conversion factor in the 'conversion' attribute of 'data' to get the data values in Volts, i.e, data in Volts = data * data.conversion * channel_conversion. This approach allows for both global and per-channel data conversion factors needed to support the storage of electrical recordings as native values generated by data acquisition systems. If this dataset is not present, then there is no channel-specific conversion factor, i.e. it is 1 for all channels.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_channels"}]}}},
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -188,13 +196,17 @@ class SpikeEventSeries(ElectricalSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    control: Optional[List[int]] = Field(
-        default_factory=list,
+    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+        None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control_description: Optional[List[str]] = Field(
-        default_factory=list,
+    control_description: Optional[NDArray[Shape["* num_control_values"], str]] = Field(
+        None,
         description="""Description of each control value. Must be present if control is present. If present, control_description[0] should describe time points where control == 0.""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "num_control_values"}]}}
+        },
     )
     sync: Optional[TimeSeriesSync] = Field(
         None,
@@ -202,81 +214,51 @@ class SpikeEventSeries(ElectricalSeries):
     )
 
 
-class SpikeEventSeriesData(ConfiguredBaseModel):
-    """
-    Spike waveforms.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["data"] = Field("data")
-    unit: Optional[str] = Field(
-        None, description="""Unit of measurement for waveforms, which is fixed to 'volts'."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* num_events, * num_samples"], Number],
-            NDArray[Shape["* num_events, * num_samples, * num_channels"], Number],
-        ]
-    ] = Field(None)
-
-
 class FeatureExtraction(NWBDataInterface):
     """
     Features, such as PC1 and PC2, that are extracted from signals stored in a SpikeEventSeries or other source.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
-    description: List[str] = Field(
-        default_factory=list,
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    name: str = Field(
+        "FeatureExtraction",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(FeatureExtraction)"}},
+    )
+    description: NDArray[Shape["* num_features"], str] = Field(
+        ...,
         description="""Description of features (eg, ''PC1'') for each of the extracted features.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_features"}]}}},
     )
-    features: FeatureExtractionFeatures = Field(
-        ..., description="""Multi-dimensional array of features extracted from each event."""
+    features: NDArray[Shape["* num_events, * num_channels, * num_features"], np.float32] = Field(
+        ...,
+        description="""Multi-dimensional array of features extracted from each event.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {
+                    "dimensions": [
+                        {"alias": "num_events"},
+                        {"alias": "num_channels"},
+                        {"alias": "num_features"},
+                    ]
+                }
+            }
+        },
     )
-    times: List[float] = Field(
-        default_factory=list,
+    times: NDArray[Shape["* num_events"], np.float64] = Field(
+        ...,
         description="""Times of events that features correspond to (can be a link).""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_events"}]}}},
     )
-    electrodes: FeatureExtractionElectrodes = Field(
+    electrodes: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
+        json_schema_extra={
+            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+        },
     )
-
-
-class FeatureExtractionFeatures(ConfiguredBaseModel):
-    """
-    Multi-dimensional array of features extracted from each event.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["features"] = Field("features")
-    array: Optional[NDArray[Shape["* num_events, * num_channels, * num_features"], Float32]] = (
-        Field(None)
-    )
-
-
-class FeatureExtractionElectrodes(DynamicTableRegion):
-    """
-    DynamicTableRegion pointer to the electrodes that this time series was generated from.
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["electrodes"] = Field("electrodes")
-    table: Optional[DynamicTable] = Field(
-        None, description="""Reference to the DynamicTable object that this region applies to."""
-    )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
-    )
-    array: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
 
 
 class EventDetection(NWBDataInterface):
@@ -284,18 +266,26 @@ class EventDetection(NWBDataInterface):
     Detected spike events from voltage trace(s).
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    name: str = Field(
+        "EventDetection", json_schema_extra={"linkml_meta": {"ifabsent": "string(EventDetection)"}}
+    )
     detection_method: str = Field(
         ...,
         description="""Description of how events were detected, such as voltage threshold, or dV/dT threshold, as well as relevant values.""",
     )
-    source_idx: List[int] = Field(
-        default_factory=list,
+    source_idx: NDArray[Shape["* num_events"], np.int32] = Field(
+        ...,
         description="""Indices (zero-based) into source ElectricalSeries::data array corresponding to time of event. ''description'' should define what is meant by time of event (e.g., .25 ms before action potential peak, zero-crossing time, etc). The index points to each event from the raw data.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_events"}]}}},
     )
-    times: List[float] = Field(
-        default_factory=list, description="""Timestamps of events, in seconds."""
+    times: NDArray[Shape["* num_events"], np.float64] = Field(
+        ...,
+        description="""Timestamps of events, in seconds.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_events"}]}}},
     )
 
 
@@ -304,8 +294,13 @@ class EventWaveform(NWBDataInterface):
     Represents either the waveforms of detected events, as extracted from a raw data trace in /acquisition, or the event waveforms that were stored during experiment acquisition.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, SpikeEventSeries]] = Field(default_factory=dict)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    children: Optional[List[SpikeEventSeries]] = Field(
+        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpikeEventSeries"}]}}
+    )
     name: str = Field(...)
 
 
@@ -314,8 +309,13 @@ class FilteredEphys(NWBDataInterface):
     Electrophysiology data from one or more channels that has been subjected to filtering. Examples of filtered data include Theta and Gamma (LFP has its own interface). FilteredEphys modules publish an ElectricalSeries for each filtered channel or set of channels. The name of each ElectricalSeries is arbitrary but should be informative. The source of the filtered data, whether this is from analysis of another time series or as acquired by hardware, should be noted in each's TimeSeries::description field. There is no assumed 1::1 correspondence between filtered ephys signals and electrodes, as a single signal can apply to many nearby electrodes, and one electrode may have different filtered (e.g., theta and/or gamma) signals represented. Filter properties should be noted in the ElectricalSeries.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, ElectricalSeries]] = Field(default_factory=dict)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    children: Optional[List[ElectricalSeries]] = Field(
+        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "ElectricalSeries"}]}}
+    )
     name: str = Field(...)
 
 
@@ -324,8 +324,13 @@ class LFP(NWBDataInterface):
     LFP data from one or more channels. The electrode map in each published ElectricalSeries will identify which channels are providing LFP data. Filter properties should be noted in the ElectricalSeries description or comments field.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    children: Optional[Dict[str, ElectricalSeries]] = Field(default_factory=dict)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    children: Optional[List[ElectricalSeries]] = Field(
+        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "ElectricalSeries"}]}}
+    )
     name: str = Field(...)
 
 
@@ -334,16 +339,37 @@ class ElectrodeGroup(NWBContainer):
     A physical grouping of electrodes, e.g. a shank of an array.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
     name: str = Field(...)
     description: Optional[str] = Field(None, description="""Description of this electrode group.""")
     location: Optional[str] = Field(
         None,
         description="""Location of electrode group. Specify the area, layer, comments on estimation of area/layer, etc. Use standard atlas names for anatomical regions when possible.""",
     )
-    position: Optional[Any] = Field(
+    position: Optional[ElectrodeGroupPosition] = Field(
         None, description="""stereotaxic or common framework coordinates"""
     )
+
+
+class ElectrodeGroupPosition(ConfiguredBaseModel):
+    """
+    stereotaxic or common framework coordinates
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ecephys"})
+
+    name: Literal["position"] = Field(
+        "position",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "position", "ifabsent": "string(position)"}
+        },
+    )
+    x: Optional[np.float32] = Field(None, description="""x coordinate""")
+    y: Optional[np.float32] = Field(None, description="""y coordinate""")
+    z: Optional[np.float32] = Field(None, description="""z coordinate""")
 
 
 class ClusterWaveforms(NWBDataInterface):
@@ -351,39 +377,35 @@ class ClusterWaveforms(NWBDataInterface):
     DEPRECATED The mean waveform shape, including standard deviation, of the different clusters. Ideally, the waveform analysis should be performed on data that is only high-pass filtered. This is a separate module because it is expected to require updating. For example, IMEC probes may require different storage requirements to store/display mean waveforms, requiring a new interface or an extension of this one.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    name: str = Field(
+        "ClusterWaveforms",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(ClusterWaveforms)"}},
+    )
     waveform_filtering: str = Field(
         ..., description="""Filtering applied to data before generating mean/sd"""
     )
-    waveform_mean: ClusterWaveformsWaveformMean = Field(
+    waveform_mean: NDArray[Shape["* num_clusters, * num_samples"], np.float32] = Field(
         ...,
         description="""The mean waveform for each cluster, using the same indices for each wave as cluster numbers in the associated Clustering module (i.e, cluster 3 is in array slot [3]). Waveforms corresponding to gaps in cluster sequence should be empty (e.g., zero- filled)""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}
+            }
+        },
     )
-    waveform_sd: ClusterWaveformsWaveformSd = Field(
+    waveform_sd: NDArray[Shape["* num_clusters, * num_samples"], np.float32] = Field(
         ...,
         description="""Stdev of waveforms for each cluster, using the same indices as in mean""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}
+            }
+        },
     )
-
-
-class ClusterWaveformsWaveformMean(ConfiguredBaseModel):
-    """
-    The mean waveform for each cluster, using the same indices for each wave as cluster numbers in the associated Clustering module (i.e, cluster 3 is in array slot [3]). Waveforms corresponding to gaps in cluster sequence should be empty (e.g., zero- filled)
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["waveform_mean"] = Field("waveform_mean")
-    array: Optional[NDArray[Shape["* num_clusters, * num_samples"], Float32]] = Field(None)
-
-
-class ClusterWaveformsWaveformSd(ConfiguredBaseModel):
-    """
-    Stdev of waveforms for each cluster, using the same indices as in mean
-    """
-
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(), frozen=True)
-    name: Literal["waveform_sd"] = Field("waveform_sd")
-    array: Optional[NDArray[Shape["* num_clusters, * num_samples"], Float32]] = Field(None)
 
 
 class Clustering(NWBDataInterface):
@@ -391,39 +413,44 @@ class Clustering(NWBDataInterface):
     DEPRECATED Clustered spike data, whether from automatic clustering tools (e.g., klustakwik) or as a result of manual sorting.
     """
 
-    linkml_meta: ClassVar[LinkML_Meta] = Field(LinkML_Meta(tree_root=True), frozen=True)
-    name: str = Field(...)
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "core.nwb.ecephys", "tree_root": True}
+    )
+
+    name: str = Field(
+        "Clustering", json_schema_extra={"linkml_meta": {"ifabsent": "string(Clustering)"}}
+    )
     description: str = Field(
         ...,
         description="""Description of clusters or clustering, (e.g. cluster 0 is noise, clusters curated using Klusters, etc)""",
     )
-    num: List[int] = Field(default_factory=list, description="""Cluster number of each event""")
-    peak_over_rms: List[float] = Field(
-        default_factory=list,
-        description="""Maximum ratio of waveform peak to RMS on any channel in the cluster (provides a basic clustering metric).""",
+    num: NDArray[Shape["* num_events"], np.int32] = Field(
+        ...,
+        description="""Cluster number of each event""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_events"}]}}},
     )
-    times: List[float] = Field(
-        default_factory=list,
+    peak_over_rms: NDArray[Shape["* num_clusters"], np.float32] = Field(
+        ...,
+        description="""Maximum ratio of waveform peak to RMS on any channel in the cluster (provides a basic clustering metric).""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_clusters"}]}}},
+    )
+    times: NDArray[Shape["* num_events"], np.float64] = Field(
+        ...,
         description="""Times of clustered events, in seconds. This may be a link to times field in associated FeatureExtraction module.""",
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_events"}]}}},
     )
 
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 ElectricalSeries.model_rebuild()
-ElectricalSeriesData.model_rebuild()
-ElectricalSeriesElectrodes.model_rebuild()
 SpikeEventSeries.model_rebuild()
-SpikeEventSeriesData.model_rebuild()
 FeatureExtraction.model_rebuild()
-FeatureExtractionFeatures.model_rebuild()
-FeatureExtractionElectrodes.model_rebuild()
 EventDetection.model_rebuild()
 EventWaveform.model_rebuild()
 FilteredEphys.model_rebuild()
 LFP.model_rebuild()
 ElectrodeGroup.model_rebuild()
+ElectrodeGroupPosition.model_rebuild()
 ClusterWaveforms.model_rebuild()
-ClusterWaveformsWaveformMean.model_rebuild()
-ClusterWaveformsWaveformSd.model_rebuild()
 Clustering.model_rebuild()

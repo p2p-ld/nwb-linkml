@@ -13,6 +13,10 @@ author = 'Jonny Saunders'
 release = 'v0.1.0'
 
 import os
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+from directives import AdapterDirective
 from sphinx.util.tags import Tags
 tags: Tags
 
@@ -23,7 +27,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
-    'sphinxcontrib.autodoc_pydantic',
+    #'sphinxcontrib.autodoc_pydantic',
     'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
     "sphinx_design",
@@ -35,12 +39,11 @@ extensions = [
 
 
 templates_path = ['_templates']
-
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.venv']
 if os.environ.get('SPHINX_MINIMAL', None) == 'True':
-    exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**/models']
+    exclude_patterns.append('**/models')
     tags.add('minimal')
 else:
-    exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
     tags.add('full')
 
 
@@ -90,7 +93,8 @@ graphviz_output_format = "svg"
 # autodoc
 autodoc_pydantic_model_show_json_error_strategy = 'coerce'
 autodoc_pydantic_model_show_json = False
-autodoc_mock_imports = []
+#autodoc_mock_imports = ['pydantic', 'curies', 'pydantic_settings']
+autodoc_mock_imports = ['curies']
 autoclass_content = "both"
 autodoc_member_order='bysource'
 add_module_names = False
@@ -106,16 +110,16 @@ nb_append_css = False
 
 # --------------------------------------------------
 # doctest
-doctest_global_setup = """
-from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition, SchemaDefinition
-from nwb_schema_language import Namespaces, Namespace, Dataset, Group, Schema
-from linkml_runtime.dumpers import yaml_dumper
-import yaml
-from pydantic import BaseModel, Field
-import numpy as np
-
-from nwb_linkml.adapters import BuildResult
-"""
+# doctest_global_setup = """
+# from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition, SchemaDefinition
+# from nwb_schema_language import Namespaces, Namespace, Dataset, Group, Schema
+# from linkml_runtime.dumpers import yaml_dumper
+# import yaml
+# from pydantic import BaseModel, Field
+# import numpy as np
+#
+# from nwb_linkml.adapters import BuildResult
+# """
 
 # --------------------------------------------------
 # Etc one-off settings
@@ -123,4 +127,9 @@ from nwb_linkml.adapters import BuildResult
 # todo
 todo_include_todos = True
 todo_link_only = True
+
+def setup(app):
+    AdapterDirective.app = app
+    app.add_directive('adapter', AdapterDirective)
+    return {'parallel_read_safe': True, 'parallel_write_safe': True}
 

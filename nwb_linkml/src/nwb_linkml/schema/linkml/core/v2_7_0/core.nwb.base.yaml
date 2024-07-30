@@ -1,0 +1,386 @@
+name: core.nwb.base
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
+id: core.nwb.base
+version: 2.7.0
+imports:
+- ../../hdmf_common/v1_8_0/namespace
+- ../../hdmf_common/v1_8_0/namespace
+- core.nwb.language
+default_prefix: core.nwb.base/
+classes:
+  NWBData:
+    name: NWBData
+    description: An abstract data type for a dataset.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
+  TimeSeriesReferenceVectorData:
+    name: TimeSeriesReferenceVectorData
+    description: Column storing references to a TimeSeries (rows). For each TimeSeries
+      this VectorData column stores the start_index and count to indicate the range
+      in time to be selected as well as an object reference to the TimeSeries.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(timeseries)
+        range: string
+        required: true
+      idx_start:
+        name: idx_start
+        description: Start index into the TimeSeries 'data' and 'timestamp' datasets
+          of the referenced TimeSeries. The first dimension of those arrays is always
+          time.
+        range: int32
+        required: true
+        multivalued: false
+      count:
+        name: count
+        description: Number of data samples available in this time series, during
+          this epoch
+        range: int32
+        required: true
+        multivalued: false
+      timeseries:
+        name: timeseries
+        description: The TimeSeries that this index applies to
+        range: TimeSeries
+        required: true
+        multivalued: false
+    tree_root: true
+  Image:
+    name: Image
+    description: An abstract data type for an image. Shape can be 2-D (x, y), or 3-D
+      where the third dimension can have three or four elements, e.g. (x, y, (r, g,
+      b)) or (x, y, (r, g, b, a)).
+    is_a: NWBData
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      resolution:
+        name: resolution
+        description: Pixel resolution of the image, in pixels per centimeter.
+        range: float32
+      description:
+        name: description
+        description: Description of the image.
+        range: text
+      array:
+        name: array
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+            - alias: r_g_b
+              exact_cardinality: 3
+        - array:
+            dimensions:
+            - alias: x
+            - alias: y
+            - alias: r_g_b_a
+              exact_cardinality: 4
+    tree_root: true
+  ImageReferences:
+    name: ImageReferences
+    description: Ordered dataset of references to Image objects.
+    is_a: NWBData
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      image:
+        name: image
+        description: Ordered dataset of references to Image objects.
+        range: Image
+        required: true
+        multivalued: true
+    tree_root: true
+  NWBContainer:
+    name: NWBContainer
+    description: An abstract data type for a generic container storing collections
+      of data and metadata. Base type for all data and metadata containers.
+    is_a: Container
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
+  NWBDataInterface:
+    name: NWBDataInterface
+    description: An abstract data type for a generic container storing collections
+      of data, as opposed to metadata.
+    is_a: NWBContainer
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
+  TimeSeries:
+    name: TimeSeries
+    description: General purpose time series.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of the time series.
+        range: text
+      comments:
+        name: comments
+        description: Human-readable comments about the TimeSeries. This second descriptive
+          field can be used to store additional information, or descriptive information
+          if the primary description field is populated with a computer-readable string.
+        range: text
+      data:
+        name: data
+        description: Data values. Data can be in 1-D, 2-D, 3-D, or 4-D. The first
+          dimension should always represent time. This can also be used to store binary
+          data (e.g., image frames). This can also be a link to data stored in an
+          external file.
+        range: TimeSeries__data
+        required: true
+        multivalued: false
+      starting_time:
+        name: starting_time
+        description: Timestamp of the first sample in seconds. When timestamps are
+          uniformly spaced, the timestamp of the first sample can be specified and
+          all subsequent ones calculated from the sampling rate attribute.
+        range: TimeSeries__starting_time
+        required: false
+        multivalued: false
+      timestamps:
+        name: timestamps
+        description: Timestamps for samples stored in data, in seconds, relative to
+          the common experiment master-clock stored in NWBFile.timestamps_reference_time.
+        array:
+          dimensions:
+          - alias: num_times
+        range: float64
+        required: false
+        multivalued: false
+      control:
+        name: control
+        description: Numerical labels that apply to each time point in data for the
+          purpose of querying and slicing data by these values. If present, the length
+          of this array should be the same size as the first dimension of data.
+        array:
+          dimensions:
+          - alias: num_times
+        range: uint8
+        required: false
+        multivalued: false
+      control_description:
+        name: control_description
+        description: Description of each control value. Must be present if control
+          is present. If present, control_description[0] should describe time points
+          where control == 0.
+        array:
+          dimensions:
+          - alias: num_control_values
+        range: text
+        required: false
+        multivalued: false
+      sync:
+        name: sync
+        description: Lab-specific time and sync information as provided directly from
+          hardware devices and that is necessary for aligning all acquired time information
+          to a common timebase. The timestamp array stores time in the common timebase.
+          This group will usually only be populated in TimeSeries that are stored
+          external to the NWB file, in files storing raw data. Once timestamp data
+          is calculated, the contents of 'sync' are mostly for archival purposes.
+        range: TimeSeries__sync
+        required: false
+        multivalued: false
+    tree_root: true
+  TimeSeries__data:
+    name: TimeSeries__data
+    description: Data values. Data can be in 1-D, 2-D, 3-D, or 4-D. The first dimension
+      should always represent time. This can also be used to store binary data (e.g.,
+      image frames). This can also be a link to data stored in an external file.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        range: float32
+      offset:
+        name: offset
+        description: Scalar to add to the data after scaling by 'conversion' to finalize
+          its coercion to the specified 'unit'. Two common examples of this include
+          (a) data stored in an unsigned type that requires a shift after scaling
+          to re-center the data, and (b) specialized recording devices that naturally
+          cause a scalar offset with respect to the true units.
+        range: float32
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        range: float32
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion' and add 'offset'.
+        range: text
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+      array:
+        name: array
+        range: AnyType
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_dim2
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_dim2
+            - alias: num_dim3
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_dim2
+            - alias: num_dim3
+            - alias: num_dim4
+  TimeSeries__starting_time:
+    name: TimeSeries__starting_time
+    description: Timestamp of the first sample in seconds. When timestamps are uniformly
+      spaced, the timestamp of the first sample can be specified and all subsequent
+      ones calculated from the sampling rate attribute.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(starting_time)
+        range: string
+        required: true
+        equals_string: starting_time
+      rate:
+        name: rate
+        description: Sampling rate, in Hz.
+        range: float32
+      unit:
+        name: unit
+        description: Unit of measurement for time, which is fixed to 'seconds'.
+        range: text
+      value:
+        name: value
+        range: float64
+        required: true
+  TimeSeries__sync:
+    name: TimeSeries__sync
+    description: Lab-specific time and sync information as provided directly from
+      hardware devices and that is necessary for aligning all acquired time information
+      to a common timebase. The timestamp array stores time in the common timebase.
+      This group will usually only be populated in TimeSeries that are stored external
+      to the NWB file, in files storing raw data. Once timestamp data is calculated,
+      the contents of 'sync' are mostly for archival purposes.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(sync)
+        range: string
+        required: true
+        equals_string: sync
+  ProcessingModule:
+    name: ProcessingModule
+    description: A collection of processed data.
+    is_a: NWBContainer
+    attributes:
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
+    tree_root: true
+  Images:
+    name: Images
+    description: A collection of images with an optional way to specify the order
+      of the images using the "order_of_images" dataset. An order must be specified
+      if the images are referenced by index, e.g., from an IndexSeries.
+    is_a: NWBDataInterface
+    attributes:
+      name:
+        name: name
+        ifabsent: string(Images)
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of this collection of images.
+        range: text
+      image:
+        name: image
+        description: Images stored in this collection.
+        range: Image
+        required: true
+        multivalued: true
+      order_of_images:
+        name: order_of_images
+        annotations:
+          named:
+            tag: named
+            value: true
+        description: Ordered dataset of references to Image objects stored in the
+          parent group. Each Image object in the Images group should be stored once
+          and only once, so the dataset should have the same length as the number
+          of images.
+        range: ImageReferences
+        required: false
+        multivalued: false
+    tree_root: true

@@ -3,16 +3,17 @@ Adapter for NWB datasets to linkml Classes
 """
 
 from abc import abstractmethod
-from typing import Optional
+from typing import ClassVar, Optional, Type
 
-from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
 from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
 from nwb_linkml.maps.dtype import flat_to_linkml
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import Dataset
+from nwb_schema_language import CompoundDtype, Dataset
 
 
 class DatasetMap(Map):
@@ -47,38 +48,20 @@ class MapScalar(DatasetMap):
 
     Examples:
 
-        .. grid:: 2
-            :gutter: 1
-            :margin: 0
-            :padding: 0
-
-            .. grid-item-card::
-                :margin: 0
-
-                NWB Schema
-                ^^^
-                .. code-block:: yaml
-
-                    datasets:
-                    - name: MyScalar
-                      doc: A scalar
-                      dtype: int32
-                      quantity: '?'
-
-            .. grid-item-card::
-                :margin: 0
-
-                LinkML
-                ^^^
-                .. code-block:: yaml
-
-                    attributes:
-                    - name: MyScalar
-                      description: A scalar
-                      multivalued: false
-                      range: int32
-                      required: false
-
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - name: MyScalar
+                  doc: A scalar
+                  dtype: int32
+                  quantity: '?'
+            :linkml:
+                slots:
+                - name: MyScalar
+                  description: A scalar
+                  multivalued: false
+                  range: int32
+                  required: false
 
     """
 
@@ -109,6 +92,7 @@ class MapScalar(DatasetMap):
             and not cls.attributes
             and not cls.dims
             and not cls.shape
+            and not is_compound(cls)
             and cls.name
         )
 
@@ -133,6 +117,53 @@ class MapScalarAttributes(DatasetMap):
     """
     A scalar with attributes gets an additional slot "value" that contains the actual scalar
     value of this field
+
+    Examples:
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - name: starting_time
+                  dtype: float64
+                  doc: Timestamp of the first sample in seconds. When timestamps are uniformly
+                    spaced, the timestamp of the first sample can be specified and all subsequent
+                    ones calculated from the sampling rate attribute.
+                  quantity: '?'
+                  attributes:
+                  - name: rate
+                    dtype: float32
+                    doc: Sampling rate, in Hz.
+                  - name: unit
+                    dtype: text
+                    value: seconds
+                    doc: Unit of measurement for time, which is fixed to 'seconds'.
+            :linkml:
+                classes:
+                - name: starting_time
+                  description: Timestamp of the first sample in seconds. When timestamps are
+                    uniformly spaced, the timestamp of the first sample can be specified and all
+                    subsequent ones calculated from the sampling rate attribute.
+                  attributes:
+                    name:
+                      name: name
+                      ifabsent: string(starting_time)
+                      range: string
+                      required: true
+                      equals_string: starting_time
+                    rate:
+                      name: rate
+                      description: Sampling rate, in Hz.
+                      range: float32
+                    unit:
+                      name: unit
+                      description: Unit of measurement for time, which is fixed to 'seconds'.
+                      range: text
+                    value:
+                      name: value
+                      range: float64
+                      required: true
+                  tree_root: true
+
     """
 
     @classmethod
@@ -147,7 +178,7 @@ class MapScalarAttributes(DatasetMap):
             * - ``neurodata_type_inc``
               - ``None``
             * - ``attributes``
-              - Truthy
+              - ``True``
             * - ``dims``
               - ``None``
             * - ``shape``
@@ -181,16 +212,72 @@ class MapScalarAttributes(DatasetMap):
 
 class MapListlike(DatasetMap):
     """
-    Datasets that refer to other datasets (that handle their own arrays)
+    Datasets that refer to a list of other datasets.
+
+    Used exactly once in the core schema, in ``ImageReferences`` -
+    an array of references to other ``Image`` datasets. We ignore the
+    usual array structure and unnest the implicit array into a slot names from the
+    target type rather than the oddly-named ``num_images`` dimension so that
+    ultimately in the pydantic model we get a nicely behaved single-level list.
+
+    Examples:
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - neurodata_type_def: ImageReferences
+                  neurodata_type_inc: NWBData
+                  dtype:
+                    target_type: Image
+                    reftype: object
+                  dims:
+                  - num_images
+                  shape:
+                  - null
+                  doc: Ordered dataset of references to Image objects.
+            :linkml:
+                classes:
+                - name: ImageReferences
+                  description: Ordered dataset of references to Image objects.
+                  is_a: NWBData
+                  attributes:
+                    name:
+                      name: name
+                      range: string
+                      required: true
+                    image:
+                      name: image
+                      description: Ordered dataset of references to Image objects.
+                      multivalued: true
+                      range: Image
+                      required: true
+                  tree_root: true
+
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
         Check if we are a 1D dataset that isn't a normal datatype
+
+        .. list-table::
+            :header-rows: 1
+            :align: left
+
+            * - Attr
+              - Value
+            * - :func:`.is_1d`
+              - ``True``
+            * - ``dtype``
+              - ``Class``
         """
         dtype = ClassAdapter.handle_dtype(cls.dtype)
-        return is_1d(cls) and dtype != "AnyType" and dtype not in flat_to_linkml
+        return (
+            cls.neurodata_type_inc != "VectorData"
+            and is_1d(cls)
+            and dtype != "AnyType"
+            and dtype not in flat_to_linkml
+        )
 
     @classmethod
     def apply(
@@ -216,15 +303,89 @@ class MapArraylike(DatasetMap):
     Datasets without any additional attributes don't create their own subclass,
     they're just an array :).
 
-    Replace the base class with the array class, and make a slot that refers to it.
+    Replace the base class with a slot that defines the array.
+
+    Examples:
+
+        eg. from ``image.ImageSeries`` :
+
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - name: data
+                  dtype: numeric
+                  dims:
+                  - - frame
+                    - x
+                    - y
+                  - - frame
+                    - x
+                    - y
+                    - z
+                  shape:
+                  - - null
+                    - null
+                    - null
+                  - - null
+                    - null
+                    - null
+                    - null
+                  doc: Binary data representing images across frames. If data are stored in an
+                    external file, this should be an empty 3D array.
+            :linkml:
+                slots:
+                - name: data
+                  description: Binary data representing images across frames. If data are stored in
+                    an external file, this should be an empty 3D array.
+                  multivalued: false
+                  range: numeric
+                  required: true
+                  any_of:
+                  - array:
+                      dimensions:
+                      - alias: frame
+                      - alias: x
+                      - alias: y
+                  - array:
+                      dimensions:
+                      - alias: frame
+                      - alias: x
+                      - alias: y
+                      - alias: z
+
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
         Check if we're a plain array
+
+        .. list-table::
+            :header-rows: 1
+            :align: left
+
+            * - Attr
+              - Value
+            * - ``name``
+              - ``True``
+            * - ``dims``
+              - ``True``
+            * - ``shape``
+              - ``True``
+            * - :func:`.has_attrs`
+              - ``False``
+            * - :func:`.is_compound`
+              - ``False``
+
         """
-        return cls.name and all([cls.dims, cls.shape]) and not has_attrs(cls)
+        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        return (
+            cls.name
+            and (all([cls.dims, cls.shape]) or cls.neurodata_type_inc == "VectorData")
+            and not has_attrs(cls)
+            and not is_compound(cls)
+            and dtype in flat_to_linkml
+        )
 
     @classmethod
     def apply(
@@ -233,19 +394,27 @@ class MapArraylike(DatasetMap):
         """
         Map to an array class and the adjoining slot
         """
-        array_class = make_arraylike(cls, name)
+        if cls.neurodata_type_inc == "VectorData" and not (cls.dims and cls.shape):
+            expressions = {
+                "array": ArrayExpression(
+                    minimum_number_dimensions=1, maximum_number_dimensions=False
+                )
+            }
+        else:
+            array_adapter = ArrayAdapter(cls.dims, cls.shape)
+            expressions = array_adapter.make_slot()
         name = camel_to_snake(cls.name)
         res = BuildResult(
             slots=[
                 SlotDefinition(
                     name=name,
                     multivalued=False,
-                    range=array_class.name,
+                    range=ClassAdapter.handle_dtype(cls.dtype),
                     description=cls.doc,
                     required=cls.quantity not in ("*", "?"),
+                    **expressions,
                 )
-            ],
-            classes=[array_class],
+            ]
         )
         return res
 
@@ -255,14 +424,86 @@ class MapArrayLikeAttributes(DatasetMap):
     The most general case - treat everything that isn't handled by one of the special cases
     as an array!
 
-    Specifically, we make an ``Arraylike`` class such that:
+    Examples:
 
-    - Each slot within a subclass indicates a possible dimension.
-    - Only dimensions that are present in all the dimension specifiers in the
-      original schema are required.
-    - Shape requirements are indicated using max/min cardinalities on the slot.
-    - The arraylike object should be stored in the `array` slot on the containing class
-      (since there are already properties named `data`)
+        .. adapter:: DatasetAdapter
+            :nwb:
+                datasets:
+                - neurodata_type_def: Image
+                  neurodata_type_inc: NWBData
+                  dtype: numeric
+                  dims:
+                  - - x
+                    - y
+                  - - x
+                    - y
+                    - r, g, b
+                  - - x
+                    - y
+                    - r, g, b, a
+                  shape:
+                  - - null
+                    - null
+                  - - null
+                    - null
+                    - 3
+                  - - null
+                    - null
+                    - 4
+                  doc: An abstract data type for an image. Shape can be 2-D (x, y), or 3-D where the
+                    third dimension can have three or four elements, e.g. (x, y, (r, g, b)) or
+                    (x, y, (r, g, b, a)).
+                  attributes:
+                  - name: resolution
+                    dtype: float32
+                    doc: Pixel resolution of the image, in pixels per centimeter.
+                    required: false
+                  - name: description
+                    dtype: text
+                    doc: Description of the image.
+                    required: false
+            :linkml:
+                classes:
+                - name: Image
+                  description: An abstract data type for an image. Shape can be 2-D (x, y), or 3-D
+                    where the third dimension can have three or four elements, e.g. (x, y, (r, g,
+                    b)) or (x, y, (r, g, b, a)).
+                  is_a: NWBData
+                  attributes:
+                    name:
+                      name: name
+                      range: string
+                      required: true
+                    resolution:
+                      name: resolution
+                      description: Pixel resolution of the image, in pixels per centimeter.
+                      range: float32
+                    description:
+                      name: description
+                      description: Description of the image.
+                      range: text
+                    array:
+                      name: array
+                      range: numeric
+                      any_of:
+                      - array:
+                          dimensions:
+                          - alias: x
+                          - alias: y
+                      - array:
+                          dimensions:
+                          - alias: x
+                          - alias: y
+                          - alias: r_g_b
+                            exact_cardinality: 3
+                      - array:
+                          dimensions:
+                          - alias: x
+                          - alias: y
+                          - alias: r_g_b_a
+                            exact_cardinality: 4
+                  tree_root: true
+
     """
 
     NEEDS_NAME = True
@@ -277,6 +518,7 @@ class MapArrayLikeAttributes(DatasetMap):
             all([cls.dims, cls.shape])
             and cls.neurodata_type_inc != "VectorData"
             and has_attrs(cls)
+            and not is_compound(cls)
             and (dtype == "AnyType" or dtype in flat_to_linkml)
         )
 
@@ -287,36 +529,34 @@ class MapArrayLikeAttributes(DatasetMap):
         """
         Map to an arraylike class
         """
-        array_class = make_arraylike(cls, name)
+        array_adapter = ArrayAdapter(cls.dims, cls.shape)
+        expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
-        array_slot = SlotDefinition(name="array", range=array_class.name)
-
-        res.classes.append(array_class)
+        array_slot = SlotDefinition(
+            name="array", range=ClassAdapter.handle_dtype(cls.dtype), **expressions
+        )
         res.classes[0].attributes.update({"array": array_slot})
         return res
 
 
-# --------------------------------------------------
-# DynamicTable special cases
-# --------------------------------------------------
-
-
-class Map1DVector(DatasetMap):
+class MapClassRange(DatasetMap):
     """
-    ``VectorData`` is subclassed with a name but without dims or attributes,
-    treat this as a normal 1D array slot that replaces any class that would be built for this
+    Datasets that are a simple named reference to another type without any
+    additional modification to that type.
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
-        Check that we're a 1d VectorData class
+        Check that we are a dataset with a ``neurodata_type_inc`` and a name but nothing else
         """
         return (
-            cls.neurodata_type_inc == "VectorData"
+            cls.neurodata_type_inc
+            and not cls.neurodata_type_def
+            and not cls.attributes
             and not cls.dims
             and not cls.shape
-            and not cls.attributes
+            and not cls.dtype
             and cls.name
         )
 
@@ -325,17 +565,119 @@ class Map1DVector(DatasetMap):
         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
     ) -> BuildResult:
         """
-        Return a simple multivalued slot
+        Replace the base class with a slot with an annotation that indicates
+        it should use the :class:`.Named` generic when generated to pydantic
         """
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,
-            range=ClassAdapter.handle_dtype(cls.dtype),
-            multivalued=True,
+            range=f"{cls.neurodata_type_inc}",
+            annotations=[{"named": True}],
+            **QUANTITY_MAP[cls.quantity],
         )
-        # No need to make a class for us, so we replace the existing build results
         res = BuildResult(slots=[this_slot])
         return res
+
+
+# --------------------------------------------------
+# DynamicTable special cases
+# --------------------------------------------------
+
+
+class MapVectorClassRange(DatasetMap):
+    """
+    Map a ``VectorData`` class that is a reference to another class as simply
+    a multivalued slot range, rather than an independent class
+    """
+
+    @classmethod
+    def check(c, cls: Dataset) -> bool:
+        """
+        Check that we are a VectorData object without any additional attributes
+        with a dtype that refers to another class
+        """
+        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        return (
+            cls.neurodata_type_inc == "VectorData"
+            and cls.name
+            and not has_attrs(cls)
+            and not (cls.shape or cls.dims)
+            and not is_compound(cls)
+            and dtype not in flat_to_linkml
+        )
+
+    @classmethod
+    def apply(
+        c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
+    ) -> BuildResult:
+        """
+        Create a slot that replaces the base class just as a list[ClassRef]
+        """
+        this_slot = SlotDefinition(
+            name=cls.name,
+            description=cls.doc,
+            multivalued=True,
+            range=ClassAdapter.handle_dtype(cls.dtype),
+            required=cls.quantity not in ("*", "?"),
+        )
+        res = BuildResult(slots=[this_slot])
+        return res
+
+
+#
+# class Map1DVector(DatasetMap):
+#     """
+#     ``VectorData`` is subclassed with a name but without dims or attributes,
+#     treat this as a normal 1D array slot that replaces any class that would be built for this
+#
+#     eg. all the datasets in epoch.TimeIntervals:
+#
+#     .. code-block:: yaml
+#
+#         groups:
+#         - neurodata_type_def: TimeIntervals
+#           neurodata_type_inc: DynamicTable
+#           doc: A container for aggregating epoch data and the TimeSeries that each epoch applies
+#             to.
+#           datasets:
+#           - name: start_time
+#             neurodata_type_inc: VectorData
+#             dtype: float32
+#             doc: Start time of epoch, in seconds.
+#
+#     """
+#
+#     @classmethod
+#     def check(c, cls: Dataset) -> bool:
+#         """
+#         Check that we're a 1d VectorData class
+#         """
+#         return (
+#             cls.neurodata_type_inc == "VectorData"
+#             and not cls.dims
+#             and not cls.shape
+#             and not cls.attributes
+#             and not cls.neurodata_type_def
+#             and not is_compound(cls)
+#             and cls.name
+#         )
+#
+#     @classmethod
+#     def apply(
+#         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
+#     ) -> BuildResult:
+#         """
+#         Return a simple multivalued slot
+#         """
+#         this_slot = SlotDefinition(
+#             name=cls.name,
+#             description=cls.doc,
+#             range=ClassAdapter.handle_dtype(cls.dtype),
+#             multivalued=True,
+#         )
+#         # No need to make a class for us, so we replace the existing build results
+#         res = BuildResult(slots=[this_slot])
+#         return res
 
 
 class MapNVectors(DatasetMap):
@@ -376,10 +718,73 @@ class MapNVectors(DatasetMap):
         return res
 
 
+class MapCompoundDtype(DatasetMap):
+    """
+    A ``dtype`` declared as an array of types that function effectively as a row in a table.
+
+    We render them just as a class with each of the dtypes as slots - they are
+    typically used by other datasets to create a table.
+
+    Eg. ``base.TimeSeriesReferenceVectorData``
+
+    .. code-block:: yaml
+
+        datasets:
+        - neurodata_type_def: TimeSeriesReferenceVectorData
+          neurodata_type_inc: VectorData
+          default_name: timeseries
+          dtype:
+          - name: idx_start
+            dtype: int32
+            doc: Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced
+              TimeSeries. The first dimension of those arrays is always time.
+          - name: count
+            dtype: int32
+            doc: Number of data samples available in this time series, during this epoch
+          - name: timeseries
+            dtype:
+              target_type: TimeSeries
+              reftype: object
+            doc: The TimeSeries that this index applies to
+          doc: Column storing references to a TimeSeries (rows). For each TimeSeries this
+            VectorData column stores the start_index and count to indicate the range in time
+            to be selected as well as an object reference to the TimeSeries.
+
+    """
+
+    @classmethod
+    def check(c, cls: Dataset) -> bool:
+        """
+        Check that we're a dataset with a compound dtype
+        """
+        return is_compound(cls)
+
+    @classmethod
+    def apply(
+        c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
+    ) -> BuildResult:
+        """
+        Make a new class for this dtype, using its sub-dtypes as fields,
+        and use it as the range for the parent class
+        """
+        slots = {}
+        for a_dtype in cls.dtype:
+            slots[a_dtype.name] = SlotDefinition(
+                name=a_dtype.name,
+                description=a_dtype.doc,
+                range=ClassAdapter.handle_dtype(a_dtype.dtype),
+                **QUANTITY_MAP[cls.quantity],
+            )
+        res.classes[0].attributes.update(slots)
+        return res
+
+
 class DatasetAdapter(ClassAdapter):
     """
     Orchestrator class for datasets - calls the set of applicable mapping classes
     """
+
+    TYPE: ClassVar[Type] = Dataset
 
     cls: Dataset
 
@@ -390,6 +795,25 @@ class DatasetAdapter(ClassAdapter):
         res = self.build_base()
 
         # find a map to use
+        map = self.match()
+
+        # apply matching maps
+        if map is not None:
+            res = map.apply(self.cls, res, self._get_full_name())
+
+        return res
+
+    def match(self) -> Optional[Type[DatasetMap]]:
+        """
+        Find the map class that applies to this class
+
+        Returns:
+            :class:`.DatasetMap`
+
+        Raises:
+            RuntimeError - if more than one map matches
+        """
+        # find a map to use
         matches = [m for m in DatasetMap.__subclasses__() if m.check(self.cls)]
 
         if len(matches) > 1:  # pragma: no cover
@@ -397,96 +821,19 @@ class DatasetAdapter(ClassAdapter):
                 "Only one map should apply to a dataset, you need to refactor the maps! Got maps:"
                 f" {matches}"
             )
-
-        # apply matching maps
-        for m in matches:
-            res = m.apply(self.cls, res, self._get_full_name())
-
-        return res
-
-
-def make_arraylike(cls: Dataset, name: Optional[str] = None) -> ClassDefinition:
-    """
-    Create a containing arraylike class
-
-    This is likely deprecated so this docstring is a placeholder to satisfy the linter...
-    """
-    # The schema language doesn't have a way of specifying a dataset/group is "abstract"
-    # and yet hdmf-common says you don't need a dtype if the dataset is "abstract"
-    # so....
-    dtype = ClassAdapter.handle_dtype(cls.dtype)
-
-    # dims and shape are lists of lists. First we couple them
-    # (so each dim has its corresponding shape)..
-    # and then we take unique
-    # (dicts are ordered by default in recent pythons,
-    # while set() doesn't preserve order)
-    dims_shape = []
-    for inner_dim, inner_shape in zip(cls.dims, cls.shape):
-        if isinstance(inner_dim, list):
-            # list of lists
-            dims_shape.extend([(dim, shape) for dim, shape in zip(inner_dim, inner_shape)])
-        elif isinstance(inner_shape, list):
-            # Some badly formatted schema will have the shape be a LoL but the dims won't be...
-            dims_shape.extend([(inner_dim, shape) for shape in inner_shape])
+        elif len(matches) == 0:
+            return None
         else:
-            # single-layer list
-            dims_shape.append((inner_dim, inner_shape))
-
-    dims_shape = tuple(dict.fromkeys(dims_shape).keys())
-
-    # --------------------------------------------------
-    # SPECIAL CASE - allen institute's ndx-aibs-ecephys.extension
-    # confuses "dims" with "shape" , eg shape = [None], dims = [3].
-    # So we hardcode that here...
-    # --------------------------------------------------
-    if len(dims_shape) == 1 and isinstance(dims_shape[0][0], int) and dims_shape[0][1] is None:
-        dims_shape = (("dim", dims_shape[0][0]),)
-
-    # now make slots for each of them
-    slots = []
-    for dims, shape in dims_shape:
-        # if there is just a single list of possible dimensions, it's required
-        if not any([isinstance(inner_dim, list) for inner_dim in cls.dims]) or all(
-            [dims in inner_dim for inner_dim in cls.dims]
-        ):
-            required = True
-        else:
-            required = False
-
-        # use cardinality to do shape
-        cardinality = None if shape == "null" else shape
-
-        slots.append(
-            SlotDefinition(
-                name=dims,
-                required=required,
-                maximum_cardinality=cardinality,
-                minimum_cardinality=cardinality,
-                range=dtype,
-            )
-        )
-
-    # and then the class is just a subclass of `Arraylist`
-    # (which is imported by default from `nwb.language.yaml`)
-    if name:
-        pass
-    elif cls.neurodata_type_def:
-        name = cls.neurodata_type_def
-    elif cls.name:
-        name = cls.name
-    else:
-        raise ValueError("Dataset has no name or type definition, what do call it?")
-
-    name = "__".join([name, "Arraylike"])
-
-    array_class = ClassDefinition(name=name, is_a="Arraylike", attributes=slots)
-    return array_class
+            return matches[0]
 
 
 def is_1d(cls: Dataset) -> bool:
     """
-    Check if the values of a dataset are 1-dimensional
+    Check if the values of a dataset are 1-dimensional.
+
+    Specifically:
+    * a single-layer dim/shape list of length 1, or
+    * a nested dim/shape list where every nested spec is of length 1
     """
     return (
         not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1
@@ -494,6 +841,15 @@ def is_1d(cls: Dataset) -> bool:
         all([isinstance(dim, list) for dim in cls.dims])
         and len(cls.dims) == 1
         and len(cls.dims[0]) == 1
+    )
+
+
+def is_compound(cls: Dataset) -> bool:
+    """Check if dataset has a compound dtype"""
+    return (
+        isinstance(cls.dtype, list)
+        and len(cls.dtype) > 0
+        and isinstance(cls.dtype[0], CompoundDtype)
     )
 
 

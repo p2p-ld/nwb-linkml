@@ -16,6 +16,7 @@ from typing import (
     Union,
 )
 
+from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import (
     ClassDefinition,
     Definition,
@@ -90,6 +91,18 @@ class BuildResult:
 
         return out_str
 
+    def as_linkml(self) -> str:
+        """
+        Print build results as linkml-style YAML.
+
+        Note that only non-schema results will be included, as a schema
+        usually contains all the other types.
+        """
+
+        items = (("classes", self.classes), ("slots", self.slots), ("types", self.types))
+        output = {k: v for k, v in items if v}
+        return yaml_dumper.dumps(output)
+
 
 class Adapter(BaseModel):
     """Abstract base class for adapters"""
@@ -100,7 +113,31 @@ class Adapter(BaseModel):
         Generate the corresponding linkML element for this adapter
         """
 
-    def walk(self, input: BaseModel | list | dict) -> Generator[BaseModel | Any | None, None, None]:
+    def get(self, name: str) -> Union[Group, Dataset]:
+        """
+        Get the first item whose ``neurodata_type_def`` matches ``name``
+
+        Convenience wrapper around :meth:`.walk_field_values`
+        """
+        return next(self.walk_field_values(self, "neurodata_type_def", name))
+
+    def get_model_with_field(self, field: str) -> Generator[Union[Group, Dataset], None, None]:
+        """
+        Yield models that have a non-None value in the given field.
+
+        Useful during development to find all the ways that a given
+        field is used.
+
+        Args:
+            field (str): Field to search for
+        """
+        for model in self.walk_types(self, (Group, Dataset)):
+            if getattr(model, field, None) is not None:
+                yield model
+
+    def walk(
+        self, input: Union[BaseModel, dict, list]
+    ) -> Generator[Union[BaseModel, Any, None], None, None]:
         """
         Iterate through all items in the given model.
 
@@ -140,7 +177,7 @@ class Adapter(BaseModel):
             pass
 
     def walk_fields(
-        self, input: BaseModel | list | dict, field: str | Tuple[str, ...]
+        self, input: Union[BaseModel, dict, list], field: str | Tuple[str, ...]
     ) -> Generator[Any, None, None]:
         """
         Recursively walk input for fields that match ``field``
@@ -160,7 +197,7 @@ class Adapter(BaseModel):
                 yield item[1]
 
     def walk_field_values(
-        self, input: BaseModel | list | dict, field: str, value: Optional[Any] = None
+        self, input: Union[BaseModel, dict, list], field: str, value: Optional[Any] = None
     ) -> Generator[BaseModel, None, None]:
         """
         Recursively walk input for **models** that contain a ``field`` as a direct child
@@ -184,7 +221,9 @@ class Adapter(BaseModel):
                     yield item
 
     def walk_types(
-        self, input: BaseModel | list | dict, get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]]
+        self,
+        input: Union[BaseModel, dict, list],
+        get_type: Type[T] | Tuple[Type[T], Type[Unpack[Ts]]],
     ) -> Generator[T | Ts, None, None]:
         """
         Walk a model, yielding items that are the same type as the given type
@@ -197,5 +236,5 @@ class Adapter(BaseModel):
             get_type = [get_type]
 
         for item in self.walk(input):
-            if any([type(item) == atype for atype in get_type]):
+            if any([type(item) is atype for atype in get_type]):
                 yield item

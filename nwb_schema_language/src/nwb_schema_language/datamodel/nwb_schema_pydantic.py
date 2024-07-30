@@ -15,14 +15,7 @@ metamodel_version = "None"
 version = "None"
 
 
-class ConfiguredBaseModel(
-    BaseModel,
-    validate_assignment=True,
-    validate_default=True,
-    extra="forbid",
-    arbitrary_types_allowed=True,
-    use_enum_values=True,
-):
+class ConfiguredBaseModel(BaseModel):
     pass
 
 
@@ -272,19 +265,3 @@ class Dataset(DtypeMixin):
     dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
         default_factory=list
     )
-
-
-# Model rebuild
-# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
-Namespace.model_rebuild()
-Namespaces.model_rebuild()
-Schema.model_rebuild()
-Group.model_rebuild()
-Groups.model_rebuild()
-Link.model_rebuild()
-Datasets.model_rebuild()
-ReferenceDtype.model_rebuild()
-CompoundDtype.model_rebuild()
-DtypeMixin.model_rebuild()
-Attribute.model_rebuild()
-Dataset.model_rebuild()

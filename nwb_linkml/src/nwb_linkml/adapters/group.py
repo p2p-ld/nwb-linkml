@@ -2,6 +2,8 @@
 Adapter for NWB groups to linkml Classes
 """
 
+from typing import Type
+
 from linkml_runtime.linkml_model import SlotDefinition
 
 from nwb_linkml.adapters.adapter import BuildResult
@@ -16,6 +18,8 @@ class GroupAdapter(ClassAdapter):
     """
     Adapt NWB Groups to LinkML Classes
     """
+
+    TYPE: Type = Group
 
     cls: Group
 

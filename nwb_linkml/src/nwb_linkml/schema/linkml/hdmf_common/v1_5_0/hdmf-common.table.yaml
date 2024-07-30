@@ -1,4 +1,11 @@
 name: hdmf-common.table
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
 id: hdmf-common.table
 version: 1.5.0
 imports:
@@ -20,7 +27,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       description:
@@ -29,28 +35,27 @@ classes:
         range: text
       array:
         name: array
-        range: VectorData__Array
+        range: AnyType
+        any_of:
+        - array:
+            dimensions:
+            - alias: dim0
+        - array:
+            dimensions:
+            - alias: dim0
+            - alias: dim1
+        - array:
+            dimensions:
+            - alias: dim0
+            - alias: dim1
+            - alias: dim2
+        - array:
+            dimensions:
+            - alias: dim0
+            - alias: dim1
+            - alias: dim2
+            - alias: dim3
     tree_root: true
-  VectorData__Array:
-    name: VectorData__Array
-    is_a: Arraylike
-    attributes:
-      dim0:
-        name: dim0
-        range: AnyType
-        required: true
-      dim1:
-        name: dim1
-        range: AnyType
-        required: false
-      dim2:
-        name: dim2
-        range: AnyType
-        required: false
-      dim3:
-        name: dim3
-        range: AnyType
-        required: false
   VectorIndex:
     name: VectorIndex
     description: Used with VectorData to encode a ragged array. An array of indices
@@ -62,7 +67,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       target:
@@ -78,21 +82,10 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
+        ifabsent: string(element_id)
         range: string
         required: true
-      array:
-        name: array
-        range: ElementIdentifiers__Array
     tree_root: true
-  ElementIdentifiers__Array:
-    name: ElementIdentifiers__Array
-    is_a: Arraylike
-    attributes:
-      num_elements:
-        name: num_elements
-        range: int
-        required: true
   DynamicTableRegion:
     name: DynamicTableRegion
     description: DynamicTableRegion provides a link from one table to an index or
@@ -108,7 +101,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       table:
@@ -145,7 +137,6 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       colnames:
@@ -160,15 +151,18 @@ classes:
       id:
         name: id
         description: Array of unique identifiers for the rows of this dynamic table.
-        multivalued: true
+        array:
+          dimensions:
+          - alias: num_rows
         range: int
         required: true
+        multivalued: false
       vector_data:
         name: vector_data
         description: Vector columns, including index columns, of this dynamic table.
-        multivalued: true
         range: VectorData
         required: false
+        multivalued: true
     tree_root: true
   AlignedDynamicTable:
     name: AlignedDynamicTable
@@ -181,10 +175,11 @@ classes:
       by a separate DynamicTable stored within the group.
     is_a: DynamicTable
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: DynamicTable
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: DynamicTable
     tree_root: true

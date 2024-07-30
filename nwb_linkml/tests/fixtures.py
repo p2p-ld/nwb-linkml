@@ -35,8 +35,17 @@ __all__ = [
 def tmp_output_dir() -> Path:
     path = Path(__file__).parent.resolve() / "__tmp__"
     if path.exists():
-        shutil.rmtree(str(path))
-    path.mkdir()
+        for subdir in path.iterdir():
+            if subdir.name == "git":
+                # don't wipe out git repos every time, they don't rly change
+                continue
+            elif subdir.is_file() and subdir.parent != path:
+                continue
+            elif subdir.is_file():
+                subdir.unlink(missing_ok=True)
+            else:
+                shutil.rmtree(str(subdir))
+    path.mkdir(exist_ok=True)
 
     return path
 
@@ -67,7 +76,7 @@ def tmp_output_dir_mod(tmp_output_dir) -> Path:
     return subpath
 
 
-@pytest.fixture(scope="session", params=[{"core_version": "2.6.0", "hdmf_version": "1.5.0"}])
+@pytest.fixture(scope="session", params=[{"core_version": "2.7.0", "hdmf_version": "1.8.0"}])
 def nwb_core_fixture(request) -> NamespacesAdapter:
     nwb_core = io.load_nwb_core(**request.param)
     nwb_core.populate_imports()

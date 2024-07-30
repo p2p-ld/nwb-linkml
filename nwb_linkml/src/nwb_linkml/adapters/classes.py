@@ -3,14 +3,18 @@ Adapters to linkML classes
 """
 
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Type, TypeVar
 
 from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
+from pydantic import field_validator
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset, DTypeType, Group, ReferenceDtype
+from nwb_schema_language import CompoundDtype, Dataset, DTypeType, FlatDtype, Group, ReferenceDtype
+
+T = TypeVar("T", bound=Type[Dataset] | Type[Group])
+TI = TypeVar("TI", bound=Dataset | Group)
 
 
 class ClassAdapter(Adapter):
@@ -19,8 +23,26 @@ class ClassAdapter(Adapter):
     both DatasetAdapter and GroupAdapter
     """
 
-    cls: Dataset | Group
+    TYPE: T
+    """
+    The type that this adapter class handles
+    """
+
+    cls: TI
     parent: Optional["ClassAdapter"] = None
+
+    @field_validator("cls", mode="before")
+    @classmethod
+    def cast_from_string(cls, value: str | TI) -> TI:
+        """
+        Cast from YAML string to desired class
+        """
+        if isinstance(value, str):
+            from nwb_linkml.io.yaml import load_yaml
+
+            value = load_yaml(value)
+            value = cls.TYPE(**value)
+        return value
 
     @abstractmethod
     def build(self) -> BuildResult:
@@ -123,6 +145,7 @@ class ClassAdapter(Adapter):
 
             name_parts.append(self.cls.name)
             name = "__".join(name_parts)
+
         elif self.cls.neurodata_type_inc is not None:
             # again, this is against the schema, but is common
             name = self.cls.neurodata_type_inc
@@ -180,6 +203,8 @@ class ClassAdapter(Adapter):
         elif dtype is None or dtype == []:
             # Some ill-defined datasets are "abstract" despite that not being in the schema language
             return "AnyType"
+        elif isinstance(dtype, FlatDtype):
+            return dtype.value
         elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
             # there is precisely one class that uses compound dtypes:
             # TimeSeriesReferenceVectorData
@@ -206,17 +231,24 @@ class ClassAdapter(Adapter):
         Returns:
 
         """
-        if self.cls.name:
+        if self.cls.name or self.cls.default_name:
+            if self.cls.name:
+                # name overrides default_name
+                name = self.cls.name
+                equals_string = name
+            else:
+                name = self.cls.default_name
+                equals_string = None
+
             name_slot = SlotDefinition(
                 name="name",
                 required=True,
-                ifabsent=f"string({self.cls.name})",
-                equals_string=self.cls.name,
+                ifabsent=f"string({name})",
+                equals_string=equals_string,
                 range="string",
-                identifier=True,
             )
         else:
-            name_slot = SlotDefinition(name="name", required=True, range="string", identifier=True)
+            name_slot = SlotDefinition(name="name", required=True, range="string")
         return name_slot
 
     def build_self_slot(self) -> SlotDefinition:

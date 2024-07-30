@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import warnings
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, DirectoryPath, Field, HttpUrl
 
@@ -25,7 +25,7 @@ class NamespaceRepo(BaseModel):
             " within a namespaces NWB list)"
         )
     )
-    repository: HttpUrl | DirectoryPath = Field(
+    repository: Union[HttpUrl, DirectoryPath] = Field(
         description="URL or local absolute path to the root repository"
     )
     path: Path = Field(description="Relative path from the repository root to the namespace file")
@@ -49,7 +49,18 @@ NWB_CORE_REPO = NamespaceRepo(
     name="core",
     repository="https://github.com/NeurodataWithoutBorders/nwb-schema",
     path=Path("core/nwb.namespace.yaml"),
-    versions=["2.2.0", "2.2.1", "2.2.2", "2.2.4", "2.2.5", "2.3.0", "2.4.0", "2.5.0", "2.6.0"],
+    versions=[
+        "2.2.0",
+        "2.2.1",
+        "2.2.2",
+        "2.2.4",
+        "2.2.5",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.6.0",
+        "2.7.0",
+    ],
 )
 
 HDMF_COMMON_REPO = NamespaceRepo(

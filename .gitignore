@@ -166,3 +166,5 @@ jupyter_execute
 
 .pdm-python
 .venv*
+
+requests-cache.sqlite

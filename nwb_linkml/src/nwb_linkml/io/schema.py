@@ -6,27 +6,14 @@ from pathlib import Path
 from pprint import pprint
 from typing import Optional
 
-import yaml
 from linkml_runtime.loaders import yaml_loader
 
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.adapters.schema import SchemaAdapter
+from nwb_linkml.io.yaml import load_yaml
 from nwb_linkml.maps.postload import apply_postload
 from nwb_linkml.providers.git import HDMF_COMMON_REPO, NWB_CORE_REPO, NamespaceRepo
 from nwb_schema_language import Dataset, Group, Namespaces
-
-
-def load_yaml(path: Path | str) -> dict:
-    """
-    Load yaml file from file, applying postload modifications
-    """
-    if isinstance(path, str) and not Path(path).exists():
-        ns_dict = yaml.safe_load(path)
-    else:
-        with open(path) as file:
-            ns_dict = yaml.safe_load(file)
-    ns_dict = apply_postload(ns_dict)
-    return ns_dict
 
 
 def load_namespaces(path: Path | NamespaceRepo) -> Namespaces:
@@ -133,7 +120,7 @@ def load_namespace_adapter(
     return adapter
 
 
-def load_nwb_core(core_version: str = "2.6.0", hdmf_version: str = "1.5.0") -> NamespacesAdapter:
+def load_nwb_core(core_version: str = "2.7.0", hdmf_version: str = "1.8.0") -> NamespacesAdapter:
     """
     Convenience function for loading the NWB core schema + hdmf-common as a namespace adapter.
 

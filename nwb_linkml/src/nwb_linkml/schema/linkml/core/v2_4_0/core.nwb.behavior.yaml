@@ -1,4 +1,11 @@
 name: core.nwb.behavior
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
 id: core.nwb.behavior
 version: 2.4.0
 imports:
@@ -22,22 +29,21 @@ classes:
     attributes:
       name:
         name: name
-        identifier: true
         range: string
         required: true
       data:
         name: data
         description: 1-D or 2-D array storing position or direction relative to some
           reference frame.
-        multivalued: false
         range: SpatialSeries__data
         required: true
+        multivalued: false
       reference_frame:
         name: reference_frame
         description: Description defining what exactly 'straight-ahead' means.
-        multivalued: false
         range: text
         required: false
+        multivalued: false
     tree_root: true
   SpatialSeries__data:
     name: SpatialSeries__data
@@ -47,7 +53,6 @@ classes:
       name:
         name: name
         ifabsent: string(data)
-        identifier: true
         range: string
         required: true
         equals_string: data
@@ -59,19 +64,15 @@ classes:
         range: text
       array:
         name: array
-        range: SpatialSeries__data__Array
-  SpatialSeries__data__Array:
-    name: SpatialSeries__data__Array
-    is_a: Arraylike
-    attributes:
-      num_times:
-        name: num_times
         range: numeric
-        required: true
-      num_features:
-        name: num_features
-        range: numeric
-        required: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_features
   BehavioralEpochs:
     name: BehavioralEpochs
     description: TimeSeries for storing behavioral epochs.  The objective of this
@@ -88,12 +89,13 @@ classes:
       events. BehavioralTimeSeries is for continuous data.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: IntervalSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: IntervalSeries
     tree_root: true
   BehavioralEvents:
     name: BehavioralEvents
@@ -101,12 +103,13 @@ classes:
       for more details.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   BehavioralTimeSeries:
     name: BehavioralTimeSeries
@@ -114,36 +117,39 @@ classes:
       of <a href="#BehavioralEpochs">BehavioralEpochs</a> for more details.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   PupilTracking:
     name: PupilTracking
     description: Eye-tracking data, representing pupil size.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   EyeTracking:
     name: EyeTracking
     description: Eye-tracking data, representing direction of gaze.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true
   CompassDirection:
     name: CompassDirection
@@ -154,22 +160,24 @@ classes:
       be radians or degrees.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true
   Position:
     name: Position
     description: Position data, whether along the x, x/y or x/y/z axis.
     is_a: NWBDataInterface
     attributes:
-    - name: children
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      children:
+        name: children
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true

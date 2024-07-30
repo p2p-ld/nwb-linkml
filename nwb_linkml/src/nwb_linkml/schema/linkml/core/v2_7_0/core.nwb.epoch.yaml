@@ -1,0 +1,84 @@
+name: core.nwb.epoch
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: core
+id: core.nwb.epoch
+version: 2.7.0
+imports:
+- ../../hdmf_common/v1_8_0/namespace
+- core.nwb.base
+- core.nwb.language
+default_prefix: core.nwb.epoch/
+classes:
+  TimeIntervals:
+    name: TimeIntervals
+    description: A container for aggregating epoch data and the TimeSeries that each
+      epoch applies to.
+    is_a: DynamicTable
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      start_time:
+        name: start_time
+        description: Start time of epoch, in seconds.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
+        range: float32
+        required: true
+        multivalued: false
+      stop_time:
+        name: stop_time
+        description: Stop time of epoch, in seconds.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
+        range: float32
+        required: true
+        multivalued: false
+      tags:
+        name: tags
+        description: User-defined tags that identify or categorize events.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
+        range: text
+        required: false
+        multivalued: false
+      tags_index:
+        name: tags_index
+        annotations:
+          named:
+            tag: named
+            value: true
+        description: Index for tags.
+        range: VectorIndex
+        required: false
+        multivalued: false
+      timeseries:
+        name: timeseries
+        annotations:
+          named:
+            tag: named
+            value: true
+        description: An index into a TimeSeries object.
+        range: TimeSeriesReferenceVectorData
+        required: false
+        multivalued: false
+      timeseries_index:
+        name: timeseries_index
+        annotations:
+          named:
+            tag: named
+            value: true
+        description: Index for timeseries.
+        range: VectorIndex
+        required: false
+        multivalued: false
+    tree_root: true
