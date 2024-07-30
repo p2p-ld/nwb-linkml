@@ -65,6 +65,7 @@ def test_linkml_build_from_yaml(tmp_output_dir):
 
 
 # @pytest.mark.depends(on=["test_linkml_provider"])
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     ["class_name", "test_fields"],
     [

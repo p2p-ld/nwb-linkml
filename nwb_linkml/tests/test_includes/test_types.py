@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from nwb_linkml.includes import Named
+from nwb_linkml.includes.types import Named
 
 
 def test_named_generic():

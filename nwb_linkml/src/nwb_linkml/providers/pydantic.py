@@ -98,10 +98,10 @@ class PydanticProvider(Provider):
             namespace.endswith(".yaml") or namespace.endswith(".yml")
         ):
             # we're given a name of a namespace to build
-            path = (
-                LinkMLProvider(path=self.config.cache_dir).namespace_path(namespace, version)
-                / "namespace.yaml"
-            )
+            provider = LinkMLProvider(path=self.config.cache_dir)
+            # ensure we have the schema in question
+            _ = provider.get(namespace, version=version)
+            path = provider.namespace_path(namespace, version) / "namespace.yaml"
 
         else:
             # given a path to a namespace linkml yaml file
@@ -211,6 +211,8 @@ class PydanticProvider(Provider):
         # make __init__.py files if we generated any files
         if len(module_paths) > 0:
             _ensure_inits(module_paths)
+            # then extra_inits that usually aren't generated bc we're one layer deeper
+            self._make_inits(ns_file)
 
         return res
 

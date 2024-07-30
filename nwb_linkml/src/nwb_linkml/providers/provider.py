@@ -118,6 +118,12 @@ class Provider(ABC):
     def available_versions(self) -> Dict[str, List[str]]:
         """
         Dictionary mapping a namespace to a list of built versions
+
+        .. warning:: This is busted
+
+            at the moment this property is very broken and needs to be updated to actually read
+            module metadata rather than try and parse filenames which is extremely fragile!!!
+
         """
         from nwb_linkml.providers import LinkMLProvider
 

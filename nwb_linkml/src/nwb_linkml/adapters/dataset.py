@@ -147,7 +147,6 @@ class MapScalarAttributes(DatasetMap):
                     name:
                       name: name
                       ifabsent: string(starting_time)
-                      identifier: true
                       range: string
                       required: true
                       equals_string: starting_time
@@ -244,7 +243,6 @@ class MapListlike(DatasetMap):
                   attributes:
                     name:
                       name: name
-                      identifier: true
                       range: string
                       required: true
                     image:
@@ -354,6 +352,7 @@ class MapArraylike(DatasetMap):
                       - alias: x
                       - alias: y
                       - alias: z
+
     """
 
     @classmethod
@@ -473,7 +472,6 @@ class MapArrayLikeAttributes(DatasetMap):
                   attributes:
                     name:
                       name: name
-                      identifier: true
                       range: string
                       required: true
                     resolution:

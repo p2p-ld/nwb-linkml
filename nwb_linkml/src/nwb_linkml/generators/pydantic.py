@@ -188,6 +188,21 @@ class AfterGenerateSlot:
                 if is_optional:
                     slot.attribute.range = "Optional[" + slot.attribute.range + "]"
                 del slot.attribute.meta["any_of"]
+
+                # merge injects/imports from the numpydantic array without using the merge method
+                if slot.injected_classes is None:
+                    slot.injected_classes = NumpydanticArray.INJECTS.copy()
+                else:
+                    slot.injected_classes.extend(NumpydanticArray.INJECTS.copy())
+                if isinstance(slot.imports, list):
+                    slot.imports = (
+                        Imports(imports=slot.imports) + NumpydanticArray.IMPORTS.model_copy()
+                    )
+                elif isinstance(slot.imports, Imports):
+                    slot.imports += NumpydanticArray.IMPORTS.model_copy()
+                else:
+                    slot.imports = NumpydanticArray.IMPORTS.model_copy()
+
         return slot
 
     @staticmethod

@@ -150,7 +150,7 @@ def test_name_slot():
     assert slot.name == "name"
     assert slot.required
     assert slot.range == "string"
-    assert slot.identifier
+    assert slot.identifier is None
     assert slot.ifabsent is None
     assert slot.equals_string is None
 
@@ -159,7 +159,7 @@ def test_name_slot():
     assert slot.name == "name"
     assert slot.required
     assert slot.range == "string"
-    assert slot.identifier
+    assert slot.identifier is None
     assert slot.ifabsent == "string(FixedName)"
     assert slot.equals_string == "FixedName"
 
