@@ -5,34 +5,11 @@ from enum import Enum
 import re
 import sys
 import numpy as np
-from ...hdmf_common.v1_1_2.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
-)
-from ...hdmf_common.v1_1_2.hdmf_common_table import (
-    Data,
-    Index,
-    VectorData,
-    VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
-    Container,
-    DynamicTable,
-)
-from ...core.v2_2_1.core_nwb_device import Device
 from ...core.v2_2_1.core_nwb_base import (
-    NWBData,
-    Image,
-    NWBContainer,
-    NWBDataInterface,
     TimeSeries,
-    TimeSeriesData,
     TimeSeriesStartingTime,
     TimeSeriesSync,
-    ProcessingModule,
-    Images,
+    NWBContainer,
 )
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
 from pydantic import (
@@ -45,6 +22,7 @@ from pydantic import (
     BeforeValidator,
 )
 from numpydantic import NDArray, Shape
+from ...hdmf_common.v1_1_2.hdmf_common_table import DynamicTable, VectorIndex, VectorData
 
 metamodel_version = "None"
 version = "2.2.1"
@@ -87,7 +65,8 @@ NUMPYDANTIC_VERSION = "1.2.1"
 ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 
-def _get_name(item: BaseModel | dict, info: ValidationInfo):
+def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
+    """Get the name of the slot that refers to this object"""
     assert isinstance(item, (BaseModel, dict))
     name = info.field_name
     if isinstance(item, BaseModel):

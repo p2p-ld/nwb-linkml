@@ -7,103 +7,21 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...core.v2_2_2.core_nwb_misc import (
-    AbstractFeatureSeries,
-    AbstractFeatureSeriesData,
-    AnnotationSeries,
-    IntervalSeries,
-    DecompositionSeries,
-    DecompositionSeriesData,
-    DecompositionSeriesBands,
-    Units,
-    UnitsSpikeTimes,
-)
-from ...core.v2_2_2.core_nwb_ecephys import (
-    ElectricalSeries,
-    SpikeEventSeries,
-    FeatureExtraction,
-    EventDetection,
-    EventWaveform,
-    FilteredEphys,
-    LFP,
-    ElectrodeGroup,
-    ElectrodeGroupPosition,
-    ClusterWaveforms,
-    Clustering,
-)
+from ...core.v2_2_2.core_nwb_epoch import TimeIntervals
+from ...core.v2_2_2.core_nwb_misc import Units
 from ...core.v2_2_2.core_nwb_device import Device
+from ...core.v2_2_2.core_nwb_ogen import OptogeneticStimulusSite
+from ...core.v2_2_2.core_nwb_ophys import ImagingPlane
 from ...core.v2_2_2.core_nwb_base import (
-    NWBData,
-    Image,
     NWBContainer,
     NWBDataInterface,
-    TimeSeries,
-    TimeSeriesData,
-    TimeSeriesStartingTime,
-    TimeSeriesSync,
     ProcessingModule,
-    Images,
+    TimeSeries,
 )
-from ...hdmf_common.v1_1_3.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
-)
-from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    Data,
-    Index,
-    VectorData,
-    VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
-    Container,
-    DynamicTable,
-)
-from ...core.v2_2_2.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
-from ...core.v2_2_2.core_nwb_ophys import (
-    TwoPhotonSeries,
-    RoiResponseSeries,
-    DfOverF,
-    Fluorescence,
-    ImageSegmentation,
-    ImagingPlane,
-    MotionCorrection,
-)
-from ...core.v2_2_2.core_nwb_image import (
-    GrayscaleImage,
-    RGBImage,
-    RGBAImage,
-    ImageSeries,
-    ImageSeriesExternalFile,
-    ImageMaskSeries,
-    OpticalSeries,
-    IndexSeries,
-)
-from ...core.v2_2_2.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
-from ...core.v2_2_2.core_nwb_icephys import (
-    PatchClampSeries,
-    PatchClampSeriesData,
-    CurrentClampSeries,
-    CurrentClampSeriesData,
-    IZeroClampSeries,
-    CurrentClampStimulusSeries,
-    CurrentClampStimulusSeriesData,
-    VoltageClampSeries,
-    VoltageClampSeriesData,
-    VoltageClampSeriesCapacitanceFast,
-    VoltageClampSeriesCapacitanceSlow,
-    VoltageClampSeriesResistanceCompBandwidth,
-    VoltageClampSeriesResistanceCompCorrection,
-    VoltageClampSeriesResistanceCompPrediction,
-    VoltageClampSeriesWholeCellCapacitanceComp,
-    VoltageClampSeriesWholeCellSeriesResistanceComp,
-    VoltageClampStimulusSeries,
-    VoltageClampStimulusSeriesData,
-    IntracellularElectrode,
-    SweepTable,
-)
+from ...core.v2_2_2.core_nwb_ecephys import ElectrodeGroup
 from numpydantic import NDArray, Shape
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, VectorData, VectorIndex
+from ...core.v2_2_2.core_nwb_icephys import IntracellularElectrode, SweepTable
 
 metamodel_version = "None"
 version = "2.2.2"
@@ -142,21 +60,6 @@ class LinkMLMeta(RootModel):
 
 
 NUMPYDANTIC_VERSION = "1.2.1"
-
-ModelType = TypeVar("ModelType", bound=Type[BaseModel])
-
-
-def _get_name(item: BaseModel | dict, info: ValidationInfo):
-    assert isinstance(item, (BaseModel, dict))
-    name = info.field_name
-    if isinstance(item, BaseModel):
-        item.name = name
-    else:
-        item["name"] = name
-    return item
-
-
-Named = Annotated[ModelType, BeforeValidator(_get_name)]
 linkml_meta = LinkMLMeta(
     {
         "annotations": {

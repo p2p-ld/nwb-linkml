@@ -7,35 +7,8 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...core.v2_2_1.core_nwb_base import (
-    NWBData,
-    Image,
-    NWBContainer,
-    NWBDataInterface,
-    TimeSeries,
-    TimeSeriesData,
-    TimeSeriesStartingTime,
-    TimeSeriesSync,
-    ProcessingModule,
-    Images,
-)
-from ...hdmf_common.v1_1_2.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
-)
-from ...hdmf_common.v1_1_2.hdmf_common_table import (
-    Data,
-    Index,
-    VectorData,
-    VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
-    Container,
-    DynamicTable,
-)
 from numpydantic import NDArray, Shape
+from ...core.v2_2_1.core_nwb_base import Image, TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
 
 metamodel_version = "None"
 version = "2.2.1"
@@ -74,21 +47,6 @@ class LinkMLMeta(RootModel):
 
 
 NUMPYDANTIC_VERSION = "1.2.1"
-
-ModelType = TypeVar("ModelType", bound=Type[BaseModel])
-
-
-def _get_name(item: BaseModel | dict, info: ValidationInfo):
-    assert isinstance(item, (BaseModel, dict))
-    name = info.field_name
-    if isinstance(item, BaseModel):
-        item.name = name
-    else:
-        item["name"] = name
-    return item
-
-
-Named = Annotated[ModelType, BeforeValidator(_get_name)]
 linkml_meta = LinkMLMeta(
     {
         "annotations": {

@@ -42,7 +42,7 @@ from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.build import SlotResult
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
-from linkml.generators.pydanticgen.template import PydanticModule, Import, ObjectImport
+from linkml.generators.pydanticgen.template import PydanticModule, Import, Imports
 from linkml_runtime.linkml_model.meta import (
     Annotation,
     AnonymousSlotExpression,
@@ -203,7 +203,9 @@ class AfterGenerateSlot:
                 slot.injected_classes = named_injects
             else:
                 slot.injected_classes.extend([ModelTypeString, _get_name, NamedString])
-            if slot.imports:
+            if isinstance(slot.imports, list):
+                slot.imports = Imports(imports=slot.imports) + NamedImports
+            elif isinstance(slot.imports, Imports):
                 slot.imports += NamedImports
             else:
                 slot.imports = NamedImports

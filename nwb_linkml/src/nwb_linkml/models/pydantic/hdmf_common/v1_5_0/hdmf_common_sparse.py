@@ -7,7 +7,7 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container, SimpleMultiContainer
+from ...hdmf_common.v1_5_0.hdmf_common_base import Container
 from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
@@ -47,21 +47,6 @@ class LinkMLMeta(RootModel):
 
 
 NUMPYDANTIC_VERSION = "1.2.1"
-
-ModelType = TypeVar("ModelType", bound=Type[BaseModel])
-
-
-def _get_name(item: BaseModel | dict, info: ValidationInfo):
-    assert isinstance(item, (BaseModel, dict))
-    name = info.field_name
-    if isinstance(item, BaseModel):
-        item.name = name
-    else:
-        item["name"] = name
-    return item
-
-
-Named = Annotated[ModelType, BeforeValidator(_get_name)]
 linkml_meta = LinkMLMeta(
     {
         "annotations": {

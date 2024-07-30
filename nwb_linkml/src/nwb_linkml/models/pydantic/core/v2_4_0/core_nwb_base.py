@@ -48,21 +48,6 @@ class LinkMLMeta(RootModel):
 
 
 NUMPYDANTIC_VERSION = "1.2.1"
-
-ModelType = TypeVar("ModelType", bound=Type[BaseModel])
-
-
-def _get_name(item: BaseModel | dict, info: ValidationInfo):
-    assert isinstance(item, (BaseModel, dict))
-    name = info.field_name
-    if isinstance(item, BaseModel):
-        item.name = name
-    else:
-        item["name"] = name
-    return item
-
-
-Named = Annotated[ModelType, BeforeValidator(_get_name)]
 linkml_meta = LinkMLMeta(
     {
         "annotations": {

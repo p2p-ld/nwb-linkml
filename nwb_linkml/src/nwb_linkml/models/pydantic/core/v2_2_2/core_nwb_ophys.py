@@ -5,45 +5,7 @@ from enum import Enum
 import re
 import sys
 import numpy as np
-from ...core.v2_2_2.core_nwb_device import Device
-from ...core.v2_2_2.core_nwb_base import (
-    NWBData,
-    Image,
-    NWBContainer,
-    NWBDataInterface,
-    TimeSeries,
-    TimeSeriesData,
-    TimeSeriesStartingTime,
-    TimeSeriesSync,
-    ProcessingModule,
-    Images,
-)
-from ...hdmf_common.v1_1_3.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
-)
-from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    Data,
-    Index,
-    VectorData,
-    VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
-    Container,
-    DynamicTable,
-)
-from ...core.v2_2_2.core_nwb_image import (
-    GrayscaleImage,
-    RGBImage,
-    RGBAImage,
-    ImageSeries,
-    ImageSeriesExternalFile,
-    ImageMaskSeries,
-    OpticalSeries,
-    IndexSeries,
-)
+from ...core.v2_2_2.core_nwb_image import ImageSeries, ImageSeriesExternalFile
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
 from pydantic import (
     BaseModel,
@@ -55,6 +17,14 @@ from pydantic import (
     BeforeValidator,
 )
 from numpydantic import NDArray, Shape
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTableRegion, DynamicTable
+from ...core.v2_2_2.core_nwb_base import (
+    TimeSeriesStartingTime,
+    TimeSeriesSync,
+    TimeSeries,
+    NWBDataInterface,
+    NWBContainer,
+)
 
 metamodel_version = "None"
 version = "2.2.2"
@@ -97,7 +67,8 @@ NUMPYDANTIC_VERSION = "1.2.1"
 ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 
-def _get_name(item: BaseModel | dict, info: ValidationInfo):
+def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
+    """Get the name of the slot that refers to this object"""
     assert isinstance(item, (BaseModel, dict))
     name = info.field_name
     if isinstance(item, BaseModel):

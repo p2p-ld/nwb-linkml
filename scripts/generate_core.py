@@ -102,12 +102,9 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
 
                     # build pydantic
                     ns_files = [res['namespace'] for res in linkml_res.values()]
-                    all_schema = []
-                    for ns_file in ns_files:
-                        all_schema.extend(list(ns_file.parent.glob('*.yaml')))
 
-                    pydantic_task = build_progress.add_task('', name=version, action='', total=len(all_schema))
-                    for schema in all_schema:
+                    pydantic_task = build_progress.add_task('', name=version, action='', total=len(ns_files))
+                    for schema in ns_files:
                         pbar_string = ' - '.join([schema.parts[-3], schema.parts[-2], schema.parts[-1]])
                         build_progress.update(pydantic_task, action=pbar_string)
                         pydantic_provider.build(schema, versions=core_ns.versions, split=True)

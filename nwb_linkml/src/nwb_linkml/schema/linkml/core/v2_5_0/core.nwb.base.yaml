@@ -107,6 +107,12 @@ classes:
         name: name
         range: string
         required: true
+      image:
+        name: image
+        description: Ordered dataset of references to Image objects.
+        range: Image
+        required: true
+        multivalued: true
     tree_root: true
   NWBContainer:
     name: NWBContainer
