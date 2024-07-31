@@ -22,7 +22,7 @@ class DynamicTableMixin(BaseModel):
     """
 
     model_config = ConfigDict(extra="allow")
-    __pydantic_extra__: Dict[str, Union[list, "NDArray", "VectorData"]]
+    __pydantic_extra__: Dict[str, Union[list, "NDArray", "VectorDataMixin"]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "name",
         "colnames",
@@ -33,15 +33,15 @@ class DynamicTableMixin(BaseModel):
     colnames: List[str] = Field(default_factory=list)
 
     @property
-    def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
+    def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorDataMixin"]]:
         return {k: getattr(self, k) for i, k in enumerate(self.colnames)}
 
     @property
-    def _columns_list(self) -> List[Union[list, "NDArray", "VectorData"]]:
+    def _columns_list(self) -> List[Union[list, "NDArray", "VectorDataMixin"]]:
         return [getattr(self, k) for i, k in enumerate(self.colnames)]
 
     @overload
-    def __getitem__(self, item: str) -> Union[list, "NDArray", "VectorData"]: ...
+    def __getitem__(self, item: str) -> Union[list, "NDArray", "VectorDataMixin"]: ...
 
     @overload
     def __getitem__(self, item: int) -> DataFrame: ...
@@ -54,7 +54,7 @@ class DynamicTableMixin(BaseModel):
         DataFrame,
         list,
         "NDArray",
-        "VectorData",
+        "VectorDataMixin",
     ]: ...
 
     @overload
