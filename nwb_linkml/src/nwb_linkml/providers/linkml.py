@@ -285,4 +285,4 @@ class LinkMLProvider(Provider):
             )
         ns_file = ns_repo.provide_from_git(commit=version)
         res = self.build_from_yaml(ns_file)
-        return res[namespace]["namespace"]
+        return res[namespace].namespace
