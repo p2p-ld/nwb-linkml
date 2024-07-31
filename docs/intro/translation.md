@@ -20,6 +20,11 @@
 
 ### DynamicTable
 
+```{note}
+See the [DynamicTable](https://hdmf-common-schema.readthedocs.io/en/stable/format_description.html#dynamictable)
+reference docs
+```
+
 One of the major special cases in NWB is the use of `DynamicTable` to contain tabular data that
 contains columns that are not in the base spec. 
 

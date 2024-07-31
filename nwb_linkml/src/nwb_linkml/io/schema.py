@@ -120,7 +120,7 @@ def load_namespace_adapter(
     return adapter
 
 
-def load_nwb_core(core_version: str = "2.7.0", hdmf_version: str = "1.8.0") -> NamespacesAdapter:
+def load_nwb_core(core_version: str = "2.7.0", hdmf_version: str = "1.8.0", hdmf_only:bool=False) -> NamespacesAdapter:
     """
     Convenience function for loading the NWB core schema + hdmf-common as a namespace adapter.
 
@@ -136,14 +136,18 @@ def load_nwb_core(core_version: str = "2.7.0", hdmf_version: str = "1.8.0") -> N
     Args:
         core_version (str): an entry in :attr:`.NWB_CORE_REPO.versions`
         hdmf_version (str): an entry in :attr:`.NWB_CORE_REPO.versions`
+        hdmf_only (bool): Only return the hdmf common schema
 
     Returns:
 
     """
     # First get hdmf-common:
     hdmf_schema = load_namespace_adapter(HDMF_COMMON_REPO, version=hdmf_version)
-    schema = load_namespace_adapter(NWB_CORE_REPO, version=core_version)
+    if hdmf_only:
+        schema = hdmf_schema
+    else:
+        schema = load_namespace_adapter(NWB_CORE_REPO, version=core_version)
 
-    schema.imported.append(hdmf_schema)
+        schema.imported.append(hdmf_schema)
 
     return schema

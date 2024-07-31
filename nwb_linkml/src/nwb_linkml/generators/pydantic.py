@@ -40,7 +40,7 @@ from types import ModuleType
 from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
 
 from linkml.generators import PydanticGenerator
-from linkml.generators.pydanticgen.build import SlotResult
+from linkml.generators.pydanticgen.build import SlotResult, ClassResult
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
 from linkml.generators.pydanticgen.template import PydanticModule, Import, Imports
 from linkml_runtime.linkml_model.meta import (
@@ -63,6 +63,7 @@ from pydantic import BaseModel
 from nwb_linkml.maps import flat_to_nptyping
 from nwb_linkml.maps.naming import module_case, version_module_case
 from nwb_linkml.includes.types import ModelTypeString, _get_name, NamedString, NamedImports
+from nwb_linkml.includes.hdmf import DYNAMIC_TABLE_IMPORTS, DYNAMIC_TABLE_INJECTS
 
 OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
 
@@ -96,6 +97,9 @@ class NWBPydanticGenerator(PydanticGenerator):
     def _check_anyof(
         self, s: SlotDefinition, sn: SlotDefinitionName, sv: SchemaView
     ):  # pragma: no cover
+        """
+        Overridden to allow `array` in any_of
+        """
         # Confirm that the original slot range (ignoring the default that comes in from
         # induced_slot) isn't in addition to setting any_of
         allowed_keys = ("array",)
@@ -126,6 +130,10 @@ class NWBPydanticGenerator(PydanticGenerator):
         slot = AfterGenerateSlot.make_named_class_range(slot)
 
         return slot
+
+    def after_generate_class(self, cls: ClassResult, sv: SchemaView) -> ClassResult:
+        cls = AfterGenerateClass.inject_dynamictable(cls)
+        return cls
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
         if "source_file" in template.meta:
@@ -225,6 +233,33 @@ class AfterGenerateSlot:
             else:
                 slot.imports = NamedImports
         return slot
+
+class AfterGenerateClass:
+    """
+    Container class for class-modification methods
+    """
+
+    @staticmethod
+    def inject_dynamictable(cls: ClassResult) -> ClassResult:
+        if cls.cls.name == "DynamicTable":
+            cls.cls.bases = ["DynamicTableMixin"]
+
+            if cls.injected_classes is None:
+                cls.injected_classes = DYNAMIC_TABLE_INJECTS.copy()
+            else:
+                cls.injected_classes.extend(DYNAMIC_TABLE_INJECTS.copy())
+
+            if isinstance(cls.imports, Imports):
+                cls.imports += DYNAMIC_TABLE_IMPORTS
+            elif isinstance(cls.imports, list):
+                cls.imports = Imports(imports=cls.imports) + DYNAMIC_TABLE_IMPORTS
+            else:
+                cls.imports = DYNAMIC_TABLE_IMPORTS.model_copy()
+        elif cls.cls.name == "VectorData":
+            cls.cls.bases = ["VectorDataMixin"]
+        elif cls.cls.name == "VectorIndex":
+            cls.cls.bases = ["VectorIndexMixin"]
+        return cls
 
 
 def compile_python(

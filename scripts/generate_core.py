@@ -14,13 +14,13 @@ from rich import print
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
 from nwb_linkml.providers import LinkMLProvider, PydanticProvider
-from nwb_linkml.providers.git import NWB_CORE_REPO, GitRepo
+from nwb_linkml.providers.git import NWB_CORE_REPO, HDMF_COMMON_REPO, GitRepo
 from nwb_linkml.io import schema as io
 
-def generate_core_yaml(output_path:Path, dry_run:bool=False):
+def generate_core_yaml(output_path:Path, dry_run:bool=False, hdmf_only:bool=False):
     """Just build the latest version of the core schema"""
 
-    core = io.load_nwb_core()
+    core = io.load_nwb_core(hdmf_only=hdmf_only)
     built_schemas = core.build().schemas
     for schema in built_schemas:
         output_file = output_path / (schema.name + '.yaml')
@@ -45,11 +45,10 @@ def generate_core_pydantic(yaml_path:Path, output_path:Path, dry_run:bool=False)
             with open(pydantic_file, 'w') as pfile:
                 pfile.write(gen_pydantic)
 
-def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
+def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False, repo:GitRepo=NWB_CORE_REPO, hdmf_only=False):
     """
     Generate linkml models for all versions
     """
-    repo = GitRepo(NWB_CORE_REPO)
     #repo.clone(force=True)
     repo.clone()
 
@@ -81,7 +80,7 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
             linkml_task = None
             pydantic_task = None
 
-            for version in NWB_CORE_REPO.versions:
+            for version in repo.namespace.versions:
                 # build linkml
                 try:
                     # check out the version (this should also refresh the hdmf-common schema)
@@ -91,9 +90,11 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
 
                     # first load the core namespace
                     core_ns = io.load_namespace_adapter(repo.namespace_file)
-                    # then the hdmf-common namespace
-                    hdmf_common_ns = io.load_namespace_adapter(repo.temp_directory / 'hdmf-common-schema' / 'common' / 'namespace.yaml')
-                    core_ns.imported.append(hdmf_common_ns)
+                    if repo.namespace == NWB_CORE_REPO:
+                        # then the hdmf-common namespace
+                        hdmf_common_ns = io.load_namespace_adapter(repo.temp_directory / 'hdmf-common-schema' / 'common' / 'namespace.yaml')
+                        core_ns.imported.append(hdmf_common_ns)
+
                     build_progress.update(linkml_task, advance=1, action="Build LinkML")
 
 
@@ -101,7 +102,7 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
                     build_progress.update(linkml_task, advance=1, action="Built LinkML")
 
                     # build pydantic
-                    ns_files = [res['namespace'] for res in linkml_res.values()]
+                    ns_files = [res.namespace for res in linkml_res.values()]
 
                     pydantic_task = build_progress.add_task('', name=version, action='', total=len(ns_files))
                     for schema in ns_files:
@@ -129,10 +130,20 @@ def generate_versions(yaml_path:Path, pydantic_path:Path, dry_run:bool=False):
                     pydantic_task = None
 
         if not dry_run:
-            shutil.rmtree(yaml_path / 'linkml')
-            shutil.rmtree(pydantic_path / 'pydantic')
-            shutil.move(tmp_dir / 'linkml', yaml_path)
-            shutil.move(tmp_dir / 'pydantic', pydantic_path)
+            if hdmf_only:
+                shutil.rmtree(yaml_path / 'linkml' / 'hdmf_common')
+                shutil.rmtree(yaml_path / 'linkml' / 'hdmf_experimental')
+                shutil.rmtree(pydantic_path / 'pydantic' / 'hdmf_common')
+                shutil.rmtree(pydantic_path / 'pydantic' / 'hdmf_experimental')
+                shutil.move(tmp_dir / 'linkml' / 'hdmf_common', yaml_path / 'linkml')
+                shutil.move(tmp_dir / 'linkml' / 'hdmf_experimental', yaml_path / 'linkml')
+                shutil.move(tmp_dir / 'pydantic' / 'hdmf_common', pydantic_path / 'pydantic')
+                shutil.move(tmp_dir / 'pydantic' / 'hdmf_experimental', pydantic_path / 'pydantic')
+            else:
+                shutil.rmtree(yaml_path / 'linkml')
+                shutil.rmtree(pydantic_path / 'pydantic')
+                shutil.move(tmp_dir / 'linkml', yaml_path)
+                shutil.move(tmp_dir / 'pydantic', pydantic_path)
 
             # import the most recent version of the schemaz we built
             latest_version = sorted((pydantic_path / 'pydantic' / 'core').iterdir(), key=os.path.getmtime)[-1]
@@ -168,6 +179,11 @@ def parser() -> ArgumentParser:
         default=Path(__file__).parent.parent / 'nwb_linkml' / 'src' / 'nwb_linkml' / 'models'
     )
     parser.add_argument(
+        '--hdmf',
+        help="Only generate the HDMF namespaces",
+        action="store_true"
+    )
+    parser.add_argument(
         '--latest',
         help="Only generate the latest version of the core schemas.",
         action="store_true"
@@ -182,14 +198,19 @@ def parser() -> ArgumentParser:
 
 def main():
     args = parser().parse_args()
+    if args.hdmf:
+        repo = GitRepo(HDMF_COMMON_REPO)
+    else:
+        repo = GitRepo(NWB_CORE_REPO)
+
     if not args.dry_run:
         args.yaml.mkdir(exist_ok=True)
         args.pydantic.mkdir(exist_ok=True)
     if args.latest:
-        generate_core_yaml(args.yaml, args.dry_run)
+        generate_core_yaml(args.yaml, args.dry_run, args.hdmf)
         generate_core_pydantic(args.yaml, args.pydantic, args.dry_run)
     else:
-        generate_versions(args.yaml, args.pydantic, args.dry_run)
+        generate_versions(args.yaml, args.pydantic, args.dry_run, repo, args.hdmf)
 
 if __name__ == "__main__":
     main()
