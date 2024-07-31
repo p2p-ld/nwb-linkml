@@ -32,6 +32,5 @@ def electrical_series() -> Tuple["ElectricalSeries", "NWBFileGeneralExtracellula
         id=np.arange(0, n_electrodes),
         x=np.arange(0, n_electrodes),
         y=np.arange(n_electrodes, n_electrodes * 2),
-        group=[electrode_group]*n_electrodes,
-
+        group=[electrode_group] * n_electrodes,
     )

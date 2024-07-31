@@ -5,7 +5,7 @@ annotations:
     value: 'False'
   namespace:
     tag: namespace
-    value: core
+    value: hdmf-common
 description: Adapter objects to mimic the behavior of elements in the nwb-schema-language
 id: nwb.language
 imports:

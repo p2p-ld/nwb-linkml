@@ -1,6 +1,7 @@
 """
 Special types for mimicking HDMF special case behavior
 """
+
 from typing import Any, ClassVar, Dict, List, Optional, Union, Tuple, overload, TYPE_CHECKING
 
 
@@ -23,16 +24,18 @@ class DynamicTableMixin(BaseModel):
 
     model_config = ConfigDict(extra="allow")
     __pydantic_extra__: Dict[str, Union[list, "NDArray", "VectorData"]]
-    NON_COLUMN_FIELDS: ClassVar[tuple[str]] = ("name", "colnames", "description",)
+    NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
+        "name",
+        "colnames",
+        "description",
+    )
 
     # overridden by subclass but implemented here for testing and typechecking purposes :)
     colnames: List[str] = Field(default_factory=list)
 
     @property
     def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
-        return {
-            k: getattr(self, k) for i, k in enumerate(self.colnames)
-        }
+        return {k: getattr(self, k) for i, k in enumerate(self.colnames)}
 
     @property
     def _columns_list(self) -> List[Union[list, "NDArray", "VectorData"]]:
@@ -48,12 +51,26 @@ class DynamicTableMixin(BaseModel):
     def __getitem__(self, item: Tuple[int, Union[int, str]]) -> Any: ...
 
     @overload
-    def __getitem__(self, item: Tuple[Union[int,slice], ...]) -> Union[DataFrame, list, "NDArray", "VectorData",]: ...
+    def __getitem__(self, item: Tuple[Union[int, slice], ...]) -> Union[
+        DataFrame,
+        list,
+        "NDArray",
+        "VectorData",
+    ]: ...
 
     @overload
     def __getitem__(self, item: slice) -> DataFrame: ...
 
-    def __getitem__(self, item: Union[str, int, slice, Tuple[int, Union[int, str]], Tuple[Union[int, slice], ...],]) -> Any:
+    def __getitem__(
+        self,
+        item: Union[
+            str,
+            int,
+            slice,
+            Tuple[int, Union[int, str]],
+            Tuple[Union[int, slice], ...],
+        ],
+    ) -> Any:
         """
         Get an item from the table
 
@@ -74,7 +91,9 @@ class DynamicTableMixin(BaseModel):
         elif isinstance(item, tuple):
             if len(item) != 2:
                 raise ValueError(
-                    f"DynamicTables are 2-dimensional, can't index with more than 2 indices like {item}")
+                    "DynamicTables are 2-dimensional, can't index with more than 2 indices like"
+                    f" {item}"
+                )
 
             # all other cases are tuples of (rows, cols)
             rows, cols = item
@@ -85,19 +104,16 @@ class DynamicTableMixin(BaseModel):
         else:
             raise ValueError(f"Unsure how to get item with key {item}")
 
-
-    def _slice_range(self, rows: Union[int, slice], cols: Optional[Union[str, List[str]]] = None) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
+    def _slice_range(
+        self, rows: Union[int, slice], cols: Optional[Union[str, List[str]]] = None
+    ) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
         if cols is None:
             cols = self.colnames
         elif isinstance(cols, str):
             cols = [cols]
 
-        data = {
-            k: self._columns[k][rows] for k in cols
-        }
+        data = {k: self._columns[k][rows] for k in cols}
         return data
-
-
 
     def __setitem__(self, key: str, value: Any) -> None:
         raise NotImplementedError("TODO")
@@ -107,10 +123,10 @@ class DynamicTableMixin(BaseModel):
         Add a column, appending it to ``colnames``
         """
         # don't use this while building the model
-        if not getattr(self, '__pydantic_complete__', False):
+        if not getattr(self, "__pydantic_complete__", False):
             return super().__setattr__(key, value)
 
-        if key not in self.model_fields_set and not key.endswith('_index'):
+        if key not in self.model_fields_set and not key.endswith("_index"):
             self.colnames.append(key)
 
         return super().__setattr__(key, value)
@@ -124,19 +140,23 @@ class DynamicTableMixin(BaseModel):
         the model dict is ordered after python3.6, so we can use that minus
         anything in :attr:`.NON_COLUMN_FIELDS` to determine order implied from passage order
         """
-        if 'colnames' not in model:
-            colnames = [k for k in model.keys()
-                        if k not in cls.NON_COLUMN_FIELDS
-                        and not k.endswith('_index')]
-            model['colnames'] = colnames
+        if "colnames" not in model:
+            colnames = [
+                k
+                for k in model.keys()
+                if k not in cls.NON_COLUMN_FIELDS and not k.endswith("_index")
+            ]
+            model["colnames"] = colnames
         else:
             # add any columns not explicitly given an order at the end
-            colnames = [k for k in model.keys() if
-                        k not in cls.NON_COLUMN_FIELDS
-                        and not k.endswith('_index')
-                        and k not in model['colnames'].keys()
-                        ]
-            model['colnames'].extend(colnames)
+            colnames = [
+                k
+                for k in model.keys()
+                if k not in cls.NON_COLUMN_FIELDS
+                and not k.endswith("_index")
+                and k not in model["colnames"].keys()
+            ]
+            model["colnames"].extend(colnames)
         return model
 
     @model_validator(mode="after")
@@ -164,12 +184,11 @@ class DynamicTableMixin(BaseModel):
         return self
 
 
-
-
 class VectorDataMixin(BaseModel):
     """
     Mixin class to give VectorData indexing abilities
     """
+
     _index: Optional["VectorIndex"] = None
 
     # redefined in `VectorData`, but included here for testing and type checking
@@ -194,6 +213,7 @@ class VectorIndexMixin(BaseModel):
     """
     Mixin class to give VectorIndex indexing abilities
     """
+
     # redefined in `VectorData`, but included here for testing and type checking
     array: Optional[NDArray] = None
     target: Optional["VectorData"] = None
@@ -219,7 +239,6 @@ class VectorIndexMixin(BaseModel):
         else:
             raise NotImplementedError("DynamicTableRange not supported yet")
 
-
     def __setitem__(self, key, value) -> None:
         if self._index:
             # VectorIndex is the thing that knows how to do the slicing
@@ -229,11 +248,18 @@ class VectorIndexMixin(BaseModel):
 
 
 DYNAMIC_TABLE_IMPORTS = Imports(
-    imports = [
+    imports=[
         Import(module="pandas", objects=[ObjectImport(name="DataFrame")]),
-        Import(module="typing", objects=[ObjectImport(name="ClassVar"), ObjectImport(name="overload"), ObjectImport(name="Tuple")]),
-        Import(module='numpydantic', objects=[ObjectImport(name='NDArray')]),
-        Import(module="pydantic", objects=[ObjectImport(name="model_validator")])
+        Import(
+            module="typing",
+            objects=[
+                ObjectImport(name="ClassVar"),
+                ObjectImport(name="overload"),
+                ObjectImport(name="Tuple"),
+            ],
+        ),
+        Import(module="numpydantic", objects=[ObjectImport(name="NDArray")]),
+        Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
     ]
 )
 """

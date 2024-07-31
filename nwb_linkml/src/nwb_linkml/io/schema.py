@@ -120,7 +120,9 @@ def load_namespace_adapter(
     return adapter
 
 
-def load_nwb_core(core_version: str = "2.7.0", hdmf_version: str = "1.8.0", hdmf_only:bool=False) -> NamespacesAdapter:
+def load_nwb_core(
+    core_version: str = "2.7.0", hdmf_version: str = "1.8.0", hdmf_only: bool = False
+) -> NamespacesAdapter:
     """
     Convenience function for loading the NWB core schema + hdmf-common as a namespace adapter.
 

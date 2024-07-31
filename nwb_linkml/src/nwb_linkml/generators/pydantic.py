@@ -234,6 +234,7 @@ class AfterGenerateSlot:
                 slot.imports = NamedImports
         return slot
 
+
 class AfterGenerateClass:
     """
     Container class for class-modification methods
