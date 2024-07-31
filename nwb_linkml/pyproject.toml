@@ -24,6 +24,7 @@ dependencies = [
     'typing-extensions>=4.12.2;python_version<"3.11"',
     "numpydantic>=1.2.1",
     "black>=24.4.2",
+    "pandas>=2.2.2",
 ]
 
 [project.urls]
