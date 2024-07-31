@@ -1,75 +1,43 @@
 """
 Subclass of :class:`linkml.generators.PydanticGenerator`
+customized to support NWB models.
 
-The pydantic generator is a subclass of
-- :class:`linkml.utils.generator.Generator`
-- :class:`linkml.generators.oocodegen.OOCodeGenerator`
-
-The default `__main__` method
-- Instantiates the class
-- Calls :meth:`~linkml.generators.PydanticGenerator.serialize`
-
-The `serialize` method:
-
-- Accepts an optional jinja-style template, otherwise it uses the default template
-- Uses :class:`linkml_runtime.utils.schemaview.SchemaView` to interact with the schema
-- Generates linkML Classes
-    - `generate_enums` runs first
-
-.. note::
-
-    This module is heinous. We have mostly copied and pasted the existing :class:`linkml.generators.PydanticGenerator`
-    and overridden what we need to make this work for NWB, but the source is...
-    a little messy. We will be tidying this up and trying to pull changes upstream,
-    but for now this is just our hacky little secret.
-
+See class and module docstrings for details :)
 """
 
-# FIXME: Remove this after we refactor this generator
-# ruff: noqa
-
-import inspect
-import pdb
 import re
 import sys
-import warnings
-from copy import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import ClassVar, Dict, List, Optional, Tuple, Type, Union
+from typing import ClassVar, Dict, List, Optional, Tuple
 
 from linkml.generators import PydanticGenerator
-from linkml.generators.pydanticgen.build import SlotResult, ClassResult
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
-from linkml.generators.pydanticgen.template import PydanticModule, Import, Imports
+from linkml.generators.pydanticgen.build import ClassResult, SlotResult
+from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule
 from linkml_runtime.linkml_model.meta import (
-    Annotation,
-    AnonymousSlotExpression,
     ArrayExpression,
-    ClassDefinition,
-    ClassDefinitionName,
-    ElementName,
     SchemaDefinition,
     SlotDefinition,
     SlotDefinitionName,
 )
 from linkml_runtime.utils.compile_python import file_text
-from linkml_runtime.utils.formatutils import camelcase, underscore, remove_empty_items
+from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
-from pydantic import BaseModel
-
-from nwb_linkml.maps import flat_to_nptyping
-from nwb_linkml.maps.naming import module_case, version_module_case
-from nwb_linkml.includes.types import ModelTypeString, _get_name, NamedString, NamedImports
 from nwb_linkml.includes.hdmf import DYNAMIC_TABLE_IMPORTS, DYNAMIC_TABLE_INJECTS
+from nwb_linkml.includes.types import ModelTypeString, NamedImports, NamedString, _get_name
 
 OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
 
 
 @dataclass
 class NWBPydanticGenerator(PydanticGenerator):
+    """
+    Subclass of pydantic generator, custom behavior is in overridden lifecycle methods :)
+    """
+
 
     injected_fields: List[str] = (
         (
@@ -96,7 +64,7 @@ class NWBPydanticGenerator(PydanticGenerator):
 
     def _check_anyof(
         self, s: SlotDefinition, sn: SlotDefinitionName, sv: SchemaView
-    ):  # pragma: no cover
+    ) -> None:  # pragma: no cover
         """
         Overridden to allow `array` in any_of
         """
@@ -108,7 +76,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             allowed = True
             for option in s.any_of:
                 items = remove_empty_items(option)
-                if not all([key in allowed_keys for key in items.keys()]):
+                if not all([key in allowed_keys for key in items]):
                     allowed = False
             if allowed:
                 return
@@ -132,10 +100,14 @@ class NWBPydanticGenerator(PydanticGenerator):
         return slot
 
     def after_generate_class(self, cls: ClassResult, sv: SchemaView) -> ClassResult:
+        """Customize dynamictable behavior"""
         cls = AfterGenerateClass.inject_dynamictable(cls)
         return cls
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
+        """
+        Remove source file from metadata
+        """
         if "source_file" in template.meta:
             del template.meta["source_file"]
         return template
@@ -167,6 +139,9 @@ class AfterGenerateSlot:
 
     @staticmethod
     def skip_meta(slot: SlotResult, skip_meta: tuple[str]) -> SlotResult:
+        """
+        Skip additional metadata slots
+        """
         for key in skip_meta:
             if key in slot.attribute.meta:
                 del slot.attribute.meta[key]
@@ -242,6 +217,14 @@ class AfterGenerateClass:
 
     @staticmethod
     def inject_dynamictable(cls: ClassResult) -> ClassResult:
+        """
+        Modify dynamictable class bases and inject needed objects :)
+        Args:
+            cls:
+
+        Returns:
+
+        """
         if cls.cls.name == "DynamicTable":
             cls.cls.bases = ["DynamicTableMixin"]
 
@@ -269,7 +252,8 @@ def compile_python(
     """
     Compile the text or file and return the resulting module
     @param text_or_fn: Python text or file name that references python file
-    @param package_path: Root package path.  If omitted and we've got a python file, the package is the containing
+    @param package_path: Root package path.  If omitted and we've got a python file,
+    the package is the containing
     directory
     @return: Compiled module
     """

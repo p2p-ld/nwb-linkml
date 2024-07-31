@@ -3,9 +3,9 @@ Provider for LinkML schema built from NWB schema
 """
 
 import shutil
-from pathlib import Path
-from typing import Dict, Optional, TypedDict
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Optional
 
 from linkml_runtime import SchemaView
 from linkml_runtime.dumpers import yaml_dumper

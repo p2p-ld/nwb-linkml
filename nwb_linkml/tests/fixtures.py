@@ -15,9 +15,9 @@ from linkml_runtime.linkml_model import (
 )
 
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_linkml.io import schema as io
 from nwb_linkml.providers import LinkMLProvider, PydanticProvider
 from nwb_linkml.providers.linkml import LinkMLSchemaBuild
-from nwb_linkml.io import schema as io
 from nwb_schema_language import Attribute, Dataset, Group
 
 __all__ = [

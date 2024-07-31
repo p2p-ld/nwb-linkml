@@ -1,5 +1,4 @@
-from typing import Tuple, TYPE_CHECKING
-from types import ModuleType
+from typing import Tuple
 
 import numpy as np
 import pytest
