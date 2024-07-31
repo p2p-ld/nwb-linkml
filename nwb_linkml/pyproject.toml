@@ -22,7 +22,7 @@ dependencies = [
     "dask>=2023.9.2",
     "tqdm>=4.66.1",
     'typing-extensions>=4.12.2;python_version<"3.11"',
-    "numpydantic>=1.2.1",
+    "numpydantic>=1.2.2",
     "black>=24.4.2",
     "pandas>=2.2.2",
 ]
