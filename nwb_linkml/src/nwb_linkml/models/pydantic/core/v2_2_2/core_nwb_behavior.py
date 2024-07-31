@@ -93,12 +93,12 @@ class SpatialSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -133,8 +133,8 @@ class SpatialSeriesData(ConfiguredBaseModel):
     )
     array: Optional[
         Union[
-            NDArray[Shape["* num_times"], np.number],
-            NDArray[Shape["* num_times, * num_features"], np.number],
+            NDArray[Shape["* num_times"], float],
+            NDArray[Shape["* num_times, * num_features"], float],
         ]
     ] = Field(None)
 

@@ -114,11 +114,11 @@ class TimeSeriesReferenceVectorData(VectorData):
     name: str = Field(
         "timeseries", json_schema_extra={"linkml_meta": {"ifabsent": "string(timeseries)"}}
     )
-    idx_start: np.int32 = Field(
+    idx_start: int = Field(
         ...,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
     )
-    count: np.int32 = Field(
+    count: int = Field(
         ...,
         description="""Number of data samples available in this time series, during this epoch""",
     )
@@ -146,15 +146,15 @@ class Image(NWBData):
     )
 
     name: str = Field(...)
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -221,12 +221,12 @@ class TimeSeries(NWBDataInterface):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -255,15 +255,15 @@ class TimeSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    conversion: Optional[np.float32] = Field(
+    conversion: Optional[float] = Field(
         None,
         description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
     )
-    offset: Optional[np.float32] = Field(
+    offset: Optional[float] = Field(
         None,
         description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
     )
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None,
         description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
     )
@@ -298,11 +298,11 @@ class TimeSeriesStartingTime(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "starting_time", "ifabsent": "string(starting_time)"}
         },
     )
-    rate: Optional[np.float32] = Field(None, description="""Sampling rate, in Hz.""")
+    rate: Optional[float] = Field(None, description="""Sampling rate, in Hz.""")
     unit: Optional[str] = Field(
         None, description="""Unit of measurement for time, which is fixed to 'seconds'."""
     )
-    value: np.float64 = Field(...)
+    value: float = Field(...)
 
 
 class TimeSeriesSync(ConfiguredBaseModel):

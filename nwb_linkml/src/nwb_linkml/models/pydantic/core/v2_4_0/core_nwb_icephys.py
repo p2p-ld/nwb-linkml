@@ -116,11 +116,11 @@ class PatchClampSeries(TimeSeries):
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     data: PatchClampSeriesData = Field(..., description="""Recorded voltage or current.""")
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
@@ -133,12 +133,12 @@ class PatchClampSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -171,7 +171,7 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times"], np.number]] = Field(
+    array: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -187,18 +187,18 @@ class CurrentClampSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
-    bias_current: Optional[np.float32] = Field(None, description="""Bias current, in amps.""")
-    bridge_balance: Optional[np.float32] = Field(None, description="""Bridge balance, in ohms.""")
-    capacitance_compensation: Optional[np.float32] = Field(
+    bias_current: Optional[float] = Field(None, description="""Bias current, in amps.""")
+    bridge_balance: Optional[float] = Field(None, description="""Bridge balance, in ohms.""")
+    capacitance_compensation: Optional[float] = Field(
         None, description="""Capacitance compensation, in farads."""
     )
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
@@ -211,12 +211,12 @@ class CurrentClampSeries(PatchClampSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -266,18 +266,16 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""An IZeroClampSeries has no stimulus, so this attribute is automatically set to \"N/A\"""",
     )
-    bias_current: np.float32 = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
-    bridge_balance: np.float32 = Field(
-        ..., description="""Bridge balance, in ohms, fixed to 0.0."""
-    )
-    capacitance_compensation: np.float32 = Field(
+    bias_current: float = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
+    bridge_balance: float = Field(..., description="""Bridge balance, in ohms, fixed to 0.0.""")
+    capacitance_compensation: float = Field(
         ..., description="""Capacitance compensation, in farads, fixed to 0.0."""
     )
     data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
@@ -290,12 +288,12 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -327,10 +325,10 @@ class CurrentClampStimulusSeries(PatchClampSeries):
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
@@ -343,12 +341,12 @@ class CurrentClampStimulusSeries(PatchClampSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -419,10 +417,10 @@ class VoltageClampSeries(PatchClampSeries):
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
@@ -435,12 +433,12 @@ class VoltageClampSeries(PatchClampSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -496,7 +494,7 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
@@ -519,7 +517,7 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
@@ -542,7 +540,7 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
@@ -565,7 +563,7 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
@@ -588,7 +586,7 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
@@ -611,7 +609,7 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
@@ -634,7 +632,7 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
         None,
         description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""",
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampStimulusSeries(PatchClampSeries):
@@ -651,10 +649,10 @@ class VoltageClampStimulusSeries(PatchClampSeries):
     stimulus_description: Optional[str] = Field(
         None, description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
@@ -667,12 +665,12 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -746,7 +744,7 @@ class SweepTable(DynamicTable):
     )
 
     name: str = Field(...)
-    sweep_number: NDArray[Any, np.uint32] = Field(
+    sweep_number: NDArray[Any, int] = Field(
         ...,
         description="""Sweep number of the PatchClampSeries in that row.""",
         json_schema_extra={

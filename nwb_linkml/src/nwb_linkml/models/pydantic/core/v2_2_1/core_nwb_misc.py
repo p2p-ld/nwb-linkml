@@ -129,12 +129,12 @@ class AbstractFeatureSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -169,8 +169,8 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
     )
     array: Optional[
         Union[
-            NDArray[Shape["* num_times"], np.number],
-            NDArray[Shape["* num_times, * num_features"], np.number],
+            NDArray[Shape["* num_times"], float],
+            NDArray[Shape["* num_times, * num_features"], float],
         ]
     ] = Field(None)
 
@@ -199,12 +199,12 @@ class AnnotationSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -232,7 +232,7 @@ class IntervalSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], np.int8] = Field(
+    data: NDArray[Shape["* num_times"], int] = Field(
         ...,
         description="""Use values >0 if interval started, <0 if interval ended.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -246,12 +246,12 @@ class IntervalSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -296,12 +296,12 @@ class DecompositionSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -334,7 +334,7 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], np.number]] = Field(
+    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -370,7 +370,7 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_limits: NDArray[Shape["* num_bands, 2 low_high"], np.float32] = Field(
+    band_limits: NDArray[Shape["* num_bands, 2 low_high"], float] = Field(
         ...,
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
         json_schema_extra={
@@ -384,12 +384,12 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_mean: NDArray[Shape["* num_bands"], np.float32] = Field(
+    band_mean: NDArray[Shape["* num_bands"], float] = Field(
         ...,
         description="""The mean Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
     )
-    band_stdev: NDArray[Shape["* num_bands"], np.float32] = Field(
+    band_stdev: NDArray[Shape["* num_bands"], float] = Field(
         ...,
         description="""The standard deviation of Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
@@ -441,7 +441,7 @@ class Units(DynamicTable):
             "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
         },
     )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], np.float64]] = Field(
+    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = Field(
         None,
         description="""Observation intervals for each unit.""",
         json_schema_extra={
@@ -474,14 +474,14 @@ class Units(DynamicTable):
     )
     waveform_mean: Optional[
         Union[
-            NDArray[Shape["* num_units, * num_samples"], np.float32],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], np.float32],
+            NDArray[Shape["* num_units, * num_samples"], float],
+            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
         ]
     ] = Field(None, description="""Spike waveform mean for each spike unit.""")
     waveform_sd: Optional[
         Union[
-            NDArray[Shape["* num_units, * num_samples"], np.float32],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], np.float32],
+            NDArray[Shape["* num_units, * num_samples"], float],
+            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
         ]
     ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
     colnames: Optional[str] = Field(
@@ -517,7 +517,7 @@ class UnitsSpikeTimes(VectorData):
             "linkml_meta": {"equals_string": "spike_times", "ifabsent": "string(spike_times)"}
         },
     )
-    resolution: Optional[np.float64] = Field(
+    resolution: Optional[float] = Field(
         None,
         description="""The smallest possible difference between two spike times. Usually 1 divided by the acquisition sampling rate from which spike times were extracted, but could be larger if the acquisition time series was downsampled or smaller if the acquisition time series was smoothed/interpolated and it is possible for the spike time to be between samples.""",
     )

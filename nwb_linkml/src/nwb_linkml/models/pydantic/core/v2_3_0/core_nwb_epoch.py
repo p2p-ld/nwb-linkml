@@ -96,7 +96,7 @@ class TimeIntervals(DynamicTable):
     )
 
     name: str = Field(...)
-    start_time: NDArray[Any, np.float32] = Field(
+    start_time: NDArray[Any, float] = Field(
         ...,
         description="""Start time of epoch, in seconds.""",
         json_schema_extra={
@@ -105,7 +105,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    stop_time: NDArray[Any, np.float32] = Field(
+    stop_time: NDArray[Any, float] = Field(
         ...,
         description="""Stop time of epoch, in seconds.""",
         json_schema_extra={
@@ -170,11 +170,11 @@ class TimeIntervalsTimeseries(VectorData):
             "linkml_meta": {"equals_string": "timeseries", "ifabsent": "string(timeseries)"}
         },
     )
-    idx_start: Optional[np.int32] = Field(
+    idx_start: Optional[int] = Field(
         None,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
     )
-    count: Optional[np.int32] = Field(
+    count: Optional[int] = Field(
         None,
         description="""Number of data samples available in this time series, during this epoch.""",
     )

@@ -66,7 +66,7 @@ class VectorDataMixin(BaseModel):
         else:
             return self.array[item]
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
         if self._index:
             # Following hdmf, VectorIndex is the thing that knows how to do the slicing
             self._index[key] = value
@@ -83,7 +83,7 @@ class VectorIndexMixin(BaseModel):
     array: Optional[NDArray] = None
     target: Optional["VectorData"] = None
 
-    def _getitem_helper(self, arg: int):
+    def _getitem_helper(self, arg: int) -> Union[list, NDArray]:
         """
         Mimicking :func:`hdmf.common.table.VectorIndex.__getitem_helper`
         """
@@ -104,7 +104,7 @@ class VectorIndexMixin(BaseModel):
         else:
             raise NotImplementedError("DynamicTableRange not supported yet")
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: Union[int, slice], value: Any) -> None:
         if self._index:
             # VectorIndex is the thing that knows how to do the slicing
             self._index[key] = value
@@ -121,7 +121,7 @@ class DynamicTableMixin(BaseModel):
     """
 
     model_config = ConfigDict(extra="allow")
-    __pydantic_extra__: Dict[str, Union[list, "NDArray", "VectorData"]]
+    __pydantic_extra__: Dict[str, Union[list, "NDArray", "VectorDataMixin"]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "name",
         "colnames",
@@ -132,15 +132,15 @@ class DynamicTableMixin(BaseModel):
     colnames: List[str] = Field(default_factory=list)
 
     @property
-    def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
+    def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorDataMixin"]]:
         return {k: getattr(self, k) for i, k in enumerate(self.colnames)}
 
     @property
-    def _columns_list(self) -> List[Union[list, "NDArray", "VectorData"]]:
+    def _columns_list(self) -> List[Union[list, "NDArray", "VectorDataMixin"]]:
         return [getattr(self, k) for i, k in enumerate(self.colnames)]
 
     @overload
-    def __getitem__(self, item: str) -> Union[list, "NDArray", "VectorData"]: ...
+    def __getitem__(self, item: str) -> Union[list, "NDArray", "VectorDataMixin"]: ...
 
     @overload
     def __getitem__(self, item: int) -> DataFrame: ...
@@ -153,7 +153,7 @@ class DynamicTableMixin(BaseModel):
         DataFrame,
         list,
         "NDArray",
-        "VectorData",
+        "VectorDataMixin",
     ]: ...
 
     @overload
@@ -231,7 +231,7 @@ class DynamicTableMixin(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def create_colnames(cls, model: Dict[str, Any]):
+    def create_colnames(cls, model: Dict[str, Any]) -> None:
         """
         Construct colnames from arguments.
 
@@ -240,19 +240,17 @@ class DynamicTableMixin(BaseModel):
         """
         if "colnames" not in model:
             colnames = [
-                k
-                for k in model.keys()
-                if k not in cls.NON_COLUMN_FIELDS and not k.endswith("_index")
+                k for k in model if k not in cls.NON_COLUMN_FIELDS and not k.endswith("_index")
             ]
             model["colnames"] = colnames
         else:
             # add any columns not explicitly given an order at the end
             colnames = [
                 k
-                for k in model.keys()
+                for k in model
                 if k not in cls.NON_COLUMN_FIELDS
                 and not k.endswith("_index")
-                and k not in model["colnames"].keys()
+                and k not in model["colnames"]
             ]
             model["colnames"].extend(colnames)
         return model
@@ -269,13 +267,11 @@ class DynamicTableMixin(BaseModel):
                 for field_name in self.model_fields_set:
                     # implicit name-based index
                     field = getattr(self, field_name)
-                    if isinstance(field, VectorIndex):
-                        if field_name == f"{key}_index":
-                            idx = field
-                            break
-                        elif field.target is col:
-                            idx = field
-                            break
+                    if isinstance(field, VectorIndex) and (
+                        field_name == f"{key}_index" or field.target is col
+                    ):
+                        idx = field
+                        break
                 if idx is not None:
                     col._index = idx
                     idx.target = col

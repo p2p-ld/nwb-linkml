@@ -33,7 +33,9 @@ def _make_dtypes() -> List[TypeDefinition]:
         # repr_string = f"np.{np_type.__name__}" if np_type.__module__ == "numpy" else None
 
         atype = TypeDefinition(
-            name=nwbtype, minimum_value=amin, typeof=linkmltype, # repr=repr_string
+            name=nwbtype,
+            minimum_value=amin,
+            typeof=linkmltype,  # repr=repr_string
         )
         DTypeTypes.append(atype)
     return DTypeTypes

@@ -109,24 +109,21 @@ class TwoPhotonSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    pmt_gain: Optional[np.float32] = Field(None, description="""Photomultiplier gain.""")
-    scan_line_rate: Optional[np.float32] = Field(
+    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
+    scan_line_rate: Optional[float] = Field(
         None,
         description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     field_of_view: Optional[
-        Union[
-            NDArray[Shape["2 width_height"], np.float32],
-            NDArray[Shape["3 width_height"], np.float32],
-        ]
+        Union[NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height"], float]]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
     data: Optional[
         Union[
-            NDArray[Shape["* frame, * x, * y"], np.number],
-            NDArray[Shape["* frame, * x, * y, * z"], np.number],
+            NDArray[Shape["* frame, * x, * y"], float],
+            NDArray[Shape["* frame, * x, * y, * z"], float],
         ]
     ] = Field(None, description="""Binary data representing images across frames.""")
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -148,12 +145,12 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -182,8 +179,7 @@ class RoiResponseSeries(TimeSeries):
 
     name: str = Field(...)
     data: Union[
-        NDArray[Shape["* num_times"], np.number],
-        NDArray[Shape["* num_times, * num_rois"], np.number],
+        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
     ] = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
@@ -201,12 +197,12 @@ class RoiResponseSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},

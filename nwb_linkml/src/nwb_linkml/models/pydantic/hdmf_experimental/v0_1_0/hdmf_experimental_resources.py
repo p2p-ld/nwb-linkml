@@ -7,7 +7,7 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_common.v1_4_0.hdmf_common_base import Container, Data
+from ...hdmf_common.v1_5_0.hdmf_common_base import Container, Data
 
 metamodel_version = "None"
 version = "0.1.0"
@@ -53,7 +53,7 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "hdmf-experimental.resources/",
         "id": "hdmf-experimental.resources",
-        "imports": ["../../hdmf_common/v1_4_0/namespace", "hdmf-experimental.nwb.language"],
+        "imports": ["../../hdmf_common/v1_5_0/namespace", "hdmf-experimental.nwb.language"],
         "name": "hdmf-experimental.resources",
     }
 )
@@ -118,8 +118,8 @@ class ExternalResourcesEntities(Data):
             "linkml_meta": {"equals_string": "entities", "ifabsent": "string(entities)"}
         },
     )
-    keys_idx: np.uint64 = Field(..., description="""The index to the key in the 'keys' table.""")
-    resources_idx: np.uint64 = Field(..., description="""The index into the 'resources' table""")
+    keys_idx: int = Field(..., description="""The index to the key in the 'keys' table.""")
+    resources_idx: int = Field(..., description="""The index into the 'resources' table""")
     entity_id: str = Field(..., description="""The unique identifier entity.""")
     entity_uri: str = Field(
         ...,
@@ -179,10 +179,10 @@ class ExternalResourcesObjectKeys(Data):
             "linkml_meta": {"equals_string": "object_keys", "ifabsent": "string(object_keys)"}
         },
     )
-    objects_idx: np.uint64 = Field(
+    objects_idx: int = Field(
         ..., description="""The index to the 'objects' table for the object that holds the key."""
     )
-    keys_idx: np.uint64 = Field(..., description="""The index to the 'keys' table for the key.""")
+    keys_idx: int = Field(..., description="""The index to the 'keys' table for the key.""")
 
 
 # Model rebuild

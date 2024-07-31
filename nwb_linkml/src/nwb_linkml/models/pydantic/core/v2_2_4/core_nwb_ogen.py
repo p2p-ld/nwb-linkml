@@ -76,7 +76,7 @@ class OptogeneticSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], np.number] = Field(
+    data: NDArray[Shape["* num_times"], float] = Field(
         ...,
         description="""Applied power for optogenetic stimulus, in watts.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -90,12 +90,12 @@ class OptogeneticSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -124,7 +124,7 @@ class OptogeneticStimulusSite(NWBContainer):
 
     name: str = Field(...)
     description: str = Field(..., description="""Description of stimulation site.""")
-    excitation_lambda: np.float32 = Field(..., description="""Excitation wavelength, in nm.""")
+    excitation_lambda: float = Field(..., description="""Excitation wavelength, in nm.""")
     location: str = Field(
         ...,
         description="""Location of the stimulation site. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",

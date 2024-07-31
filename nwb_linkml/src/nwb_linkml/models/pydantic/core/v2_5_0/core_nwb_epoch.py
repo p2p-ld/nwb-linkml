@@ -96,7 +96,7 @@ class TimeIntervals(DynamicTable):
     )
 
     name: str = Field(...)
-    start_time: NDArray[Any, np.float32] = Field(
+    start_time: NDArray[Any, float] = Field(
         ...,
         description="""Start time of epoch, in seconds.""",
         json_schema_extra={
@@ -105,7 +105,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    stop_time: NDArray[Any, np.float32] = Field(
+    stop_time: NDArray[Any, float] = Field(
         ...,
         description="""Stop time of epoch, in seconds.""",
         json_schema_extra={

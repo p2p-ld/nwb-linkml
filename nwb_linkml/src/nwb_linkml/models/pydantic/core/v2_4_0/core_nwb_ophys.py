@@ -114,25 +114,23 @@ class TwoPhotonSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    pmt_gain: Optional[np.float32] = Field(None, description="""Photomultiplier gain.""")
-    scan_line_rate: Optional[np.float32] = Field(
+    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
+    scan_line_rate: Optional[float] = Field(
         None,
         description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     field_of_view: Optional[
         Union[
-            NDArray[Shape["2 width_height"], np.float32],
-            NDArray[Shape["3 width_height_depth"], np.float32],
+            NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height_depth"], float]
         ]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
     data: Union[
-        NDArray[Shape["* frame, * x, * y"], np.number],
-        NDArray[Shape["* frame, * x, * y, * z"], np.number],
+        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
     ] = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -154,12 +152,12 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -188,8 +186,7 @@ class RoiResponseSeries(TimeSeries):
 
     name: str = Field(...)
     data: Union[
-        NDArray[Shape["* num_times"], np.number],
-        NDArray[Shape["* num_times, * num_rois"], np.number],
+        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
     ] = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
@@ -207,12 +204,12 @@ class RoiResponseSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -372,9 +369,9 @@ class PlaneSegmentationPixelMask(VectorData):
             "linkml_meta": {"equals_string": "pixel_mask", "ifabsent": "string(pixel_mask)"}
         },
     )
-    x: Optional[np.uint32] = Field(None, description="""Pixel x-coordinate.""")
-    y: Optional[np.uint32] = Field(None, description="""Pixel y-coordinate.""")
-    weight: Optional[np.float32] = Field(None, description="""Weight of the pixel.""")
+    x: Optional[int] = Field(None, description="""Pixel x-coordinate.""")
+    y: Optional[int] = Field(None, description="""Pixel y-coordinate.""")
+    weight: Optional[float] = Field(None, description="""Weight of the pixel.""")
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -401,10 +398,10 @@ class PlaneSegmentationVoxelMask(VectorData):
             "linkml_meta": {"equals_string": "voxel_mask", "ifabsent": "string(voxel_mask)"}
         },
     )
-    x: Optional[np.uint32] = Field(None, description="""Voxel x-coordinate.""")
-    y: Optional[np.uint32] = Field(None, description="""Voxel y-coordinate.""")
-    z: Optional[np.uint32] = Field(None, description="""Voxel z-coordinate.""")
-    weight: Optional[np.float32] = Field(None, description="""Weight of the voxel.""")
+    x: Optional[int] = Field(None, description="""Voxel x-coordinate.""")
+    y: Optional[int] = Field(None, description="""Voxel y-coordinate.""")
+    z: Optional[int] = Field(None, description="""Voxel z-coordinate.""")
+    weight: Optional[float] = Field(None, description="""Weight of the voxel.""")
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
@@ -444,9 +441,7 @@ class OpticalChannel(NWBContainer):
 
     name: str = Field(...)
     description: str = Field(..., description="""Description or other notes about the channel.""")
-    emission_lambda: np.float32 = Field(
-        ..., description="""Emission wavelength for channel, in nm."""
-    )
+    emission_lambda: float = Field(..., description="""Emission wavelength for channel, in nm.""")
 
 
 class MotionCorrection(NWBDataInterface):

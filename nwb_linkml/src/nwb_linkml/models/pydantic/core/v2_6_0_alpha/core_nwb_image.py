@@ -76,15 +76,15 @@ class GrayscaleImage(Image):
     )
 
     name: str = Field(...)
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -99,15 +99,15 @@ class RGBImage(Image):
     )
 
     name: str = Field(...)
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -122,15 +122,15 @@ class RGBAImage(Image):
     )
 
     name: str = Field(...)
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -146,13 +146,12 @@ class ImageSeries(TimeSeries):
 
     name: str = Field(...)
     data: Union[
-        NDArray[Shape["* frame, * x, * y"], np.number],
-        NDArray[Shape["* frame, * x, * y, * z"], np.number],
+        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
     ] = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -174,12 +173,12 @@ class ImageSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -210,7 +209,7 @@ class ImageSeriesExternalFile(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "external_file", "ifabsent": "string(external_file)"}
         },
     )
-    starting_frame: Optional[np.int32] = Field(
+    starting_frame: Optional[int] = Field(
         None,
         description="""Each external image may contain one or more consecutive frames of the full ImageSeries. This attribute serves as an index to indicate which frames each file contains, to faciliate random access. The 'starting_frame' attribute, hence, contains a list of frame numbers within the full ImageSeries of the first frame of each file listed in the parent 'external_file' dataset. Zero-based indexing is used (hence, the first element will always be zero). For example, if the 'external_file' dataset has three paths to files and the first file has 5 frames, the second file has 10 frames, and the third file has 20 frames, then this attribute will have values [0, 5, 15]. If there is a single external file that holds all of the frames of the ImageSeries (and so there is a single element in the 'external_file' dataset), then this attribute should have value [0].""",
     )
@@ -230,13 +229,12 @@ class ImageMaskSeries(ImageSeries):
 
     name: str = Field(...)
     data: Union[
-        NDArray[Shape["* frame, * x, * y"], np.number],
-        NDArray[Shape["* frame, * x, * y, * z"], np.number],
+        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
     ] = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -258,12 +256,12 @@ class ImageMaskSeries(ImageSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -291,24 +289,23 @@ class OpticalSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    distance: Optional[np.float32] = Field(
+    distance: Optional[float] = Field(
         None, description="""Distance from camera/monitor to target/eye."""
     )
     field_of_view: Optional[
         Union[
-            NDArray[Shape["2 width_height"], np.float32],
-            NDArray[Shape["3 width_height_depth"], np.float32],
+            NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height_depth"], float]
         ]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
     data: Union[
-        NDArray[Shape["* frame, * x, * y"], np.number],
-        NDArray[Shape["* frame, * x, * y, 3 r_g_b"], np.number],
+        NDArray[Shape["* frame, * x, * y"], float],
+        NDArray[Shape["* frame, * x, * y, 3 r_g_b"], float],
     ] = Field(..., description="""Images presented to subject, either grayscale or RGB""")
     orientation: Optional[str] = Field(
         None,
         description="""Description of image relative to some reference frame (e.g., which way is up). Must also specify frame of reference.""",
     )
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -330,12 +327,12 @@ class OpticalSeries(ImageSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -363,7 +360,7 @@ class IndexSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], np.uint32] = Field(
+    data: NDArray[Shape["* num_times"], int] = Field(
         ...,
         description="""Index of the image (using zero-indexing) in the linked Images object.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -377,12 +374,12 @@ class IndexSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},

@@ -96,14 +96,12 @@ class RetinotopyMap(NWBData):
     )
 
     name: str = Field(...)
-    dimension: Optional[np.int32] = Field(
+    dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -124,19 +122,17 @@ class AxisMap(RetinotopyMap):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
+    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
         },
     )
-    dimension: Optional[np.int32] = Field(
+    dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
 
 
 class RetinotopyImage(GrayscaleImage):
@@ -149,29 +145,27 @@ class RetinotopyImage(GrayscaleImage):
     )
 
     name: str = Field(...)
-    bits_per_pixel: Optional[np.int32] = Field(
+    bits_per_pixel: Optional[int] = Field(
         None,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
     )
-    dimension: Optional[np.int32] = Field(
+    dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -262,32 +256,28 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
             }
         },
     )
-    focal_depth: Optional[np.float32] = Field(
-        None, description="""Focal depth offset, in meters."""
-    )
-    bits_per_pixel: Optional[np.int32] = Field(
+    focal_depth: Optional[float] = Field(None, description="""Focal depth offset, in meters.""")
+    bits_per_pixel: Optional[int] = Field(
         None,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
     )
-    dimension: Optional[np.int32] = Field(
+    dimension: Optional[int] = Field(
         None,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    resolution: Optional[np.float32] = Field(
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
     array: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 

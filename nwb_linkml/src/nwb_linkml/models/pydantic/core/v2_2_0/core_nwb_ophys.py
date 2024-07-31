@@ -109,24 +109,21 @@ class TwoPhotonSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    pmt_gain: Optional[np.float32] = Field(None, description="""Photomultiplier gain.""")
-    scan_line_rate: Optional[np.float32] = Field(
+    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
+    scan_line_rate: Optional[float] = Field(
         None,
         description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     field_of_view: Optional[
-        Union[
-            NDArray[Shape["2 width_height"], np.float32],
-            NDArray[Shape["3 width_height"], np.float32],
-        ]
+        Union[NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height"], float]]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
     data: Optional[
         Union[
-            NDArray[Shape["* frame, * x, * y"], np.number],
-            NDArray[Shape["* frame, * x, * y, * z"], np.number],
+            NDArray[Shape["* frame, * x, * y"], float],
+            NDArray[Shape["* frame, * x, * y, * z"], float],
         ]
     ] = Field(None, description="""Binary data representing images across frames.""")
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -148,12 +145,12 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -182,8 +179,7 @@ class RoiResponseSeries(TimeSeries):
 
     name: str = Field(...)
     data: Union[
-        NDArray[Shape["* num_times"], np.number],
-        NDArray[Shape["* num_times, * num_rois"], np.number],
+        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
     ] = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
@@ -201,12 +197,12 @@ class RoiResponseSeries(TimeSeries):
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -280,8 +276,8 @@ class ImagingPlane(NWBContainer):
 
     name: str = Field(...)
     description: Optional[str] = Field(None, description="""Description of the imaging plane.""")
-    excitation_lambda: np.float32 = Field(..., description="""Excitation wavelength, in nm.""")
-    imaging_rate: np.float32 = Field(..., description="""Rate that images are acquired, in Hz.""")
+    excitation_lambda: float = Field(..., description="""Excitation wavelength, in nm.""")
+    imaging_rate: float = Field(..., description="""Rate that images are acquired, in Hz.""")
     indicator: str = Field(..., description="""Calcium indicator.""")
     location: str = Field(
         ...,
@@ -321,7 +317,7 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "manifold", "ifabsent": "string(manifold)"}
         },
     )
-    conversion: Optional[np.float32] = Field(
+    conversion: Optional[float] = Field(
         None,
         description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as pixels from x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then the 'conversion' multiplier to get from raw data acquisition pixel units to meters is 2/1000.""",
     )
@@ -331,8 +327,8 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
     )
     array: Optional[
         Union[
-            NDArray[Shape["* height, * width, 3 x_y_z"], np.float32],
-            NDArray[Shape["* height, * width, * depth, 3 x_y_z"], np.float32],
+            NDArray[Shape["* height, * width, 3 x_y_z"], float],
+            NDArray[Shape["* height, * width, * depth, 3 x_y_z"], float],
         ]
     ] = Field(None)
 
@@ -353,7 +349,7 @@ class ImagingPlaneOriginCoords(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Measurement units for origin_coords. The default value is 'meters'."""
     )
-    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], np.float32]] = Field(
+    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -384,7 +380,7 @@ class ImagingPlaneGridSpacing(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Measurement units for grid_spacing. The default value is 'meters'."""
     )
-    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], np.float32]] = Field(
+    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -408,9 +404,7 @@ class OpticalChannel(NWBContainer):
 
     name: str = Field(...)
     description: str = Field(..., description="""Description or other notes about the channel.""")
-    emission_lambda: np.float32 = Field(
-        ..., description="""Emission wavelength for channel, in nm."""
-    )
+    emission_lambda: float = Field(..., description="""Emission wavelength for channel, in nm.""")
 
 
 class MotionCorrection(NWBDataInterface):

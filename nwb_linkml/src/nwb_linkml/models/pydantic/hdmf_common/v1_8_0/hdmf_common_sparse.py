@@ -71,17 +71,17 @@ class CSRMatrix(Container):
     )
 
     name: str = Field(...)
-    shape: Optional[np.uint64] = Field(
+    shape: Optional[int] = Field(
         None, description="""The shape (number of rows, number of columns) of this sparse matrix."""
     )
-    indices: NDArray[Shape["* number_of_non_zero_values"], np.uint64] = Field(
+    indices: NDArray[Shape["* number_of_non_zero_values"], int] = Field(
         ...,
         description="""The column indices.""",
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "number_of_non_zero_values"}]}}
         },
     )
-    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], np.uint64] = Field(
+    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], int] = Field(
         ...,
         description="""The row index pointer.""",
         json_schema_extra={

@@ -102,7 +102,7 @@ class NWBFile(NWBContainer):
         None,
         description="""File version string. Use semantic versioning, e.g. 1.2.1. This will be the name of the format with trailing major, minor and patch numbers.""",
     )
-    file_create_date: NDArray[Shape["* num_modifications"], np.datetime64] = Field(
+    file_create_date: NDArray[Shape["* num_modifications"], datetime] = Field(
         ...,
         description="""A record of the date the file was created and of subsequent modifications. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted strings: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds. The file can be created after the experiment was run, so this may differ from the experiment start time. Each modification to the nwb file adds a new entry to the array.""",
         json_schema_extra={
@@ -116,11 +116,11 @@ class NWBFile(NWBContainer):
     session_description: str = Field(
         ..., description="""A description of the experimental session and data in the file."""
     )
-    session_start_time: np.datetime64 = Field(
+    session_start_time: datetime = Field(
         ...,
         description="""Date and time of the experiment/session start. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds.""",
     )
-    timestamps_reference_time: np.datetime64 = Field(
+    timestamps_reference_time: datetime = Field(
         ...,
         description="""Date and time corresponding to time zero of all timestamps. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds. All times stored in the file use this time as reference (i.e., time zero).""",
     )
@@ -335,7 +335,7 @@ class Subject(NWBContainer):
     age: Optional[str] = Field(
         None, description="""Age of subject. Can be supplied instead of 'date_of_birth'."""
     )
-    date_of_birth: Optional[np.datetime64] = Field(
+    date_of_birth: Optional[datetime] = Field(
         None, description="""Date of birth of subject. Can be supplied instead of 'age'."""
     )
     description: Optional[str] = Field(
@@ -394,7 +394,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             "linkml_meta": {"equals_string": "electrodes", "ifabsent": "string(electrodes)"}
         },
     )
-    x: NDArray[Any, np.float32] = Field(
+    x: NDArray[Any, float] = Field(
         ...,
         description="""x coordinate of the channel location in the brain (+x is posterior).""",
         json_schema_extra={
@@ -403,7 +403,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    y: NDArray[Any, np.float32] = Field(
+    y: NDArray[Any, float] = Field(
         ...,
         description="""y coordinate of the channel location in the brain (+y is inferior).""",
         json_schema_extra={
@@ -412,7 +412,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    z: NDArray[Any, np.float32] = Field(
+    z: NDArray[Any, float] = Field(
         ...,
         description="""z coordinate of the channel location in the brain (+z is right).""",
         json_schema_extra={
@@ -421,7 +421,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    imp: NDArray[Any, np.float32] = Field(
+    imp: NDArray[Any, float] = Field(
         ...,
         description="""Impedance of the channel.""",
         json_schema_extra={
@@ -439,7 +439,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    filtering: NDArray[Any, np.float32] = Field(
+    filtering: NDArray[Any, float] = Field(
         ...,
         description="""Description of hardware filtering.""",
         json_schema_extra={
@@ -460,7 +460,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_x: Optional[NDArray[Any, np.float32]] = Field(
+    rel_x: Optional[NDArray[Any, float]] = Field(
         None,
         description="""x coordinate in electrode group""",
         json_schema_extra={
@@ -469,7 +469,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_y: Optional[NDArray[Any, np.float32]] = Field(
+    rel_y: Optional[NDArray[Any, float]] = Field(
         None,
         description="""y coordinate in electrode group""",
         json_schema_extra={
@@ -478,7 +478,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_z: Optional[NDArray[Any, np.float32]] = Field(
+    rel_z: Optional[NDArray[Any, float]] = Field(
         None,
         description="""z coordinate in electrode group""",
         json_schema_extra={

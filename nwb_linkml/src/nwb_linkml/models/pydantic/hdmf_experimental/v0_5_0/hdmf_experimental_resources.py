@@ -161,7 +161,7 @@ class HERDObjects(Data):
             "linkml_meta": {"equals_string": "objects", "ifabsent": "string(objects)"}
         },
     )
-    files_idx: np.uint64 = Field(
+    files_idx: int = Field(
         ..., description="""The row index to the file in the `files` table containing the object."""
     )
     object_id: str = Field(..., description="""The object id (UUID) of the object.""")
@@ -189,12 +189,10 @@ class HERDObjectKeys(Data):
             "linkml_meta": {"equals_string": "object_keys", "ifabsent": "string(object_keys)"}
         },
     )
-    objects_idx: np.uint64 = Field(
+    objects_idx: int = Field(
         ..., description="""The row index to the object in the `objects` table that holds the key"""
     )
-    keys_idx: np.uint64 = Field(
-        ..., description="""The row index to the key in the `keys` table."""
-    )
+    keys_idx: int = Field(..., description="""The row index to the key in the `keys` table.""")
 
 
 class HERDEntityKeys(Data):
@@ -210,12 +208,10 @@ class HERDEntityKeys(Data):
             "linkml_meta": {"equals_string": "entity_keys", "ifabsent": "string(entity_keys)"}
         },
     )
-    entities_idx: np.uint64 = Field(
+    entities_idx: int = Field(
         ..., description="""The row index to the entity in the `entities` table."""
     )
-    keys_idx: np.uint64 = Field(
-        ..., description="""The row index to the key in the `keys` table."""
-    )
+    keys_idx: int = Field(..., description="""The row index to the key in the `keys` table.""")
 
 
 # Model rebuild

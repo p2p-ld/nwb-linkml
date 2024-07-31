@@ -38,7 +38,6 @@ class NWBPydanticGenerator(PydanticGenerator):
     Subclass of pydantic generator, custom behavior is in overridden lifecycle methods :)
     """
 
-
     injected_fields: List[str] = (
         (
             'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object'
