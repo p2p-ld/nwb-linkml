@@ -114,8 +114,8 @@ classes:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -145,8 +145,8 @@ classes:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -175,8 +175,8 @@ classes:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -206,8 +206,8 @@ classes:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -246,8 +246,8 @@ classes:
         name: format
         description: Format of image. Right now only 'raw' is supported.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -273,8 +273,8 @@ classes:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -309,8 +309,8 @@ classes:
         name: format
         description: Format of image. Right now only 'raw' is supported.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows

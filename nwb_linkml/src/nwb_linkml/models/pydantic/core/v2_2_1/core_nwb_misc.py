@@ -167,7 +167,7 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
         None,
         description="""Since there can be different units for different features, store the units in 'feature_units'. The default value for this attribute is \"see 'feature_units'\".""",
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* num_times"], float],
             NDArray[Shape["* num_times, * num_features"], float],
@@ -287,6 +287,15 @@ class DecompositionSeries(TimeSeries):
         ...,
         description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""",
     )
+    source_timeseries: Optional[Union[TimeSeries, str]] = Field(
+        None,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "TimeSeries"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -334,7 +343,7 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -428,7 +437,12 @@ class Units(DynamicTable):
         None,
         description="""Index into the spike_times dataset.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     spike_times: Optional[UnitsSpikeTimes] = Field(
@@ -438,7 +452,12 @@ class Units(DynamicTable):
         None,
         description="""Index into the obs_intervals dataset.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = Field(
@@ -459,14 +478,24 @@ class Units(DynamicTable):
         None,
         description="""Index into electrodes.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     electrodes: Named[Optional[DynamicTableRegion]] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     electrode_group: Optional[List[ElectrodeGroup]] = Field(

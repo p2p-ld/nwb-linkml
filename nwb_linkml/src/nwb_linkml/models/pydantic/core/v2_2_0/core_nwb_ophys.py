@@ -17,6 +17,7 @@ from pydantic import (
     BeforeValidator,
 )
 from ...hdmf_common.v1_1_0.hdmf_common_table import DynamicTableRegion, DynamicTable
+from ...core.v2_2_0.core_nwb_device import Device
 from numpydantic import NDArray, Shape
 from ...core.v2_2_0.core_nwb_base import (
     TimeSeriesStartingTime,
@@ -117,6 +118,15 @@ class TwoPhotonSeries(ImageSeries):
     field_of_view: Optional[
         Union[NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height"], float]]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
+    imaging_plane: Union[ImagingPlane, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImagingPlane"}, {"range": "string"}],
+            }
+        },
+    )
     data: Optional[
         Union[
             NDArray[Shape["* frame, * x, * y"], float],
@@ -185,7 +195,12 @@ class RoiResponseSeries(TimeSeries):
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
@@ -229,7 +244,7 @@ class DfOverF(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -244,7 +259,7 @@ class Fluorescence(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -259,7 +274,7 @@ class ImageSegmentation(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[DynamicTable]] = Field(
+    value: Optional[List[DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     name: str = Field(...)
@@ -302,6 +317,15 @@ class ImagingPlane(NWBContainer):
     optical_channel: OpticalChannel = Field(
         ..., description="""An optical channel used to record from an imaging plane."""
     )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
+    )
 
 
 class ImagingPlaneManifold(ConfiguredBaseModel):
@@ -325,7 +349,7 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. The default value is 'meters'.""",
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* height, * width, 3 x_y_z"], float],
             NDArray[Shape["* height, * width, * depth, 3 x_y_z"], float],
@@ -349,7 +373,7 @@ class ImagingPlaneOriginCoords(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Measurement units for origin_coords. The default value is 'meters'."""
     )
-    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
+    value: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -380,7 +404,7 @@ class ImagingPlaneGridSpacing(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Measurement units for grid_spacing. The default value is 'meters'."""
     )
-    array: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
+    value: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -416,7 +440,7 @@ class MotionCorrection(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[NWBDataInterface]] = Field(
+    value: Optional[List[NWBDataInterface]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBDataInterface"}]}}
     )
     name: str = Field(...)

@@ -63,8 +63,8 @@ classes:
           units. To access the data in these units, multiply 'data' by 'conversion'
           and add 'offset'.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         range: numeric
         any_of:
         - array:
@@ -101,8 +101,8 @@ classes:
       events. BehavioralTimeSeries is for continuous data.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -115,8 +115,8 @@ classes:
       for more details.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -129,8 +129,8 @@ classes:
       of <a href="#BehavioralEpochs">BehavioralEpochs</a> for more details.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -142,8 +142,8 @@ classes:
     description: Eye-tracking data, representing pupil size.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -155,8 +155,8 @@ classes:
     description: Eye-tracking data, representing direction of gaze.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -172,8 +172,8 @@ classes:
       be radians or degrees.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -185,8 +185,8 @@ classes:
     description: Position data, whether along the x, x/y or x/y/z axis.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false

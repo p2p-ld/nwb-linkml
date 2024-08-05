@@ -7,7 +7,6 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...core.v2_4_0.core_nwb_epoch import TimeIntervals
 from ...core.v2_4_0.core_nwb_misc import Units
 from ...core.v2_4_0.core_nwb_device import Device
 from ...core.v2_4_0.core_nwb_ogen import OptogeneticStimulusSite
@@ -24,6 +23,7 @@ from ...core.v2_4_0.core_nwb_icephys import (
     RepetitionsTable,
     ExperimentalConditionsTable,
 )
+from ...core.v2_4_0.core_nwb_epoch import TimeIntervals
 from ...core.v2_4_0.core_nwb_base import (
     NWBData,
     NWBContainer,
@@ -182,19 +182,9 @@ class NWBFile(NWBContainer):
         ...,
         description="""Experimental metadata, including protocol, notes and description of hardware device(s).  The metadata stored in this section should be used to describe the experiment. Metadata necessary for interpreting the data is stored with the data. General experimental metadata, including animal strain, experimental protocols, experimenter, devices, etc, are stored under 'general'. Core metadata (e.g., that required to interpret data fields) is stored with the data itself, and implicitly defined by the file specification (e.g., time is in seconds). The strategy used here for storing non-core metadata is to use free-form text fields, such as would appear in sentences or paragraphs from a Methods section. Metadata fields are text to enable them to be more general, for example to represent ranges instead of numerical values. Machine-readable metadata is stored as attributes to these free-form datasets. All entries in the below table are to be included when data is present. Unused groups (e.g., intracellular_ephys in an optophysiology experiment) should not be created unless there is data to store within them.""",
     )
-    intervals: Optional[List[TimeIntervals]] = Field(
+    intervals: Optional[NWBFileIntervals] = Field(
         None,
         description="""Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "any_of": [
-                    {"range": "TimeIntervals"},
-                    {"range": "TimeIntervals"},
-                    {"range": "TimeIntervals"},
-                    {"range": "TimeIntervals"},
-                ]
-            }
-        },
     )
     units: Optional[Units] = Field(None, description="""Data about sorted spike units.""")
 
@@ -548,6 +538,35 @@ class GeneralIntracellularEphys(ConfiguredBaseModel):
     )
 
 
+class NWBFileIntervals(ConfiguredBaseModel):
+    """
+    Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file"})
+
+    name: Literal["intervals"] = Field(
+        "intervals",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "intervals", "ifabsent": "string(intervals)"}
+        },
+    )
+    epochs: Optional[TimeIntervals] = Field(
+        None,
+        description="""Divisions in time marking experimental stages or sub-divisions of a single recording session.""",
+    )
+    trials: Optional[TimeIntervals] = Field(
+        None, description="""Repeated experimental events that have a logical grouping."""
+    )
+    invalid_times: Optional[TimeIntervals] = Field(
+        None, description="""Time intervals that should be removed from analysis."""
+    )
+    time_intervals: Optional[List[TimeIntervals]] = Field(
+        None,
+        description="""Optional additional table(s) for describing other experimental time intervals.""",
+    )
+
+
 class LabMetaData(NWBContainer):
     """
     Lab-specific meta-data.
@@ -606,5 +625,6 @@ GeneralSourceScript.model_rebuild()
 GeneralExtracellularEphys.model_rebuild()
 ExtracellularEphysElectrodes.model_rebuild()
 GeneralIntracellularEphys.model_rebuild()
+NWBFileIntervals.model_rebuild()
 LabMetaData.model_rebuild()
 Subject.model_rebuild()

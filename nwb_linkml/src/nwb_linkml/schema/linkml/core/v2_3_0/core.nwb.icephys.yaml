@@ -46,6 +46,17 @@ classes:
         range: float32
         required: false
         multivalued: false
+      electrode:
+        name: electrode
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: IntracellularElectrode
+        - range: string
     tree_root: true
   PatchClampSeries__data:
     name: PatchClampSeries__data
@@ -63,8 +74,8 @@ classes:
           values are not necessarily stored in these units. To access the data in
           these units, multiply 'data' by 'conversion'.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_times
@@ -497,6 +508,17 @@ classes:
         range: text
         required: false
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
   SweepTable:
     name: SweepTable
@@ -528,6 +550,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index for series.
         range: VectorIndex
         required: true

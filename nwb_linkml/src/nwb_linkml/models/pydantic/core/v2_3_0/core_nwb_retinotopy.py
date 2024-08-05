@@ -135,7 +135,7 @@ class ImagingRetinotopyAxis1PhaseMap(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -167,7 +167,7 @@ class ImagingRetinotopyAxis1PowerMap(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -199,7 +199,7 @@ class ImagingRetinotopyAxis2PhaseMap(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -231,7 +231,7 @@ class ImagingRetinotopyAxis2PowerMap(ConfiguredBaseModel):
     unit: Optional[str] = Field(
         None, description="""Unit that axis data is stored in (e.g., degrees)."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -268,7 +268,7 @@ class ImagingRetinotopyFocalDepthImage(ConfiguredBaseModel):
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], int]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -294,7 +294,7 @@ class ImagingRetinotopySignMap(ConfiguredBaseModel):
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
     field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -330,7 +330,7 @@ class ImagingRetinotopyVasculatureImage(ConfiguredBaseModel):
     format: Optional[str] = Field(
         None, description="""Format of image. Right now only 'raw' is supported."""
     )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], int]] = Field(
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}

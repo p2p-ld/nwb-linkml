@@ -332,7 +332,7 @@ class VectorData(VectorDataMixin):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -355,7 +355,7 @@ class VectorIndex(VectorIndexMixin):
     target: Optional[VectorData] = Field(
         None, description="""Reference to the target dataset that this index applies to."""
     )
-    array: Optional[NDArray[Shape["* num_rows"], Any]] = Field(
+    value: Optional[NDArray[Shape["* num_rows"], Any]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}}
     )
 
@@ -390,7 +390,7 @@ class DynamicTableRegion(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],

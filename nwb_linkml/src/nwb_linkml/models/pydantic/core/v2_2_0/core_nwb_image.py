@@ -75,7 +75,7 @@ class GrayscaleImage(Image):
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
             NDArray[Shape["* x, * y, 3 r_g_b"], float],
@@ -98,7 +98,7 @@ class RGBImage(Image):
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
             NDArray[Shape["* x, * y, 3 r_g_b"], float],
@@ -121,7 +121,7 @@ class RGBAImage(Image):
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
             NDArray[Shape["* x, * y, 3 r_g_b"], float],
@@ -208,7 +208,7 @@ class ImageSeriesExternalFile(ConfiguredBaseModel):
         None,
         description="""Each external image may contain one or more consecutive frames of the full ImageSeries. This attribute serves as an index to indicate which frames each file contains, to faciliate random access. The 'starting_frame' attribute, hence, contains a list of frame numbers within the full ImageSeries of the first frame of each file listed in the parent 'external_file' dataset. Zero-based indexing is used (hence, the first element will always be zero). For example, if the 'external_file' dataset has three paths to files and the first file has 5 frames, the second file has 10 frames, and the third file has 20 frames, then this attribute will have values [0, 5, 15]. If there is a single external file that holds all of the frames of the ImageSeries (and so there is a single element in the 'external_file' dataset), then this attribute should have value [0].""",
     )
-    array: Optional[NDArray[Shape["* num_files"], str]] = Field(
+    value: Optional[NDArray[Shape["* num_files"], str]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_files"}]}}}
     )
 
@@ -223,6 +223,15 @@ class ImageMaskSeries(ImageSeries):
     )
 
     name: str = Field(...)
+    masked_imageseries: Union[ImageSeries, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImageSeries"}, {"range": "string"}],
+            }
+        },
+    )
     data: Optional[
         Union[
             NDArray[Shape["* frame, * x, * y"], float],
@@ -361,6 +370,15 @@ class IndexSeries(TimeSeries):
         ...,
         description="""Index of the frame in the referenced ImageSeries.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
+    )
+    indexed_timeseries: Union[ImageSeries, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImageSeries"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(

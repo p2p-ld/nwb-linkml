@@ -55,8 +55,8 @@ classes:
         name: description
         description: Description of what these vectors represent.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         range: AnyType
         any_of:
         - array:
@@ -93,8 +93,8 @@ classes:
         name: target
         description: Reference to the target dataset that this index applies to.
         range: VectorData
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows

@@ -50,6 +50,17 @@ classes:
             dimensions:
             - alias: width_height
               exact_cardinality: 3
+      imaging_plane:
+        name: imaging_plane
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ImagingPlane
+        - range: string
     tree_root: true
   RoiResponseSeries:
     name: RoiResponseSeries
@@ -81,6 +92,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion referencing into an ROITable containing information
           on the ROIs stored in this timeseries.
         range: DynamicTableRegion
@@ -94,8 +108,8 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -109,8 +123,8 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -128,8 +142,8 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -158,6 +172,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into pixel_mask.
         range: VectorIndex
         required: false
@@ -176,6 +193,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into voxel_mask.
         range: VectorIndex
         required: false
@@ -196,6 +216,17 @@ classes:
         inlined_as_list: false
         any_of:
         - range: ImageSeries
+      imaging_plane:
+        name: imaging_plane
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ImagingPlane
+        - range: string
     tree_root: true
   PlaneSegmentation__image_mask:
     name: PlaneSegmentation__image_mask
@@ -282,14 +313,202 @@ classes:
     description: An imaging plane and its metadata.
     is_a: NWBContainer
     attributes:
-      children:
-        name: children
+      name:
+        name: name
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of the imaging plane.
+        range: text
+        required: false
+        multivalued: false
+      excitation_lambda:
+        name: excitation_lambda
+        description: Excitation wavelength, in nm.
+        range: float32
+        required: true
+        multivalued: false
+      imaging_rate:
+        name: imaging_rate
+        description: Rate that images are acquired, in Hz. If the corresponding TimeSeries
+          is present, the rate should be stored there instead.
+        range: float32
+        required: false
+        multivalued: false
+      indicator:
+        name: indicator
+        description: Calcium indicator.
+        range: text
+        required: true
+        multivalued: false
+      location:
+        name: location
+        description: Location of the imaging plane. Specify the area, layer, comments
+          on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
+          standard atlas names for anatomical regions when possible.
+        range: text
+        required: true
+        multivalued: false
+      manifold:
+        name: manifold
+        description: DEPRECATED Physical position of each pixel. 'xyz' represents
+          the position of the pixel relative to the defined coordinate space. Deprecated
+          in favor of origin_coords and grid_spacing.
+        range: ImagingPlane__manifold
+        required: false
+        multivalued: false
+      origin_coords:
+        name: origin_coords
+        description: Physical location of the first element of the imaging plane (0,
+          0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for
+          what the physical location is relative to (e.g., bregma).
+        range: ImagingPlane__origin_coords
+        required: false
+        multivalued: false
+      grid_spacing:
+        name: grid_spacing
+        description: Space between pixels in (x, y) or voxels in (x, y, z) directions,
+          in the specified unit. Assumes imaging plane is a regular grid. See also
+          reference_frame to interpret the grid.
+        range: ImagingPlane__grid_spacing
+        required: false
+        multivalued: false
+      reference_frame:
+        name: reference_frame
+        description: Describes reference frame of origin_coords and grid_spacing.
+          For example, this can be a text description of the anatomical location and
+          orientation of the grid defined by origin_coords and grid_spacing or the
+          vectors needed to transform or rotate the grid to a common anatomical axis
+          (e.g., AP/DV/ML). This field is necessary to interpret origin_coords and
+          grid_spacing. If origin_coords and grid_spacing are not present, then this
+          field is not required. For example, if the microscope takes 10 x 10 x 2
+          images, where the first value of the data matrix (index (0, 0, 0)) corresponds
+          to (-1.2, -0.6, -2) mm relative to bregma, the spacing between pixels is
+          0.2 mm in x, 0.2 mm in y and 0.5 mm in z, and larger numbers in x means
+          more anterior, larger numbers in y means more rightward, and larger numbers
+          in z means more ventral, then enter the following -- origin_coords = (-1.2,
+          -0.6, -2) grid_spacing = (0.2, 0.2, 0.5) reference_frame = "Origin coordinates
+          are relative to bregma. First dimension corresponds to anterior-posterior
+          axis (larger index = more anterior). Second dimension corresponds to medial-lateral
+          axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral
+          axis (larger index = more ventral)."
+        range: text
+        required: false
+        multivalued: false
+      optical_channel:
+        name: optical_channel
+        description: An optical channel used to record from an imaging plane.
+        range: OpticalChannel
+        required: true
         multivalued: true
-        inlined: true
-        inlined_as_list: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
         any_of:
-        - range: OpticalChannel
+        - range: Device
+        - range: string
     tree_root: true
+  ImagingPlane__manifold:
+    name: ImagingPlane__manifold
+    description: DEPRECATED Physical position of each pixel. 'xyz' represents the
+      position of the pixel relative to the defined coordinate space. Deprecated in
+      favor of origin_coords and grid_spacing.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(manifold)
+        range: string
+        required: true
+        equals_string: manifold
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as pixels from
+          x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then
+          the 'conversion' multiplier to get from raw data acquisition pixel units
+          to meters is 2/1000.
+        range: float32
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. The default
+          value is 'meters'.
+        range: text
+      value:
+        name: value
+        range: float32
+        any_of:
+        - array:
+            dimensions:
+            - alias: height
+            - alias: width
+            - alias: x_y_z
+              exact_cardinality: 3
+        - array:
+            dimensions:
+            - alias: height
+            - alias: width
+            - alias: depth
+            - alias: x_y_z
+              exact_cardinality: 3
+  ImagingPlane__origin_coords:
+    name: ImagingPlane__origin_coords
+    description: Physical location of the first element of the imaging plane (0, 0)
+      for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the
+      physical location is relative to (e.g., bregma).
+    attributes:
+      name:
+        name: name
+        ifabsent: string(origin_coords)
+        range: string
+        required: true
+        equals_string: origin_coords
+      unit:
+        name: unit
+        description: Measurement units for origin_coords. The default value is 'meters'.
+        range: text
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: x_y
+            exact_cardinality: 2
+          - alias: x_y_z
+            exact_cardinality: 3
+        range: float32
+  ImagingPlane__grid_spacing:
+    name: ImagingPlane__grid_spacing
+    description: Space between pixels in (x, y) or voxels in (x, y, z) directions,
+      in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame
+      to interpret the grid.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(grid_spacing)
+        range: string
+        required: true
+        equals_string: grid_spacing
+      unit:
+        name: unit
+        description: Measurement units for grid_spacing. The default value is 'meters'.
+        range: text
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: x_y
+            exact_cardinality: 2
+          - alias: x_y_z
+            exact_cardinality: 3
+        range: float32
   OpticalChannel:
     name: OpticalChannel
     description: An optical channel used to record from an imaging plane.
@@ -319,8 +538,8 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -349,4 +568,15 @@ classes:
         range: TimeSeries
         required: true
         multivalued: false
+      original:
+        name: original
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ImageSeries
+        - range: string
     tree_root: true

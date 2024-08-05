@@ -56,6 +56,9 @@ from ...core.v2_2_5.core_nwb_ophys import (
     PlaneSegmentationPixelMask,
     PlaneSegmentationVoxelMask,
     ImagingPlane,
+    ImagingPlaneManifold,
+    ImagingPlaneOriginCoords,
+    ImagingPlaneGridSpacing,
     OpticalChannel,
     MotionCorrection,
     CorrectedImageStack,
@@ -138,6 +141,7 @@ from ...core.v2_2_5.core_nwb_file import (
     GeneralExtracellularEphys,
     ExtracellularEphysElectrodes,
     GeneralIntracellularEphys,
+    NWBFileIntervals,
     LabMetaData,
     Subject,
 )

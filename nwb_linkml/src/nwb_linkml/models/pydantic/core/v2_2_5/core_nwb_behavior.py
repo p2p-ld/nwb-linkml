@@ -131,7 +131,7 @@ class SpatialSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* num_times"], float],
             NDArray[Shape["* num_times, * num_features"], float],
@@ -148,7 +148,7 @@ class BehavioralEpochs(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[IntervalSeries]] = Field(
+    value: Optional[List[IntervalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "IntervalSeries"}]}}
     )
     name: str = Field(...)
@@ -163,7 +163,7 @@ class BehavioralEvents(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[TimeSeries]] = Field(
+    value: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
     name: str = Field(...)
@@ -178,7 +178,7 @@ class BehavioralTimeSeries(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[TimeSeries]] = Field(
+    value: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
     name: str = Field(...)
@@ -193,7 +193,7 @@ class PupilTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[TimeSeries]] = Field(
+    value: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
     name: str = Field(...)
@@ -208,7 +208,7 @@ class EyeTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[SpatialSeries]] = Field(
+    value: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
     name: str = Field(...)
@@ -223,7 +223,7 @@ class CompassDirection(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[SpatialSeries]] = Field(
+    value: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
     name: str = Field(...)
@@ -238,7 +238,7 @@ class Position(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[SpatialSeries]] = Field(
+    value: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
     name: str = Field(...)

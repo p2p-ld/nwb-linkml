@@ -11,6 +11,7 @@ from ...core.v2_3_0.core_nwb_base import (
     TimeSeriesSync,
     NWBContainer,
 )
+from ...core.v2_3_0.core_nwb_device import Device
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
 from pydantic import (
     BaseModel,
@@ -117,6 +118,15 @@ class PatchClampSeries(TimeSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -164,7 +174,7 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -194,6 +204,15 @@ class CurrentClampSeries(PatchClampSeries):
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
+    )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -272,6 +291,15 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -324,6 +352,15 @@ class CurrentClampStimulusSeries(PatchClampSeries):
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
+    )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -416,6 +453,15 @@ class VoltageClampSeries(PatchClampSeries):
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
+    )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -649,6 +695,15 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -725,6 +780,15 @@ class IntracellularElectrode(NWBContainer):
     slice: Optional[str] = Field(
         None, description="""Information about slice used for recording."""
     )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
+    )
 
 
 class SweepTable(DynamicTable):
@@ -753,7 +817,12 @@ class SweepTable(DynamicTable):
         ...,
         description="""Index for series.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(

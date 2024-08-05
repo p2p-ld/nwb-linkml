@@ -306,7 +306,7 @@ class VectorData(VectorDataMixin):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -332,7 +332,7 @@ class VectorIndex(VectorIndexMixin):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -372,7 +372,7 @@ class DynamicTableRegion(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -418,7 +418,7 @@ class AlignedDynamicTable(DynamicTable):
         {"from_schema": "hdmf-common.table", "tree_root": True}
     )
 
-    children: Optional[List[DynamicTable]] = Field(
+    value: Optional[List[DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     name: str = Field(...)

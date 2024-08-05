@@ -87,7 +87,7 @@ class Image(NWBData):
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
             NDArray[Shape["* x, * y, 3 r_g_b"], float],
@@ -189,7 +189,7 @@ class TimeSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* num_times"], Any],
             NDArray[Shape["* num_times, * num_dim2"], Any],
@@ -241,7 +241,7 @@ class ProcessingModule(NWBContainer):
         {"from_schema": "core.nwb.base", "tree_root": True}
     )
 
-    children: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
+    value: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}

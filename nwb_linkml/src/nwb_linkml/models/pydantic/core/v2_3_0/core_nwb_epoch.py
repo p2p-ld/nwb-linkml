@@ -127,7 +127,12 @@ class TimeIntervals(DynamicTable):
         None,
         description="""Index for tags.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     timeseries: Optional[TimeIntervalsTimeseries] = Field(
@@ -137,7 +142,12 @@ class TimeIntervals(DynamicTable):
         None,
         description="""Index for timeseries.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -184,7 +194,7 @@ class TimeIntervalsTimeseries(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],

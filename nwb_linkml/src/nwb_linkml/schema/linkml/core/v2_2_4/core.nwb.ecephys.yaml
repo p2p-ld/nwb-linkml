@@ -52,6 +52,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion pointer to the electrodes that this time series
           was generated from.
         range: DynamicTableRegion
@@ -167,6 +170,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion pointer to the electrodes that this time series
           was generated from.
         range: DynamicTableRegion
@@ -211,6 +217,17 @@ classes:
         range: float64
         required: true
         multivalued: false
+      source_electricalseries:
+        name: source_electricalseries
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ElectricalSeries
+        - range: string
     tree_root: true
   EventWaveform:
     name: EventWaveform
@@ -219,8 +236,8 @@ classes:
       during experiment acquisition.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -242,8 +259,8 @@ classes:
       the ElectricalSeries.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -257,8 +274,8 @@ classes:
       properties should be noted in the ElectricalSeries description or comments field.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -290,6 +307,17 @@ classes:
         range: ElectrodeGroup__position
         required: false
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
   ElectrodeGroup__position:
     name: ElectrodeGroup__position
@@ -364,6 +392,17 @@ classes:
         range: float32
         required: true
         multivalued: false
+      clustering_interface:
+        name: clustering_interface
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Clustering
+        - range: string
     tree_root: true
   Clustering:
     name: Clustering

@@ -5,6 +5,7 @@ from enum import Enum
 import re
 import sys
 import numpy as np
+from ...core.v2_6_0_alpha.core_nwb_device import Device
 from ...core.v2_6_0_alpha.core_nwb_base import (
     TimeSeries,
     TimeSeriesStartingTime,
@@ -124,6 +125,15 @@ class PatchClampSeries(TimeSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -171,7 +181,7 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         None,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
     )
-    array: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -201,6 +211,15 @@ class CurrentClampSeries(PatchClampSeries):
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
+    )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -279,6 +298,15 @@ class IZeroClampSeries(CurrentClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -331,6 +359,15 @@ class CurrentClampStimulusSeries(PatchClampSeries):
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
+    )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -423,6 +460,15 @@ class VoltageClampSeries(PatchClampSeries):
     gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
+    )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
@@ -656,6 +702,15 @@ class VoltageClampStimulusSeries(PatchClampSeries):
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -733,6 +788,15 @@ class IntracellularElectrode(NWBContainer):
     slice: Optional[str] = Field(
         None, description="""Information about slice used for recording."""
     )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
+    )
 
 
 class SweepTable(DynamicTable):
@@ -761,7 +825,12 @@ class SweepTable(DynamicTable):
         ...,
         description="""Index for series.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -828,7 +897,12 @@ class IntracellularStimuliTable(DynamicTable):
         ...,
         description="""Column storing the reference to the recorded stimulus for the recording (rows).""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -862,7 +936,12 @@ class IntracellularResponsesTable(DynamicTable):
         ...,
         description="""Column storing the reference to the recorded response for the recording (rows)""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -910,7 +989,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     responses: IntracellularResponsesTable = Field(
         ..., description="""Table for storing intracellular response related metadata."""
     )
-    children: Optional[List[DynamicTable]] = Field(
+    value: Optional[List[DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     colnames: Optional[str] = Field(
@@ -953,7 +1032,12 @@ class SimultaneousRecordingsTable(DynamicTable):
         ...,
         description="""Index dataset for the recordings column.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -993,7 +1077,7 @@ class SimultaneousRecordingsTableRecordings(DynamicTableRegion):
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -1029,7 +1113,12 @@ class SequentialRecordingsTable(DynamicTable):
         ...,
         description="""Index dataset for the simultaneous_recordings column.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     stimulus_type: NDArray[Any, str] = Field(
@@ -1081,7 +1170,7 @@ class SequentialRecordingsTableSimultaneousRecordings(DynamicTableRegion):
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -1114,7 +1203,12 @@ class RepetitionsTable(DynamicTable):
         ...,
         description="""Index dataset for the sequential_recordings column.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -1157,7 +1251,7 @@ class RepetitionsTableSequentialRecordings(DynamicTableRegion):
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -1192,7 +1286,12 @@ class ExperimentalConditionsTable(DynamicTable):
         ...,
         description="""Index dataset for the repetitions column.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     colnames: Optional[str] = Field(
@@ -1232,7 +1331,7 @@ class ExperimentalConditionsTableRepetitions(DynamicTableRegion):
     description: Optional[str] = Field(
         None, description="""Description of what this table region points to."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],

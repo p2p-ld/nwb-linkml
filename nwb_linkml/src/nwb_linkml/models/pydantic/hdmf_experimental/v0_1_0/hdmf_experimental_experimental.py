@@ -78,7 +78,7 @@ class EnumData(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],

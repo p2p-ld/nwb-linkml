@@ -92,7 +92,7 @@ class Image(NWBData):
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* x, * y"], float],
             NDArray[Shape["* x, * y, 3 r_g_b"], float],
@@ -198,7 +198,7 @@ class TimeSeriesData(ConfiguredBaseModel):
         None,
         description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* num_times"], Any],
             NDArray[Shape["* num_times, * num_dim2"], Any],
@@ -250,7 +250,7 @@ class ProcessingModule(NWBContainer):
         {"from_schema": "core.nwb.base", "tree_root": True}
     )
 
-    children: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
+    value: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}

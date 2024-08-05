@@ -73,8 +73,8 @@ classes:
           the units in 'feature_units'. The default value for this attribute is "see
           'feature_units'".
         range: text
-      array:
-        name: array
+      value:
+        name: value
         range: numeric
         any_of:
         - array:
@@ -159,6 +159,17 @@ classes:
         range: DecompositionSeries__bands
         required: true
         multivalued: false
+      source_timeseries:
+        name: source_timeseries
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: false
+        multivalued: false
+        any_of:
+        - range: TimeSeries
+        - range: string
     tree_root: true
   DecompositionSeries__data:
     name: DecompositionSeries__data
@@ -176,8 +187,8 @@ classes:
           values are not necessarily stored in these units. To access the data in
           these units, multiply 'data' by 'conversion'.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_times
@@ -252,6 +263,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into the spike_times dataset.
         range: VectorIndex
         required: false
@@ -268,6 +282,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into the obs_intervals dataset.
         range: VectorIndex
         required: false
@@ -289,6 +306,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into electrodes.
         range: VectorIndex
         required: false
@@ -299,6 +319,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
         range: DynamicTableRegion
         required: false

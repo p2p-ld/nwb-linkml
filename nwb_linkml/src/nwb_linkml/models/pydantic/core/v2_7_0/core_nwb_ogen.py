@@ -14,6 +14,7 @@ from ...core.v2_7_0.core_nwb_base import (
     TimeSeriesSync,
     NWBContainer,
 )
+from ...core.v2_7_0.core_nwb_device import Device
 
 metamodel_version = "None"
 version = "2.7.0"
@@ -82,6 +83,15 @@ class OptogeneticSeries(TimeSeries):
         ...,
         description="""Applied power for optogenetic stimulus, in watts. Shape can be 1D or 2D. 2D data is meant to be used in an extension of OptogeneticSeries that defines what the second dimension represents.""",
     )
+    site: Union[OptogeneticStimulusSite, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "OptogeneticStimulusSite"}, {"range": "string"}],
+            }
+        },
+    )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
     comments: Optional[str] = Field(
         None,
@@ -129,6 +139,15 @@ class OptogeneticStimulusSite(NWBContainer):
     location: str = Field(
         ...,
         description="""Location of the stimulation site. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
+    )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
     )
 
 

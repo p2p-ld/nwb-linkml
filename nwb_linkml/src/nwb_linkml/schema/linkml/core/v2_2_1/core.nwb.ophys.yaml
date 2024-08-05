@@ -50,6 +50,17 @@ classes:
             dimensions:
             - alias: width_height
               exact_cardinality: 3
+      imaging_plane:
+        name: imaging_plane
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ImagingPlane
+        - range: string
     tree_root: true
   RoiResponseSeries:
     name: RoiResponseSeries
@@ -81,6 +92,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion referencing into an ROITable containing information
           on the ROIs stored in this timeseries.
         range: DynamicTableRegion
@@ -94,8 +108,8 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -109,8 +123,8 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -128,8 +142,8 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -229,6 +243,17 @@ classes:
         range: OpticalChannel
         required: true
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
   ImagingPlane__manifold:
     name: ImagingPlane__manifold
@@ -258,8 +283,8 @@ classes:
         description: Base unit of measurement for working with the data. The default
           value is 'meters'.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         range: float32
         any_of:
         - array:
@@ -291,8 +316,8 @@ classes:
         name: unit
         description: Measurement units for origin_coords. The default value is 'meters'.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: x_y
@@ -316,8 +341,8 @@ classes:
         name: unit
         description: Measurement units for grid_spacing. The default value is 'meters'.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: x_y
@@ -353,8 +378,8 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false

@@ -43,8 +43,8 @@ classes:
         name: description
         description: Description of the image.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         range: numeric
         any_of:
         - array:
@@ -215,8 +215,8 @@ classes:
           the way this data is interpreted, the way it is visualized, and what analysis
           methods are applicable.
         range: text
-      array:
-        name: array
+      value:
+        name: value
         range: AnyType
         any_of:
         - array:
@@ -281,8 +281,8 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false

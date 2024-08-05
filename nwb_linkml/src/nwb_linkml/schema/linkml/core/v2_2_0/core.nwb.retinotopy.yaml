@@ -32,8 +32,8 @@ classes:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -54,8 +54,8 @@ classes:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
-      array:
-        name: array
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -112,6 +112,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Phase response to stimulus on the first measured axis.
         range: AxisMap
         required: true
@@ -122,6 +125,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Power response on the first measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         range: AxisMap
@@ -133,6 +139,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Phase response to stimulus on the second measured axis.
         range: AxisMap
         required: true
@@ -143,6 +152,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Power response to stimulus on the second measured axis.
         range: AxisMap
         required: false
@@ -153,6 +165,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Sine of the angle between the direction of the gradient in axis_1
           and axis_2.
         range: RetinotopyMap
@@ -183,6 +198,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: 'Gray-scale anatomical image of cortical surface. Array structure:
           [rows][columns]'
         range: RetinotopyImage

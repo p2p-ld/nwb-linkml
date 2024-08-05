@@ -16,6 +16,7 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
+from ...core.v2_2_2.core_nwb_device import Device
 from ...core.v2_2_2.core_nwb_base import (
     TimeSeries,
     TimeSeriesStartingTime,
@@ -116,7 +117,12 @@ class ElectricalSeries(TimeSeries):
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     channel_conversion: Optional[NDArray[Shape["* num_channels"], float]] = Field(
@@ -179,7 +185,12 @@ class SpikeEventSeries(ElectricalSeries):
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     channel_conversion: Optional[NDArray[Shape["* num_channels"], float]] = Field(
@@ -256,7 +267,12 @@ class FeatureExtraction(NWBDataInterface):
         ...,
         description="""DynamicTableRegion pointer to the electrodes that this time series was generated from.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
 
@@ -287,6 +303,15 @@ class EventDetection(NWBDataInterface):
         description="""Timestamps of events, in seconds.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_events"}]}}},
     )
+    source_electricalseries: Union[ElectricalSeries, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ElectricalSeries"}, {"range": "string"}],
+            }
+        },
+    )
 
 
 class EventWaveform(NWBDataInterface):
@@ -298,7 +323,7 @@ class EventWaveform(NWBDataInterface):
         {"from_schema": "core.nwb.ecephys", "tree_root": True}
     )
 
-    children: Optional[List[SpikeEventSeries]] = Field(
+    value: Optional[List[SpikeEventSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpikeEventSeries"}]}}
     )
     name: str = Field(...)
@@ -313,7 +338,7 @@ class FilteredEphys(NWBDataInterface):
         {"from_schema": "core.nwb.ecephys", "tree_root": True}
     )
 
-    children: Optional[List[ElectricalSeries]] = Field(
+    value: Optional[List[ElectricalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "ElectricalSeries"}]}}
     )
     name: str = Field(...)
@@ -328,7 +353,7 @@ class LFP(NWBDataInterface):
         {"from_schema": "core.nwb.ecephys", "tree_root": True}
     )
 
-    children: Optional[List[ElectricalSeries]] = Field(
+    value: Optional[List[ElectricalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "ElectricalSeries"}]}}
     )
     name: str = Field(...)
@@ -351,6 +376,15 @@ class ElectrodeGroup(NWBContainer):
     )
     position: Optional[ElectrodeGroupPosition] = Field(
         None, description="""stereotaxic or common framework coordinates"""
+    )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
     )
 
 
@@ -403,6 +437,15 @@ class ClusterWaveforms(NWBDataInterface):
         json_schema_extra={
             "linkml_meta": {
                 "array": {"dimensions": [{"alias": "num_clusters"}, {"alias": "num_samples"}]}
+            }
+        },
+    )
+    clustering_interface: Union[Clustering, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Clustering"}, {"range": "string"}],
             }
         },
     )

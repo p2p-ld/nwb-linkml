@@ -133,6 +133,7 @@ from ...core.v2_2_1.core_nwb_file import (
     GeneralExtracellularEphys,
     ExtracellularEphysElectrodes,
     GeneralIntracellularEphys,
+    NWBFileIntervals,
 )
 from ...core.v2_2_1.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
 

@@ -36,8 +36,8 @@ classes:
     description: A simple Container for holding onto multiple containers.
     is_a: Container
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false

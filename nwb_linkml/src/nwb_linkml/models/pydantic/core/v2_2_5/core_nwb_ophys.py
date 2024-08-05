@@ -21,8 +21,8 @@ from ...hdmf_common.v1_1_3.hdmf_common_table import (
     VectorIndex,
     VectorData,
 )
+from ...core.v2_2_5.core_nwb_device import Device
 from numpydantic import NDArray, Shape
-from ...core.v2_2_5.core_nwb_image import ImageSeries, ImageSeriesExternalFile
 from ...core.v2_2_5.core_nwb_base import (
     TimeSeriesStartingTime,
     TimeSeriesSync,
@@ -30,6 +30,7 @@ from ...core.v2_2_5.core_nwb_base import (
     NWBDataInterface,
     NWBContainer,
 )
+from ...core.v2_2_5.core_nwb_image import ImageSeries, ImageSeriesExternalFile
 
 metamodel_version = "None"
 version = "2.2.5"
@@ -124,6 +125,15 @@ class TwoPhotonSeries(ImageSeries):
             NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height_depth"], float]
         ]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
+    imaging_plane: Union[ImagingPlane, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImagingPlane"}, {"range": "string"}],
+            }
+        },
+    )
     data: Optional[
         Union[
             NDArray[Shape["* frame, * x, * y"], float],
@@ -192,7 +202,12 @@ class RoiResponseSeries(TimeSeries):
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     description: Optional[str] = Field(None, description="""Description of the time series.""")
@@ -236,7 +251,7 @@ class DfOverF(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -251,7 +266,7 @@ class Fluorescence(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -266,7 +281,7 @@ class ImageSegmentation(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[PlaneSegmentation]] = Field(
+    value: Optional[List[PlaneSegmentation]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "PlaneSegmentation"}]}}
     )
     name: str = Field(...)
@@ -290,7 +305,12 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""Index into pixel_mask.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
@@ -301,7 +321,12 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""Index into voxel_mask.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
@@ -312,6 +337,15 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""Image stacks that the segmentation masks apply to.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ImageSeries"}]}},
+    )
+    imaging_plane: Union[ImagingPlane, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImagingPlane"}, {"range": "string"}],
+            }
+        },
     )
     colnames: Optional[str] = Field(
         None,
@@ -349,7 +383,7 @@ class PlaneSegmentationImageMask(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -378,7 +412,7 @@ class PlaneSegmentationPixelMask(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -408,7 +442,7 @@ class PlaneSegmentationVoxelMask(VectorData):
     description: Optional[str] = Field(
         None, description="""Description of what these vectors represent."""
     )
-    array: Optional[
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
@@ -427,10 +461,117 @@ class ImagingPlane(NWBContainer):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[OpticalChannel]] = Field(
-        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "OpticalChannel"}]}}
-    )
     name: str = Field(...)
+    description: Optional[str] = Field(None, description="""Description of the imaging plane.""")
+    excitation_lambda: float = Field(..., description="""Excitation wavelength, in nm.""")
+    imaging_rate: Optional[float] = Field(
+        None,
+        description="""Rate that images are acquired, in Hz. If the corresponding TimeSeries is present, the rate should be stored there instead.""",
+    )
+    indicator: str = Field(..., description="""Calcium indicator.""")
+    location: str = Field(
+        ...,
+        description="""Location of the imaging plane. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
+    )
+    manifold: Optional[ImagingPlaneManifold] = Field(
+        None,
+        description="""DEPRECATED Physical position of each pixel. 'xyz' represents the position of the pixel relative to the defined coordinate space. Deprecated in favor of origin_coords and grid_spacing.""",
+    )
+    origin_coords: Optional[ImagingPlaneOriginCoords] = Field(
+        None,
+        description="""Physical location of the first element of the imaging plane (0, 0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the physical location is relative to (e.g., bregma).""",
+    )
+    grid_spacing: Optional[ImagingPlaneGridSpacing] = Field(
+        None,
+        description="""Space between pixels in (x, y) or voxels in (x, y, z) directions, in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame to interpret the grid.""",
+    )
+    reference_frame: Optional[str] = Field(
+        None,
+        description="""Describes reference frame of origin_coords and grid_spacing. For example, this can be a text description of the anatomical location and orientation of the grid defined by origin_coords and grid_spacing or the vectors needed to transform or rotate the grid to a common anatomical axis (e.g., AP/DV/ML). This field is necessary to interpret origin_coords and grid_spacing. If origin_coords and grid_spacing are not present, then this field is not required. For example, if the microscope takes 10 x 10 x 2 images, where the first value of the data matrix (index (0, 0, 0)) corresponds to (-1.2, -0.6, -2) mm relative to bregma, the spacing between pixels is 0.2 mm in x, 0.2 mm in y and 0.5 mm in z, and larger numbers in x means more anterior, larger numbers in y means more rightward, and larger numbers in z means more ventral, then enter the following -- origin_coords = (-1.2, -0.6, -2) grid_spacing = (0.2, 0.2, 0.5) reference_frame = \"Origin coordinates are relative to bregma. First dimension corresponds to anterior-posterior axis (larger index = more anterior). Second dimension corresponds to medial-lateral axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral axis (larger index = more ventral).\"""",
+    )
+    optical_channel: List[OpticalChannel] = Field(
+        ..., description="""An optical channel used to record from an imaging plane."""
+    )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
+    )
+
+
+class ImagingPlaneManifold(ConfiguredBaseModel):
+    """
+    DEPRECATED Physical position of each pixel. 'xyz' represents the position of the pixel relative to the defined coordinate space. Deprecated in favor of origin_coords and grid_spacing.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["manifold"] = Field(
+        "manifold",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "manifold", "ifabsent": "string(manifold)"}
+        },
+    )
+    conversion: Optional[float] = Field(
+        None,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as pixels from x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then the 'conversion' multiplier to get from raw data acquisition pixel units to meters is 2/1000.""",
+    )
+    unit: Optional[str] = Field(
+        None,
+        description="""Base unit of measurement for working with the data. The default value is 'meters'.""",
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* height, * width, 3 x_y_z"], float],
+            NDArray[Shape["* height, * width, * depth, 3 x_y_z"], float],
+        ]
+    ] = Field(None)
+
+
+class ImagingPlaneOriginCoords(ConfiguredBaseModel):
+    """
+    Physical location of the first element of the imaging plane (0, 0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the physical location is relative to (e.g., bregma).
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["origin_coords"] = Field(
+        "origin_coords",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "origin_coords", "ifabsent": "string(origin_coords)"}
+        },
+    )
+    unit: Optional[str] = Field(
+        None, description="""Measurement units for origin_coords. The default value is 'meters'."""
+    )
+    value: Optional[Union[NDArray[Shape["2 x_y"], float], NDArray[Shape["3 x_y_z"], float]]] = (
+        Field(None)
+    )
+
+
+class ImagingPlaneGridSpacing(ConfiguredBaseModel):
+    """
+    Space between pixels in (x, y) or voxels in (x, y, z) directions, in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame to interpret the grid.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["grid_spacing"] = Field(
+        "grid_spacing",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "grid_spacing", "ifabsent": "string(grid_spacing)"}
+        },
+    )
+    unit: Optional[str] = Field(
+        None, description="""Measurement units for grid_spacing. The default value is 'meters'."""
+    )
+    value: Optional[Union[NDArray[Shape["2 x_y"], float], NDArray[Shape["3 x_y_z"], float]]] = (
+        Field(None)
+    )
 
 
 class OpticalChannel(NWBContainer):
@@ -456,7 +597,7 @@ class MotionCorrection(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[CorrectedImageStack]] = Field(
+    value: Optional[List[CorrectedImageStack]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "CorrectedImageStack"}]}}
     )
     name: str = Field(...)
@@ -479,6 +620,15 @@ class CorrectedImageStack(NWBDataInterface):
         ...,
         description="""Stores the x,y delta necessary to align each frame to the common coordinates, for example, to align each frame to a reference image.""",
     )
+    original: Union[ImageSeries, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImageSeries"}, {"range": "string"}],
+            }
+        },
+    )
 
 
 # Model rebuild
@@ -493,6 +643,9 @@ PlaneSegmentationImageMask.model_rebuild()
 PlaneSegmentationPixelMask.model_rebuild()
 PlaneSegmentationVoxelMask.model_rebuild()
 ImagingPlane.model_rebuild()
+ImagingPlaneManifold.model_rebuild()
+ImagingPlaneOriginCoords.model_rebuild()
+ImagingPlaneGridSpacing.model_rebuild()
 OpticalChannel.model_rebuild()
 MotionCorrection.model_rebuild()
 CorrectedImageStack.model_rebuild()
