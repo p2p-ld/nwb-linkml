@@ -133,7 +133,24 @@ class ClassAdapter(Adapter):
         """The full name of the object in the generated linkml
 
         Distinct from 'name' which is the thing that's used to define position in
-        a hierarchical data setting
+        a hierarchical data setting.
+
+        Combines names from ``parent``, if present, using ``"__"`` .
+        Rather than concatenating the full series of names with ``__`` like
+
+        * ``Parent``
+        * ``Parent__child1``
+        * ``Parent__child1__child2``
+
+        we only keep the last parent, so
+
+        * ``Parent``
+        * ``Parent__child1``
+        * ``child1__child2``
+
+        The assumption is that a child name may not be unique, but the combination of
+        a parent/child pair should be unique enough to avoid name shadowing without
+        making humongous and cumbersome names.
         """
         if self.cls.neurodata_type_def:
             name = self.cls.neurodata_type_def
@@ -141,7 +158,8 @@ class ClassAdapter(Adapter):
             # not necessarily a unique name, so we combine parent names
             name_parts = []
             if self.parent is not None:
-                name_parts.append(self.parent._get_full_name())
+                parent_name = self.parent._get_full_name().split("__")[-1]
+                name_parts.append(parent_name)
 
             name_parts.append(self.cls.name)
             name = "__".join(name_parts)
