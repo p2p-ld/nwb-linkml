@@ -283,7 +283,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Description of slices, including information about preparation thickness, orientation, temperature, and bath solution.""",
     )
-    source_script: Optional[NWBFileGeneralSourceScript] = Field(
+    source_script: Optional[GeneralSourceScript] = Field(
         None,
         description="""Script file or link to public source code used to create this NWB file.""",
     )
@@ -311,10 +311,10 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Information about the animal or person from which the data was measured.""",
     )
-    extracellular_ephys: Optional[NWBFileGeneralExtracellularEphys] = Field(
+    extracellular_ephys: Optional[GeneralExtracellularEphys] = Field(
         None, description="""Metadata related to extracellular electrophysiology."""
     )
-    intracellular_ephys: Optional[NWBFileGeneralIntracellularEphys] = Field(
+    intracellular_ephys: Optional[GeneralIntracellularEphys] = Field(
         None, description="""Metadata related to intracellular electrophysiology."""
     )
     optogenetics: Optional[List[OptogeneticStimulusSite]] = Field(
@@ -329,7 +329,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
     )
 
 
-class NWBFileGeneralSourceScript(ConfiguredBaseModel):
+class GeneralSourceScript(ConfiguredBaseModel):
     """
     Script file or link to public source code used to create this NWB file.
     """
@@ -346,7 +346,7 @@ class NWBFileGeneralSourceScript(ConfiguredBaseModel):
     value: str = Field(...)
 
 
-class NWBFileGeneralExtracellularEphys(ConfiguredBaseModel):
+class GeneralExtracellularEphys(ConfiguredBaseModel):
     """
     Metadata related to extracellular electrophysiology.
     """
@@ -365,12 +365,12 @@ class NWBFileGeneralExtracellularEphys(ConfiguredBaseModel):
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Physical group of electrodes."""
     )
-    electrodes: Optional[NWBFileGeneralExtracellularEphysElectrodes] = Field(
+    electrodes: Optional[ExtracellularEphysElectrodes] = Field(
         None, description="""A table of all electrodes (i.e. channels) used for recording."""
     )
 
 
-class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
+class ExtracellularEphysElectrodes(DynamicTable):
     """
     A table of all electrodes (i.e. channels) used for recording.
     """
@@ -502,7 +502,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
     )
 
 
-class NWBFileGeneralIntracellularEphys(ConfiguredBaseModel):
+class GeneralIntracellularEphys(ConfiguredBaseModel):
     """
     Metadata related to intracellular electrophysiology.
     """
@@ -623,10 +623,10 @@ ScratchData.model_rebuild()
 NWBFile.model_rebuild()
 NWBFileStimulus.model_rebuild()
 NWBFileGeneral.model_rebuild()
-NWBFileGeneralSourceScript.model_rebuild()
-NWBFileGeneralExtracellularEphys.model_rebuild()
-NWBFileGeneralExtracellularEphysElectrodes.model_rebuild()
-NWBFileGeneralIntracellularEphys.model_rebuild()
+GeneralSourceScript.model_rebuild()
+GeneralExtracellularEphys.model_rebuild()
+ExtracellularEphysElectrodes.model_rebuild()
+GeneralIntracellularEphys.model_rebuild()
 LabMetaData.model_rebuild()
 Subject.model_rebuild()
 SubjectAge.model_rebuild()

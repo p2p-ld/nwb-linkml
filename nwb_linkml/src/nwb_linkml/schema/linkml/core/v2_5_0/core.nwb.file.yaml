@@ -374,7 +374,7 @@ classes:
         name: source_script
         description: Script file or link to public source code used to create this
           NWB file.
-        range: NWBFile__general__source_script
+        range: general__source_script
         required: false
         multivalued: false
       stimulus:
@@ -423,13 +423,13 @@ classes:
       extracellular_ephys:
         name: extracellular_ephys
         description: Metadata related to extracellular electrophysiology.
-        range: NWBFile__general__extracellular_ephys
+        range: general__extracellular_ephys
         required: false
         multivalued: false
       intracellular_ephys:
         name: intracellular_ephys
         description: Metadata related to intracellular electrophysiology.
-        range: NWBFile__general__intracellular_ephys
+        range: general__intracellular_ephys
         required: false
         multivalued: false
       optogenetics:
@@ -448,8 +448,8 @@ classes:
         inlined_as_list: false
         any_of:
         - range: ImagingPlane
-  NWBFile__general__source_script:
-    name: NWBFile__general__source_script
+  general__source_script:
+    name: general__source_script
     description: Script file or link to public source code used to create this NWB
       file.
     attributes:
@@ -467,8 +467,8 @@ classes:
         name: value
         range: text
         required: true
-  NWBFile__general__extracellular_ephys:
-    name: NWBFile__general__extracellular_ephys
+  general__extracellular_ephys:
+    name: general__extracellular_ephys
     description: Metadata related to extracellular electrophysiology.
     attributes:
       name:
@@ -486,11 +486,11 @@ classes:
       electrodes:
         name: electrodes
         description: A table of all electrodes (i.e. channels) used for recording.
-        range: NWBFile__general__extracellular_ephys__electrodes
+        range: extracellular_ephys__electrodes
         required: false
         multivalued: false
-  NWBFile__general__extracellular_ephys__electrodes:
-    name: NWBFile__general__extracellular_ephys__electrodes
+  extracellular_ephys__electrodes:
+    name: extracellular_ephys__electrodes
     description: A table of all electrodes (i.e. channels) used for recording.
     is_a: DynamicTable
     attributes:
@@ -610,8 +610,8 @@ classes:
         range: text
         required: false
         multivalued: false
-  NWBFile__general__intracellular_ephys:
-    name: NWBFile__general__intracellular_ephys
+  general__intracellular_ephys:
+    name: general__intracellular_ephys
     description: Metadata related to intracellular electrophysiology.
     attributes:
       name:
