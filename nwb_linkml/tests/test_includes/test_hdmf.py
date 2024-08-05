@@ -7,12 +7,12 @@ import pytest
 from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
     ElectricalSeries,
     ElectrodeGroup,
-    NWBFileGeneralExtracellularEphysElectrodes,
+    ExtracellularEphysElectrodes,
 )
 
 
 @pytest.fixture()
-def electrical_series() -> Tuple["ElectricalSeries", "NWBFileGeneralExtracellularEphysElectrodes"]:
+def electrical_series() -> Tuple["ElectricalSeries", "ExtracellularEphysElectrodes"]:
     """
     Demo electrical series with adjoining electrodes
     """
@@ -27,7 +27,7 @@ def electrical_series() -> Tuple["ElectricalSeries", "NWBFileGeneralExtracellula
     )
 
     # make electrodes tables
-    electrodes = NWBFileGeneralExtracellularEphysElectrodes(
+    electrodes = ExtracellularEphysElectrodes(
         id=np.arange(0, n_electrodes),
         x=np.arange(0, n_electrodes),
         y=np.arange(n_electrodes, n_electrodes * 2),

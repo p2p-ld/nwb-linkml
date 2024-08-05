@@ -216,8 +216,8 @@ class MapListlike(DatasetMap):
 
     Used exactly once in the core schema, in ``ImageReferences`` -
     an array of references to other ``Image`` datasets. We ignore the
-    usual array structure and unnest the implicit array into a slot names from the
-    target type rather than the oddly-named ``num_images`` dimension so that
+    usual array structure and unnest the implicit array into a slot named "value"
+    rather than the oddly-named ``num_images`` dimension so that
     ultimately in the pydantic model we get a nicely behaved single-level list.
 
     Examples:
@@ -245,7 +245,7 @@ class MapListlike(DatasetMap):
                       name: name
                       range: string
                       required: true
-                    image:
+                    value:
                       name: image
                       description: Ordered dataset of references to Image objects.
                       multivalued: true
@@ -286,15 +286,15 @@ class MapListlike(DatasetMap):
         """
         Map to a list of the given class
         """
-        dtype = camel_to_snake(ClassAdapter.handle_dtype(cls.dtype))
         slot = SlotDefinition(
-            name=dtype,
+            name="value",
             multivalued=True,
             range=ClassAdapter.handle_dtype(cls.dtype),
             description=cls.doc,
             required=cls.quantity not in ("*", "?"),
+            annotations=[{"source_type": "reference"}],
         )
-        res.classes[0].attributes[dtype] = slot
+        res.classes[0].attributes["value"] = slot
         return res
 
 
@@ -533,9 +533,9 @@ class MapArrayLikeAttributes(DatasetMap):
         expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
         array_slot = SlotDefinition(
-            name="array", range=ClassAdapter.handle_dtype(cls.dtype), **expressions
+            name="value", range=ClassAdapter.handle_dtype(cls.dtype), **expressions
         )
-        res.classes[0].attributes.update({"array": array_slot})
+        res.classes[0].attributes.update({"value": array_slot})
         return res
 
 
@@ -572,7 +572,7 @@ class MapClassRange(DatasetMap):
             name=cls.name,
             description=cls.doc,
             range=f"{cls.neurodata_type_inc}",
-            annotations=[{"named": True}],
+            annotations=[{"named": True}, {"source_type": "neurodata_type_inc"}],
             **QUANTITY_MAP[cls.quantity],
         )
         res = BuildResult(slots=[this_slot])
@@ -686,17 +686,28 @@ class MapNVectors(DatasetMap):
 
     Most commonly: ``VectorData`` is subclassed without a name and with a '*' quantity to indicate
     arbitrary columns.
+
+    Used twice:
+    - Images
+    - DynamicTable (and all its uses)
+
+    DynamicTable (and the slot VectorData where this is called for)
+    is handled specially and just dropped, because we handle the possibility for
+    arbitrary extra VectorData in the :mod:`nwb_linkml.includes.hdmf` module mixin classes.
+
+    So really this is just a handler for the `Images` case
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
-        Check for being an unnamed multivalued vector class
+        Check for being an unnamed multivalued vector class that isn't VectorData
         """
         return (
             cls.name is None
             and cls.neurodata_type_def is None
             and cls.neurodata_type_inc
+            and cls.neurodata_type_inc != "VectorData"
             and cls.quantity in ("*", "+")
         )
 

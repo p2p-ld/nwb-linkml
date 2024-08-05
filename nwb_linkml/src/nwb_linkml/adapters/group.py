@@ -2,7 +2,7 @@
 Adapter for NWB groups to linkml Classes
 """
 
-from typing import Type
+from typing import Type, List
 
 from linkml_runtime.linkml_model import SlotDefinition
 
@@ -28,24 +28,12 @@ class GroupAdapter(ClassAdapter):
         Do the translation, yielding the BuildResult
         """
         # Handle container groups with only * quantity unnamed groups
-        if len(self.cls.groups) > 0 and all(
-            [self._check_if_container(g) for g in self.cls.groups]
+        if (
+            len(self.cls.groups) > 0
+            and not self.cls.links
+            and all([self._check_if_container(g) for g in self.cls.groups])
         ):  # and \
             # self.parent is not None:
-            return self.handle_container_group(self.cls)
-        # Or you can have groups like /intervals where there are some named groups, and some unnamed
-        # but they all have the same type
-        elif (
-            len(self.cls.groups) > 0
-            and all(
-                [
-                    g.neurodata_type_inc == self.cls.groups[0].neurodata_type_inc
-                    for g in self.cls.groups
-                ]
-            )
-            and self.cls.groups[0].neurodata_type_inc is not None
-            and all([g.quantity in ("?", "*") for g in self.cls.groups])
-        ):
             return self.handle_container_group(self.cls)
 
         # handle if we are a terminal container group without making a new class
@@ -58,17 +46,42 @@ class GroupAdapter(ClassAdapter):
             return self.handle_container_slot(self.cls)
 
         nested_res = self.build_subclasses()
+        # add links
+        links = self.build_links()
+
         # we don't propagate slots up to the next level since they are meant for this
         # level (ie. a way to refer to our children)
-        res = self.build_base(extra_attrs=nested_res.slots)
+        res = self.build_base(extra_attrs=nested_res.slots + links)
         # we do propagate classes tho
         res.classes.extend(nested_res.classes)
 
         return res
 
+    def build_links(self) -> List[SlotDefinition]:
+        """
+        Build links specified in the ``links`` field as slots that refer to other
+        classes, with an additional annotation specifying that they are in fact links.
+
+        Link slots can take either the object itself or the path to that object in the
+        file hierarchy as a string.
+        """
+        if not self.cls.links:
+            return []
+
+        slots = [
+            SlotDefinition(
+                name=link.name,
+                any_of=[{"range": link.target_type}, {"range": "string"}],
+                annotations=[{"tag": "source_type", "value": "link"}],
+                **QUANTITY_MAP[link.quantity],
+            )
+            for link in self.cls.links
+        ]
+        return slots
+
     def handle_container_group(self, cls: Group) -> BuildResult:
         """
-        Make a special LinkML `children` slot that can
+        Make a special LinkML `value` slot that can
         have any number of the objects that are of `neurodata_type_inc` class
 
         Examples:
@@ -84,14 +97,11 @@ class GroupAdapter(ClassAdapter):
                     doc: Images objects containing images of presented stimuli.
                     quantity: '*'
 
-        Args:
-            children (List[:class:`.Group`]): Child groups
-
         """
 
         # don't build subgroups as their own classes, just make a slot
         # that can contain them
-        name = cls.name if self.cls.name else "children"
+        name = cls.name if self.cls.name else "value"
 
         slot = SlotDefinition(
             name=name,
