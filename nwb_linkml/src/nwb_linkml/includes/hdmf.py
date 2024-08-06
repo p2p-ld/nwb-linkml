@@ -123,7 +123,6 @@ class DynamicTableMixin(BaseModel):
                 # into {n_fields} rows, rather than keeping it in a dict
                 val = Series([val])
             data[k] = val
-        data = {k: self._columns[k][rows] for k in cols}
         return data
 
     def __setitem__(self, key: str, value: Any) -> None:
