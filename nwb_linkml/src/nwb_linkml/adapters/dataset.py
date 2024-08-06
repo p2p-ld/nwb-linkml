@@ -154,10 +154,14 @@ class MapScalarAttributes(DatasetMap):
                       name: rate
                       description: Sampling rate, in Hz.
                       range: float32
+                      required: true
                     unit:
                       name: unit
                       description: Unit of measurement for time, which is fixed to 'seconds'.
+                      ifabsent: string(seconds)
                       range: text
+                      required: true
+                      equals_string: seconds
                     value:
                       name: value
                       range: float64
@@ -244,11 +248,15 @@ class MapListlike(DatasetMap):
                       range: string
                       required: true
                     value:
-                      name: image
+                      name: value
+                      annotations:
+                        source_type:
+                          tag: source_type
+                          value: reference
                       description: Ordered dataset of references to Image objects.
-                      multivalued: true
                       range: Image
                       required: true
+                      multivalued: true
                   tree_root: true
 
     """
@@ -476,12 +484,14 @@ class MapArrayLikeAttributes(DatasetMap):
                       name: resolution
                       description: Pixel resolution of the image, in pixels per centimeter.
                       range: float32
+                      required: false
                     description:
                       name: description
                       description: Description of the image.
                       range: text
-                    array:
-                      name: array
+                      required: false
+                    value:
+                      name: value
                       range: numeric
                       any_of:
                       - array:
