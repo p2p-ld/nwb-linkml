@@ -1,14 +1,9 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
-import re
-import sys
-import numpy as np
-from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container
-from pandas import DataFrame
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Tuple
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
+
+from ...hdmf_common.v1_8_0.hdmf_common_base import Data
+from pandas import DataFrame, Series
+from typing import Any, ClassVar, List, Dict, Optional, Union, overload, Tuple
+from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
@@ -198,6 +193,11 @@ class DynamicTableMixin(BaseModel):
             rows, cols = item
             if isinstance(cols, (int, slice)):
                 cols = self.colnames[cols]
+
+            if isinstance(rows, int) and isinstance(cols, str):
+                # single scalar value
+                return self._columns[cols][rows]
+
             data = self._slice_range(rows, cols)
             return DataFrame.from_dict(data)
         else:
@@ -210,8 +210,14 @@ class DynamicTableMixin(BaseModel):
             cols = self.colnames
         elif isinstance(cols, str):
             cols = [cols]
-
-        data = {k: self._columns[k][rows] for k in cols}
+        data = {}
+        for k in cols:
+            val = self._columns[k][rows]
+            if isinstance(val, BaseModel):
+                # special case where pandas will unpack a pydantic model
+                # into {n_fields} rows, rather than keeping it in a dict
+                val = Series([val])
+            data[k] = val
         return data
 
     def __setitem__(self, key: str, value: Any) -> None:

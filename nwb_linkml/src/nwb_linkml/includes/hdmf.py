@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple, Un
 
 from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport
 from numpydantic import NDArray
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 if TYPE_CHECKING:
@@ -98,6 +98,11 @@ class DynamicTableMixin(BaseModel):
             rows, cols = item
             if isinstance(cols, (int, slice)):
                 cols = self.colnames[cols]
+
+            if isinstance(rows, int) and isinstance(cols, str):
+                # single scalar value
+                return self._columns[cols][rows]
+
             data = self._slice_range(rows, cols)
             return DataFrame.from_dict(data)
         else:
@@ -110,7 +115,14 @@ class DynamicTableMixin(BaseModel):
             cols = self.colnames
         elif isinstance(cols, str):
             cols = [cols]
-
+        data = {}
+        for k in cols:
+            val = self._columns[k][rows]
+            if isinstance(val, BaseModel):
+                # special case where pandas will unpack a pydantic model
+                # into {n_fields} rows, rather than keeping it in a dict
+                val = Series([val])
+            data[k] = val
         data = {k: self._columns[k][rows] for k in cols}
         return data
 
@@ -244,7 +256,9 @@ class VectorIndexMixin(BaseModel):
 
 DYNAMIC_TABLE_IMPORTS = Imports(
     imports=[
-        Import(module="pandas", objects=[ObjectImport(name="DataFrame")]),
+        Import(
+            module="pandas", objects=[ObjectImport(name="DataFrame"), ObjectImport(name="Series")]
+        ),
         Import(
             module="typing",
             objects=[
