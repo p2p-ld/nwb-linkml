@@ -57,21 +57,21 @@ class VectorDataMixin(BaseModel):
     _index: Optional["VectorIndex"] = None
 
     # redefined in `VectorData`, but included here for testing and type checking
-    array: Optional[NDArray] = None
+    value: Optional[NDArray] = None
 
     def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
         if self._index:
             # Following hdmf, VectorIndex is the thing that knows how to do the slicing
             return self._index[item]
         else:
-            return self.array[item]
+            return self.value[item]
 
     def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
         if self._index:
             # Following hdmf, VectorIndex is the thing that knows how to do the slicing
             self._index[key] = value
         else:
-            self.array[key] = value
+            self.value[key] = value
 
 
 class VectorIndexMixin(BaseModel):
@@ -80,7 +80,7 @@ class VectorIndexMixin(BaseModel):
     """
 
     # redefined in `VectorData`, but included here for testing and type checking
-    array: Optional[NDArray] = None
+    value: Optional[NDArray] = None
     target: Optional["VectorData"] = None
 
     def _getitem_helper(self, arg: int) -> Union[list, NDArray]:
@@ -88,18 +88,18 @@ class VectorIndexMixin(BaseModel):
         Mimicking :func:`hdmf.common.table.VectorIndex.__getitem_helper`
         """
 
-        start = 0 if arg == 0 else self.array[arg - 1]
-        end = self.array[arg]
+        start = 0 if arg == 0 else self.value[arg - 1]
+        end = self.value[arg]
         return self.target.array[slice(start, end)]
 
     def __getitem__(self, item: Union[int, slice]) -> Any:
         if self.target is None:
-            return self.array[item]
+            return self.value[item]
         elif type(self.target).__name__ == "VectorData":
             if isinstance(item, int):
                 return self._getitem_helper(item)
             else:
-                idx = range(*item.indices(len(self.array)))
+                idx = range(*item.indices(len(self.value)))
                 return [self._getitem_helper(i) for i in idx]
         else:
             raise NotImplementedError("DynamicTableRange not supported yet")
@@ -109,7 +109,7 @@ class VectorIndexMixin(BaseModel):
             # VectorIndex is the thing that knows how to do the slicing
             self._index[key] = value
         else:
-            self.array[key] = value
+            self.value[key] = value
 
 
 class DynamicTableMixin(BaseModel):
