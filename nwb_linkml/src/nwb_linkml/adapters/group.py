@@ -2,7 +2,7 @@
 Adapter for NWB groups to linkml Classes
 """
 
-from typing import Type, List
+from typing import List, Type
 
 from linkml_runtime.linkml_model import SlotDefinition
 

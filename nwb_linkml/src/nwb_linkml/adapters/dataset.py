@@ -7,7 +7,7 @@ from typing import ClassVar, Optional, Type
 
 from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
-from nwb_linkml.adapters.adapter import BuildResult, is_1d, is_compound, has_attrs
+from nwb_linkml.adapters.adapter import BuildResult, has_attrs, is_1d, is_compound
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map

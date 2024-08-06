@@ -308,7 +308,7 @@ There are several different ways to create references between objects in nwb/hdm
 - Implicitly, hdmf creates references between objects according to some naming conventions, eg.
   an attribute/dataset that is a `VectorIndex` named `mydata_index` will be linked to a `VectorData`
   object `mydata`.
-- There is currrently a note in the schema language docs that there will be an additional
+- There is currently a note in the schema language docs that there will be an additional
   [Relationships](https://schema-language.readthedocs.io/en/latest/description.html#relationships) system
   that explicitly models relationships, but it is unclear how that would be different than references. 
 

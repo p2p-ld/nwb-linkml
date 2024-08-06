@@ -7,6 +7,7 @@ from typing import Any, Type
 
 import nptyping
 import numpy as np
+
 from nwb_schema_language import CompoundDtype, DTypeType, FlatDtype, ReferenceDtype
 
 flat_to_linkml = {

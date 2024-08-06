@@ -26,7 +26,7 @@ from linkml_runtime.linkml_model import (
 )
 from pydantic import BaseModel
 
-from nwb_schema_language import Attribute, Dataset, Group, Schema, CompoundDtype
+from nwb_schema_language import Attribute, CompoundDtype, Dataset, Group, Schema
 
 if sys.version_info.minor >= 11:
     from typing import TypeVarTuple, Unpack

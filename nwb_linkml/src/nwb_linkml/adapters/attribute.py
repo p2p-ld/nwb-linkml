@@ -3,12 +3,12 @@ Adapters for attribute types
 """
 
 from abc import abstractmethod
-from typing import ClassVar, Optional, TypedDict, Type
+from typing import ClassVar, Optional, Type, TypedDict
 
 from linkml_runtime.linkml_model.meta import SlotDefinition
 
+from nwb_linkml.adapters.adapter import Adapter, BuildResult, is_1d
 from nwb_linkml.adapters.array import ArrayAdapter
-from nwb_linkml.adapters.adapter import BuildResult, is_1d, Adapter
 from nwb_linkml.maps import Map
 from nwb_linkml.maps.dtype import handle_dtype
 from nwb_schema_language import Attribute
@@ -24,16 +24,19 @@ def _make_ifabsent(val: str | int | float | None) -> str | None:
     elif isinstance(val, float):
         return f"float({val})"
     else:
-        return str(value)
+        return str(val)
 
 
 class AttrDefaults(TypedDict):
+    """Default fields for an attribute"""
+
     equals_string: str | None
     equals_number: float | int | None
     ifabsent: str | None
 
 
 class AttributeMap(Map):
+    """Base class for attribute mapping transformations :)"""
 
     @classmethod
     def handle_defaults(cls, attr: Attribute) -> AttrDefaults:
