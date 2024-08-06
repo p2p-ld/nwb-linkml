@@ -150,13 +150,11 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -191,9 +189,7 @@ class TimeIntervalsTimeseries(VectorData):
     timeseries: Optional[TimeSeries] = Field(
         None, description="""the TimeSeries that this index applies to."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],

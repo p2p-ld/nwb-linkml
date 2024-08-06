@@ -29,6 +29,8 @@ classes:
         description: The shape (number of rows, number of columns) of this sparse
           matrix.
         range: uint
+        required: true
+        multivalued: true
       indices:
         name: indices
         description: The column indices.

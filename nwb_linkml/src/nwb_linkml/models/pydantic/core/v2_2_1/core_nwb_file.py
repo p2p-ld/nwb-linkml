@@ -98,9 +98,10 @@ class NWBFile(NWBContainer):
         "root",
         json_schema_extra={"linkml_meta": {"equals_string": "root", "ifabsent": "string(root)"}},
     )
-    nwb_version: Optional[str] = Field(
-        None,
+    nwb_version: Literal["2.2.1"] = Field(
+        "2.2.1",
         description="""File version string. Use semantic versioning, e.g. 1.2.1. This will be the name of the format with trailing major, minor and patch numbers.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "2.2.1", "ifabsent": "string(2.2.1)"}},
     )
     file_create_date: NDArray[Shape["* num_modifications"], datetime] = Field(
         ...,
@@ -305,7 +306,7 @@ class GeneralSourceScript(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "source_script", "ifabsent": "string(source_script)"}
         },
     )
-    file_name: Optional[str] = Field(None, description="""Name of script file.""")
+    file_name: str = Field(..., description="""Name of script file.""")
     value: str = Field(...)
 
 
@@ -486,13 +487,11 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",

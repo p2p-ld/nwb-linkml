@@ -29,12 +29,14 @@ classes:
         name: pmt_gain
         description: Photomultiplier gain.
         range: float32
+        required: false
       scan_line_rate:
         name: scan_line_rate
         description: Lines imaged per second. This is also stored in /general/optophysiology
           but is kept here as it is useful information for analysis, and so good to
           be stored w/ the actual data.
         range: float32
+        required: false
       field_of_view:
         name: field_of_view
         description: Width, height and depth of image, or imaged area, in meters.
@@ -436,12 +438,16 @@ classes:
           x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then
           the 'conversion' multiplier to get from raw data acquisition pixel units
           to meters is 2/1000.
+        ifabsent: float(1.0)
         range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. The default
           value is 'meters'.
+        ifabsent: string(meters)
         range: text
+        required: false
       value:
         name: value
         range: float32
@@ -474,7 +480,9 @@ classes:
       unit:
         name: unit
         description: Measurement units for origin_coords. The default value is 'meters'.
+        ifabsent: string(meters)
         range: text
+        required: true
       value:
         name: value
         array:
@@ -499,7 +507,9 @@ classes:
       unit:
         name: unit
         description: Measurement units for grid_spacing. The default value is 'meters'.
+        ifabsent: string(meters)
         range: text
+        required: true
       value:
         name: value
         array:

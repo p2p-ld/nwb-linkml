@@ -96,11 +96,11 @@ class RetinotopyMap(NWBData):
     )
 
     name: str = Field(...)
-    dimension: Optional[int] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
     value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
@@ -119,20 +119,18 @@ class AxisMap(RetinotopyMap):
     )
 
     name: str = Field(...)
-    unit: Optional[str] = Field(
-        None, description="""Unit that axis data is stored in (e.g., degrees)."""
-    )
+    unit: str = Field(..., description="""Unit that axis data is stored in (e.g., degrees).""")
     value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
         },
     )
-    dimension: Optional[int] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
 
 
 class RetinotopyImage(GrayscaleImage):
@@ -145,18 +143,16 @@ class RetinotopyImage(GrayscaleImage):
     )
 
     name: str = Field(...)
-    bits_per_pixel: Optional[int] = Field(
-        None,
+    bits_per_pixel: int = Field(
+        ...,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
     )
-    dimension: Optional[int] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    format: Optional[str] = Field(
-        None, description="""Format of image. Right now only 'raw' is supported."""
-    )
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
+    format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
@@ -286,19 +282,17 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
             }
         },
     )
-    focal_depth: Optional[float] = Field(None, description="""Focal depth offset, in meters.""")
-    bits_per_pixel: Optional[int] = Field(
-        None,
+    focal_depth: float = Field(..., description="""Focal depth offset, in meters.""")
+    bits_per_pixel: int = Field(
+        ...,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
     )
-    dimension: Optional[int] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[float] = Field(None, description="""Size of viewing area, in meters.""")
-    format: Optional[str] = Field(
-        None, description="""Format of image. Right now only 'raw' is supported."""
-    )
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
+    format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )

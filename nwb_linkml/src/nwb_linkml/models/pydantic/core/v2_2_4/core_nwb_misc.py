@@ -120,10 +120,15 @@ class AbstractFeatureSeries(TimeSeries):
         description="""Description of the features represented in TimeSeries::data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_features"}]}}},
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -164,8 +169,9 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
-        None,
+        "see 'feature_units'",
         description="""Since there can be different units for different features, store the units in 'feature_units'. The default value for this attribute is \"see 'feature_units'\".""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(see 'feature_units')"}},
     )
     value: Optional[
         Union[
@@ -190,10 +196,15 @@ class AnnotationSeries(TimeSeries):
         description="""Annotations made during an experiment.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -237,10 +248,15 @@ class IntervalSeries(TimeSeries):
         description="""Use values >0 if interval started, <0 if interval ended.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -296,10 +312,15 @@ class DecompositionSeries(TimeSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -339,9 +360,10 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: str = Field(
+        "no unit",
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no unit)"}},
     )
     value: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(
         None,
@@ -403,13 +425,11 @@ class DecompositionSeriesBands(DynamicTable):
         description="""The standard deviation of Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -513,13 +533,11 @@ class Units(DynamicTable):
             NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
         ]
     ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -550,9 +568,7 @@ class UnitsSpikeTimes(VectorData):
         None,
         description="""The smallest possible difference between two spike times. Usually 1 divided by the acquisition sampling rate from which spike times were extracted, but could be larger if the acquisition time series was downsampled or smaller if the acquisition time series was smoothed/interpolated and it is possible for the spike time to be between samples.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],

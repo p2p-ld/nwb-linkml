@@ -84,10 +84,15 @@ class SpatialSeries(TimeSeries):
     reference_frame: Optional[str] = Field(
         None, description="""Description defining what exactly 'straight-ahead' means."""
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -128,8 +133,9 @@ class SpatialSeriesData(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
-        None,
+        "meters",
         description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[
         Union[

@@ -114,8 +114,8 @@ class PatchClampSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
@@ -134,10 +134,15 @@ class PatchClampSeries(TimeSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -177,8 +182,8 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: str = Field(
+        ...,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
     )
     value: Optional[NDArray[Shape["* num_times"], float]] = Field(
@@ -202,8 +207,8 @@ class CurrentClampSeries(PatchClampSeries):
     capacitance_compensation: Optional[float] = Field(
         None, description="""Capacitance compensation, in farads."""
     )
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
@@ -221,10 +226,15 @@ class CurrentClampSeries(PatchClampSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -264,9 +274,10 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["volts"] = Field(
+        "volts",
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
     value: Any = Field(...)
 
@@ -281,9 +292,10 @@ class IZeroClampSeries(CurrentClampSeries):
     )
 
     name: str = Field(...)
-    stimulus_description: Optional[str] = Field(
-        None,
+    stimulus_description: Literal["N/A"] = Field(
+        "N/A",
         description="""An IZeroClampSeries has no stimulus, so this attribute is automatically set to \"N/A\"""",
+        json_schema_extra={"linkml_meta": {"equals_string": "N/A", "ifabsent": "string(N/A)"}},
     )
     bias_current: float = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
     bridge_balance: float = Field(..., description="""Bridge balance, in ohms, fixed to 0.0.""")
@@ -307,10 +319,15 @@ class IZeroClampSeries(CurrentClampSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -350,8 +367,8 @@ class CurrentClampStimulusSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: CurrentClampStimulusSeriesData = Field(..., description="""Stimulus current applied.""")
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
@@ -369,10 +386,15 @@ class CurrentClampStimulusSeries(PatchClampSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -412,9 +434,12 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["amperes"] = Field(
+        "amperes",
         description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
+        },
     )
     value: Any = Field(...)
 
@@ -451,8 +476,8 @@ class VoltageClampSeries(PatchClampSeries):
     whole_cell_series_resistance_comp: Optional[VoltageClampSeriesWholeCellSeriesResistanceComp] = (
         Field(None, description="""Whole cell series resistance compensation, in ohms.""")
     )
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
@@ -470,10 +495,15 @@ class VoltageClampSeries(PatchClampSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -513,9 +543,12 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["amperes"] = Field(
+        "amperes",
         description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
+        },
     )
     value: Any = Field(...)
 
@@ -536,9 +569,12 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["farads"] = Field(
+        "farads",
         description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "farads", "ifabsent": "string(farads)"}
+        },
     )
     value: float = Field(...)
 
@@ -559,9 +595,12 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["farads"] = Field(
+        "farads",
         description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "farads", "ifabsent": "string(farads)"}
+        },
     )
     value: float = Field(...)
 
@@ -582,9 +621,10 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["hertz"] = Field(
+        "hertz",
         description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "hertz", "ifabsent": "string(hertz)"}},
     )
     value: float = Field(...)
 
@@ -605,9 +645,12 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["percent"] = Field(
+        "percent",
         description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "percent", "ifabsent": "string(percent)"}
+        },
     )
     value: float = Field(...)
 
@@ -628,9 +671,12 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["percent"] = Field(
+        "percent",
         description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "percent", "ifabsent": "string(percent)"}
+        },
     )
     value: float = Field(...)
 
@@ -651,9 +697,12 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["farads"] = Field(
+        "farads",
         description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "farads", "ifabsent": "string(farads)"}
+        },
     )
     value: float = Field(...)
 
@@ -674,9 +723,10 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["ohms"] = Field(
+        "ohms",
         description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "ohms", "ifabsent": "string(ohms)"}},
     )
     value: float = Field(...)
 
@@ -692,8 +742,8 @@ class VoltageClampStimulusSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: VoltageClampStimulusSeriesData = Field(..., description="""Stimulus voltage applied.""")
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
     sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
@@ -711,10 +761,15 @@ class VoltageClampStimulusSeries(PatchClampSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -754,9 +809,10 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["volts"] = Field(
+        "volts",
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
     value: Any = Field(...)
 
@@ -833,13 +889,11 @@ class SweepTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -860,14 +914,21 @@ class IntracellularElectrodesTable(DynamicTable):
     )
 
     name: str = Field(...)
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
+    description: Literal["Table for storing intracellular electrode related metadata."] = Field(
+        "Table for storing intracellular electrode related metadata.",
+        description="""Description of what is in this dynamic table.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "equals_string": "Table for storing intracellular electrode related metadata.",
+                "ifabsent": "string(Table for storing intracellular electrode related metadata.)",
+            }
+        },
     )
     electrode: List[IntracellularElectrode] = Field(
         ..., description="""Column for storing the reference to the intracellular electrode."""
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     id: NDArray[Shape["* num_rows"], int] = Field(
@@ -890,8 +951,15 @@ class IntracellularStimuliTable(DynamicTable):
     )
 
     name: str = Field(...)
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
+    description: Literal["Table for storing intracellular stimulus related metadata."] = Field(
+        "Table for storing intracellular stimulus related metadata.",
+        description="""Description of what is in this dynamic table.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "equals_string": "Table for storing intracellular stimulus related metadata.",
+                "ifabsent": "string(Table for storing intracellular stimulus related metadata.)",
+            }
+        },
     )
     stimulus: Named[TimeSeriesReferenceVectorData] = Field(
         ...,
@@ -917,8 +985,8 @@ class IntracellularStimuliTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     id: NDArray[Shape["* num_rows"], int] = Field(
@@ -941,8 +1009,15 @@ class IntracellularResponsesTable(DynamicTable):
     )
 
     name: str = Field(...)
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
+    description: Literal["Table for storing intracellular response related metadata."] = Field(
+        "Table for storing intracellular response related metadata.",
+        description="""Description of what is in this dynamic table.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "equals_string": "Table for storing intracellular response related metadata.",
+                "ifabsent": "string(Table for storing intracellular response related metadata.)",
+            }
+        },
     )
     response: Named[TimeSeriesReferenceVectorData] = Field(
         ...,
@@ -956,8 +1031,8 @@ class IntracellularResponsesTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     id: NDArray[Shape["* num_rows"], int] = Field(
@@ -988,9 +1063,27 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
             }
         },
     )
-    description: Optional[str] = Field(
-        None,
+    description: Literal[
+        "A table to group together a stimulus and response from a single electrode and a single"
+        " simultaneous recording and for storing metadata about the intracellular recording."
+    ] = Field(
+        "A table to group together a stimulus and response from a single electrode and a single"
+        " simultaneous recording and for storing metadata about the intracellular recording.",
         description="""Description of the contents of this table. Inherited from AlignedDynamicTable and overwritten here to fix the value of the attribute.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "equals_string": (
+                    "A table to group together a stimulus and response from a "
+                    "single electrode and a single simultaneous recording and "
+                    "for storing metadata about the intracellular recording."
+                ),
+                "ifabsent": (
+                    "string(A table to group together a stimulus and response from a "
+                    "single electrode and a single simultaneous recording and for "
+                    "storing metadata about the intracellular recording.)"
+                ),
+            }
+        },
     )
     electrodes: IntracellularElectrodesTable = Field(
         ..., description="""Table for storing intracellular electrode related metadata."""
@@ -1004,8 +1097,8 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     value: Optional[List[DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     id: NDArray[Shape["* num_rows"], int] = Field(
@@ -1052,13 +1145,11 @@ class SimultaneousRecordingsTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -1082,12 +1173,12 @@ class SimultaneousRecordingsTableRecordings(DynamicTableRegion):
             "linkml_meta": {"equals_string": "recordings", "ifabsent": "string(recordings)"}
         },
     )
-    table: Optional[IntracellularRecordingsTable] = Field(
-        None,
+    table: IntracellularRecordingsTable = Field(
+        ...,
         description="""Reference to the IntracellularRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
+    description: str = Field(
+        ..., description="""Description of what this table region points to."""
     )
     value: Optional[
         Union[
@@ -1142,13 +1233,11 @@ class SequentialRecordingsTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -1175,12 +1264,12 @@ class SequentialRecordingsTableSimultaneousRecordings(DynamicTableRegion):
             }
         },
     )
-    table: Optional[SimultaneousRecordingsTable] = Field(
-        None,
+    table: SimultaneousRecordingsTable = Field(
+        ...,
         description="""Reference to the SimultaneousRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
+    description: str = Field(
+        ..., description="""Description of what this table region points to."""
     )
     value: Optional[
         Union[
@@ -1223,13 +1312,11 @@ class RepetitionsTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -1256,12 +1343,12 @@ class RepetitionsTableSequentialRecordings(DynamicTableRegion):
             }
         },
     )
-    table: Optional[SequentialRecordingsTable] = Field(
-        None,
+    table: SequentialRecordingsTable = Field(
+        ...,
         description="""Reference to the SequentialRecordingsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
+    description: str = Field(
+        ..., description="""Description of what this table region points to."""
     )
     value: Optional[
         Union[
@@ -1306,13 +1393,11 @@ class ExperimentalConditionsTable(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -1336,12 +1421,12 @@ class ExperimentalConditionsTableRepetitions(DynamicTableRegion):
             "linkml_meta": {"equals_string": "repetitions", "ifabsent": "string(repetitions)"}
         },
     )
-    table: Optional[RepetitionsTable] = Field(
-        None,
+    table: RepetitionsTable = Field(
+        ...,
         description="""Reference to the RepetitionsTable table that this table region applies to. This specializes the attribute inherited from DynamicTableRegion to fix the type of table that can be referenced here.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
+    description: str = Field(
+        ..., description="""Description of what this table region points to."""
     )
     value: Optional[
         Union[

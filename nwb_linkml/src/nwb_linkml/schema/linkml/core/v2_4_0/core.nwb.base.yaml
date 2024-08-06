@@ -73,10 +73,12 @@ classes:
         name: resolution
         description: Pixel resolution of the image, in pixels per centimeter.
         range: float32
+        required: false
       description:
         name: description
         description: Description of the image.
         range: text
+        required: false
       value:
         name: value
         range: numeric
@@ -132,13 +134,17 @@ classes:
       description:
         name: description
         description: Description of the time series.
+        ifabsent: string(no description)
         range: text
+        required: false
       comments:
         name: comments
         description: Human-readable comments about the TimeSeries. This second descriptive
           field can be used to store additional information, or descriptive information
           if the primary description field is populated with a computer-readable string.
+        ifabsent: string(no comments)
         range: text
+        required: false
       data:
         name: data
         description: Data values. Data can be in 1-D, 2-D, 3-D, or 4-D. The first
@@ -223,20 +229,25 @@ classes:
           to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
           multiplier to get from raw data acquisition values to recorded volts is
           2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
         range: float32
+        required: false
       resolution:
         name: resolution
         description: Smallest meaningful difference between values in data, stored
           in the specified by unit, e.g., the change in value of the least significant
           bit, or a larger number if signal noise is known to be present. If unknown,
           use -1.0.
+        ifabsent: float(-1.0)
         range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. Actual stored
           values are not necessarily stored in these units. To access the data in
           these units, multiply 'data' by 'conversion'.
         range: text
+        required: true
       continuity:
         name: continuity
         description: Optionally describe the continuity of the data. Can be "continuous",
@@ -249,6 +260,7 @@ classes:
           the way this data is interpreted, the way it is visualized, and what analysis
           methods are applicable.
         range: text
+        required: false
       value:
         name: value
         range: AnyType
@@ -287,10 +299,14 @@ classes:
         name: rate
         description: Sampling rate, in Hz.
         range: float32
+        required: true
       unit:
         name: unit
         description: Unit of measurement for time, which is fixed to 'seconds'.
+        ifabsent: string(seconds)
         range: text
+        required: true
+        equals_string: seconds
       value:
         name: value
         range: float64
@@ -338,6 +354,7 @@ classes:
         name: description
         description: Description of this collection of images.
         range: text
+        required: true
       image:
         name: image
         description: Images stored in this collection.

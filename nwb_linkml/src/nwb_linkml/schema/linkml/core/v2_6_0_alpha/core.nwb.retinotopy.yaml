@@ -106,14 +106,19 @@ classes:
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       unit:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
+        required: true
       value:
         name: value
         array:
@@ -137,14 +142,19 @@ classes:
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       unit:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
+        required: true
       value:
         name: value
         array:
@@ -167,14 +177,19 @@ classes:
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       unit:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
+        required: true
       value:
         name: value
         array:
@@ -198,14 +213,19 @@ classes:
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       unit:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
+        required: true
       value:
         name: value
         array:
@@ -229,23 +249,30 @@ classes:
         description: Number of bits used to represent each value. This is necessary
           to determine maximum (white) pixel value.
         range: int32
+        required: true
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       focal_depth:
         name: focal_depth
         description: Focal depth offset, in meters.
         range: float32
+        required: true
       format:
         name: format
         description: Format of image. Right now only 'raw' is supported.
         range: text
+        required: true
       value:
         name: value
         array:
@@ -269,10 +296,14 @@ classes:
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       value:
         name: value
         array:
@@ -296,19 +327,25 @@ classes:
         description: Number of bits used to represent each value. This is necessary
           to determine maximum (white) pixel value
         range: int32
+        required: true
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       format:
         name: format
         description: Format of image. Right now only 'raw' is supported.
         range: text
+        required: true
       value:
         name: value
         array:

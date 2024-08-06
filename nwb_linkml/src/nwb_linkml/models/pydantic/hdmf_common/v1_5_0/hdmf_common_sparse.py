@@ -71,8 +71,8 @@ class CSRMatrix(Container):
     )
 
     name: str = Field(...)
-    shape: Optional[int] = Field(
-        None, description="""The shape (number of rows, number of columns) of this sparse matrix."""
+    shape: List[int] = Field(
+        ..., description="""The shape (number of rows, number of columns) of this sparse matrix."""
     )
     indices: NDArray[Shape["* number_of_non_zero_values"], int] = Field(
         ...,

@@ -132,6 +132,8 @@ classes:
           (and so there is a single element in the 'external_file' dataset), then
           this attribute should have value [0].
         range: int32
+        required: true
+        multivalued: true
       value:
         name: value
         array:

@@ -303,9 +303,7 @@ class VectorData(VectorDataMixin):
     )
 
     name: str = Field(...)
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -326,12 +324,10 @@ class VectorIndex(VectorIndexMixin):
     )
 
     name: str = Field(...)
-    target: Optional[VectorData] = Field(
-        None, description="""Reference to the target dataset that this index applies to."""
+    target: VectorData = Field(
+        ..., description="""Reference to the target dataset that this index applies to."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -366,11 +362,11 @@ class DynamicTableRegion(VectorData):
     )
 
     name: str = Field(...)
-    table: Optional[DynamicTable] = Field(
-        None, description="""Reference to the DynamicTable object that this region applies to."""
+    table: DynamicTable = Field(
+        ..., description="""Reference to the DynamicTable object that this region applies to."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what this table region points to."""
+    description: str = Field(
+        ..., description="""Description of what this table region points to."""
     )
     value: Optional[
         Union[
@@ -392,13 +388,11 @@ class DynamicTable(DynamicTableMixin):
     )
 
     name: str = Field(...)
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -422,13 +416,11 @@ class AlignedDynamicTable(DynamicTable):
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     name: str = Field(...)
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",

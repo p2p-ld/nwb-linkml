@@ -72,7 +72,9 @@ classes:
         description: Since there can be different units for different features, store
           the units in 'feature_units'. The default value for this attribute is "see
           'feature_units'".
+        ifabsent: string(see 'feature_units')
         range: text
+        required: false
       value:
         name: value
         range: numeric
@@ -186,7 +188,9 @@ classes:
         description: Base unit of measurement for working with the data. Actual stored
           values are not necessarily stored in these units. To access the data in
           these units, multiply 'data' by 'conversion'.
+        ifabsent: string(no unit)
         range: text
+        required: true
       value:
         name: value
         array:
@@ -384,3 +388,4 @@ classes:
           if the acquisition time series was smoothed/interpolated and it is possible
           for the spike time to be between samples.
         range: float64
+        required: false

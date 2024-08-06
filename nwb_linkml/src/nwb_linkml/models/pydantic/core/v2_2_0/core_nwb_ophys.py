@@ -146,10 +146,15 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -203,10 +208,15 @@ class RoiResponseSeries(TimeSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -342,12 +352,14 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
         },
     )
     conversion: Optional[float] = Field(
-        None,
+        1.0,
         description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as pixels from x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then the 'conversion' multiplier to get from raw data acquisition pixel units to meters is 2/1000.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
     )
     unit: Optional[str] = Field(
-        None,
+        "meters",
         description="""Base unit of measurement for working with the data. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[
         Union[
@@ -370,8 +382,10 @@ class ImagingPlaneOriginCoords(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "origin_coords", "ifabsent": "string(origin_coords)"}
         },
     )
-    unit: Optional[str] = Field(
-        None, description="""Measurement units for origin_coords. The default value is 'meters'."""
+    unit: str = Field(
+        "meters",
+        description="""Measurement units for origin_coords. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
         None,
@@ -401,8 +415,10 @@ class ImagingPlaneGridSpacing(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "grid_spacing", "ifabsent": "string(grid_spacing)"}
         },
     )
-    unit: Optional[str] = Field(
-        None, description="""Measurement units for grid_spacing. The default value is 'meters'."""
+    unit: str = Field(
+        "meters",
+        description="""Measurement units for grid_spacing. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
         None,

@@ -99,9 +99,7 @@ class TimeSeriesReferenceVectorData(VectorData):
         description="""Number of data samples available in this time series, during this epoch""",
     )
     timeseries: TimeSeries = Field(..., description="""The TimeSeries that this index applies to""")
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -169,10 +167,15 @@ class TimeSeries(NWBDataInterface):
     )
 
     name: str = Field(...)
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     data: TimeSeriesData = Field(
         ...,
@@ -217,15 +220,17 @@ class TimeSeriesData(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     conversion: Optional[float] = Field(
-        None,
+        1.0,
         description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
     )
     resolution: Optional[float] = Field(
-        None,
+        -1.0,
         description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: str = Field(
+        ...,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
     continuity: Optional[str] = Field(
@@ -255,9 +260,13 @@ class TimeSeriesStartingTime(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "starting_time", "ifabsent": "string(starting_time)"}
         },
     )
-    rate: Optional[float] = Field(None, description="""Sampling rate, in Hz.""")
-    unit: Optional[str] = Field(
-        None, description="""Unit of measurement for time, which is fixed to 'seconds'."""
+    rate: float = Field(..., description="""Sampling rate, in Hz.""")
+    unit: Literal["seconds"] = Field(
+        "seconds",
+        description="""Unit of measurement for time, which is fixed to 'seconds'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "seconds", "ifabsent": "string(seconds)"}
+        },
     )
     value: float = Field(...)
 
@@ -303,9 +312,7 @@ class Images(NWBDataInterface):
     )
 
     name: str = Field("Images", json_schema_extra={"linkml_meta": {"ifabsent": "string(Images)"}})
-    description: Optional[str] = Field(
-        None, description="""Description of this collection of images."""
-    )
+    description: str = Field(..., description="""Description of this collection of images.""")
     image: List[Image] = Field(..., description="""Images stored in this collection.""")
 
 

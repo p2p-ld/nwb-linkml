@@ -295,12 +295,14 @@ classes:
         name: description
         description: Description of this electrode group.
         range: text
+        required: true
       location:
         name: location
         description: Location of electrode group. Specify the area, layer, comments
           on estimation of area/layer, etc. Use standard atlas names for anatomical
           regions when possible.
         range: text
+        required: true
       position:
         name: position
         description: stereotaxic or common framework coordinates

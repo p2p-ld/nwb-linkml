@@ -61,7 +61,9 @@ classes:
         description: Base unit of measurement for working with the data. The default
           value is 'meters'. Actual stored values are not necessarily stored in these
           units. To access the data in these units, multiply 'data' by 'conversion'.
+        ifabsent: string(meters)
         range: text
+        required: false
       value:
         name: value
         range: numeric

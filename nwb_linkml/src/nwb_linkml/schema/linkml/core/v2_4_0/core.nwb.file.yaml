@@ -34,6 +34,7 @@ classes:
         name: notes
         description: Any notes the user has about the dataset being stored
         range: text
+        required: true
     tree_root: true
   NWBFile:
     name: NWBFile
@@ -51,7 +52,10 @@ classes:
         name: nwb_version
         description: File version string. Use semantic versioning, e.g. 1.2.1. This
           will be the name of the format with trailing major, minor and patch numbers.
+        ifabsent: string(2.4.0)
         range: text
+        required: true
+        equals_string: 2.4.0
       file_create_date:
         name: file_create_date
         description: 'A record of the date the file was created and of subsequent
@@ -457,6 +461,7 @@ classes:
         name: file_name
         description: Name of script file.
         range: text
+        required: true
       value:
         name: value
         range: text

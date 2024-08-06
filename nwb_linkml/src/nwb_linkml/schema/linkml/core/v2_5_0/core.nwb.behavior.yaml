@@ -62,7 +62,9 @@ classes:
           value is 'meters'. Actual stored values are not necessarily stored in these
           units. To access the data in these units, multiply 'data' by 'conversion'
           and add 'offset'.
+        ifabsent: string(meters)
         range: text
+        required: false
       value:
         name: value
         range: numeric

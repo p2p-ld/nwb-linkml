@@ -162,10 +162,15 @@ class TwoPhotonSeries(ImageSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -219,10 +224,15 @@ class RoiResponseSeries(TimeSeries):
             }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
@@ -356,13 +366,11 @@ class PlaneSegmentation(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -386,9 +394,7 @@ class PlaneSegmentationImageMask(VectorData):
             "linkml_meta": {"equals_string": "image_mask", "ifabsent": "string(image_mask)"}
         },
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -415,9 +421,7 @@ class PlaneSegmentationPixelMask(VectorData):
     x: Optional[int] = Field(None, description="""Pixel x-coordinate.""")
     y: Optional[int] = Field(None, description="""Pixel y-coordinate.""")
     weight: Optional[float] = Field(None, description="""Weight of the pixel.""")
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -445,9 +449,7 @@ class PlaneSegmentationVoxelMask(VectorData):
     y: Optional[int] = Field(None, description="""Voxel y-coordinate.""")
     z: Optional[int] = Field(None, description="""Voxel z-coordinate.""")
     weight: Optional[float] = Field(None, description="""Weight of the voxel.""")
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
@@ -523,12 +525,14 @@ class ImagingPlaneManifold(ConfiguredBaseModel):
         },
     )
     conversion: Optional[float] = Field(
-        None,
+        1.0,
         description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as pixels from x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then the 'conversion' multiplier to get from raw data acquisition pixel units to meters is 2/1000.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
     )
     unit: Optional[str] = Field(
-        None,
+        "meters",
         description="""Base unit of measurement for working with the data. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[
         Union[
@@ -551,8 +555,10 @@ class ImagingPlaneOriginCoords(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "origin_coords", "ifabsent": "string(origin_coords)"}
         },
     )
-    unit: Optional[str] = Field(
-        None, description="""Measurement units for origin_coords. The default value is 'meters'."""
+    unit: str = Field(
+        "meters",
+        description="""Measurement units for origin_coords. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[Union[NDArray[Shape["2 x_y"], float], NDArray[Shape["3 x_y_z"], float]]] = (
         Field(None)
@@ -572,8 +578,10 @@ class ImagingPlaneGridSpacing(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "grid_spacing", "ifabsent": "string(grid_spacing)"}
         },
     )
-    unit: Optional[str] = Field(
-        None, description="""Measurement units for grid_spacing. The default value is 'meters'."""
+    unit: str = Field(
+        "meters",
+        description="""Measurement units for grid_spacing. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
     value: Optional[Union[NDArray[Shape["2 x_y"], float], NDArray[Shape["3 x_y_z"], float]]] = (
         Field(None)
