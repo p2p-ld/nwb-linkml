@@ -2,8 +2,8 @@ import pytest
 from linkml_runtime.linkml_model import SlotDefinition
 
 from nwb_linkml.adapters import DatasetAdapter, GroupAdapter
-from nwb_schema_language import CompoundDtype, Dataset, Group, ReferenceDtype
 from nwb_linkml.maps.dtype import handle_dtype
+from nwb_schema_language import CompoundDtype, Dataset, Group, ReferenceDtype
 
 
 @pytest.mark.xfail()
