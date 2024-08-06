@@ -26,7 +26,7 @@ from linkml_runtime.linkml_model import (
 )
 from pydantic import BaseModel
 
-from nwb_schema_language import Attribute, Dataset, Group, Schema
+from nwb_schema_language import Attribute, Dataset, Group, Schema, CompoundDtype
 
 if sys.version_info.minor >= 11:
     from typing import TypeVarTuple, Unpack
@@ -238,3 +238,36 @@ class Adapter(BaseModel):
         for item in self.walk(input):
             if any([type(item) is atype for atype in get_type]):
                 yield item
+
+
+def is_1d(cls: Dataset | Attribute) -> bool:
+    """
+    Check if the values of a dataset are 1-dimensional.
+
+    Specifically:
+    * a single-layer dim/shape list of length 1, or
+    * a nested dim/shape list where every nested spec is of length 1
+    """
+    return (
+        not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1
+    ) or (  # nested list
+        all([isinstance(dim, list) for dim in cls.dims])
+        and len(cls.dims) == 1
+        and len(cls.dims[0]) == 1
+    )
+
+
+def is_compound(cls: Dataset) -> bool:
+    """Check if dataset has a compound dtype"""
+    return (
+        isinstance(cls.dtype, list)
+        and len(cls.dtype) > 0
+        and isinstance(cls.dtype[0], CompoundDtype)
+    )
+
+
+def has_attrs(cls: Dataset) -> bool:
+    """
+    Check if a dataset has any attributes at all without defaults
+    """
+    return len(cls.attributes) > 0 and all([not a.value for a in cls.attributes])

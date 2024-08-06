@@ -9,9 +9,10 @@ from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
 from pydantic import field_validator
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
+from nwb_linkml.adapters.attribute import AttributeAdapter
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset, DTypeType, FlatDtype, Group, ReferenceDtype
+from nwb_schema_language import Dataset, Group
 
 T = TypeVar("T", bound=Type[Dataset] | Type[Group])
 TI = TypeVar("TI", bound=Dataset | Group)
@@ -118,16 +119,9 @@ class ClassAdapter(Adapter):
         Returns:
             list[:class:`.SlotDefinition`]
         """
-        attrs = [
-            SlotDefinition(
-                name=attr.name,
-                description=attr.doc,
-                range=self.handle_dtype(attr.dtype),
-            )
-            for attr in cls.attributes
-        ]
-
-        return attrs
+        results = [AttributeAdapter(cls=attr).build() for attr in cls.attributes]
+        slots = [r.slots[0] for r in results]
+        return slots
 
     def _get_full_name(self) -> str:
         """The full name of the object in the generated linkml
@@ -204,37 +198,6 @@ class ClassAdapter(Adapter):
             raise ValueError(f"Class has no name!: {self.cls}")
 
         return name
-
-    @classmethod
-    def handle_dtype(cls, dtype: DTypeType | None) -> str:
-        """
-        Get the string form of a dtype
-
-        Args:
-            dtype (:class:`.DTypeType`): Dtype to stringify
-
-        Returns:
-            str
-        """
-        if isinstance(dtype, ReferenceDtype):
-            return dtype.target_type
-        elif dtype is None or dtype == []:
-            # Some ill-defined datasets are "abstract" despite that not being in the schema language
-            return "AnyType"
-        elif isinstance(dtype, FlatDtype):
-            return dtype.value
-        elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
-            # there is precisely one class that uses compound dtypes:
-            # TimeSeriesReferenceVectorData
-            # compoundDtypes are able to define a ragged table according to the schema
-            # but are used in this single case equivalently to attributes.
-            # so we'll... uh... treat them as slots.
-            # TODO
-            return "AnyType"
-
-        else:
-            # flat dtype
-            return dtype
 
     def build_name_slot(self) -> SlotDefinition:
         """

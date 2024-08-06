@@ -7,6 +7,7 @@ from typing import Any, Type
 
 import nptyping
 import numpy as np
+from nwb_schema_language import CompoundDtype, DTypeType, FlatDtype, ReferenceDtype
 
 flat_to_linkml = {
     "float": "float",
@@ -185,3 +186,34 @@ def struct_from_dtype(dtype: np.dtype) -> Type[nptyping.Structure]:
     struct_pieces = [f"{k}: {flat_to_nptyping[v[0].name]}" for k, v in dtype.fields.items()]
     struct_dtype = ", ".join(struct_pieces)
     return nptyping.Structure[struct_dtype]
+
+
+def handle_dtype(dtype: DTypeType | None) -> str:
+    """
+    Get the string form of a dtype
+
+    Args:
+        dtype (:class:`.DTypeType`): Dtype to stringify
+
+    Returns:
+        str
+    """
+    if isinstance(dtype, ReferenceDtype):
+        return dtype.target_type
+    elif dtype is None or dtype == []:
+        # Some ill-defined datasets are "abstract" despite that not being in the schema language
+        return "AnyType"
+    elif isinstance(dtype, FlatDtype):
+        return dtype.value
+    elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
+        # there is precisely one class that uses compound dtypes:
+        # TimeSeriesReferenceVectorData
+        # compoundDtypes are able to define a ragged table according to the schema
+        # but are used in this single case equivalently to attributes.
+        # so we'll... uh... treat them as slots.
+        # TODO
+        return "AnyType"
+
+    else:
+        # flat dtype
+        return dtype

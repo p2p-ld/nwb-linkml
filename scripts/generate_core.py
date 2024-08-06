@@ -1,6 +1,8 @@
 import shutil
 import os
+import sys
 import traceback
+from pdb import post_mortem
 
 from argparse import ArgumentParser
 from pathlib import Path
@@ -53,6 +55,7 @@ def generate_versions(
     dry_run: bool = False,
     repo: GitRepo = NWB_CORE_REPO,
     hdmf_only=False,
+    pdb=False,
 ):
     """
     Generate linkml models for all versions
@@ -128,6 +131,11 @@ def generate_versions(
                     build_progress.update(pydantic_task, action="Built Pydantic")
 
                 except Exception as e:
+                    if pdb:
+                        live.stop()
+                        post_mortem()
+                        sys.exit(1)
+
                     build_progress.stop_task(linkml_task)
                     if linkml_task is not None:
                         build_progress.update(linkml_task, action="[bold red]LinkML Build Failed")
@@ -205,6 +213,7 @@ def parser() -> ArgumentParser:
         ),
         action="store_true",
     )
+    parser.add_argument("--pdb", help="Launch debugger on an error", action="store_true")
     return parser
 
 
@@ -222,7 +231,7 @@ def main():
         generate_core_yaml(args.yaml, args.dry_run, args.hdmf)
         generate_core_pydantic(args.yaml, args.pydantic, args.dry_run)
     else:
-        generate_versions(args.yaml, args.pydantic, args.dry_run, repo, args.hdmf)
+        generate_versions(args.yaml, args.pydantic, args.dry_run, repo, args.hdmf, pdb=args.pdb)
 
 
 if __name__ == "__main__":

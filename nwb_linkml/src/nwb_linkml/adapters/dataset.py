@@ -7,13 +7,13 @@ from typing import ClassVar, Optional, Type
 
 from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
-from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.adapter import BuildResult, is_1d, is_compound, has_attrs
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
-from nwb_linkml.maps.dtype import flat_to_linkml
+from nwb_linkml.maps.dtype import flat_to_linkml, handle_dtype
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset
+from nwb_schema_language import Dataset
 
 
 class DatasetMap(Map):
@@ -106,7 +106,7 @@ class MapScalar(DatasetMap):
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,
-            range=ClassAdapter.handle_dtype(cls.dtype),
+            range=handle_dtype(cls.dtype),
             **QUANTITY_MAP[cls.quantity],
         )
         res = BuildResult(slots=[this_slot])
@@ -203,9 +203,7 @@ class MapScalarAttributes(DatasetMap):
         """
         Map to a scalar attribute with an adjoining "value" slot
         """
-        value_slot = SlotDefinition(
-            name="value", range=ClassAdapter.handle_dtype(cls.dtype), required=True
-        )
+        value_slot = SlotDefinition(name="value", range=handle_dtype(cls.dtype), required=True)
         res.classes[0].attributes["value"] = value_slot
         return res
 
@@ -271,7 +269,7 @@ class MapListlike(DatasetMap):
             * - ``dtype``
               - ``Class``
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             cls.neurodata_type_inc != "VectorData"
             and is_1d(cls)
@@ -289,7 +287,7 @@ class MapListlike(DatasetMap):
         slot = SlotDefinition(
             name="value",
             multivalued=True,
-            range=ClassAdapter.handle_dtype(cls.dtype),
+            range=handle_dtype(cls.dtype),
             description=cls.doc,
             required=cls.quantity not in ("*", "?"),
             annotations=[{"source_type": "reference"}],
@@ -378,7 +376,7 @@ class MapArraylike(DatasetMap):
               - ``False``
 
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             cls.name
             and (all([cls.dims, cls.shape]) or cls.neurodata_type_inc == "VectorData")
@@ -409,7 +407,7 @@ class MapArraylike(DatasetMap):
                 SlotDefinition(
                     name=name,
                     multivalued=False,
-                    range=ClassAdapter.handle_dtype(cls.dtype),
+                    range=handle_dtype(cls.dtype),
                     description=cls.doc,
                     required=cls.quantity not in ("*", "?"),
                     **expressions,
@@ -513,7 +511,7 @@ class MapArrayLikeAttributes(DatasetMap):
         """
         Check that we're an array with some additional metadata
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             all([cls.dims, cls.shape])
             and cls.neurodata_type_inc != "VectorData"
@@ -532,9 +530,7 @@ class MapArrayLikeAttributes(DatasetMap):
         array_adapter = ArrayAdapter(cls.dims, cls.shape)
         expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
-        array_slot = SlotDefinition(
-            name="value", range=ClassAdapter.handle_dtype(cls.dtype), **expressions
-        )
+        array_slot = SlotDefinition(name="value", range=handle_dtype(cls.dtype), **expressions)
         res.classes[0].attributes.update({"value": array_slot})
         return res
 
@@ -596,7 +592,7 @@ class MapVectorClassRange(DatasetMap):
         Check that we are a VectorData object without any additional attributes
         with a dtype that refers to another class
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             cls.neurodata_type_inc == "VectorData"
             and cls.name
@@ -617,7 +613,7 @@ class MapVectorClassRange(DatasetMap):
             name=cls.name,
             description=cls.doc,
             multivalued=True,
-            range=ClassAdapter.handle_dtype(cls.dtype),
+            range=handle_dtype(cls.dtype),
             required=cls.quantity not in ("*", "?"),
         )
         res = BuildResult(slots=[this_slot])
@@ -672,7 +668,7 @@ class MapVectorClassRange(DatasetMap):
 #         this_slot = SlotDefinition(
 #             name=cls.name,
 #             description=cls.doc,
-#             range=ClassAdapter.handle_dtype(cls.dtype),
+#             range=handle_dtype(cls.dtype),
 #             multivalued=True,
 #         )
 #         # No need to make a class for us, so we replace the existing build results
@@ -783,7 +779,7 @@ class MapCompoundDtype(DatasetMap):
             slots[a_dtype.name] = SlotDefinition(
                 name=a_dtype.name,
                 description=a_dtype.doc,
-                range=ClassAdapter.handle_dtype(a_dtype.dtype),
+                range=handle_dtype(a_dtype.dtype),
                 **QUANTITY_MAP[cls.quantity],
             )
         res.classes[0].attributes.update(slots)
@@ -836,36 +832,3 @@ class DatasetAdapter(ClassAdapter):
             return None
         else:
             return matches[0]
-
-
-def is_1d(cls: Dataset) -> bool:
-    """
-    Check if the values of a dataset are 1-dimensional.
-
-    Specifically:
-    * a single-layer dim/shape list of length 1, or
-    * a nested dim/shape list where every nested spec is of length 1
-    """
-    return (
-        not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1
-    ) or (  # nested list
-        all([isinstance(dim, list) for dim in cls.dims])
-        and len(cls.dims) == 1
-        and len(cls.dims[0]) == 1
-    )
-
-
-def is_compound(cls: Dataset) -> bool:
-    """Check if dataset has a compound dtype"""
-    return (
-        isinstance(cls.dtype, list)
-        and len(cls.dtype) > 0
-        and isinstance(cls.dtype[0], CompoundDtype)
-    )
-
-
-def has_attrs(cls: Dataset) -> bool:
-    """
-    Check if a dataset has any attributes at all without defaults
-    """
-    return len(cls.attributes) > 0 and all([not a.value for a in cls.attributes])
