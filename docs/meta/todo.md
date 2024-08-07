@@ -7,7 +7,7 @@ NWB schema translation
 - handle compound `dtype` like in ophys.PlaneSegmentation.pixel_mask
 - handle compound `dtype` like in TimeSeriesReferenceVectorData
 - Create a validator that checks if all the lists in a compound dtype dataset are same length
-- [ ] Make `target` optional in vectorIndex
+- [ ] Move making `target` optional in vectorIndex from pydantic generator to linkml generators!
 
 Cleanup
 - [ ] Update pydantic generator

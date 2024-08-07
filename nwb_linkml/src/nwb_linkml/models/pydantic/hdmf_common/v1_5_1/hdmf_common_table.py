@@ -4,11 +4,21 @@ from decimal import Decimal
 from enum import Enum
 import re
 import sys
-import numpy as np
 from ...hdmf_common.v1_5_1.hdmf_common_base import Data, Container
 from pandas import DataFrame, Series
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Tuple
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    field_validator,
+    model_validator,
+    ValidationInfo,
+    ValidatorFunctionWrapHandler,
+    ValidationError,
+)
+import numpy as np
 from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
@@ -60,6 +70,11 @@ class VectorDataMixin(BaseModel):
     # redefined in `VectorData`, but included here for testing and type checking
     value: Optional[NDArray] = None
 
+    def __init__(self, value: Optional[NDArray] = None, **kwargs):
+        if value is not None and "value" not in kwargs:
+            kwargs["value"] = value
+        super().__init__(**kwargs)
+
     def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
         if self._index:
             # Following hdmf, VectorIndex is the thing that knows how to do the slicing
@@ -74,6 +89,27 @@ class VectorDataMixin(BaseModel):
         else:
             self.value[key] = value
 
+    def __getattr__(self, item: str) -> Any:
+        """
+        Forward getattr to ``value``
+        """
+        try:
+            return BaseModel.__getattr__(self, item)
+        except AttributeError as e:
+            try:
+                return getattr(self.value, item)
+            except AttributeError:
+                raise e from None
+
+    def __len__(self) -> int:
+        """
+        Use index as length, if present
+        """
+        if self._index:
+            return len(self._index)
+        else:
+            return len(self.value)
+
 
 class VectorIndexMixin(BaseModel):
     """
@@ -84,6 +120,11 @@ class VectorIndexMixin(BaseModel):
     value: Optional[NDArray] = None
     target: Optional["VectorData"] = None
 
+    def __init__(self, value: Optional[NDArray] = None, **kwargs):
+        if value is not None and "value" not in kwargs:
+            kwargs["value"] = value
+        super().__init__(**kwargs)
+
     def _getitem_helper(self, arg: int) -> Union[list, NDArray]:
         """
         Mimicking :func:`hdmf.common.table.VectorIndex.__getitem_helper`
@@ -91,19 +132,19 @@ class VectorIndexMixin(BaseModel):
 
         start = 0 if arg == 0 else self.value[arg - 1]
         end = self.value[arg]
-        return self.target.array[slice(start, end)]
+        return self.target.value[slice(start, end)]
 
     def __getitem__(self, item: Union[int, slice]) -> Any:
         if self.target is None:
             return self.value[item]
-        elif type(self.target).__name__ == "VectorData":
+        elif isinstance(self.target, VectorData):
             if isinstance(item, int):
                 return self._getitem_helper(item)
             else:
                 idx = range(*item.indices(len(self.value)))
                 return [self._getitem_helper(i) for i in idx]
         else:
-            raise NotImplementedError("DynamicTableRange not supported yet")
+            raise AttributeError(f"Could not index with {item}")
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
         if self._index:
@@ -111,6 +152,24 @@ class VectorIndexMixin(BaseModel):
             self._index[key] = value
         else:
             self.value[key] = value
+
+    def __getattr__(self, item: str) -> Any:
+        """
+        Forward getattr to ``value``
+        """
+        try:
+            return BaseModel.__getattr__(self, item)
+        except AttributeError as e:
+            try:
+                return getattr(self.value, item)
+            except AttributeError:
+                raise e from None
+
+    def __len__(self) -> int:
+        """
+        Get length from value
+        """
+        return len(self.value)
 
 
 class DynamicTableMixin(BaseModel):
@@ -131,6 +190,7 @@ class DynamicTableMixin(BaseModel):
 
     # overridden by subclass but implemented here for testing and typechecking purposes :)
     colnames: List[str] = Field(default_factory=list)
+    id: Optional[NDArray[Shape["* num_rows"], int]] = None
 
     @property
     def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorDataMixin"]]:
@@ -222,6 +282,10 @@ class DynamicTableMixin(BaseModel):
                 # special case where pandas will unpack a pydantic model
                 # into {n_fields} rows, rather than keeping it in a dict
                 val = Series([val])
+            elif isinstance(rows, int) and hasattr(val, "shape") and len(val) > 1:
+                # special case where we are returning a row in a ragged array,
+                # same as above - prevent pandas pivoting to long
+                val = Series([val])
             data[k] = val
         return data
 
@@ -241,9 +305,40 @@ class DynamicTableMixin(BaseModel):
 
         return super().__setattr__(key, value)
 
+    def __getattr__(self, item: str) -> Any:
+        """Try and use pandas df attrs if we don't have them"""
+        try:
+            return BaseModel.__getattr__(self, item)
+        except AttributeError as e:
+            try:
+                return getattr(self[:, :], item)
+            except AttributeError:
+                raise e from None
+
     @model_validator(mode="before")
     @classmethod
-    def create_colnames(cls, model: Dict[str, Any]) -> None:
+    def create_id(cls, model: Dict[str, Any]) -> Dict:
+        """
+        Create ID column if not provided
+        """
+        if "id" not in model:
+            lengths = []
+            for key, val in model.items():
+                # don't get lengths of columns with an index
+                if (
+                    f"{key}_index" in model
+                    or (isinstance(val, VectorData) and val._index)
+                    or key in cls.NON_COLUMN_FIELDS
+                ):
+                    continue
+                lengths.append(len(val))
+            model["id"] = np.arange(np.max(lengths))
+
+        return model
+
+    @model_validator(mode="before")
+    @classmethod
+    def create_colnames(cls, model: Dict[str, Any]) -> Dict:
         """
         Construct colnames from arguments.
 
@@ -288,6 +383,40 @@ class DynamicTableMixin(BaseModel):
                     col._index = idx
                     idx.target = col
         return self
+
+    @model_validator(mode="after")
+    def ensure_equal_length_cols(self) -> "DynamicTableMixin":
+        """
+        Ensure that all columns are equal length
+        """
+        lengths = [len(v) for v in self._columns.values()]
+        assert [length == lengths[0] for length in lengths], (
+            "Columns are not of equal length! "
+            f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
+        )
+        return self
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_columns(
+        cls, val: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
+    ) -> Any:
+        """
+        If columns are supplied as arrays, try casting them to the type before validating
+        """
+        try:
+            return handler(val)
+        except ValidationError:
+            annotation = cls.model_fields[info.field_name].annotation
+            if type(annotation).__name__ == "_UnionGenericAlias":
+                annotation = annotation.__args__[0]
+            return handler(
+                annotation(
+                    val,
+                    name=info.field_name,
+                    description=cls.model_fields[info.field_name].description,
+                )
+            )
 
 
 linkml_meta = LinkMLMeta(
@@ -335,8 +464,8 @@ class VectorIndex(VectorIndexMixin):
     )
 
     name: str = Field(...)
-    target: VectorData = Field(
-        ..., description="""Reference to the target dataset that this index applies to."""
+    target: Optional[VectorData] = Field(
+        None, description="""Reference to the target dataset that this index applies to."""
     )
     description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[

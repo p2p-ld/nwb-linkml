@@ -4,6 +4,7 @@ Special types for mimicking HDMF special case behavior
 
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple, Union, overload
 
+import numpy as np
 from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport
 from numpydantic import NDArray, Shape
 from pandas import DataFrame, Series
@@ -11,13 +12,12 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    model_validator,
-    field_validator,
-    ValidatorFunctionWrapHandler,
     ValidationError,
     ValidationInfo,
+    ValidatorFunctionWrapHandler,
+    field_validator,
+    model_validator,
 )
-import numpy as np
 
 if TYPE_CHECKING:
     from nwb_linkml.models import VectorData, VectorIndex
@@ -133,6 +133,10 @@ class DynamicTableMixin(BaseModel):
                 # special case where pandas will unpack a pydantic model
                 # into {n_fields} rows, rather than keeping it in a dict
                 val = Series([val])
+            elif isinstance(rows, int) and hasattr(val, "shape") and len(val) > 1:
+                # special case where we are returning a row in a ragged array,
+                # same as above - prevent pandas pivoting to long
+                val = Series([val])
             data[k] = val
         return data
 
@@ -151,6 +155,16 @@ class DynamicTableMixin(BaseModel):
             self.colnames.append(key)
 
         return super().__setattr__(key, value)
+
+    def __getattr__(self, item: str) -> Any:
+        """Try and use pandas df attrs if we don't have them"""
+        try:
+            return BaseModel.__getattr__(self, item)
+        except AttributeError as e:
+            try:
+                return getattr(self[:, :], item)
+            except AttributeError:
+                raise e from None
 
     @model_validator(mode="before")
     @classmethod
@@ -199,12 +213,6 @@ class DynamicTableMixin(BaseModel):
             model["colnames"].extend(colnames)
         return model
 
-    @model_validator(mode="before")
-    def create_id(cls, model: Dict[str, Any]) -> Dict:
-        """
-        If an id column is not given, create one as an arange.
-        """
-
     @model_validator(mode="after")
     def resolve_targets(self) -> "DynamicTableMixin":
         """
@@ -233,7 +241,7 @@ class DynamicTableMixin(BaseModel):
         Ensure that all columns are equal length
         """
         lengths = [len(v) for v in self._columns.values()]
-        assert [l == lengths[0] for l in lengths], (
+        assert [length == lengths[0] for length in lengths], (
             "Columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
@@ -241,7 +249,9 @@ class DynamicTableMixin(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def cast_columns(cls, val: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo):
+    def cast_columns(
+        cls, val: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
+    ) -> Any:
         """
         If columns are supplied as arrays, try casting them to the type before validating
         """
@@ -299,7 +309,7 @@ class VectorDataMixin(BaseModel):
             try:
                 return getattr(self.value, item)
             except AttributeError:
-                raise e
+                raise e from None
 
     def __len__(self) -> int:
         """
@@ -332,7 +342,7 @@ class VectorIndexMixin(BaseModel):
 
         start = 0 if arg == 0 else self.value[arg - 1]
         end = self.value[arg]
-        return [self.target.value[slice(start, end)]]
+        return self.target.value[slice(start, end)]
 
     def __getitem__(self, item: Union[int, slice]) -> Any:
         if self.target is None:
@@ -363,7 +373,7 @@ class VectorIndexMixin(BaseModel):
             try:
                 return getattr(self.value, item)
             except AttributeError:
-                raise e
+                raise e from None
 
     def __len__(self) -> int:
         """

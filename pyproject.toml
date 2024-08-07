@@ -70,6 +70,8 @@ ignore = [
     "UP006", "UP035",
     # | for Union types (only supported >=3.10
     "UP007", "UP038",
+    # syntax error in forward annotation with numpydantic
+    "F722"
 ]
 
 fixable = ["ALL"]

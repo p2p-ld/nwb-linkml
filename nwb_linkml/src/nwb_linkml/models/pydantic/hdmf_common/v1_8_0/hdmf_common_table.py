@@ -1,22 +1,25 @@
 from __future__ import annotations
-
-
-from ...hdmf_common.v1_8_0.hdmf_common_base import Data
+from datetime import datetime, date
+from decimal import Decimal
+from enum import Enum
+import re
+import sys
+from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container
 from pandas import DataFrame, Series
-from typing import Any, ClassVar, List, Dict, Optional, Union, overload, Tuple
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Tuple
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
     RootModel,
-    model_validator,
     field_validator,
+    model_validator,
     ValidationInfo,
     ValidatorFunctionWrapHandler,
     ValidationError,
 )
-from numpydantic import NDArray, Shape
 import numpy as np
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "1.8.0"
@@ -96,7 +99,7 @@ class VectorDataMixin(BaseModel):
             try:
                 return getattr(self.value, item)
             except AttributeError:
-                raise e
+                raise e from None
 
     def __len__(self) -> int:
         """
@@ -141,7 +144,7 @@ class VectorIndexMixin(BaseModel):
                 idx = range(*item.indices(len(self.value)))
                 return [self._getitem_helper(i) for i in idx]
         else:
-            raise NotImplementedError("DynamicTableRange not supported yet")
+            raise AttributeError(f"Could not index with {item}")
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
         if self._index:
@@ -160,7 +163,7 @@ class VectorIndexMixin(BaseModel):
             try:
                 return getattr(self.value, item)
             except AttributeError:
-                raise e
+                raise e from None
 
     def __len__(self) -> int:
         """
@@ -302,7 +305,7 @@ class DynamicTableMixin(BaseModel):
 
         return super().__setattr__(key, value)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         """Try and use pandas df attrs if we don't have them"""
         try:
             return BaseModel.__getattr__(self, item)
@@ -310,7 +313,7 @@ class DynamicTableMixin(BaseModel):
             try:
                 return getattr(self[:, :], item)
             except AttributeError:
-                raise e
+                raise e from None
 
     @model_validator(mode="before")
     @classmethod
@@ -387,7 +390,7 @@ class DynamicTableMixin(BaseModel):
         Ensure that all columns are equal length
         """
         lengths = [len(v) for v in self._columns.values()]
-        assert [l == lengths[0] for l in lengths], (
+        assert [length == lengths[0] for length in lengths], (
             "Columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
@@ -395,7 +398,9 @@ class DynamicTableMixin(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def cast_columns(cls, val: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo):
+    def cast_columns(
+        cls, val: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
+    ) -> Any:
         """
         If columns are supplied as arrays, try casting them to the type before validating
         """

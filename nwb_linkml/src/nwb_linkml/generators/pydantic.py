@@ -87,6 +87,14 @@ class NWBPydanticGenerator(PydanticGenerator):
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
 
+    def before_generate_slot(self, slot: SlotDefinition, sv: SchemaView) -> SlotDefinition:
+        """
+        Force some properties to be optional
+        """
+        if slot.name == "target" and "index" in slot.description:
+            slot.required = False
+        return slot
+
     def after_generate_slot(self, slot: SlotResult, sv: SchemaView) -> SlotResult:
         """
         - strip unwanted metadata
