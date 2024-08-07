@@ -10,6 +10,7 @@ from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
     ElectricalSeries,
     ElectrodeGroup,
     ExtracellularEphysElectrodes,
+    Units,
 )
 
 
@@ -54,6 +55,40 @@ def electrical_series() -> Tuple["ElectricalSeries", "ExtracellularEphysElectrod
         data=data,
     )
     return electrical_series, electrodes
+
+
+@pytest.fixture(params=[True, False])
+def units(request) -> Tuple[Units, list[np.ndarray], np.ndarray]:
+    """
+    Test case for units
+
+    Parameterized by extra_column because pandas likes to pivot dataframes
+    to long when there is only one column and it's not len() == 1
+    """
+
+    n_units = 24
+    spike_times = [
+        np.full(shape=np.random.randint(10, 50), fill_value=i, dtype=float) for i in range(n_units)
+    ]
+    spike_idx = []
+    for i in range(n_units):
+        if i == 0:
+            spike_idx.append(len(spike_times[0]))
+        else:
+            spike_idx.append(len(spike_times[i]) + spike_idx[i - 1])
+    spike_idx = np.array(spike_idx)
+
+    spike_times_flat = np.concatenate(spike_times)
+
+    kwargs = {
+        "description": "units!!!!",
+        "spike_times": spike_times_flat,
+        "spike_times_index": spike_idx,
+    }
+    if request.param:
+        kwargs["extra_column"] = ["hey!"] * n_units
+    units = Units(**kwargs)
+    return units, spike_times, spike_idx
 
 
 def test_dynamictable_indexing(electrical_series):
@@ -104,6 +139,24 @@ def test_dynamictable_indexing(electrical_series):
     assert subsection.shape == (3, 3)
     assert subsection.columns.tolist() == colnames[0:3]
     assert subsection.dtypes.values.tolist() == dtypes[0:3]
+
+
+def test_dynamictable_ragged_arrays(units):
+    """
+    Should be able to index ragged arrays using an implicit _index column
+
+    Also tests:
+    - passing arrays directly instead of wrapping in vectordata/index specifically,
+      if the models in the fixture instantiate then this works
+    """
+    units, spike_times, spike_idx = units
+
+    # ensure we don't pivot to long when indexing
+    assert units[0].shape[0] == 1
+    # check that we got the indexing boundaries corrunect
+    # (and that we are forwarding attr calls to the dataframe by accessing shape
+    for i in range(units.shape[0]):
+        assert np.all(units.iloc[i, 0] == spike_times[i])
 
 
 def test_dynamictable_append_column():
