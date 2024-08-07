@@ -2,7 +2,18 @@
 Special types for mimicking HDMF special case behavior
 """
 
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Tuple, Union, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
 import numpy as np
 from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport
@@ -69,7 +80,7 @@ class DynamicTableMixin(BaseModel):
     ]: ...
 
     @overload
-    def __getitem__(self, item: slice) -> DataFrame: ...
+    def __getitem__(self, item: Union[slice, "NDArray"]) -> DataFrame: ...
 
     def __getitem__(
         self,
@@ -77,6 +88,7 @@ class DynamicTableMixin(BaseModel):
             str,
             int,
             slice,
+            "NDArray",
             Tuple[int, Union[int, str]],
             Tuple[Union[int, slice], ...],
         ],
@@ -96,7 +108,7 @@ class DynamicTableMixin(BaseModel):
         """
         if isinstance(item, str):
             return self._columns[item]
-        if isinstance(item, (int, slice)):
+        if isinstance(item, (int, slice, np.integer, np.ndarray)):
             return DataFrame.from_dict(self._slice_range(item))
         elif isinstance(item, tuple):
             if len(item) != 2:
@@ -107,7 +119,7 @@ class DynamicTableMixin(BaseModel):
 
             # all other cases are tuples of (rows, cols)
             rows, cols = item
-            if isinstance(cols, (int, slice)):
+            if isinstance(cols, (int, slice, np.integer)):
                 cols = self.colnames[cols]
 
             if isinstance(rows, int) and isinstance(cols, str):
@@ -120,7 +132,7 @@ class DynamicTableMixin(BaseModel):
             raise ValueError(f"Unsure how to get item with key {item}")
 
     def _slice_range(
-        self, rows: Union[int, slice], cols: Optional[Union[str, List[str]]] = None
+        self, rows: Union[int, slice, np.ndarray], cols: Optional[Union[str, List[str]]] = None
     ) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
         if cols is None:
             cols = self.colnames
@@ -128,7 +140,11 @@ class DynamicTableMixin(BaseModel):
             cols = [cols]
         data = {}
         for k in cols:
-            val = self._columns[k][rows]
+            if isinstance(rows, np.ndarray):
+                val = [self._columns[k][i] for i in rows]
+            else:
+                val = self._columns[k][rows]
+
             if isinstance(val, BaseModel):
                 # special case where pandas will unpack a pydantic model
                 # into {n_fields} rows, rather than keeping it in a dict
@@ -339,22 +355,22 @@ class VectorIndexMixin(BaseModel):
         """
         Mimicking :func:`hdmf.common.table.VectorIndex.__getitem_helper`
         """
-
         start = 0 if arg == 0 else self.value[arg - 1]
         end = self.value[arg]
         return self.target.value[slice(start, end)]
 
-    def __getitem__(self, item: Union[int, slice]) -> Any:
+    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
         if self.target is None:
             return self.value[item]
-        elif isinstance(self.target, VectorData):
+        else:
             if isinstance(item, int):
                 return self._getitem_helper(item)
+            elif isinstance(item, (slice, Iterable)):
+                if isinstance(item, slice):
+                    item = range(*item.indices(len(self.value)))
+                return [self._getitem_helper(i) for i in item]
             else:
-                idx = range(*item.indices(len(self.value)))
-                return [self._getitem_helper(i) for i in idx]
-        else:
-            raise AttributeError(f"Could not index with {item}")
+                raise AttributeError(f"Could not index with {item}")
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
         if self._index:
@@ -387,13 +403,40 @@ class DynamicTableRegionMixin(BaseModel):
     Mixin to allow indexing references to regions of dynamictables
     """
 
-    table: "DynamicTableMixin"
+    _index: Optional["VectorIndex"] = None
 
-    def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
-        return self.table[item]
+    table: "DynamicTableMixin"
+    value: Optional[NDArray] = None
+
+    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
+        """
+        Use ``value`` to index the table. Works analogously to ``VectorIndex`` despite
+        this being a subclass of ``VectorData``
+        """
+        if self._index:
+            if isinstance(item, int):
+                # index returns an array of indices,
+                # and indexing table with an array returns a list of rows
+                return self.table[self._index[item]]
+            elif isinstance(item, slice):
+                # index returns a list of arrays of indices,
+                # so we index table with an array to construct
+                # a list of lists of rows
+                return [self.table[idx] for idx in self._index[item]]
+            else:
+                raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
+        else:
+            if isinstance(item, int):
+                return self.table[self.value[item]]
+            elif isinstance(item, (slice, Iterable)):
+                if isinstance(item, slice):
+                    item = range(*item.indices(len(self.value)))
+                return [self.table[self.value[i]] for i in item]
+            else:
+                raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
 
     def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
-        self.table[key] = value
+        self.table[self.value[key]] = value
 
 
 DYNAMIC_TABLE_IMPORTS = Imports(
@@ -405,8 +448,9 @@ DYNAMIC_TABLE_IMPORTS = Imports(
             module="typing",
             objects=[
                 ObjectImport(name="ClassVar"),
-                ObjectImport(name="overload"),
+                ObjectImport(name="Iterable"),
                 ObjectImport(name="Tuple"),
+                ObjectImport(name="overload"),
             ],
         ),
         Import(

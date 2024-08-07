@@ -5,7 +5,7 @@ from enum import Enum
 import re
 import sys
 from pandas import DataFrame, Series
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Tuple
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Iterable, Tuple, overload
 from numpydantic import NDArray, Shape
 from pydantic import (
     BaseModel,
@@ -128,22 +128,22 @@ class VectorIndexMixin(BaseModel):
         """
         Mimicking :func:`hdmf.common.table.VectorIndex.__getitem_helper`
         """
-
         start = 0 if arg == 0 else self.value[arg - 1]
         end = self.value[arg]
         return self.target.value[slice(start, end)]
 
-    def __getitem__(self, item: Union[int, slice]) -> Any:
+    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
         if self.target is None:
             return self.value[item]
-        elif isinstance(self.target, VectorData):
+        else:
             if isinstance(item, int):
                 return self._getitem_helper(item)
+            elif isinstance(item, (slice, Iterable)):
+                if isinstance(item, slice):
+                    item = range(*item.indices(len(self.value)))
+                return [self._getitem_helper(i) for i in item]
             else:
-                idx = range(*item.indices(len(self.value)))
-                return [self._getitem_helper(i) for i in idx]
-        else:
-            raise AttributeError(f"Could not index with {item}")
+                raise AttributeError(f"Could not index with {item}")
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
         if self._index:
@@ -176,13 +176,40 @@ class DynamicTableRegionMixin(BaseModel):
     Mixin to allow indexing references to regions of dynamictables
     """
 
-    table: "DynamicTableMixin"
+    _index: Optional["VectorIndex"] = None
 
-    def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
-        return self.table[item]
+    table: "DynamicTableMixin"
+    value: Optional[NDArray] = None
+
+    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
+        """
+        Use ``value`` to index the table. Works analogously to ``VectorIndex`` despite
+        this being a subclass of ``VectorData``
+        """
+        if self._index:
+            if isinstance(item, int):
+                # index returns an array of indices,
+                # and indexing table with an array returns a list of rows
+                return self.table[self._index[item]]
+            elif isinstance(item, slice):
+                # index returns a list of arrays of indices,
+                # so we index table with an array to construct
+                # a list of lists of rows
+                return [self.table[idx] for idx in self._index[item]]
+            else:
+                raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
+        else:
+            if isinstance(item, int):
+                return self.table[self.value[item]]
+            elif isinstance(item, (slice, Iterable)):
+                if isinstance(item, slice):
+                    item = range(*item.indices(len(self.value)))
+                return [self.table[self.value[i]] for i in item]
+            else:
+                raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
 
     def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
-        self.table[key] = value
+        self.table[self.value[key]] = value
 
 
 class DynamicTableMixin(BaseModel):
@@ -258,7 +285,7 @@ class DynamicTableMixin(BaseModel):
         """
         if isinstance(item, str):
             return self._columns[item]
-        if isinstance(item, (int, slice)):
+        if isinstance(item, (int, slice, np.integer, np.ndarray)):
             return DataFrame.from_dict(self._slice_range(item))
         elif isinstance(item, tuple):
             if len(item) != 2:
@@ -269,7 +296,7 @@ class DynamicTableMixin(BaseModel):
 
             # all other cases are tuples of (rows, cols)
             rows, cols = item
-            if isinstance(cols, (int, slice)):
+            if isinstance(cols, (int, slice, np.integer)):
                 cols = self.colnames[cols]
 
             if isinstance(rows, int) and isinstance(cols, str):
@@ -282,7 +309,7 @@ class DynamicTableMixin(BaseModel):
             raise ValueError(f"Unsure how to get item with key {item}")
 
     def _slice_range(
-        self, rows: Union[int, slice], cols: Optional[Union[str, List[str]]] = None
+        self, rows: Union[int, slice, np.ndarray], cols: Optional[Union[str, List[str]]] = None
     ) -> Dict[str, Union[list, "NDArray", "VectorData"]]:
         if cols is None:
             cols = self.colnames
@@ -290,7 +317,11 @@ class DynamicTableMixin(BaseModel):
             cols = [cols]
         data = {}
         for k in cols:
-            val = self._columns[k][rows]
+            if isinstance(rows, np.ndarray):
+                val = [self._columns[k][i] for i in rows]
+            else:
+                val = self._columns[k][rows]
+
             if isinstance(val, BaseModel):
                 # special case where pandas will unpack a pydantic model
                 # into {n_fields} rows, rather than keeping it in a dict
@@ -526,7 +557,7 @@ class ElementIdentifiers(Data):
     )
 
 
-class DynamicTableRegion(VectorData):
+class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
     """
     DynamicTableRegion provides a link from one table to an index or region of another. The `table` attribute is a link to another `DynamicTable`, indicating which table is referenced, and the data is int(s) indicating the row(s) (0-indexed) of the target array. `DynamicTableRegion`s can be used to associate rows with repeated meta-data without data duplication. They can also be used to create hierarchical relationships between multiple `DynamicTable`s. `DynamicTableRegion` objects may be paired with a `VectorIndex` object to create ragged references, so a single cell of a `DynamicTable` can reference many rows of another `DynamicTable`.
     """

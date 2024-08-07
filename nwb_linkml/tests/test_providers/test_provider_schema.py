@@ -3,10 +3,9 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import pytest
 from numpydantic import NDArray, Shape
-import numpy as np
-
 
 import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
