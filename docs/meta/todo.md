@@ -23,7 +23,7 @@ Cleanup
                 
 - [ ] Make a minimal pydanticgen-only package to slim linkml deps?
 - [ ] Disambiguate "maps" terminology - split out simple maps from the eg. dataset mapping classes
-- [ ] Remove unnecessary imports
+- [x] Remove unnecessary imports
   - dask
   - nptyping
 - [ ] Adapt the split generation to the new split generator style 

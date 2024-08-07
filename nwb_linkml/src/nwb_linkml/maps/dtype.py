@@ -100,10 +100,9 @@ np_to_python = {
             np.float64,
             np.single,
             np.double,
-            np.float_,
         )
     },
-    **{n: str for n in (np.character, np.str_, np.string_, np.unicode_)},
+    **{n: str for n in (np.character, np.str_)},
 }
 
 allowed_precisions = {

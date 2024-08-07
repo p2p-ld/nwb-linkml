@@ -67,8 +67,9 @@ def units(request) -> Tuple[Units, list[np.ndarray], np.ndarray]:
     """
 
     n_units = 24
+    generator = np.random.default_rng()
     spike_times = [
-        np.full(shape=np.random.randint(10, 50), fill_value=i, dtype=float) for i in range(n_units)
+        np.full(shape=generator.integers(10, 50), fill_value=i, dtype=float) for i in range(n_units)
     ]
     spike_idx = []
     for i in range(n_units):
@@ -139,6 +140,19 @@ def test_dynamictable_indexing(electrical_series):
     assert subsection.shape == (3, 3)
     assert subsection.columns.tolist() == colnames[0:3]
     assert subsection.dtypes.values.tolist() == dtypes[0:3]
+
+
+def test_dynamictable_region(electrical_series):
+    """
+    Dynamictableregion should
+    Args:
+        electrical_series:
+
+    Returns:
+
+    """
+    series, electrodes = electrical_series
+    
 
 
 def test_dynamictable_ragged_arrays(units):

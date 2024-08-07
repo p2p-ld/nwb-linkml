@@ -133,7 +133,7 @@ class DynamicTableMixin(BaseModel):
                 # special case where pandas will unpack a pydantic model
                 # into {n_fields} rows, rather than keeping it in a dict
                 val = Series([val])
-            elif isinstance(rows, int) and hasattr(val, "shape") and len(val) > 1:
+            elif isinstance(rows, int) and hasattr(val, "shape") and val.shape and len(val) > 1:
                 # special case where we are returning a row in a ragged array,
                 # same as above - prevent pandas pivoting to long
                 val = Series([val])
@@ -382,6 +382,20 @@ class VectorIndexMixin(BaseModel):
         return len(self.value)
 
 
+class DynamicTableRegionMixin(BaseModel):
+    """
+    Mixin to allow indexing references to regions of dynamictables
+    """
+
+    table: "DynamicTableMixin"
+
+    def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
+        return self.table[item]
+
+    def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
+        self.table[key] = value
+
+
 DYNAMIC_TABLE_IMPORTS = Imports(
     imports=[
         Import(
@@ -417,7 +431,9 @@ Imports required for the dynamic table mixin
 VectorData is purposefully excluded as an import or an inject so that it will be
 resolved to the VectorData definition in the generated module
 """
-DYNAMIC_TABLE_INJECTS = [VectorDataMixin, VectorIndexMixin, DynamicTableMixin]
-
-# class VectorDataMixin(BaseModel):
-#     index: Optional[BaseModel] = None
+DYNAMIC_TABLE_INJECTS = [
+    VectorDataMixin,
+    VectorIndexMixin,
+    DynamicTableRegionMixin,
+    DynamicTableMixin,
+]

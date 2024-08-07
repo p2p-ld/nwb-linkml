@@ -1,7 +1,12 @@
 from __future__ import annotations
-from ...hdmf_common.v1_8_0.hdmf_common_base import Data
+from datetime import datetime, date
+from decimal import Decimal
+from enum import Enum
+import re
+import sys
+from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container
 from pandas import DataFrame, Series
-from typing import Any, ClassVar, List, Dict, Optional, Union, overload, Tuple
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Tuple
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -167,6 +172,20 @@ class VectorIndexMixin(BaseModel):
         return len(self.value)
 
 
+class DynamicTableRegionMixin(BaseModel):
+    """
+    Mixin to allow indexing references to regions of dynamictables
+    """
+
+    table: "DynamicTableMixin"
+
+    def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
+        return self.table[item]
+
+    def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
+        self.table[key] = value
+
+
 class DynamicTableMixin(BaseModel):
     """
     Mixin to make DynamicTable subclasses behave like tables/dataframes
@@ -277,7 +296,7 @@ class DynamicTableMixin(BaseModel):
                 # special case where pandas will unpack a pydantic model
                 # into {n_fields} rows, rather than keeping it in a dict
                 val = Series([val])
-            elif isinstance(rows, int) and hasattr(val, "shape") and val.shape and val.shape[0] > 1:
+            elif isinstance(rows, int) and hasattr(val, "shape") and val.shape and len(val) > 1:
                 # special case where we are returning a row in a ragged array,
                 # same as above - prevent pandas pivoting to long
                 val = Series([val])

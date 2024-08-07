@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
-from nptyping import Shape, UByte
-from numpydantic import NDArray
+from numpydantic import NDArray, Shape
+import numpy as np
+
 
 import nwb_linkml
 from nwb_linkml.maps.naming import version_module_case
@@ -77,7 +78,7 @@ def test_linkml_build_from_yaml(tmp_output_dir):
                 "comments": Optional[str],
                 "data": "TimeSeriesData",
                 "timestamps": "Optional",  # __name__ just gets the first part of Optional[TimeSeriesTimestamps]
-                "control": Optional[NDArray[Shape["* num_times"], UByte]],
+                "control": Optional[NDArray[Shape["* num_times"], np.uint8]],
             },
         )
     ],

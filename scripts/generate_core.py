@@ -3,6 +3,7 @@ import os
 import sys
 import traceback
 from pdb import post_mortem
+import subprocess
 
 from argparse import ArgumentParser
 from pathlib import Path
@@ -178,6 +179,8 @@ def generate_versions(
 
             with open(pydantic_path / "__init__.py", "w") as initfile:
                 initfile.write(f"from .pydantic.core.{latest_version.name}.namespace import *")
+
+            subprocess.run(["black", "."])
 
     finally:
         if len(failed_versions) > 0:
