@@ -164,7 +164,7 @@ def test_dynamictable_region_basic(electrical_series):
     # b) every other object in the chain is strictly validated,
     # so we assume if we got a right shaped df that it is the correct one.
     # feel free to @ me when i am wrong about this
-    assert row.id == 4
+    assert all(row.id == 4)
     assert row.shape == (1, 7)
     # and we should still be preserving the model that is the contents of the cell of this row
     # so this is a dataframe row with a column "group" that contains an array of ElectrodeGroup
