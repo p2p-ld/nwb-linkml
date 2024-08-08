@@ -16,9 +16,9 @@ from typing import (
 )
 
 import numpy as np
+import pandas as pd
 from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport
 from numpydantic import NDArray, Shape
-import pandas as pd
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -236,7 +236,7 @@ class DynamicTableMixin(BaseModel):
         return model
 
     @model_validator(mode="after")
-    def cast_extra_columns(self):
+    def cast_extra_columns(self) -> "DynamicTableMixin":
         """
         If extra columns are passed as just lists or arrays, cast to VectorData
         before we resolve targets for VectorData and VectorIndex pairs.
