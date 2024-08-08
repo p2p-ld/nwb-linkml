@@ -136,7 +136,7 @@ class VectorIndexMixin(BaseModel):
         if self.target is None:
             return self.value[item]
         else:
-            if isinstance(item, int):
+            if isinstance(item, (int, np.integer)):
                 return self._getitem_helper(item)
             elif isinstance(item, (slice, Iterable)):
                 if isinstance(item, slice):
@@ -187,7 +187,7 @@ class DynamicTableRegionMixin(BaseModel):
         this being a subclass of ``VectorData``
         """
         if self._index:
-            if isinstance(item, int):
+            if isinstance(item, (int, np.integer)):
                 # index returns an array of indices,
                 # and indexing table with an array returns a list of rows
                 return self.table[self._index[item]]
@@ -199,7 +199,7 @@ class DynamicTableRegionMixin(BaseModel):
             else:
                 raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
         else:
-            if isinstance(item, int):
+            if isinstance(item, (int, np.integer)):
                 return self.table[self.value[item]]
             elif isinstance(item, (slice, Iterable)):
                 if isinstance(item, slice):
@@ -406,6 +406,32 @@ class DynamicTableMixin(BaseModel):
         return model
 
     @model_validator(mode="after")
+    def cast_extra_columns(self):
+        """
+        If extra columns are passed as just lists or arrays, cast to VectorData
+        before we resolve targets for VectorData and VectorIndex pairs.
+
+        See :meth:`.cast_specified_columns` for handling columns in the class specification
+        """
+        # if columns are not in the specification, cast to a generic VectorData
+        for key, val in self.__pydantic_extra__.items():
+            if not isinstance(val, (VectorData, VectorIndex)):
+                try:
+                    if key.endswith("_index"):
+                        self.__pydantic_extra__[key] = VectorIndex(
+                            name=key, description="", value=val
+                        )
+                    else:
+                        self.__pydantic_extra__[key] = VectorData(
+                            name=key, description="", value=val
+                        )
+                except ValidationError as e:
+                    raise ValidationError(
+                        f"field {key} cannot be cast to VectorData from {val}"
+                    ) from e
+        return self
+
+    @model_validator(mode="after")
     def resolve_targets(self) -> "DynamicTableMixin":
         """
         Ensure that any implicitly indexed columns are linked, and create backlinks
@@ -441,11 +467,15 @@ class DynamicTableMixin(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def cast_columns(
+    def cast_specified_columns(
         cls, val: Any, handler: ValidatorFunctionWrapHandler, info: ValidationInfo
     ) -> Any:
         """
-        If columns are supplied as arrays, try casting them to the type before validating
+        If columns *in* the model specification are supplied as arrays,
+        try casting them to the type before validating.
+
+        Columns that are not in the spec are handled separately in
+        :meth:`.cast_extra_columns`
         """
         try:
             return handler(val)

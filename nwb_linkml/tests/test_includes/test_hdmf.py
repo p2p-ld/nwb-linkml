@@ -211,7 +211,7 @@ def test_dynamictable_region_ragged():
         name="table",
         description="a table what else would it be",
         id=np.arange(len(spike_idx)),
-        timeseries=spike_times,
+        timeseries=spike_times_flat,
         timeseries_index=spike_idx,
     )
     region = DynamicTableRegion(
@@ -242,3 +242,10 @@ def test_dynamictable_append_column():
 
 def test_dynamictable_append_row():
     pass
+
+
+def test_dynamictable_extra_coercion():
+    """
+    Extra fields should be coerced to VectorData and have their
+    indexing relationships handled when passed as plain arrays.
+    """
