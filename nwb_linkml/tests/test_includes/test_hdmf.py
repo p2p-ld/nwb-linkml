@@ -150,6 +150,24 @@ def test_dynamictable_indexing(electrical_series):
     assert subsection.dtypes.values.tolist() == dtypes[0:3]
 
 
+def test_dynamictable_ragged(units):
+    """
+    Should be able to index ragged arrays using an implicit _index column
+
+    Also tests:
+    - passing arrays directly instead of wrapping in vectordata/index specifically,
+      if the models in the fixture instantiate then this works
+    """
+    units, spike_times, spike_idx = units
+
+    # ensure we don't pivot to long when indexing
+    assert units[0].shape[0] == 1
+    # check that we got the indexing boundaries corrunect
+    # (and that we are forwarding attr calls to the dataframe by accessing shape
+    for i in range(units.shape[0]):
+        assert np.all(units.iloc[i, 0] == spike_times[i])
+
+
 def test_dynamictable_region_basic(electrical_series):
     """
     DynamicTableRegion should be able to refer to a row or rows of another table
@@ -175,7 +193,7 @@ def test_dynamictable_region_basic(electrical_series):
     # getting a list of table rows is actually correct behavior here because
     # this list of table rows is actually the cell of another table
     rows = series.electrodes[0:3]
-    assert all([row.id == idx for row, idx in zip(rows, [4, 3, 2])])
+    assert all([all(row.id == idx) for row, idx in zip(rows, [4, 3, 2])])
 
 
 def test_dynamictable_region_ragged():
@@ -216,24 +234,6 @@ def test_dynamictable_region_ragged():
     assert rows.shape == (3, 2)
     assert all(rows.id == [1, 2, 3])
     assert all([all(row[1].timeseries == i) for i, row in zip([1, 2, 3], rows.iterrows())])
-
-
-def test_dynamictable_ragged(units):
-    """
-    Should be able to index ragged arrays using an implicit _index column
-
-    Also tests:
-    - passing arrays directly instead of wrapping in vectordata/index specifically,
-      if the models in the fixture instantiate then this works
-    """
-    units, spike_times, spike_idx = units
-
-    # ensure we don't pivot to long when indexing
-    assert units[0].shape[0] == 1
-    # check that we got the indexing boundaries corrunect
-    # (and that we are forwarding attr calls to the dataframe by accessing shape
-    for i in range(units.shape[0]):
-        assert np.all(units.iloc[i, 0] == spike_times[i])
 
 
 def test_dynamictable_append_column():

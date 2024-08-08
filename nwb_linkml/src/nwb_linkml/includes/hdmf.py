@@ -109,7 +109,7 @@ class DynamicTableMixin(BaseModel):
         if isinstance(item, str):
             return self._columns[item]
         if isinstance(item, (int, slice, np.integer, np.ndarray)):
-            return DataFrame.from_dict(self._slice_range(item))
+            data = self._slice_range(item)
         elif isinstance(item, tuple):
             if len(item) != 2:
                 raise ValueError(
@@ -127,9 +127,11 @@ class DynamicTableMixin(BaseModel):
                 return self._columns[cols][rows]
 
             data = self._slice_range(rows, cols)
-            return DataFrame.from_dict(data)
         else:
             raise ValueError(f"Unsure how to get item with key {item}")
+
+        # cast to DF
+        return DataFrame(data)
 
     def _slice_range(
         self, rows: Union[int, slice, np.ndarray], cols: Optional[Union[str, List[str]]] = None
@@ -145,14 +147,10 @@ class DynamicTableMixin(BaseModel):
             else:
                 val = self._columns[k][rows]
 
-            if isinstance(val, BaseModel):
-                # special case where pandas will unpack a pydantic model
-                # into {n_fields} rows, rather than keeping it in a dict
+            # scalars need to be wrapped in series for pandas
+            if not isinstance(rows, (Iterable, slice)):
                 val = Series([val])
-            elif isinstance(rows, int) and hasattr(val, "shape") and val.shape and len(val) > 1:
-                # special case where we are returning a row in a ragged array,
-                # same as above - prevent pandas pivoting to long
-                val = Series([val])
+
             data[k] = val
         return data
 
