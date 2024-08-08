@@ -9,7 +9,7 @@ annotations:
 id: hdmf-experimental.experimental
 version: 0.1.0
 imports:
-- ../../hdmf_common/v1_5_0/namespace
+- ../../hdmf_common/v1_4_0/namespace
 - hdmf-experimental.nwb.language
 default_prefix: hdmf-experimental.experimental/
 classes:
@@ -28,4 +28,5 @@ classes:
         description: Reference to the VectorData object that contains the enumerable
           elements
         range: VectorData
+        required: true
     tree_root: true

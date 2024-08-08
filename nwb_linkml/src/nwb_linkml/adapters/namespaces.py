@@ -266,10 +266,7 @@ class NamespacesAdapter(Adapter):
         else:
             ns = ns[0]
 
-        schema_names = []
-        for sch in ns.schema_:
-            if sch.source is not None:
-                schema_names.append(sch.source)
+        schema_names = [sch.source for sch in ns.schema_ if sch.source is not None]
         return schema_names
 
     def schema_namespace(self, name: str) -> Optional[str]:

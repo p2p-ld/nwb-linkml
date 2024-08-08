@@ -1,0 +1,81 @@
+name: hdmf-common.sparse
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
+id: hdmf-common.sparse
+version: 1.2.0
+imports:
+- hdmf-common.nwb.language
+default_prefix: hdmf-common.sparse/
+classes:
+  CSRMatrix:
+    name: CSRMatrix
+    description: a compressed sparse row matrix
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      shape:
+        name: shape
+        description: the shape of this sparse matrix
+        array:
+          dimensions:
+          - alias: 'null'
+            exact_cardinality: 2
+        range: int
+        required: true
+        multivalued: false
+      indices:
+        name: indices
+        description: column indices
+        range: CSRMatrix__indices
+        required: true
+        multivalued: false
+      indptr:
+        name: indptr
+        description: index pointer
+        range: CSRMatrix__indptr
+        required: true
+        multivalued: false
+      data:
+        name: data
+        description: values in the matrix
+        range: CSRMatrix__data
+        required: true
+        multivalued: false
+    tree_root: true
+  CSRMatrix__indices:
+    name: CSRMatrix__indices
+    description: column indices
+    attributes:
+      name:
+        name: name
+        ifabsent: string(indices)
+        range: string
+        required: true
+        equals_string: indices
+  CSRMatrix__indptr:
+    name: CSRMatrix__indptr
+    description: index pointer
+    attributes:
+      name:
+        name: name
+        ifabsent: string(indptr)
+        range: string
+        required: true
+        equals_string: indptr
+  CSRMatrix__data:
+    name: CSRMatrix__data
+    description: values in the matrix
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        range: string
+        required: true
+        equals_string: data

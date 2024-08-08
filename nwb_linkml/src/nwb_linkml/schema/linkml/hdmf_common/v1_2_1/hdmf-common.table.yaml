@@ -1,0 +1,193 @@
+name: hdmf-common.table
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
+id: hdmf-common.table
+version: 1.2.1
+imports:
+- hdmf-common.base
+- hdmf-common.nwb.language
+default_prefix: hdmf-common.table/
+classes:
+  VectorData:
+    name: VectorData
+    description: An n-dimensional dataset representing a column of a DynamicTable.
+      If used without an accompanying VectorIndex, first dimension is along the rows
+      of the DynamicTable and each step along the first dimension is a cell of the
+      larger table. VectorData can also be used to represent a ragged array if paired
+      with a VectorIndex. This allows for storing arrays of varying length in a single
+      cell of the DynamicTable by indexing into this VectorData. The first vector
+      is at VectorData[0:VectorIndex[0]]. The second vector is at VectorData[VectorIndex[0]:VectorIndex[1]],
+      and so on.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of what these vectors represent.
+        range: text
+        required: true
+      value:
+        name: value
+        range: AnyType
+        any_of:
+        - array:
+            dimensions:
+            - alias: dim0
+        - array:
+            dimensions:
+            - alias: dim0
+            - alias: dim1
+        - array:
+            dimensions:
+            - alias: dim0
+            - alias: dim1
+            - alias: dim2
+        - array:
+            dimensions:
+            - alias: dim0
+            - alias: dim1
+            - alias: dim2
+            - alias: dim3
+    tree_root: true
+  VectorIndex:
+    name: VectorIndex
+    description: Used with VectorData to encode a ragged array. An array of indices
+      into the first dimension of the target VectorData, and forming a map between
+      the rows of a DynamicTable and the indices of the VectorData. The name of the
+      VectorIndex is expected to be the name of the target VectorData object followed
+      by "_index".
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      target:
+        name: target
+        description: Reference to the target dataset that this index applies to.
+        range: VectorData
+        required: true
+    tree_root: true
+  ElementIdentifiers:
+    name: ElementIdentifiers
+    description: A list of unique identifiers for values within a dataset, e.g. rows
+      of a DynamicTable.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(element_id)
+        range: string
+        required: true
+    tree_root: true
+  DynamicTableRegion:
+    name: DynamicTableRegion
+    description: DynamicTableRegion provides a link from one table to an index or
+      region of another. The `table` attribute is a link to another `DynamicTable`,
+      indicating which table is referenced, and the data is int(s) indicating the
+      row(s) (0-indexed) of the target array. `DynamicTableRegion`s can be used to
+      associate rows with repeated meta-data without data duplication. They can also
+      be used to create hierarchical relationships between multiple `DynamicTable`s.
+      `DynamicTableRegion` objects may be paired with a `VectorIndex` object to create
+      ragged references, so a single cell of a `DynamicTable` can reference many rows
+      of another `DynamicTable`.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      table:
+        name: table
+        description: Reference to the DynamicTable object that this region applies
+          to.
+        range: DynamicTable
+        required: true
+      description:
+        name: description
+        description: Description of what this table region points to.
+        range: text
+        required: true
+    tree_root: true
+  VocabData:
+    name: VocabData
+    description: Data that come from a controlled vocabulary of text values. A data
+      value of i corresponds to the i-th element in the 'vocabulary' array attribute.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      vocabulary:
+        name: vocabulary
+        description: The available items in the controlled vocabulary.
+        array:
+          dimensions:
+          - alias: 'null'
+        range: text
+        required: true
+        multivalued: false
+    tree_root: true
+  DynamicTable:
+    name: DynamicTable
+    description: A group containing multiple datasets that are aligned on the first
+      dimension (Currently, this requirement if left up to APIs to check and enforce).
+      These datasets represent different columns in the table. Apart from a column
+      that contains unique identifiers for each row, there are no other required datasets.
+      Users are free to add any number of custom VectorData objects (columns) here.
+      DynamicTable also supports ragged array columns, where each element can be of
+      a different size. To add a ragged array column, use a VectorIndex type to index
+      the corresponding VectorData type. See documentation for VectorData and VectorIndex
+      for more details. Unlike a compound data type, which is analogous to storing
+      an array-of-structs, a DynamicTable can be thought of as a struct-of-arrays.
+      This provides an alternative structure to choose from when optimizing storage
+      for anticipated access patterns. Additionally, this type provides a way of creating
+      a table without having to define a compound type up front. Although this convenience
+      may be attractive, users should think carefully about how data will be accessed.
+      DynamicTable is more appropriate for column-centric access, whereas a dataset
+      with a compound type would be more appropriate for row-centric access. Finally,
+      data size should also be taken into account. For small tables, performance loss
+      may be an acceptable trade-off for the flexibility of a DynamicTable.
+    is_a: Container
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      colnames:
+        name: colnames
+        description: The names of the columns in this table. This should be used to
+          specify an order to the columns.
+        range: text
+        required: true
+        multivalued: true
+      description:
+        name: description
+        description: Description of what is in this dynamic table.
+        range: text
+        required: true
+      id:
+        name: id
+        description: Array of unique identifiers for the rows of this dynamic table.
+        array:
+          dimensions:
+          - alias: num_rows
+        range: int
+        required: true
+        multivalued: false
+      vector_data:
+        name: vector_data
+        description: Vector columns, including index columns, of this dynamic table.
+        range: VectorData
+        required: false
+        multivalued: true
+    tree_root: true

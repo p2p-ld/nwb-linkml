@@ -29,10 +29,12 @@ classes:
         name: stimulus_description
         description: Protocol/stimulus name for this patch-clamp dataset.
         range: text
+        required: true
       sweep_number:
         name: sweep_number
         description: Sweep number, allows to group different PatchClampSeries together.
         range: uint32
+        required: false
       data:
         name: data
         description: Recorded voltage or current.
@@ -46,6 +48,17 @@ classes:
         range: float32
         required: false
         multivalued: false
+      electrode:
+        name: electrode
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: IntracellularElectrode
+        - range: string
     tree_root: true
   PatchClampSeries__data:
     name: PatchClampSeries__data
@@ -63,8 +76,9 @@ classes:
           values are not necessarily stored in these units. To access the data in
           these units, multiply 'data' by 'conversion'.
         range: text
-      array:
-        name: array
+        required: true
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_times
@@ -120,7 +134,10 @@ classes:
         description: Base unit of measurement for working with the data. which is
           fixed to 'volts'. Actual stored values are not necessarily stored in these
           units. To access the data in these units, multiply 'data' by 'conversion'.
+        ifabsent: string(volts)
         range: text
+        required: true
+        equals_string: volts
       value:
         name: value
         range: AnyType
@@ -141,7 +158,10 @@ classes:
         name: stimulus_description
         description: An IZeroClampSeries has no stimulus, so this attribute is automatically
           set to "N/A"
+        ifabsent: string(N/A)
         range: text
+        required: true
+        equals_string: N/A
       bias_current:
         name: bias_current
         description: Bias current, in amps, fixed to 0.0.
@@ -192,7 +212,10 @@ classes:
         description: Base unit of measurement for working with the data. which is
           fixed to 'amperes'. Actual stored values are not necessarily stored in these
           units. To access the data in these units, multiply 'data' by 'conversion'.
+        ifabsent: string(amperes)
         range: text
+        required: true
+        equals_string: amperes
       value:
         name: value
         range: AnyType
@@ -272,7 +295,10 @@ classes:
         description: Base unit of measurement for working with the data. which is
           fixed to 'amperes'. Actual stored values are not necessarily stored in these
           units. To access the data in these units, multiply 'data' by 'conversion'.
+        ifabsent: string(amperes)
         range: text
+        required: true
+        equals_string: amperes
       value:
         name: value
         range: AnyType
@@ -290,7 +316,10 @@ classes:
       unit:
         name: unit
         description: Unit of measurement for capacitance_fast, which is fixed to 'farads'.
+        ifabsent: string(farads)
         range: text
+        required: true
+        equals_string: farads
       value:
         name: value
         range: float32
@@ -308,7 +337,10 @@ classes:
       unit:
         name: unit
         description: Unit of measurement for capacitance_fast, which is fixed to 'farads'.
+        ifabsent: string(farads)
         range: text
+        required: true
+        equals_string: farads
       value:
         name: value
         range: float32
@@ -327,7 +359,10 @@ classes:
         name: unit
         description: Unit of measurement for resistance_comp_bandwidth, which is fixed
           to 'hertz'.
+        ifabsent: string(hertz)
         range: text
+        required: true
+        equals_string: hertz
       value:
         name: value
         range: float32
@@ -346,7 +381,10 @@ classes:
         name: unit
         description: Unit of measurement for resistance_comp_correction, which is
           fixed to 'percent'.
+        ifabsent: string(percent)
         range: text
+        required: true
+        equals_string: percent
       value:
         name: value
         range: float32
@@ -365,7 +403,10 @@ classes:
         name: unit
         description: Unit of measurement for resistance_comp_prediction, which is
           fixed to 'percent'.
+        ifabsent: string(percent)
         range: text
+        required: true
+        equals_string: percent
       value:
         name: value
         range: float32
@@ -384,7 +425,10 @@ classes:
         name: unit
         description: Unit of measurement for whole_cell_capacitance_comp, which is
           fixed to 'farads'.
+        ifabsent: string(farads)
         range: text
+        required: true
+        equals_string: farads
       value:
         name: value
         range: float32
@@ -403,7 +447,10 @@ classes:
         name: unit
         description: Unit of measurement for whole_cell_series_resistance_comp, which
           is fixed to 'ohms'.
+        ifabsent: string(ohms)
         range: text
+        required: true
+        equals_string: ohms
       value:
         name: value
         range: float32
@@ -439,7 +486,10 @@ classes:
         description: Base unit of measurement for working with the data. which is
           fixed to 'volts'. Actual stored values are not necessarily stored in these
           units. To access the data in these units, multiply 'data' by 'conversion'.
+        ifabsent: string(volts)
         range: text
+        required: true
+        equals_string: volts
       value:
         name: value
         range: AnyType
@@ -497,6 +547,17 @@ classes:
         range: text
         required: false
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
   SweepTable:
     name: SweepTable
@@ -528,6 +589,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index for series.
         range: VectorIndex
         required: true

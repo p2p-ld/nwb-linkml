@@ -1,0 +1,46 @@
+name: hdmf-common.base
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
+id: hdmf-common.base
+version: 1.3.0
+imports:
+- hdmf-common.nwb.language
+default_prefix: hdmf-common.base/
+classes:
+  Data:
+    name: Data
+    description: An abstract data type for a dataset.
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
+  Container:
+    name: Container
+    description: An abstract data type for a group storing collections of data and
+      metadata. Base type for all data and metadata containers.
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+    tree_root: true
+  SimpleMultiContainer:
+    name: SimpleMultiContainer
+    description: A simple Container for holding onto multiple containers.
+    is_a: Container
+    attributes:
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: Container
+    tree_root: true

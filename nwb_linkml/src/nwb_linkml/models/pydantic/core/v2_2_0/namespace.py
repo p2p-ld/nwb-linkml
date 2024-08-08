@@ -128,11 +128,12 @@ from ...core.v2_2_0.core_nwb_file import (
     NWBFile,
     NWBFileStimulus,
     NWBFileGeneral,
-    NWBFileGeneralSourceScript,
+    GeneralSourceScript,
     Subject,
-    NWBFileGeneralExtracellularEphys,
-    NWBFileGeneralExtracellularEphysElectrodes,
-    NWBFileGeneralIntracellularEphys,
+    GeneralExtracellularEphys,
+    ExtracellularEphysElectrodes,
+    GeneralIntracellularEphys,
+    NWBFileIntervals,
 )
 from ...core.v2_2_0.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
 

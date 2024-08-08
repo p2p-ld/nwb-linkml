@@ -15,15 +15,14 @@ from ...hdmf_experimental.v0_1_0.hdmf_experimental_resources import (
     ExternalResourcesObjects,
     ExternalResourcesObjectKeys,
 )
-from ...hdmf_common.v1_5_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
-from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container, SimpleMultiContainer
-from ...hdmf_common.v1_5_0.hdmf_common_table import (
+from ...hdmf_common.v1_4_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_common.v1_4_0.hdmf_common_base import Data, Container, SimpleMultiContainer
+from ...hdmf_common.v1_4_0.hdmf_common_table import (
     VectorData,
     VectorIndex,
     ElementIdentifiers,
     DynamicTableRegion,
     DynamicTable,
-    AlignedDynamicTable,
 )
 from ...hdmf_experimental.v0_1_0.hdmf_experimental_experimental import EnumData
 

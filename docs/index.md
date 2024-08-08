@@ -284,6 +284,7 @@ api/nwb_linkml/schema/index
 
 meta/todo
 meta/changelog
+meta/references
 genindex
 ```
 

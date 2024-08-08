@@ -28,8 +28,10 @@ classes:
         description: Description of the device (e.g., model, firmware version, processing
           software version, etc.) as free-form text.
         range: text
+        required: false
       manufacturer:
         name: manufacturer
         description: The name of the manufacturer of the device.
         range: text
+        required: false
     tree_root: true

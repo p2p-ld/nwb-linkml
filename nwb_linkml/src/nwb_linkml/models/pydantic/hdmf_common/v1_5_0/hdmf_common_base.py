@@ -91,7 +91,7 @@ class SimpleMultiContainer(Container):
         {"from_schema": "hdmf-common.base", "tree_root": True}
     )
 
-    children: Optional[List[Container]] = Field(
+    value: Optional[List[Container]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "Container"}]}}
     )
     name: str = Field(...)

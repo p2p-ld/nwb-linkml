@@ -14,7 +14,6 @@ dependencies = [
     "furo>=2023.8.19",
     "myst-parser>=2.0.0",
     "autodoc-pydantic>=2.0.1",
-    "nptyping>=2.5.0",
     "sphinx-autobuild>=2021.3.14",
     "sphinx-design>=0.5.0",
     "sphinx-togglebutton>=0.3.2",

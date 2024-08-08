@@ -96,7 +96,7 @@ class TimeIntervals(DynamicTable):
     )
 
     name: str = Field(...)
-    start_time: NDArray[Any, np.float32] = Field(
+    start_time: NDArray[Any, float] = Field(
         ...,
         description="""Start time of epoch, in seconds.""",
         json_schema_extra={
@@ -105,7 +105,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    stop_time: NDArray[Any, np.float32] = Field(
+    stop_time: NDArray[Any, float] = Field(
         ...,
         description="""Stop time of epoch, in seconds.""",
         json_schema_extra={
@@ -127,7 +127,12 @@ class TimeIntervals(DynamicTable):
         None,
         description="""Index for tags.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     timeseries: Optional[TimeIntervalsTimeseries] = Field(
@@ -137,16 +142,19 @@ class TimeIntervals(DynamicTable):
         None,
         description="""Index for timeseries.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
     id: NDArray[Shape["* num_rows"], int] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
@@ -173,20 +181,18 @@ class TimeIntervalsTimeseries(VectorData):
             "linkml_meta": {"equals_string": "timeseries", "ifabsent": "string(timeseries)"}
         },
     )
-    idx_start: Optional[np.int32] = Field(
+    idx_start: Optional[int] = Field(
         None,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
     )
-    count: Optional[np.int32] = Field(
+    count: Optional[int] = Field(
         None,
         description="""Number of data samples available in this time series, during this epoch.""",
     )
     timeseries: Optional[TimeSeries] = Field(
         None, description="""the TimeSeries that this index applies to."""
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
 
 
 # Model rebuild

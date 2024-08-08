@@ -28,12 +28,16 @@ classes:
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
-      array:
-        name: array
+        required: true
+        multivalued: true
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -54,8 +58,9 @@ classes:
         name: unit
         description: Unit that axis data is stored in (e.g., degrees).
         range: text
-      array:
-        name: array
+        required: true
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_rows
@@ -77,19 +82,25 @@ classes:
         description: Number of bits used to represent each value. This is necessary
           to determine maximum (white) pixel value.
         range: int32
+        required: true
       dimension:
         name: dimension
         description: 'Number of rows and columns in the image. NOTE: row, column representation
           is equivalent to height, width.'
         range: int32
+        required: true
+        multivalued: true
       field_of_view:
         name: field_of_view
         description: Size of viewing area, in meters.
         range: float32
+        required: true
+        multivalued: true
       format:
         name: format
         description: Format of image. Right now only 'raw' is supported.
         range: text
+        required: true
     tree_root: true
   ImagingRetinotopy:
     name: ImagingRetinotopy
@@ -112,6 +123,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Phase response to stimulus on the first measured axis.
         range: AxisMap
         required: true
@@ -122,6 +136,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Power response on the first measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         range: AxisMap
@@ -133,6 +150,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Phase response to stimulus on the second measured axis.
         range: AxisMap
         required: true
@@ -143,6 +163,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Power response to stimulus on the second measured axis.
         range: AxisMap
         required: false
@@ -153,6 +176,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Sine of the angle between the direction of the gradient in axis_1
           and axis_2.
         range: RetinotopyMap
@@ -183,6 +209,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: 'Gray-scale anatomical image of cortical surface. Array structure:
           [rows][columns]'
         range: RetinotopyImage
@@ -205,3 +234,4 @@ classes:
         name: focal_depth
         description: Focal depth offset, in meters.
         range: float32
+        required: true

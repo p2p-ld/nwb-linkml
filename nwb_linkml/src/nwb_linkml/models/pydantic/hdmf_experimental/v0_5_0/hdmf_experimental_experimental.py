@@ -71,14 +71,12 @@ class EnumData(VectorData):
     )
 
     name: str = Field(...)
-    elements: Optional[VectorData] = Field(
-        None,
+    elements: VectorData = Field(
+        ...,
         description="""Reference to the VectorData object that contains the enumerable elements""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
-    array: Optional[
+    description: str = Field(..., description="""Description of what these vectors represent.""")
+    value: Optional[
         Union[
             NDArray[Shape["* dim0"], Any],
             NDArray[Shape["* dim0, * dim1"], Any],
