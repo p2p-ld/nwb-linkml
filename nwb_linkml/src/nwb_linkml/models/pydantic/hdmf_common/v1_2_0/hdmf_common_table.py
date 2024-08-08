@@ -5,7 +5,7 @@ from enum import Enum
 import re
 import sys
 from ...hdmf_common.v1_2_0.hdmf_common_base import Data, Container
-from pandas import DataFrame, Series
+import pandas as pd
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Iterable, Tuple, overload
 from numpydantic import NDArray, Shape
 from pydantic import (
@@ -245,21 +245,21 @@ class DynamicTableMixin(BaseModel):
     def __getitem__(self, item: str) -> Union[list, "NDArray", "VectorDataMixin"]: ...
 
     @overload
-    def __getitem__(self, item: int) -> DataFrame: ...
+    def __getitem__(self, item: int) -> pd.DataFrame: ...
 
     @overload
     def __getitem__(self, item: Tuple[int, Union[int, str]]) -> Any: ...
 
     @overload
     def __getitem__(self, item: Tuple[Union[int, slice], ...]) -> Union[
-        DataFrame,
+        pd.DataFrame,
         list,
         "NDArray",
         "VectorDataMixin",
     ]: ...
 
     @overload
-    def __getitem__(self, item: Union[slice, "NDArray"]) -> DataFrame: ...
+    def __getitem__(self, item: Union[slice, "NDArray"]) -> pd.DataFrame: ...
 
     def __getitem__(
         self,
@@ -310,7 +310,7 @@ class DynamicTableMixin(BaseModel):
             raise ValueError(f"Unsure how to get item with key {item}")
 
         # cast to DF
-        return DataFrame(data)
+        return pd.DataFrame(data)
 
     def _slice_range(
         self, rows: Union[int, slice, np.ndarray], cols: Optional[Union[str, List[str]]] = None
@@ -328,7 +328,7 @@ class DynamicTableMixin(BaseModel):
 
             # scalars need to be wrapped in series for pandas
             if not isinstance(rows, (Iterable, slice)):
-                val = Series([val])
+                val = pd.Series([val])
 
             data[k] = val
         return data
@@ -358,6 +358,14 @@ class DynamicTableMixin(BaseModel):
                 return getattr(self[:, :], item)
             except AttributeError:
                 raise e from None
+
+    def __len__(self) -> int:
+        """
+        Use the id column to determine length.
+
+        If the id column doesn't represent length accurately, it's a bug
+        """
+        return len(self.id)
 
     @model_validator(mode="before")
     @classmethod
@@ -491,6 +499,67 @@ class DynamicTableMixin(BaseModel):
                     description=cls.model_fields[info.field_name].description,
                 )
             )
+
+
+class AlignedDynamicTableMixin(DynamicTableMixin):
+    """
+    Mixin to allow indexing multiple tables that are aligned on a common ID
+    """
+
+    __pydantic_extra__: Dict[str, "DynamicTableMixin"]
+
+    NON_CATEGORY_FIELDS: ClassVar[tuple[str]] = (
+        "name",
+        "categories",
+        "colnames",
+        "description",
+    )
+
+    name: str = "aligned_table"
+    categories: List[str] = Field(default_factory=list)
+    id: Optional[NDArray[Shape["* num_rows"], int]] = None
+
+    @property
+    def _categories(self) -> Dict[str, "DynamicTableMixin"]:
+        return {k: getattr(self, k) for i, k in enumerate(self.categories)}
+
+    def __getitem__(
+        self, item: Union[int, str, slice, Tuple[Union[int, slice], str]]
+    ) -> pd.DataFrame:
+        """
+        Mimic hdmf:
+
+        https://github.com/hdmf-dev/hdmf/blob/dev/src/hdmf/common/alignedtable.py#L261
+        Args:
+            item:
+
+        Returns:
+
+        """
+        if isinstance(item, str):
+            # get a single table
+            return self._categories[item][:]
+        elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[1], str):
+            # get a slice of a single table
+            return self._categories[item[1]][item[0]]
+        elif isinstance(item, (int, slice)):
+            # get a slice of all the tables
+            ids = self.id[item]
+            if not isinstance(ids, Iterable):
+                ids = pd.Series([ids])
+            ids = pd.DataFrame({"id": ids})
+            tables = [ids] + [table[item].reset_index() for table in self._categories.values()]
+            names = [self.name] + self.categories
+            # construct below in case we need to support array indexing in the future
+        else:
+            raise ValueError(
+                f"Dont know how to index with {item}, "
+                "need an int, string, slice, or tuple[int | slice, str]"
+            )
+
+        df = pd.concat(tables, axis=1, keys=names)
+        df.set_index((self.name, "id"), drop=True, inplace=True)
+        return df
 
 
 linkml_meta = LinkMLMeta(

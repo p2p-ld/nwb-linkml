@@ -252,6 +252,8 @@ class AfterGenerateClass:
             cls.cls.bases = ["VectorIndexMixin"]
         elif cls.cls.name == "DynamicTableRegion":
             cls.cls.bases = ["DynamicTableRegionMixin", "VectorData"]
+        elif cls.cls.name == "AlignedDynamicTable":
+            cls.cls.bases = ["AlignedDynamicTableMixin", "DynamicTable"]
         return cls
 
 

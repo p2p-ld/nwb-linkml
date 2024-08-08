@@ -305,6 +305,10 @@ There are several different ways to create references between objects in nwb/hdm
     target_type: ElectrodeGroup
     reftype: object
   ```
+- `TimeSeriesReferenceVectorData` is a compound dtype that behaves like VectorData and VectorIndex combined
+  into a single type. It is slightly different in that each row of the vector can refer to a different table,
+  and has a different way of handling selection (with `start` and `count` 
+  rather than a series of indices for the end of each cell)
 - Implicitly, hdmf creates references between objects according to some naming conventions, eg.
   an attribute/dataset that is a `VectorIndex` named `mydata_index` will be linked to a `VectorData`
   object `mydata`.
