@@ -153,8 +153,8 @@ class Adapter(BaseModel):
                 # SchemaAdapters that should be located under the same
                 # NamespacesAdapter when it's important to query across SchemaAdapters,
                 # so skip to avoid combinatoric walking
-                # if key == "imports" and type(input).__name__ == "SchemaAdapter":
-                #     continue
+                if key == "imports" and type(input).__name__ == "SchemaAdapter":
+                    continue
                 val = getattr(input, key)
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):

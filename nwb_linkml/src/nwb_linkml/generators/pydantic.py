@@ -26,7 +26,13 @@ from linkml_runtime.utils.compile_python import file_text
 from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
-from nwb_linkml.includes.hdmf import DYNAMIC_TABLE_IMPORTS, DYNAMIC_TABLE_INJECTS
+from nwb_linkml.includes.base import BASEMODEL_GETITEM
+from nwb_linkml.includes.hdmf import (
+    DYNAMIC_TABLE_IMPORTS,
+    DYNAMIC_TABLE_INJECTS,
+    TSRVD_IMPORTS,
+    TSRVD_INJECTS,
+)
 from nwb_linkml.includes.types import ModelTypeString, NamedImports, NamedString, _get_name
 
 OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
@@ -44,6 +50,7 @@ class NWBPydanticGenerator(PydanticGenerator):
             ' is stored in an NWB file")'
         ),
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
+        BASEMODEL_GETITEM,
     )
     split: bool = True
     imports: list[Import] = field(default_factory=lambda: [Import(module="numpy", alias="np")])
@@ -232,7 +239,7 @@ class AfterGenerateClass:
         Returns:
 
         """
-        if cls.cls.name == "DynamicTable":
+        if cls.cls.name in "DynamicTable":
             cls.cls.bases = ["DynamicTableMixin"]
 
             if cls.injected_classes is None:
@@ -254,6 +261,21 @@ class AfterGenerateClass:
             cls.cls.bases = ["DynamicTableRegionMixin", "VectorData"]
         elif cls.cls.name == "AlignedDynamicTable":
             cls.cls.bases = ["AlignedDynamicTableMixin", "DynamicTable"]
+        elif cls.cls.name == "TimeSeriesReferenceVectorData":
+            # in core.nwb.base, so need to inject and import again
+            cls.cls.bases = ["TimeSeriesReferenceVectorDataMixin", "VectorData"]
+            if cls.injected_classes is None:
+                cls.injected_classes = TSRVD_INJECTS.copy()
+            else:
+                cls.injected_classes.extend(TSRVD_INJECTS.copy())
+
+            if isinstance(cls.imports, Imports):
+                cls.imports += TSRVD_IMPORTS
+            elif isinstance(cls.imports, list):
+                cls.imports = Imports(imports=cls.imports) + TSRVD_IMPORTS
+            else:
+                cls.imports = TSRVD_IMPORTS.model_copy()
+
         return cls
 
 

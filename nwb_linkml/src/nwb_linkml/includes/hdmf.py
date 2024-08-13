@@ -535,6 +535,109 @@ class AlignedDynamicTableMixin(DynamicTableMixin):
         df.set_index((self.name, "id"), drop=True, inplace=True)
         return df
 
+    @model_validator(mode="before")
+    @classmethod
+    def create_categories(cls, model: Dict[str, Any]) -> Dict:
+        """
+        Construct categories from arguments.
+
+        the model dict is ordered after python3.6, so we can use that minus
+        anything in :attr:`.NON_COLUMN_FIELDS` to determine order implied from passage order
+        """
+        if "categories" not in model:
+            categories = [
+                k for k in model if k not in cls.NON_CATEGORY_FIELDS and not k.endswith("_index")
+            ]
+            model["categories"] = categories
+        else:
+            # add any columns not explicitly given an order at the end
+            categories = [
+                k
+                for k in model
+                if k not in cls.NON_COLUMN_FIELDS
+                and not k.endswith("_index")
+                and k not in model["categories"]
+            ]
+            model["categories"].extend(categories)
+        return model
+
+
+class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
+    """
+    Mixin class for TimeSeriesReferenceVectorData -
+    very simple, just indexing the given timeseries object.
+
+    These shouldn't have additional fields in them, just the three columns
+    for index, span, and timeseries
+    """
+
+    idx_start: NDArray[Any, int]
+    count: NDArray[Any, int]
+    timeseries: NDArray[Any, BaseModel]
+
+    @model_validator(mode="after")
+    def ensure_equal_length(self) -> "TimeSeriesReferenceVectorDataMixin":
+        assert len(self.idx_start) == len(self.timeseries) == len(self.count), (
+            f"Columns have differing lengths: idx: {len(self.idx_start)}, count: {len(self.count)},"
+            f" timeseries: {len(self.timeseries)}"
+        )
+        return self
+
+    def __len__(self) -> int:
+        """Since we have ensured equal length, just return idx_start"""
+        return len(self.idx_start)
+
+    @overload
+    def _slice_helper(self, item: int) -> slice: ...
+
+    @overload
+    def _slice_helper(self, item: slice) -> List[slice]: ...
+
+    def _slice_helper(self, item: Union[int, slice]) -> Union[slice, List[slice]]:
+        if isinstance(item, (int, np.integer)):
+            return slice(self.idx_start[item], self.idx_start[item] + self.count[item])
+        else:
+            starts = self.idx_start[item]
+            ends = starts + self.count[item]
+            return [slice(start, end) for start, end in zip(starts, ends)]
+
+    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
+        if self._index is not None:
+            raise NotImplementedError(
+                "VectorIndexing with TimeSeriesReferenceVectorData is not supported because it is"
+                " never done in the core schema."
+            )
+
+        if isinstance(item, (int, np.integer)):
+            return self.timeseries[self._slice_helper(item)]
+        elif isinstance(item, slice):
+            return [self.timeseries[subitem] for subitem in self._slice_helper(item)]
+        elif isinstance(item, Iterable):
+            return [self.timeseries[self._slice_helper(subitem)] for subitem in item]
+        else:
+            raise ValueError(
+                f"Dont know how to index with {item}, must be an int, slice, or iterable"
+            )
+
+    def __setitem__(self, key: Union[int, slice, Iterable], value: Any) -> None:
+        if self._index is not None:
+            raise NotImplementedError(
+                "VectorIndexing with TimeSeriesReferenceVectorData is not supported because it is"
+                " never done in the core schema."
+            )
+        if isinstance(key, (int, np.integer)):
+            self.timeseries[self._slice_helper(key)] = value
+        elif isinstance(key, slice):
+            for subitem in self._slice_helper(key):
+                self.timeseries[subitem] = value
+        elif isinstance(key, Iterable):
+            for subitem in key:
+                self.timeseries[self._slice_helper(subitem)] = value
+        else:
+            raise ValueError(
+                f"Dont know how to index with {key}, must be an int, slice, or iterable"
+            )
+
 
 DYNAMIC_TABLE_IMPORTS = Imports(
     imports=[
@@ -577,3 +680,19 @@ DYNAMIC_TABLE_INJECTS = [
     DynamicTableMixin,
     AlignedDynamicTableMixin,
 ]
+
+TSRVD_IMPORTS = Imports(
+    imports=[
+        Import(
+            module="typing",
+            objects=[
+                ObjectImport(name="overload"),
+                ObjectImport(name="Iterable"),
+                ObjectImport(name="Tuple"),
+            ],
+        ),
+        Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
+    ]
+)
+"""Imports for TimeSeriesReferenceVectorData"""
+TSRVD_INJECTS = [VectorDataMixin, TimeSeriesReferenceVectorDataMixin]

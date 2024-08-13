@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 # FIXME: Make this just be the output of the provider by patching into import machinery
 from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
@@ -6,6 +7,7 @@ from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
     DynamicTableRegion,
     ElectrodeGroup,
     VectorIndex,
+    VoltageClampStimulusSeries,
 )
 from .conftest import _ragged_array
 
@@ -159,3 +161,39 @@ def test_dynamictable_extra_coercion():
     Extra fields should be coerced to VectorData and have their
     indexing relationships handled when passed as plain arrays.
     """
+
+
+def test_aligned_dynamictable(intracellular_recordings_table):
+    """
+    Multiple aligned dynamictables should be indexable with a multiindex
+    """
+    # can get a single row.. (check correctness below)
+    row = intracellular_recordings_table[0]
+    # can get a single table with its name
+    stimuli = intracellular_recordings_table["stimuli"]
+    assert stimuli.shape == (10, 1)
+
+    # nab a few rows to make the dataframe
+    rows = intracellular_recordings_table[0:3]
+    assert all(
+        rows.columns
+        == pd.MultiIndex.from_tuples(
+            [
+                ("electrodes", "index"),
+                ("electrodes", "electrode"),
+                ("stimuli", "index"),
+                ("stimuli", "stimulus"),
+                ("responses", "index"),
+                ("responses", "response"),
+            ]
+        )
+    )
+
+    # ensure that we get the actual values from the TimeSeriesReferenceVectorData
+    # also tested separately
+    # each individual cell should be an array of VoltageClampStimulusSeries...
+    # and then we should be able to index within that as well
+    stims = rows["stimuli", "stimulus"][0]
+    for i in range(len(stims)):
+        assert isinstance(stims[i], VoltageClampStimulusSeries)
+        assert all([i == val for val in stims[i][:]])

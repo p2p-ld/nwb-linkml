@@ -15,6 +15,11 @@ from nwb_linkml.models import (
     IntracellularResponsesTable,
     IntracellularStimuliTable,
     IntracellularRecordingsTable,
+    VoltageClampSeries,
+    VoltageClampSeriesData,
+    VoltageClampStimulusSeries,
+    VoltageClampStimulusSeriesData,
+    TimeSeriesReferenceVectorData,
 )
 
 
@@ -102,19 +107,68 @@ def units(request) -> Tuple[Units, list[np.ndarray], np.ndarray]:
     return units, spike_times, spike_idx
 
 
+def _icephys_stimulus_and_response(
+    i: int, electrode: IntracellularElectrode
+) -> tuple[VoltageClampStimulusSeries, VoltageClampSeries]:
+    generator = np.random.default_rng()
+    n_samples = generator.integers(20, 50)
+    stimulus = VoltageClampStimulusSeries(
+        name=f"vcss_{i}",
+        data=VoltageClampStimulusSeriesData(value=[i] * n_samples),
+        stimulus_description=f"{i}",
+        sweep_number=i,
+        electrode=electrode,
+    )
+    response = VoltageClampSeries(
+        name=f"vcs_{i}",
+        data=VoltageClampSeriesData(value=[i] * n_samples),
+        stimulus_description=f"{i}",
+        electrode=electrode,
+    )
+    return stimulus, response
+
+
 @pytest.fixture()
 def intracellular_recordings_table() -> IntracellularRecordingsTable:
     n_recordings = 10
+    generator = np.random.default_rng()
     device = Device(name="my device")
     electrode = IntracellularElectrode(
         name="my_electrode", description="an electrode", device=device
     )
+    stims = []
+    responses = []
+    for i in range(n_recordings):
+        stim, response = _icephys_stimulus_and_response(i, electrode)
+        stims.append(stim)
+        responses.append(response)
+
     electrodes = IntracellularElectrodesTable(
         name="intracellular_electrodes", electrode=[electrode] * n_recordings
     )
     stimuli = IntracellularStimuliTable(
         name="intracellular_stimuli",
+        stimulus=TimeSeriesReferenceVectorData(
+            name="stimulus",
+            description="this should be optional",
+            idx_start=np.arange(n_recordings),
+            count=generator.integers(1, 10, (n_recordings,)),
+            timeseries=stims,
+        ),
     )
-    responses = IntracellularResponsesTable()
 
-    recordings_table = IntracellularRecordingsTable()
+    responses = IntracellularResponsesTable(
+        name="intracellular_responses",
+        response=TimeSeriesReferenceVectorData(
+            name="response",
+            description="this should be optional",
+            idx_start=np.arange(n_recordings),
+            count=generator.integers(1, 10, (n_recordings,)),
+            timeseries=responses,
+        ),
+    )
+
+    recordings_table = IntracellularRecordingsTable(
+        electrodes=electrodes, stimuli=stimuli, responses=responses
+    )
+    return recordings_table

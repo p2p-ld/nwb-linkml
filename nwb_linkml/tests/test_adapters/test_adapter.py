@@ -42,6 +42,7 @@ def test_walk_fields(nwb_core_fixture):
     dtype = list(nwb_core_fixture.walk_fields(nwb_core_fixture, "dtype"))
 
     dtype_havers = list(nwb_core_fixture.walk_types(nwb_core_fixture, (Dataset, Attribute)))
+    dtype_havers = [haver for haver in dtype_havers if haver.dtype is not None]
     compound_dtypes = [len(d.dtype) for d in dtype_havers if isinstance(d.dtype, list)]
     expected_dtypes = np.sum(compound_dtypes) + len(dtype_havers)
     assert expected_dtypes == len(dtype)
