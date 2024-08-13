@@ -9,6 +9,7 @@ from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
     VectorIndex,
     VoltageClampStimulusSeries,
 )
+
 from .conftest import _ragged_array
 
 

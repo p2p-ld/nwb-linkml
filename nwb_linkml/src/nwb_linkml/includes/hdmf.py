@@ -577,6 +577,9 @@ class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
 
     @model_validator(mode="after")
     def ensure_equal_length(self) -> "TimeSeriesReferenceVectorDataMixin":
+        """
+        Each of the three indexing columns must be the same length to work!
+        """
         assert len(self.idx_start) == len(self.timeseries) == len(self.count), (
             f"Columns have differing lengths: idx: {len(self.idx_start)}, count: {len(self.count)},"
             f" timeseries: {len(self.timeseries)}"

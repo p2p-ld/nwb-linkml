@@ -5,8 +5,8 @@ Base class for adapters
 import sys
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Generator, List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
 from logging import Logger
+from typing import Any, Generator, List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import (
@@ -104,6 +104,7 @@ class Adapter(BaseModel):
 
     @property
     def logger(self) -> Logger:
+        """A logger with the name of the adapter class! See :class:`.config`"""
         if self._logger is None:
             self._logger = init_logger(self.__class__.__name__)
         return self._logger

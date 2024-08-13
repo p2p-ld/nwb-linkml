@@ -4,22 +4,22 @@ import numpy as np
 import pytest
 
 from nwb_linkml.models import (
-    ElectricalSeries,
-    ExtracellularEphysElectrodes,
     Device,
-    ElectrodeGroup,
     DynamicTableRegion,
-    Units,
+    ElectricalSeries,
+    ElectrodeGroup,
+    ExtracellularEphysElectrodes,
     IntracellularElectrode,
     IntracellularElectrodesTable,
+    IntracellularRecordingsTable,
     IntracellularResponsesTable,
     IntracellularStimuliTable,
-    IntracellularRecordingsTable,
+    TimeSeriesReferenceVectorData,
+    Units,
     VoltageClampSeries,
     VoltageClampSeriesData,
     VoltageClampStimulusSeries,
     VoltageClampStimulusSeriesData,
-    TimeSeriesReferenceVectorData,
 )
 
 

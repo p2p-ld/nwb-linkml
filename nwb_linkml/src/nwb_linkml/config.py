@@ -2,9 +2,9 @@
 Manage the operation of nwb_linkml from environmental variables
 """
 
-from typing import Optional, Literal
 import tempfile
 from pathlib import Path
+from typing import Literal, Optional
 
 from pydantic import (
     BaseModel,
