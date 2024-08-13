@@ -1,12 +1,7 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
-import re
-import sys
-from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container
+from ...hdmf_common.v1_8_0.hdmf_common_base import Data
 import pandas as pd
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Iterable, Tuple, overload
+from typing import Any, ClassVar, List, Dict, Optional, Union, Iterable, Tuple, overload
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -38,6 +33,15 @@ class ConfiguredBaseModel(BaseModel):
         None, description="The absolute path that this object is stored in an NWB file"
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
 
 
 class LinkMLMeta(RootModel):
@@ -560,6 +564,32 @@ class AlignedDynamicTableMixin(DynamicTableMixin):
         df = pd.concat(tables, axis=1, keys=names)
         df.set_index((self.name, "id"), drop=True, inplace=True)
         return df
+
+    @model_validator(mode="before")
+    @classmethod
+    def create_categories(cls, model: Dict[str, Any]) -> Dict:
+        """
+        Construct categories from arguments.
+
+        the model dict is ordered after python3.6, so we can use that minus
+        anything in :attr:`.NON_COLUMN_FIELDS` to determine order implied from passage order
+        """
+        if "categories" not in model:
+            categories = [
+                k for k in model if k not in cls.NON_CATEGORY_FIELDS and not k.endswith("_index")
+            ]
+            model["categories"] = categories
+        else:
+            # add any columns not explicitly given an order at the end
+            categories = [
+                k
+                for k in model
+                if k not in cls.NON_COLUMN_FIELDS
+                and not k.endswith("_index")
+                and k not in model["categories"]
+            ]
+            model["categories"].extend(categories)
+        return model
 
 
 linkml_meta = LinkMLMeta(

@@ -4,9 +4,9 @@ from decimal import Decimal
 from enum import Enum
 import re
 import sys
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
+from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Iterable, Tuple
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container
 from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData, DynamicTable
@@ -29,6 +29,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -48,6 +57,136 @@ class LinkMLMeta(RootModel):
 
 
 NUMPYDANTIC_VERSION = "1.2.1"
+
+
+class VectorDataMixin(BaseModel):
+    """
+    Mixin class to give VectorData indexing abilities
+    """
+
+    _index: Optional["VectorIndex"] = None
+
+    # redefined in `VectorData`, but included here for testing and type checking
+    value: Optional[NDArray] = None
+
+    def __init__(self, value: Optional[NDArray] = None, **kwargs):
+        if value is not None and "value" not in kwargs:
+            kwargs["value"] = value
+        super().__init__(**kwargs)
+
+    def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
+        if self._index:
+            # Following hdmf, VectorIndex is the thing that knows how to do the slicing
+            return self._index[item]
+        else:
+            return self.value[item]
+
+    def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
+        if self._index:
+            # Following hdmf, VectorIndex is the thing that knows how to do the slicing
+            self._index[key] = value
+        else:
+            self.value[key] = value
+
+    def __getattr__(self, item: str) -> Any:
+        """
+        Forward getattr to ``value``
+        """
+        try:
+            return BaseModel.__getattr__(self, item)
+        except AttributeError as e:
+            try:
+                return getattr(self.value, item)
+            except AttributeError:
+                raise e from None
+
+    def __len__(self) -> int:
+        """
+        Use index as length, if present
+        """
+        if self._index:
+            return len(self._index)
+        else:
+            return len(self.value)
+
+
+class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
+    """
+    Mixin class for TimeSeriesReferenceVectorData -
+    very simple, just indexing the given timeseries object.
+
+    These shouldn't have additional fields in them, just the three columns
+    for index, span, and timeseries
+    """
+
+    idx_start: NDArray[Any, int]
+    count: NDArray[Any, int]
+    timeseries: NDArray[Any, BaseModel]
+
+    @model_validator(mode="after")
+    def ensure_equal_length(self) -> "TimeSeriesReferenceVectorDataMixin":
+        assert len(self.idx_start) == len(self.timeseries) == len(self.count), (
+            f"Columns have differing lengths: idx: {len(self.idx_start)}, count: {len(self.count)},"
+            f" timeseries: {len(self.timeseries)}"
+        )
+        return self
+
+    def __len__(self) -> int:
+        """Since we have ensured equal length, just return idx_start"""
+        return len(self.idx_start)
+
+    @overload
+    def _slice_helper(self, item: int) -> slice: ...
+
+    @overload
+    def _slice_helper(self, item: slice) -> List[slice]: ...
+
+    def _slice_helper(self, item: Union[int, slice]) -> Union[slice, List[slice]]:
+        if isinstance(item, (int, np.integer)):
+            return slice(self.idx_start[item], self.idx_start[item] + self.count[item])
+        else:
+            starts = self.idx_start[item]
+            ends = starts + self.count[item]
+            return [slice(start, end) for start, end in zip(starts, ends)]
+
+    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
+        if self._index is not None:
+            raise NotImplementedError(
+                "VectorIndexing with TimeSeriesReferenceVectorData is not supported because it is"
+                " never done in the core schema."
+            )
+
+        if isinstance(item, (int, np.integer)):
+            return self.timeseries[self._slice_helper(item)]
+        elif isinstance(item, slice):
+            return [self.timeseries[subitem] for subitem in self._slice_helper(item)]
+        elif isinstance(item, Iterable):
+            return [self.timeseries[self._slice_helper(subitem)] for subitem in item]
+        else:
+            raise ValueError(
+                f"Dont know how to index with {item}, must be an int, slice, or iterable"
+            )
+
+    def __setitem__(self, key: Union[int, slice, Iterable], value: Any) -> None:
+        if self._index is not None:
+            raise NotImplementedError(
+                "VectorIndexing with TimeSeriesReferenceVectorData is not supported because it is"
+                " never done in the core schema."
+            )
+        if isinstance(key, (int, np.integer)):
+            self.timeseries[self._slice_helper(key)] = value
+        elif isinstance(key, slice):
+            for subitem in self._slice_helper(key):
+                self.timeseries[subitem] = value
+        elif isinstance(key, Iterable):
+            for subitem in key:
+                self.timeseries[self._slice_helper(subitem)] = value
+        else:
+            raise ValueError(
+                f"Dont know how to index with {key}, must be an int, slice, or iterable"
+            )
+
+
 linkml_meta = LinkMLMeta(
     {
         "annotations": {
@@ -78,7 +217,7 @@ class NWBData(Data):
     name: str = Field(...)
 
 
-class TimeSeriesReferenceVectorData(VectorData):
+class TimeSeriesReferenceVectorData(TimeSeriesReferenceVectorDataMixin, VectorData):
     """
     Column storing references to a TimeSeries (rows). For each TimeSeries this VectorData column stores the start_index and count to indicate the range in time to be selected as well as an object reference to the TimeSeries.
     """
