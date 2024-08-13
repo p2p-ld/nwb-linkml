@@ -784,6 +784,12 @@ class MapCompoundDtype(DatasetMap):
         Make a new class for this dtype, using its sub-dtypes as fields,
         and use it as the range for the parent class
         """
+        # all the slots share the same ndarray spec if there is one
+        array = {}
+        if cls.dims or cls.shape:
+            array_adapter = ArrayAdapter(cls.dims, cls.shape)
+            array = array_adapter.make_slot()
+
         slots = {}
         for a_dtype in cls.dtype:
             slots[a_dtype.name] = SlotDefinition(
@@ -791,8 +797,13 @@ class MapCompoundDtype(DatasetMap):
                 description=a_dtype.doc,
                 range=handle_dtype(a_dtype.dtype),
                 **QUANTITY_MAP[cls.quantity],
+                **array,
             )
         res.classes[0].attributes.update(slots)
+
+        # the compound dtype replaces the ``value`` slot, if present
+        if "value" in res.classes[0].attributes:
+            del res.classes[0].attributes["value"]
         return res
 
 

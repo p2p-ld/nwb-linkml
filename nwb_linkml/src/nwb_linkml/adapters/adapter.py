@@ -5,16 +5,8 @@ Base class for adapters
 import sys
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import (
-    Any,
-    Generator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Generator, List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
+from logging import Logger
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import (
@@ -26,6 +18,7 @@ from linkml_runtime.linkml_model import (
 )
 from pydantic import BaseModel
 
+from nwb_linkml.logging import init_logger
 from nwb_schema_language import Attribute, CompoundDtype, Dataset, Group, Schema
 
 if sys.version_info.minor >= 11:
@@ -107,6 +100,14 @@ class BuildResult:
 class Adapter(BaseModel):
     """Abstract base class for adapters"""
 
+    _logger: Optional[Logger] = None
+
+    @property
+    def logger(self) -> Logger:
+        if self._logger is None:
+            self._logger = init_logger(self.__class__.__name__)
+        return self._logger
+
     @abstractmethod
     def build(self) -> "BuildResult":
         """
@@ -152,8 +153,8 @@ class Adapter(BaseModel):
                 # SchemaAdapters that should be located under the same
                 # NamespacesAdapter when it's important to query across SchemaAdapters,
                 # so skip to avoid combinatoric walking
-                if key == "imports" and type(input).__name__ == "SchemaAdapter":
-                    continue
+                # if key == "imports" and type(input).__name__ == "SchemaAdapter":
+                #     continue
                 val = getattr(input, key)
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):
@@ -195,6 +196,14 @@ class Adapter(BaseModel):
         for item in self.walk(input):
             if isinstance(item, tuple) and item[0] in field and item[1] is not None:
                 yield item[1]
+
+    @overload
+    def walk_field_values(
+        self,
+        input: Union[BaseModel, dict, list],
+        field: Literal["neurodata_type_def"],
+        value: Optional[Any] = None,
+    ) -> Generator[Group | Dataset, None, None]: ...
 
     def walk_field_values(
         self, input: Union[BaseModel, dict, list], field: str, value: Optional[Any] = None
@@ -248,6 +257,9 @@ def is_1d(cls: Dataset | Attribute) -> bool:
     * a single-layer dim/shape list of length 1, or
     * a nested dim/shape list where every nested spec is of length 1
     """
+    if cls.dims is None:
+        return False
+
     return (
         not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1
     ) or (  # nested list
@@ -270,4 +282,8 @@ def has_attrs(cls: Dataset) -> bool:
     """
     Check if a dataset has any attributes at all without defaults
     """
-    return len(cls.attributes) > 0 and all([not a.value for a in cls.attributes])
+    return (
+        cls.attributes is not None
+        and len(cls.attributes) > 0
+        and all([not a.value for a in cls.attributes])
+    )

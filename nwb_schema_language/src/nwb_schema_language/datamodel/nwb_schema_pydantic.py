@@ -220,8 +220,8 @@ class DtypeMixin(ConfiguredBaseModel):
 class Attribute(DtypeMixin):
 
     name: str = Field(...)
-    dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
-    shape: Optional[List[Union[Any, int, str]]] = Field(default_factory=list)
+    dims: Optional[List[Union[Any, str]]] = Field(None)
+    shape: Optional[List[Union[Any, int, str]]] = Field(None)
     value: Optional[Any] = Field(
         None, description="""Optional constant, fixed value for the attribute."""
     )
@@ -233,9 +233,7 @@ class Attribute(DtypeMixin):
         True,
         description="""Optional boolean key describing whether the attribute is required. Default value is True.""",
     )
-    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
-        default_factory=list
-    )
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(None)
 
 
 class Dataset(DtypeMixin):
@@ -250,8 +248,8 @@ class Dataset(DtypeMixin):
     )
     name: Optional[str] = Field(None)
     default_name: Optional[str] = Field(None)
-    dims: Optional[List[Union[Any, str]]] = Field(default_factory=list)
-    shape: Optional[List[Union[Any, int, str]]] = Field(default_factory=list)
+    dims: Optional[List[Union[Any, str]]] = Field(None)
+    shape: Optional[List[Union[Any, int, str]]] = Field(None)
     value: Optional[Any] = Field(
         None, description="""Optional constant, fixed value for the attribute."""
     )
@@ -261,7 +259,5 @@ class Dataset(DtypeMixin):
     doc: str = Field(..., description="""Description of corresponding object.""")
     quantity: Optional[Union[QuantityEnum, int]] = Field(1)
     linkable: Optional[bool] = Field(None)
-    attributes: Optional[List[Attribute]] = Field(default_factory=list)
-    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
-        default_factory=list
-    )
+    attributes: Optional[List[Attribute]] = Field(None)
+    dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(None)

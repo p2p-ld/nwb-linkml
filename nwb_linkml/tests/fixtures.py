@@ -82,7 +82,6 @@ def tmp_output_dir_mod(tmp_output_dir) -> Path:
 @pytest.fixture(scope="session", params=[{"core_version": "2.7.0", "hdmf_version": "1.8.0"}])
 def nwb_core_fixture(request) -> NamespacesAdapter:
     nwb_core = io.load_nwb_core(**request.param)
-    nwb_core.populate_imports()
     assert (
         request.param["core_version"] in nwb_core.versions["core"]
     )  # 2.6.0 is actually 2.6.0-alpha

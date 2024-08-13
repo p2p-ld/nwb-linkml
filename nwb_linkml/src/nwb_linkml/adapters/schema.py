@@ -42,7 +42,8 @@ class SchemaAdapter(Adapter):
         """
         The namespace.schema name for a single schema
         """
-        return ".".join([self.namespace, self.path.with_suffix("").name])
+        namespace = self.namespace if self.namespace is not None else ""
+        return ".".join([namespace, self.path.with_suffix("").name])
 
     def __repr__(self):
         out_str = "\n" + self.name + "\n"

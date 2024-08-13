@@ -13,13 +13,13 @@ from typing import Dict, List, Optional
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import Annotation, SchemaDefinition
-from pydantic import Field, PrivateAttr
+from pydantic import Field, model_validator
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
 from nwb_linkml.ui import AdapterProgress
-from nwb_schema_language import Namespaces
+from nwb_schema_language import Namespaces, Group, Dataset
 
 
 class NamespacesAdapter(Adapter):
@@ -30,12 +30,6 @@ class NamespacesAdapter(Adapter):
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
     imported: List["NamespacesAdapter"] = Field(default_factory=list)
-
-    _imports_populated: bool = PrivateAttr(False)
-
-    def __init__(self, **kwargs: dict):
-        super().__init__(**kwargs)
-        self._populate_schema_namespaces()
 
     @classmethod
     def from_yaml(cls, path: Path) -> "NamespacesAdapter":
@@ -70,8 +64,6 @@ class NamespacesAdapter(Adapter):
         """
         Build the NWB namespace to the LinkML Schema
         """
-        if not self._imports_populated and not skip_imports:
-            self.populate_imports()
 
         sch_result = BuildResult()
         for sch in self.schemas:
@@ -129,6 +121,7 @@ class NamespacesAdapter(Adapter):
 
         return sch_result
 
+    @model_validator(mode="after")
     def _populate_schema_namespaces(self) -> None:
         """
         annotate for each schema which namespace imports it
@@ -143,6 +136,7 @@ class NamespacesAdapter(Adapter):
                     sch.namespace = ns.name
                     sch.version = ns.version
                     break
+        return self
 
     def find_type_source(self, name: str) -> SchemaAdapter:
         """
@@ -182,7 +176,8 @@ class NamespacesAdapter(Adapter):
         else:
             raise KeyError(f"No schema found that define {name}")
 
-    def populate_imports(self) -> None:
+    @model_validator(mode="after")
+    def populate_imports(self) -> "NamespacesAdapter":
         """
         Populate the imports that are needed for each schema file
 
@@ -199,11 +194,46 @@ class NamespacesAdapter(Adapter):
                 if depends_on not in sch.imports:
                     sch.imports.append(depends_on)
 
-        # do so recursively
-        for imported in self.imported:
-            imported.populate_imports()
+        return self
 
-        self._imports_populated = True
+    @model_validator(mode="after")
+    def _populate_inheritance(self):
+        """
+        ensure properties from `neurodata_type_inc` are propaged through to inheriting classes.
+
+        This seems super expensive but we'll optimize for perf later if that proves to be the case
+        """
+        # don't use walk_types here so we can replace the objects as we mutate them
+        for sch in self.schemas:
+            for i, group in enumerate(sch.groups):
+                if getattr(group, "neurodata_type_inc", None) is not None:
+                    merged_attrs = self._merge_inheritance(group)
+                    sch.groups[i] = Group(**merged_attrs)
+            for i, dataset in enumerate(sch.datasets):
+                if getattr(dataset, "neurodata_type_inc", None) is not None:
+                    merged_attrs = self._merge_inheritance(dataset)
+                    sch.datasets[i] = Dataset(**merged_attrs)
+        return self
+
+    def _merge_inheritance(self, obj: Group | Dataset) -> dict:
+        obj_dict = obj.model_dump(exclude_none=True)
+        if obj.neurodata_type_inc:
+            name = obj.neurodata_type_def if obj.neurodata_type_def else obj.name
+            self.logger.debug(f"Merging {name} with {obj.neurodata_type_inc}")
+            # there must be only one type with this name
+            parent: Group | Dataset = next(
+                self.walk_field_values(self, "neurodata_type_def", obj.neurodata_type_inc)
+            )
+            if obj.neurodata_type_def == "TimeSeriesReferenceVectorData":
+                pdb.set_trace()
+            parent_dict = copy(self._merge_inheritance(parent))
+            # children don't inherit the type_def
+            del parent_dict["neurodata_type_def"]
+            # overwrite with child values
+            parent_dict.update(obj_dict)
+            return parent_dict
+
+        return obj_dict
 
     def to_yaml(self, base_dir: Path) -> None:
         """

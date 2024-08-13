@@ -74,7 +74,9 @@ addopts = [
 ]
 markers = [
     "dev: tests that are just for development rather than testing correctness",
-    "provider: tests for providers!"
+    "provider: tests for providers!",
+    "linkml: tests related to linkml generation",
+    "pydantic: tests related to pydantic generation"
 ]
 testpaths = [
     "src/nwb_linkml",

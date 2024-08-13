@@ -119,9 +119,12 @@ class ClassAdapter(Adapter):
         Returns:
             list[:class:`.SlotDefinition`]
         """
-        results = [AttributeAdapter(cls=attr).build() for attr in cls.attributes]
-        slots = [r.slots[0] for r in results]
-        return slots
+        if cls.attributes is not None:
+            results = [AttributeAdapter(cls=attr).build() for attr in cls.attributes]
+            slots = [r.slots[0] for r in results]
+            return slots
+        else:
+            return []
 
     def _get_full_name(self) -> str:
         """The full name of the object in the generated linkml

@@ -70,6 +70,7 @@ def load_namespace_adapter(
     namespace: Path | NamespaceRepo | Namespaces,
     path: Optional[Path] = None,
     version: Optional[str] = None,
+    imported: Optional[list[NamespacesAdapter]] = None,
 ) -> NamespacesAdapter:
     """
     Load all schema referenced by a namespace file
@@ -115,7 +116,10 @@ def load_namespace_adapter(
             yml_file = (path / schema.source).resolve()
             sch.append(load_schema_file(yml_file))
 
-    adapter = NamespacesAdapter(namespaces=namespaces, schemas=sch)
+    if imported is not None:
+        adapter = NamespacesAdapter(namespaces=namespaces, schemas=sch, imported=imported)
+    else:
+        adapter = NamespacesAdapter(namespaces=namespaces, schemas=sch)
 
     return adapter
 
@@ -148,8 +152,6 @@ def load_nwb_core(
     if hdmf_only:
         schema = hdmf_schema
     else:
-        schema = load_namespace_adapter(NWB_CORE_REPO, version=core_version)
-
-        schema.imported.append(hdmf_schema)
+        schema = load_namespace_adapter(NWB_CORE_REPO, version=core_version, imported=[hdmf_schema])
 
     return schema
