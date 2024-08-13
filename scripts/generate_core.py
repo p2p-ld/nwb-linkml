@@ -174,7 +174,7 @@ def generate_versions(
 
             # import the most recent version of the schemaz we built
             latest_version = sorted(
-                (pydantic_path / "pydantic" / "core").glob('v*'), key=os.path.getmtime
+                (pydantic_path / "pydantic" / "core").glob("v*"), key=os.path.getmtime
             )[-1]
 
             # make inits to use the schema! we don't usually do this in the

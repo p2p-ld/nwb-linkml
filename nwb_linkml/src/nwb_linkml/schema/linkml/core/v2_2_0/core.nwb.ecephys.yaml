@@ -334,18 +334,24 @@ classes:
       x:
         name: x
         description: x coordinate
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false
       y:
         name: y
         description: y coordinate
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false
       z:
         name: z
         description: z coordinate
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false

@@ -41,6 +41,8 @@ classes:
         description: Start index into the TimeSeries 'data' and 'timestamp' datasets
           of the referenced TimeSeries. The first dimension of those arrays is always
           time.
+        array:
+          exact_number_dimensions: 1
         range: int32
         required: true
         multivalued: false
@@ -48,12 +50,16 @@ classes:
         name: count
         description: Number of data samples available in this time series, during
           this epoch
+        array:
+          exact_number_dimensions: 1
         range: int32
         required: true
         multivalued: false
       timeseries:
         name: timeseries
         description: The TimeSeries that this index applies to
+        array:
+          exact_number_dimensions: 1
         range: TimeSeries
         required: true
         multivalued: false

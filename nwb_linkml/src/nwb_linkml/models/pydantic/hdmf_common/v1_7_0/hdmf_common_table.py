@@ -415,7 +415,7 @@ class DynamicTableMixin(BaseModel):
         return model
 
     @model_validator(mode="after")
-    def cast_extra_columns(self):
+    def cast_extra_columns(self) -> "DynamicTableMixin":
         """
         If extra columns are passed as just lists or arrays, cast to VectorData
         before we resolve targets for VectorData and VectorIndex pairs.

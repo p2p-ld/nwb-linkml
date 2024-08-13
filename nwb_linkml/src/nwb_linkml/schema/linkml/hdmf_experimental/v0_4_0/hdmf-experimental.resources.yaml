@@ -79,6 +79,8 @@ classes:
         name: key
         description: The user term that maps to one or more resources in the `resources`
           table, e.g., "human".
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -97,6 +99,8 @@ classes:
         name: file_object_id
         description: The object id (UUID) of a file that contains objects that refers
           to external resources.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -115,6 +119,8 @@ classes:
         name: entity_id
         description: The compact uniform resource identifier (CURIE) of the entity,
           in the form [prefix]:[unique local identifier], e.g., 'NCBI_TAXON:9606'.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -122,6 +128,8 @@ classes:
         name: entity_uri
         description: The URI for the entity this reference applies to. This can be
           an empty string. e.g., https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=9606
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -141,18 +149,24 @@ classes:
         name: files_idx
         description: The row index to the file in the `files` table containing the
           object.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       object_id:
         name: object_id
         description: The object id (UUID) of the object.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
       object_type:
         name: object_type
         description: The data type of the object.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -162,6 +176,8 @@ classes:
           the dataset or attribute with the value(s) that is associated with an external
           resource. This can be an empty string if the object is a dataset that contains
           the value(s) that is associated with an external resource.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -170,6 +186,8 @@ classes:
         description: The field within the compound data type using an external resource.
           This is used only if the dataset or attribute is a compound data type; otherwise
           this should be an empty string.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -188,12 +206,16 @@ classes:
         name: objects_idx
         description: The row index to the object in the `objects` table that holds
           the key
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       keys_idx:
         name: keys_idx
         description: The row index to the key in the `keys` table.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
@@ -211,12 +233,16 @@ classes:
       entities_idx:
         name: entities_idx
         description: The row index to the entity in the `entities` table.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       keys_idx:
         name: keys_idx
         description: The row index to the key in the `keys` table.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false

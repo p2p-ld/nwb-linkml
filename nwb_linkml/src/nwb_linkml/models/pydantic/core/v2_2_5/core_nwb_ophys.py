@@ -75,7 +75,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -412,9 +412,21 @@ class PlaneSegmentationPixelMask(VectorData):
             "linkml_meta": {"equals_string": "pixel_mask", "ifabsent": "string(pixel_mask)"}
         },
     )
-    x: Optional[int] = Field(None, description="""Pixel x-coordinate.""")
-    y: Optional[int] = Field(None, description="""Pixel y-coordinate.""")
-    weight: Optional[float] = Field(None, description="""Weight of the pixel.""")
+    x: Optional[NDArray[Shape["*"], int]] = Field(
+        None,
+        description="""Pixel x-coordinate.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    y: Optional[NDArray[Shape["*"], int]] = Field(
+        None,
+        description="""Pixel y-coordinate.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    weight: Optional[NDArray[Shape["*"], float]] = Field(
+        None,
+        description="""Weight of the pixel.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
     description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[
@@ -439,10 +451,26 @@ class PlaneSegmentationVoxelMask(VectorData):
             "linkml_meta": {"equals_string": "voxel_mask", "ifabsent": "string(voxel_mask)"}
         },
     )
-    x: Optional[int] = Field(None, description="""Voxel x-coordinate.""")
-    y: Optional[int] = Field(None, description="""Voxel y-coordinate.""")
-    z: Optional[int] = Field(None, description="""Voxel z-coordinate.""")
-    weight: Optional[float] = Field(None, description="""Weight of the voxel.""")
+    x: Optional[NDArray[Shape["*"], int]] = Field(
+        None,
+        description="""Voxel x-coordinate.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    y: Optional[NDArray[Shape["*"], int]] = Field(
+        None,
+        description="""Voxel y-coordinate.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    z: Optional[NDArray[Shape["*"], int]] = Field(
+        None,
+        description="""Voxel z-coordinate.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    weight: Optional[NDArray[Shape["*"], float]] = Field(
+        None,
+        description="""Weight of the voxel.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
     description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[

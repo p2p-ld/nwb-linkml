@@ -67,6 +67,8 @@ classes:
         name: key_name
         description: The user term that maps to one or more resources in the 'resources'
           table.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -84,6 +86,8 @@ classes:
       keytable_idx:
         name: keytable_idx
         description: The index to the key in the 'keys' table.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
@@ -91,12 +95,16 @@ classes:
         name: resource_name
         description: The name of the online resource (e.g., website, database) that
           has the entity.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
       resource_id:
         name: resource_id
         description: The unique identifier for the resource entity at the resource.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -104,6 +112,8 @@ classes:
         name: uri
         description: The URI for the resource entity this reference applies to. This
           can be an empty string.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -122,6 +132,8 @@ classes:
       object_id:
         name: object_id
         description: The UUID for the object.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -129,6 +141,8 @@ classes:
         name: field
         description: The field of the object. This can be an empty string if the object
           is a dataset and the field is the dataset values.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -147,12 +161,16 @@ classes:
         name: objecttable_idx
         description: The index to the 'objects' table for the object that holds the
           key.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       keytable_idx:
         name: keytable_idx
         description: The index to the 'keys' table for the key.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false

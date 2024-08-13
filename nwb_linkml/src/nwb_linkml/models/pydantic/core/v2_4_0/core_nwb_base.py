@@ -90,15 +90,21 @@ class TimeSeriesReferenceVectorData(VectorData):
     name: str = Field(
         "timeseries", json_schema_extra={"linkml_meta": {"ifabsent": "string(timeseries)"}}
     )
-    idx_start: int = Field(
+    idx_start: NDArray[Shape["*"], int] = Field(
         ...,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    count: int = Field(
+    count: NDArray[Shape["*"], int] = Field(
         ...,
         description="""Number of data samples available in this time series, during this epoch""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    timeseries: TimeSeries = Field(..., description="""The TimeSeries that this index applies to""")
+    timeseries: NDArray[Shape["*"], TimeSeries] = Field(
+        ...,
+        description="""The TimeSeries that this index applies to""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
     description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
         Union[

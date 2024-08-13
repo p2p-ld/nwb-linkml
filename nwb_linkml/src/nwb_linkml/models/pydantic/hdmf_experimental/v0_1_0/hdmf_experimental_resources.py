@@ -8,6 +8,7 @@ from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
 from ...hdmf_common.v1_4_0.hdmf_common_base import Container, Data
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "0.1.0"
@@ -45,6 +46,7 @@ class LinkMLMeta(RootModel):
         return key in self.root
 
 
+NUMPYDANTIC_VERSION = "1.2.1"
 linkml_meta = LinkMLMeta(
     {
         "annotations": {
@@ -99,9 +101,10 @@ class ExternalResourcesKeys(Data):
         "keys",
         json_schema_extra={"linkml_meta": {"equals_string": "keys", "ifabsent": "string(keys)"}},
     )
-    key: str = Field(
+    key: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The user term that maps to one or more resources in the 'resources' table.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -118,12 +121,25 @@ class ExternalResourcesEntities(Data):
             "linkml_meta": {"equals_string": "entities", "ifabsent": "string(entities)"}
         },
     )
-    keys_idx: int = Field(..., description="""The index to the key in the 'keys' table.""")
-    resources_idx: int = Field(..., description="""The index into the 'resources' table""")
-    entity_id: str = Field(..., description="""The unique identifier entity.""")
-    entity_uri: str = Field(
+    keys_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The index to the key in the 'keys' table.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    resources_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The index into the 'resources' table""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    entity_id: NDArray[Shape["*"], str] = Field(
+        ...,
+        description="""The unique identifier entity.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    entity_uri: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The URI for the entity this reference applies to. This can be an empty string.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -140,9 +156,15 @@ class ExternalResourcesResources(Data):
             "linkml_meta": {"equals_string": "resources", "ifabsent": "string(resources)"}
         },
     )
-    resource: str = Field(..., description="""The name of the resource.""")
-    resource_uri: str = Field(
-        ..., description="""The URI for the resource. This can be an empty string."""
+    resource: NDArray[Shape["*"], str] = Field(
+        ...,
+        description="""The name of the resource.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    resource_uri: NDArray[Shape["*"], str] = Field(
+        ...,
+        description="""The URI for the resource. This can be an empty string.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -159,10 +181,15 @@ class ExternalResourcesObjects(Data):
             "linkml_meta": {"equals_string": "objects", "ifabsent": "string(objects)"}
         },
     )
-    object_id: str = Field(..., description="""The UUID for the object.""")
-    field: str = Field(
+    object_id: NDArray[Shape["*"], str] = Field(
+        ...,
+        description="""The UUID for the object.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    field: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The field of the object. This can be an empty string if the object is a dataset and the field is the dataset values.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -179,10 +206,16 @@ class ExternalResourcesObjectKeys(Data):
             "linkml_meta": {"equals_string": "object_keys", "ifabsent": "string(object_keys)"}
         },
     )
-    objects_idx: int = Field(
-        ..., description="""The index to the 'objects' table for the object that holds the key."""
+    objects_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The index to the 'objects' table for the object that holds the key.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    keys_idx: int = Field(..., description="""The index to the 'keys' table for the key.""")
+    keys_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The index to the 'keys' table for the key.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
 
 
 # Model rebuild

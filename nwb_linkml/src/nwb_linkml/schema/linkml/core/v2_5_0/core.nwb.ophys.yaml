@@ -258,18 +258,24 @@ classes:
       x:
         name: x
         description: Pixel x-coordinate.
+        array:
+          exact_number_dimensions: 1
         range: uint32
         required: false
         multivalued: false
       y:
         name: y
         description: Pixel y-coordinate.
+        array:
+          exact_number_dimensions: 1
         range: uint32
         required: false
         multivalued: false
       weight:
         name: weight
         description: Weight of the pixel.
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false
@@ -289,24 +295,32 @@ classes:
       x:
         name: x
         description: Voxel x-coordinate.
+        array:
+          exact_number_dimensions: 1
         range: uint32
         required: false
         multivalued: false
       y:
         name: y
         description: Voxel y-coordinate.
+        array:
+          exact_number_dimensions: 1
         range: uint32
         required: false
         multivalued: false
       z:
         name: z
         description: Voxel z-coordinate.
+        array:
+          exact_number_dimensions: 1
         range: uint32
         required: false
         multivalued: false
       weight:
         name: weight
         description: Weight of the voxel.
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false

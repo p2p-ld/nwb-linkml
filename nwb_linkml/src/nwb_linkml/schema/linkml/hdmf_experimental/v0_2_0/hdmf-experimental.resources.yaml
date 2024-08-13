@@ -73,6 +73,8 @@ classes:
         name: key
         description: The user term that maps to one or more resources in the 'resources'
           table.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -90,18 +92,24 @@ classes:
       keys_idx:
         name: keys_idx
         description: The index to the key in the 'keys' table.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       resources_idx:
         name: resources_idx
         description: The index into the 'resources' table
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       entity_id:
         name: entity_id
         description: The unique identifier entity.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -109,6 +117,8 @@ classes:
         name: entity_uri
         description: The URI for the entity this reference applies to. This can be
           an empty string.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -126,12 +136,16 @@ classes:
       resource:
         name: resource
         description: The name of the resource.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
       resource_uri:
         name: resource_uri
         description: The URI for the resource. This can be an empty string.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -150,6 +164,8 @@ classes:
       object_id:
         name: object_id
         description: The UUID for the object.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -159,6 +175,8 @@ classes:
           dataset or attribute with the value(s) that is associated with an external
           resource. This can be an empty string if the container is a dataset which
           contains the value(s) that is associated with an external resource.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -167,6 +185,8 @@ classes:
         description: The field of the compound data type using an external resource.
           This is used only if the dataset or attribute is a compound data type; otherwise
           this should be an empty string.
+        array:
+          exact_number_dimensions: 1
         range: text
         required: true
         multivalued: false
@@ -185,12 +205,16 @@ classes:
         name: objects_idx
         description: The index to the 'objects' table for the object that holds the
           key.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false
       keys_idx:
         name: keys_idx
         description: The index to the 'keys' table for the key.
+        array:
+          exact_number_dimensions: 1
         range: uint
         required: true
         multivalued: false

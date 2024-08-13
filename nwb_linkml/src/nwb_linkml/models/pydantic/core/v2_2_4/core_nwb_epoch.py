@@ -62,7 +62,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -181,16 +181,20 @@ class TimeIntervalsTimeseries(VectorData):
             "linkml_meta": {"equals_string": "timeseries", "ifabsent": "string(timeseries)"}
         },
     )
-    idx_start: Optional[int] = Field(
+    idx_start: Optional[NDArray[Shape["*"], int]] = Field(
         None,
         description="""Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced TimeSeries. The first dimension of those arrays is always time.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    count: Optional[int] = Field(
+    count: Optional[NDArray[Shape["*"], int]] = Field(
         None,
         description="""Number of data samples available in this time series, during this epoch.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    timeseries: Optional[TimeSeries] = Field(
-        None, description="""the TimeSeries that this index applies to."""
+    timeseries: Optional[NDArray[Shape["*"], TimeSeries]] = Field(
+        None,
+        description="""the TimeSeries that this index applies to.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
     description: str = Field(..., description="""Description of what these vectors represent.""")
     value: Optional[
