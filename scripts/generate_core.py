@@ -104,14 +104,19 @@ def generate_versions(
                     repo.tag = version
                     build_progress.update(linkml_task, advance=1, action="Load Namespaces")
 
-                    # first load the core namespace
-                    core_ns = io.load_namespace_adapter(repo.namespace_file)
                     if repo.namespace == NWB_CORE_REPO:
-                        # then the hdmf-common namespace
+                        # first load HDMF common
                         hdmf_common_ns = io.load_namespace_adapter(
                             repo.temp_directory / "hdmf-common-schema" / "common" / "namespace.yaml"
                         )
-                        core_ns.imported.append(hdmf_common_ns)
+                        # then load nwb core
+                        core_ns = io.load_namespace_adapter(
+                            repo.namespace_file, imported=[hdmf_common_ns]
+                        )
+
+                    else:
+                        # otherwise just load HDMF
+                        core_ns = io.load_namespace_adapter(repo.namespace_file)
 
                     build_progress.update(linkml_task, advance=1, action="Build LinkML")
 
@@ -169,7 +174,7 @@ def generate_versions(
 
             # import the most recent version of the schemaz we built
             latest_version = sorted(
-                (pydantic_path / "pydantic" / "core").iterdir(), key=os.path.getmtime
+                (pydantic_path / "pydantic" / "core").glob('v*'), key=os.path.getmtime
             )[-1]
 
             # make inits to use the schema! we don't usually do this in the

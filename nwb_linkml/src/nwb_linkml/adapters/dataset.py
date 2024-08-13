@@ -742,6 +742,10 @@ class MapCompoundDtype(DatasetMap):
     We render them just as a class with each of the dtypes as slots - they are
     typically used by other datasets to create a table.
 
+    Since there is exactly one class (``TimeSeriesReferenceVectorData``) that uses compound dtypes
+    meaningfully, we just hardcode the behavior of inheriting the array shape from the VectorData
+    parent classes. Otherwise, linkml schemas correctly propagate the ``value`` property.
+
     Eg. ``base.TimeSeriesReferenceVectorData``
 
     .. code-block:: yaml
@@ -784,24 +788,17 @@ class MapCompoundDtype(DatasetMap):
         Make a new class for this dtype, using its sub-dtypes as fields,
         and use it as the range for the parent class
         """
-        # all the slots share the same ndarray spec if there is one
-        array = {}
-        if cls.dims or cls.shape:
-            array_adapter = ArrayAdapter(cls.dims, cls.shape)
-            array = array_adapter.make_slot()
-
         slots = {}
         for a_dtype in cls.dtype:
             slots[a_dtype.name] = SlotDefinition(
                 name=a_dtype.name,
                 description=a_dtype.doc,
                 range=handle_dtype(a_dtype.dtype),
+                array=ArrayExpression(exact_number_dimensions=1),
                 **QUANTITY_MAP[cls.quantity],
-                **array,
             )
         res.classes[0].attributes.update(slots)
 
-        # the compound dtype replaces the ``value`` slot, if present
         if "value" in res.classes[0].attributes:
             del res.classes[0].attributes["value"]
         return res

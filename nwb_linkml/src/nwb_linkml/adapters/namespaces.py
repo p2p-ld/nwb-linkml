@@ -19,7 +19,7 @@ from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
 from nwb_linkml.ui import AdapterProgress
-from nwb_schema_language import Namespaces, Group, Dataset
+from nwb_schema_language import Namespaces
 
 
 class NamespacesAdapter(Adapter):
@@ -195,45 +195,6 @@ class NamespacesAdapter(Adapter):
                     sch.imports.append(depends_on)
 
         return self
-
-    @model_validator(mode="after")
-    def _populate_inheritance(self):
-        """
-        ensure properties from `neurodata_type_inc` are propaged through to inheriting classes.
-
-        This seems super expensive but we'll optimize for perf later if that proves to be the case
-        """
-        # don't use walk_types here so we can replace the objects as we mutate them
-        for sch in self.schemas:
-            for i, group in enumerate(sch.groups):
-                if getattr(group, "neurodata_type_inc", None) is not None:
-                    merged_attrs = self._merge_inheritance(group)
-                    sch.groups[i] = Group(**merged_attrs)
-            for i, dataset in enumerate(sch.datasets):
-                if getattr(dataset, "neurodata_type_inc", None) is not None:
-                    merged_attrs = self._merge_inheritance(dataset)
-                    sch.datasets[i] = Dataset(**merged_attrs)
-        return self
-
-    def _merge_inheritance(self, obj: Group | Dataset) -> dict:
-        obj_dict = obj.model_dump(exclude_none=True)
-        if obj.neurodata_type_inc:
-            name = obj.neurodata_type_def if obj.neurodata_type_def else obj.name
-            self.logger.debug(f"Merging {name} with {obj.neurodata_type_inc}")
-            # there must be only one type with this name
-            parent: Group | Dataset = next(
-                self.walk_field_values(self, "neurodata_type_def", obj.neurodata_type_inc)
-            )
-            if obj.neurodata_type_def == "TimeSeriesReferenceVectorData":
-                pdb.set_trace()
-            parent_dict = copy(self._merge_inheritance(parent))
-            # children don't inherit the type_def
-            del parent_dict["neurodata_type_def"]
-            # overwrite with child values
-            parent_dict.update(obj_dict)
-            return parent_dict
-
-        return obj_dict
 
     def to_yaml(self, base_dir: Path) -> None:
         """
