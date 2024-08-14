@@ -213,10 +213,47 @@ def test_aligned_dynamictable(intracellular_recordings_table):
 
 def test_dynamictable_mixin_indexing():
     """
-    This is just a placeholder test to say that indexing is tested above
-    with actual model objects in case i ever ctrl+f for this
+    Can index values from a dynamictable
     """
-    pass
+
+    class MyData(DynamicTableMixin):
+        col_1: hdmf.VectorData[NDArray[Shape["*"], int]]
+        col_2: hdmf.VectorData[NDArray[Shape["*"], int]]
+        col_3: hdmf.VectorData[NDArray[Shape["*"], int]]
+
+    cols = {
+        "col_1": np.arange(10),
+        "col_2": np.arange(10),
+        "col_3": np.arange(10),
+        "col_4": np.arange(10),
+        "col_5": np.arange(10),
+    }
+    colnames = [c for c in cols]
+    inst = MyData(**cols)
+
+    row = inst[0]
+    # successfully get a single row :)
+    assert row.shape == (1, 5)
+    assert row.columns.tolist() == colnames
+
+    # slice a range of rows
+    rows = inst[0:3]
+    assert rows.shape == (3, 5)
+
+    # get a single column
+    col = inst["col_1"]
+    assert all(col.value == np.arange(10))
+
+    # get a single cell
+    val = inst[5, "col_2"]
+    assert val == 5
+    val = inst[5, 1]
+    assert val == 5
+
+    # get a slice of rows and columns
+    subsection = inst[0:3, 0:3]
+    assert subsection.shape == (3, 3)
+    assert subsection.columns.tolist() == colnames[0:3]
 
 
 def test_dynamictable_mixin_colnames():
