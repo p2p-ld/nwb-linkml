@@ -5,7 +5,20 @@ from enum import Enum
 import re
 import sys
 import numpy as np
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, overload, Iterable, Tuple
+from typing import (
+    Any,
+    ClassVar,
+    List,
+    Literal,
+    Dict,
+    Optional,
+    Union,
+    Generic,
+    Iterable,
+    Tuple,
+    TypeVar,
+    overload,
+)
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container
 from numpydantic import NDArray, Shape
@@ -58,8 +71,10 @@ class LinkMLMeta(RootModel):
 
 NUMPYDANTIC_VERSION = "1.2.1"
 
+T = TypeVar("T", bound=NDArray)
 
-class VectorDataMixin(BaseModel):
+
+class VectorDataMixin(BaseModel, Generic[T]):
     """
     Mixin class to give VectorData indexing abilities
     """
@@ -67,7 +82,7 @@ class VectorDataMixin(BaseModel):
     _index: Optional["VectorIndex"] = None
 
     # redefined in `VectorData`, but included here for testing and type checking
-    value: Optional[NDArray] = None
+    value: Optional[T] = None
 
     def __init__(self, value: Optional[NDArray] = None, **kwargs):
         if value is not None and "value" not in kwargs:
@@ -125,6 +140,9 @@ class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
 
     @model_validator(mode="after")
     def ensure_equal_length(self) -> "TimeSeriesReferenceVectorDataMixin":
+        """
+        Each of the three indexing columns must be the same length to work!
+        """
         assert len(self.idx_start) == len(self.timeseries) == len(self.count), (
             f"Columns have differing lengths: idx: {len(self.idx_start)}, count: {len(self.count)},"
             f" timeseries: {len(self.timeseries)}"

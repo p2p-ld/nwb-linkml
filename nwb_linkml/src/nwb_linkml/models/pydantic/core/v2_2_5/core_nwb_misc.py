@@ -401,7 +401,7 @@ class DecompositionSeriesBands(DynamicTable):
         "bands",
         json_schema_extra={"linkml_meta": {"equals_string": "bands", "ifabsent": "string(bands)"}},
     )
-    band_name: NDArray[Any, str] = Field(
+    band_name: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Name of the band, e.g. theta.""",
         json_schema_extra={
@@ -410,7 +410,7 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_limits: NDArray[Shape["* num_bands, 2 low_high"], float] = Field(
+    band_limits: VectorData[NDArray[Shape["* num_bands, 2 low_high"], float]] = Field(
         ...,
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
         json_schema_extra={
@@ -424,12 +424,12 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_mean: NDArray[Shape["* num_bands"], float] = Field(
+    band_mean: VectorData[NDArray[Shape["* num_bands"], float]] = Field(
         ...,
         description="""The mean Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
     )
-    band_stdev: NDArray[Shape["* num_bands"], float] = Field(
+    band_stdev: VectorData[NDArray[Shape["* num_bands"], float]] = Field(
         ...,
         description="""The standard deviation of Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
@@ -439,7 +439,7 @@ class DecompositionSeriesBands(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -489,19 +489,21 @@ class Units(DynamicTable):
             }
         },
     )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = Field(
-        None,
-        description="""Observation intervals for each unit.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "array": {
-                    "dimensions": [
-                        {"alias": "num_intervals"},
-                        {"alias": "start_end", "exact_cardinality": 2},
-                    ]
+    obs_intervals: VectorData[Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
+        Field(
+            None,
+            description="""Observation intervals for each unit.""",
+            json_schema_extra={
+                "linkml_meta": {
+                    "array": {
+                        "dimensions": [
+                            {"alias": "num_intervals"},
+                            {"alias": "start_end", "exact_cardinality": 2},
+                        ]
+                    }
                 }
-            }
-        },
+            },
+        )
     )
     electrodes_index: Named[Optional[VectorIndex]] = Field(
         None,
@@ -530,16 +532,20 @@ class Units(DynamicTable):
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Electrode group that each spike unit came from."""
     )
-    waveform_mean: Optional[
-        Union[
-            NDArray[Shape["* num_units, * num_samples"], float],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+    waveform_mean: VectorData[
+        Optional[
+            Union[
+                NDArray[Shape["* num_units, * num_samples"], float],
+                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+            ]
         ]
     ] = Field(None, description="""Spike waveform mean for each spike unit.""")
-    waveform_sd: Optional[
-        Union[
-            NDArray[Shape["* num_units, * num_samples"], float],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+    waveform_sd: VectorData[
+        Optional[
+            Union[
+                NDArray[Shape["* num_units, * num_samples"], float],
+                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+            ]
         ]
     ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
     colnames: List[str] = Field(
@@ -547,7 +553,7 @@ class Units(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

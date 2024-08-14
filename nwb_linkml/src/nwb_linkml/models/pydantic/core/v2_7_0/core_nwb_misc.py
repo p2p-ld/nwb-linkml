@@ -413,7 +413,7 @@ class DecompositionSeriesBands(DynamicTable):
         "bands",
         json_schema_extra={"linkml_meta": {"equals_string": "bands", "ifabsent": "string(bands)"}},
     )
-    band_name: NDArray[Any, str] = Field(
+    band_name: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Name of the band, e.g. theta.""",
         json_schema_extra={
@@ -422,7 +422,7 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_limits: NDArray[Shape["* num_bands, 2 low_high"], float] = Field(
+    band_limits: VectorData[NDArray[Shape["* num_bands, 2 low_high"], float]] = Field(
         ...,
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
         json_schema_extra={
@@ -436,12 +436,12 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_mean: NDArray[Shape["* num_bands"], float] = Field(
+    band_mean: VectorData[NDArray[Shape["* num_bands"], float]] = Field(
         ...,
         description="""The mean Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
     )
-    band_stdev: NDArray[Shape["* num_bands"], float] = Field(
+    band_stdev: VectorData[NDArray[Shape["* num_bands"], float]] = Field(
         ...,
         description="""The standard deviation of Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
@@ -451,7 +451,7 @@ class DecompositionSeriesBands(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -498,19 +498,21 @@ class Units(DynamicTable):
             }
         },
     )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]] = Field(
-        None,
-        description="""Observation intervals for each unit.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "array": {
-                    "dimensions": [
-                        {"alias": "num_intervals"},
-                        {"alias": "start_end", "exact_cardinality": 2},
-                    ]
+    obs_intervals: VectorData[Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
+        Field(
+            None,
+            description="""Observation intervals for each unit.""",
+            json_schema_extra={
+                "linkml_meta": {
+                    "array": {
+                        "dimensions": [
+                            {"alias": "num_intervals"},
+                            {"alias": "start_end", "exact_cardinality": 2},
+                        ]
+                    }
                 }
-            }
-        },
+            },
+        )
     )
     electrodes_index: Named[Optional[VectorIndex]] = Field(
         None,
@@ -539,26 +541,32 @@ class Units(DynamicTable):
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Electrode group that each spike unit came from."""
     )
-    waveform_mean: Optional[
-        Union[
-            NDArray[Shape["* num_units, * num_samples"], float],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+    waveform_mean: VectorData[
+        Optional[
+            Union[
+                NDArray[Shape["* num_units, * num_samples"], float],
+                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+            ]
         ]
     ] = Field(None, description="""Spike waveform mean for each spike unit.""")
-    waveform_sd: Optional[
-        Union[
-            NDArray[Shape["* num_units, * num_samples"], float],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+    waveform_sd: VectorData[
+        Optional[
+            Union[
+                NDArray[Shape["* num_units, * num_samples"], float],
+                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+            ]
         ]
     ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
-    waveforms: Optional[NDArray[Shape["* num_waveforms, * num_samples"], float]] = Field(
-        None,
-        description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "array": {"dimensions": [{"alias": "num_waveforms"}, {"alias": "num_samples"}]}
-            }
-        },
+    waveforms: VectorData[Optional[NDArray[Shape["* num_waveforms, * num_samples"], float]]] = (
+        Field(
+            None,
+            description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
+            json_schema_extra={
+                "linkml_meta": {
+                    "array": {"dimensions": [{"alias": "num_waveforms"}, {"alias": "num_samples"}]}
+                }
+            },
+        )
     )
     waveforms_index: Named[Optional[VectorIndex]] = Field(
         None,
@@ -589,7 +597,7 @@ class Units(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

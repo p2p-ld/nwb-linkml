@@ -105,7 +105,7 @@ class TimeIntervals(DynamicTable):
     )
 
     name: str = Field(...)
-    start_time: NDArray[Any, float] = Field(
+    start_time: VectorData[NDArray[Any, float]] = Field(
         ...,
         description="""Start time of epoch, in seconds.""",
         json_schema_extra={
@@ -114,7 +114,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    stop_time: NDArray[Any, float] = Field(
+    stop_time: VectorData[NDArray[Any, float]] = Field(
         ...,
         description="""Stop time of epoch, in seconds.""",
         json_schema_extra={
@@ -123,7 +123,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    tags: Optional[NDArray[Any, str]] = Field(
+    tags: VectorData[Optional[NDArray[Any, str]]] = Field(
         None,
         description="""User-defined tags that identify or categorize events.""",
         json_schema_extra={
@@ -173,7 +173,7 @@ class TimeIntervals(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

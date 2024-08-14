@@ -389,7 +389,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             "linkml_meta": {"equals_string": "electrodes", "ifabsent": "string(electrodes)"}
         },
     )
-    x: Optional[NDArray[Any, float]] = Field(
+    x: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""x coordinate of the channel location in the brain (+x is posterior).""",
         json_schema_extra={
@@ -398,7 +398,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    y: Optional[NDArray[Any, float]] = Field(
+    y: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""y coordinate of the channel location in the brain (+y is inferior).""",
         json_schema_extra={
@@ -407,7 +407,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    z: Optional[NDArray[Any, float]] = Field(
+    z: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""z coordinate of the channel location in the brain (+z is right).""",
         json_schema_extra={
@@ -416,7 +416,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    imp: Optional[NDArray[Any, float]] = Field(
+    imp: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""Impedance of the channel, in ohms.""",
         json_schema_extra={
@@ -425,7 +425,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    location: NDArray[Any, str] = Field(
+    location: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Location of the electrode (channel). Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
         json_schema_extra={
@@ -434,7 +434,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    filtering: Optional[NDArray[Any, str]] = Field(
+    filtering: VectorData[Optional[NDArray[Any, str]]] = Field(
         None,
         description="""Description of hardware filtering, including the filter name and frequency cutoffs.""",
         json_schema_extra={
@@ -446,7 +446,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
     group: List[ElectrodeGroup] = Field(
         ..., description="""Reference to the ElectrodeGroup this electrode is a part of."""
     )
-    group_name: NDArray[Any, str] = Field(
+    group_name: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Name of the ElectrodeGroup this electrode is a part of.""",
         json_schema_extra={
@@ -455,7 +455,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_x: Optional[NDArray[Any, float]] = Field(
+    rel_x: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""x coordinate in electrode group""",
         json_schema_extra={
@@ -464,7 +464,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_y: Optional[NDArray[Any, float]] = Field(
+    rel_y: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""y coordinate in electrode group""",
         json_schema_extra={
@@ -473,7 +473,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_z: Optional[NDArray[Any, float]] = Field(
+    rel_z: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""z coordinate in electrode group""",
         json_schema_extra={
@@ -482,7 +482,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    reference: Optional[NDArray[Any, str]] = Field(
+    reference: VectorData[Optional[NDArray[Any, str]]] = Field(
         None,
         description="""Description of the reference electrode and/or reference scheme used for this electrode, e.g., \"stainless steel skull screw\" or \"online common average referencing\".""",
         json_schema_extra={
@@ -496,7 +496,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

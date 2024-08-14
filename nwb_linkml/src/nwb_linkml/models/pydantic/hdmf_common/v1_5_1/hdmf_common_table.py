@@ -6,7 +6,20 @@ import re
 import sys
 from ...hdmf_common.v1_5_1.hdmf_common_base import Data, Container
 import pandas as pd
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Iterable, Tuple, overload
+from typing import (
+    Any,
+    ClassVar,
+    List,
+    Literal,
+    Dict,
+    Optional,
+    Union,
+    Generic,
+    Iterable,
+    Tuple,
+    TypeVar,
+    overload,
+)
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -68,8 +81,10 @@ class LinkMLMeta(RootModel):
 
 NUMPYDANTIC_VERSION = "1.2.1"
 
+T = TypeVar("T", bound=NDArray)
 
-class VectorDataMixin(BaseModel):
+
+class VectorDataMixin(BaseModel, Generic[T]):
     """
     Mixin class to give VectorData indexing abilities
     """
@@ -77,7 +92,7 @@ class VectorDataMixin(BaseModel):
     _index: Optional["VectorIndex"] = None
 
     # redefined in `VectorData`, but included here for testing and type checking
-    value: Optional[NDArray] = None
+    value: Optional[T] = None
 
     def __init__(self, value: Optional[NDArray] = None, **kwargs):
         if value is not None and "value" not in kwargs:
@@ -120,13 +135,13 @@ class VectorDataMixin(BaseModel):
             return len(self.value)
 
 
-class VectorIndexMixin(BaseModel):
+class VectorIndexMixin(BaseModel, Generic[T]):
     """
     Mixin class to give VectorIndex indexing abilities
     """
 
     # redefined in `VectorData`, but included here for testing and type checking
-    value: Optional[NDArray] = None
+    value: Optional[T] = None
     target: Optional["VectorData"] = None
 
     def __init__(self, value: Optional[NDArray] = None, **kwargs):
@@ -408,19 +423,27 @@ class DynamicTableMixin(BaseModel):
         """
         if "colnames" not in model:
             colnames = [
-                k for k in model if k not in cls.NON_COLUMN_FIELDS and not k.endswith("_index")
-            ]
-            model["colnames"] = colnames
-        else:
-            # add any columns not explicitly given an order at the end
-            colnames = [
                 k
                 for k in model
                 if k not in cls.NON_COLUMN_FIELDS
                 and not k.endswith("_index")
-                and k not in model["colnames"]
+                and not isinstance(model[k], VectorIndexMixin)
             ]
-            model["colnames"].extend(colnames)
+            model["colnames"] = colnames
+        else:
+            # add any columns not explicitly given an order at the end
+            colnames = model["colnames"].copy()
+            colnames.extend(
+                [
+                    k
+                    for k in model
+                    if k not in cls.NON_COLUMN_FIELDS
+                    and not k.endswith("_index")
+                    and k not in model["colnames"]
+                    and not isinstance(model[k], VectorIndexMixin)
+                ]
+            )
+            model["colnames"] = colnames
         return model
 
     @model_validator(mode="after")
@@ -570,6 +593,32 @@ class AlignedDynamicTableMixin(DynamicTableMixin):
         df.set_index((self.name, "id"), drop=True, inplace=True)
         return df
 
+    @model_validator(mode="before")
+    @classmethod
+    def create_categories(cls, model: Dict[str, Any]) -> Dict:
+        """
+        Construct categories from arguments.
+
+        the model dict is ordered after python3.6, so we can use that minus
+        anything in :attr:`.NON_COLUMN_FIELDS` to determine order implied from passage order
+        """
+        if "categories" not in model:
+            categories = [
+                k for k in model if k not in cls.NON_CATEGORY_FIELDS and not k.endswith("_index")
+            ]
+            model["categories"] = categories
+        else:
+            # add any columns not explicitly given an order at the end
+            categories = [
+                k
+                for k in model
+                if k not in cls.NON_COLUMN_FIELDS
+                and not k.endswith("_index")
+                and k not in model["categories"]
+            ]
+            model["categories"].extend(categories)
+        return model
+
 
 linkml_meta = LinkMLMeta(
     {
@@ -685,7 +734,7 @@ class DynamicTable(DynamicTableMixin):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -713,7 +762,7 @@ class AlignedDynamicTable(AlignedDynamicTableMixin, DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

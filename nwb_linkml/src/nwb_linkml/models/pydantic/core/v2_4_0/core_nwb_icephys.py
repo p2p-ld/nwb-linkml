@@ -873,7 +873,7 @@ class SweepTable(DynamicTable):
     )
 
     name: str = Field(...)
-    sweep_number: NDArray[Any, int] = Field(
+    sweep_number: VectorData[NDArray[Any, int]] = Field(
         ...,
         description="""Sweep number of the PatchClampSeries in that row.""",
         json_schema_extra={
@@ -902,7 +902,7 @@ class SweepTable(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -939,7 +939,7 @@ class IntracellularElectrodesTable(DynamicTable):
         ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -985,7 +985,7 @@ class IntracellularStimuliTable(DynamicTable):
         ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -1031,7 +1031,7 @@ class IntracellularResponsesTable(DynamicTable):
         ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -1097,7 +1097,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
         ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -1146,7 +1146,7 @@ class SimultaneousRecordingsTable(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -1220,7 +1220,7 @@ class SequentialRecordingsTable(DynamicTable):
             }
         },
     )
-    stimulus_type: NDArray[Any, str] = Field(
+    stimulus_type: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""The type of stimulus used for the sequential recording.""",
         json_schema_extra={
@@ -1234,7 +1234,7 @@ class SequentialRecordingsTable(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -1313,7 +1313,7 @@ class RepetitionsTable(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -1394,7 +1394,7 @@ class ExperimentalConditionsTable(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
