@@ -340,7 +340,7 @@ class DynamicTableMixin(BaseModel):
                     )
                 )
             except Exception:
-                raise e
+                raise e from None
 
 
 class VectorDataMixin(BaseModel, Generic[T]):
