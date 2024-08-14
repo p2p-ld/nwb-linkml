@@ -437,6 +437,37 @@ def dynamictable_assert_equal_length():
         _ = MyDT(**cols)
 
 
+def test_vectordata_indexing():
+    """
+    Vectordata/VectorIndex pairs should know how to index off each other
+    """
+    n_rows = 50
+    value_array, index_array = _ragged_array(n_rows)
+    value_array = np.concat(value_array)
+
+    data = hdmf.VectorData(value=value_array)
+
+    # before we have an index, things should work as normal, indexing a 1D array
+    assert data[0] == 0
+
+    index = hdmf.VectorIndex(value=index_array, target=data)
+    data._index = index
+
+    # after an index, both objects should index raggedly
+    for i in range(len(index)):
+        assert all(data[i] == i)
+        assert all(index[i] == i)
+
+    for item in (data, index):
+        section = item[0:3]
+        for i, subitem in enumerate(section):
+            assert all(subitem == i)
+
+    # setting uses the same indexing logic
+    data[0][:] = 5
+    assert all(data[0] == 5)
+
+
 def test_vectordata_generic_numpydantic_validation():
     """
     Using VectorData as a generic with a numpydantic array annotation should still validate
