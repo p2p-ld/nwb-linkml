@@ -138,7 +138,7 @@ def _resolve_hdmf(
     namespace: Path | NamespaceRepo | Namespaces, path: Optional[Path] = None
 ) -> Optional[NamespacesAdapter]:
     if path is None and isinstance(namespace, Namespaces):
-        # cant get any more information from already-loaded namespaces without a path
+        # can't get any more information from already-loaded namespaces without a path
         return None
 
     if isinstance(namespace, NamespaceRepo):
