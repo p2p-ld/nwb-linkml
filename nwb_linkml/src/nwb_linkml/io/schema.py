@@ -114,7 +114,7 @@ def load_namespace_adapter(
     for ns in namespaces.namespaces:
         for schema in ns.schema_:
             if schema.source is None:
-                if imported is None and schema.namespace == "hdmf-common":
+                if imported is None and schema.namespace == "hdmf-common" and ns.name == "core":
                     # special case - hdmf-common is imported by name without location or version,
                     # so to get the correct version we have to handle it separately
                     imported = _resolve_hdmf(namespace, path)

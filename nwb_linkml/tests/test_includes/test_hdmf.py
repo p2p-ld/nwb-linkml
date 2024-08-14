@@ -1,5 +1,9 @@
 import numpy as np
 import pandas as pd
+from numpydantic import NDArray, Shape
+
+from nwb_linkml.includes import hdmf
+from nwb_linkml.includes.hdmf import DynamicTableMixin, VectorDataMixin, VectorIndexMixin
 
 # FIXME: Make this just be the output of the provider by patching into import machinery
 from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
@@ -48,7 +52,7 @@ def test_dynamictable_indexing(electrical_series):
 
     # get a single column
     col = electrodes["y"]
-    assert all(col == [5, 6, 7, 8, 9])
+    assert all(col.value == [5, 6, 7, 8, 9])
 
     # get a single cell
     val = electrodes[0, "y"]
@@ -198,3 +202,104 @@ def test_aligned_dynamictable(intracellular_recordings_table):
     for i in range(len(stims)):
         assert isinstance(stims[i], VoltageClampStimulusSeries)
         assert all([i == val for val in stims[i][:]])
+
+
+# --------------------------------------------------
+# Direct mixin tests
+# --------------------------------------------------
+
+
+def test_dynamictable_mixin_indexing():
+    """
+    This is just a placeholder test to say that indexing is tested above
+    with actual model objects in case i ever ctrl+f for this
+    """
+    pass
+
+
+def test_dynamictable_mixin_colnames():
+    """
+    Should correctly infer colnames
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: NDArray[Shape["* col"], int]
+
+    new_col_1 = VectorDataMixin(value=np.arange(10))
+    new_col_2 = VectorDataMixin(value=np.arange(10))
+
+    inst = MyDT(existing_col=np.arange(10), new_col_1=new_col_1, new_col_2=new_col_2)
+    assert inst.colnames == ["existing_col", "new_col_1", "new_col_2"]
+
+
+def test_dynamictable_mixin_colnames_index():
+    """
+    Exclude index columns in colnames
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: NDArray[Shape["* col"], int]
+
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": hdmf.VectorData(value=np.arange(10)),
+        "new_col_2": hdmf.VectorData(value=np.arange(10)),
+    }
+    # explicit index with mismatching name
+    cols["weirdname_index"] = VectorIndexMixin(value=np.arange(10), target=cols["new_col_1"])
+    # implicit index with matching name
+    cols["new_col_2_index"] = VectorIndexMixin(value=np.arange(10))
+
+    inst = MyDT(**cols)
+    assert inst.colnames == ["existing_col", "new_col_1", "new_col_2"]
+
+
+def test_dynamictable_mixin_colnames_ordered():
+    """
+    Should be able to pass explicit order to colnames
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: NDArray[Shape["* col"], int]
+
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": hdmf.VectorData(value=np.arange(10)),
+        "new_col_2": hdmf.VectorData(value=np.arange(10)),
+        "new_col_3": hdmf.VectorData(value=np.arange(10)),
+    }
+    order = ["new_col_2", "existing_col", "new_col_1", "new_col_3"]
+
+    inst = MyDT(**cols, colnames=order)
+    assert inst.colnames == order
+
+    # this should get reflected in the columns selector and the df produces
+    assert all([key1 == key2 for key1, key2 in zip(order, inst._columns)])
+    assert all(inst[0].columns == order)
+
+    # partial lists should append unnamed columsn at the end
+    partial_order = ["new_col_3", "new_col_2"]
+    inst = MyDT(**cols, colnames=partial_order)
+    assert inst.colnames == [*partial_order, "existing_col", "new_col_1"]
+
+
+def test_dynamictable_mixin_getattr():
+    """
+    Dynamictable should forward unknown getattr requests to the df
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: NDArray[Shape["* col"], int]
+
+    class AModel(DynamicTableMixin):
+        col: hdmf.VectorData[NDArray[Shape["3, 3"], int]]
+
+    col = hdmf.VectorData(value=np.arange(10))
+    inst = MyDT(existing_col=col)
+    # regular lookup for attrs that exist
+
+    # pdb.set_trace()
+    # inst.existing_col
+    # assert inst.existing_col == col
+    # df lookup otherwise
+    # inst.columns

@@ -116,6 +116,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     def after_generate_class(self, cls: ClassResult, sv: SchemaView) -> ClassResult:
         """Customize dynamictable behavior"""
         cls = AfterGenerateClass.inject_dynamictable(cls)
+        cls = AfterGenerateClass.wrap_dynamictable_columns(cls, sv)
         return cls
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
@@ -276,6 +277,28 @@ class AfterGenerateClass:
             else:
                 cls.imports = TSRVD_IMPORTS.model_copy()
 
+        return cls
+
+    @staticmethod
+    def wrap_dynamictable_columns(cls: ClassResult, sv: SchemaView) -> ClassResult:
+        """
+        Wrap NDArray columns inside of dynamictables with ``VectorData`` or
+        ``VectorIndex``, which are generic classes whose value slot is
+        parameterized by the NDArray
+        """
+        if cls.source.is_a == "DynamicTable" or "DynamicTable" in sv.class_ancestors(
+            cls.source.name
+        ):
+            for an_attr in cls.cls.attributes:
+                if "NDArray" in (slot_range := cls.cls.attributes[an_attr].range):
+                    if an_attr.endswith("_index"):
+                        cls.cls.attributes[an_attr].range = "".join(
+                            ["VectorIndex[", slot_range, "]"]
+                        )
+                    else:
+                        cls.cls.attributes[an_attr].range = "".join(
+                            ["VectorData[", slot_range, "]"]
+                        )
         return cls
 
 

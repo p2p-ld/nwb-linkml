@@ -2,15 +2,18 @@
 Special types for mimicking HDMF special case behavior
 """
 
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
     Dict,
+    Generic,
     Iterable,
     List,
     Optional,
     Tuple,
+    TypeVar,
     Union,
     overload,
 )
@@ -32,6 +35,9 @@ from pydantic import (
 
 if TYPE_CHECKING:
     from nwb_linkml.models import VectorData, VectorIndex
+
+T = TypeVar("T", bound=NDArray)
+T_INJECT = 'T = TypeVar("T", bound=NDArray)'
 
 
 class DynamicTableMixin(BaseModel):
@@ -220,19 +226,27 @@ class DynamicTableMixin(BaseModel):
         """
         if "colnames" not in model:
             colnames = [
-                k for k in model if k not in cls.NON_COLUMN_FIELDS and not k.endswith("_index")
-            ]
-            model["colnames"] = colnames
-        else:
-            # add any columns not explicitly given an order at the end
-            colnames = [
                 k
                 for k in model
                 if k not in cls.NON_COLUMN_FIELDS
                 and not k.endswith("_index")
-                and k not in model["colnames"]
+                and not isinstance(model[k], VectorIndexMixin)
             ]
-            model["colnames"].extend(colnames)
+            model["colnames"] = colnames
+        else:
+            # add any columns not explicitly given an order at the end
+            colnames = model["colnames"].copy()
+            colnames.extend(
+                [
+                    k
+                    for k in model
+                    if k not in cls.NON_COLUMN_FIELDS
+                    and not k.endswith("_index")
+                    and k not in model["colnames"]
+                    and not isinstance(model[k], VectorIndexMixin)
+                ]
+            )
+            model["colnames"] = colnames
         return model
 
     @model_validator(mode="after")
@@ -322,7 +336,7 @@ class DynamicTableMixin(BaseModel):
             )
 
 
-class VectorDataMixin(BaseModel):
+class VectorDataMixin(BaseModel, Generic[T]):
     """
     Mixin class to give VectorData indexing abilities
     """
@@ -330,7 +344,7 @@ class VectorDataMixin(BaseModel):
     _index: Optional["VectorIndex"] = None
 
     # redefined in `VectorData`, but included here for testing and type checking
-    value: Optional[NDArray] = None
+    value: Optional[T] = None
 
     def __init__(self, value: Optional[NDArray] = None, **kwargs):
         if value is not None and "value" not in kwargs:
@@ -373,13 +387,13 @@ class VectorDataMixin(BaseModel):
             return len(self.value)
 
 
-class VectorIndexMixin(BaseModel):
+class VectorIndexMixin(BaseModel, Generic[T]):
     """
     Mixin class to give VectorIndex indexing abilities
     """
 
     # redefined in `VectorData`, but included here for testing and type checking
-    value: Optional[NDArray] = None
+    value: Optional[T] = None
     target: Optional["VectorData"] = None
 
     def __init__(self, value: Optional[NDArray] = None, **kwargs):
@@ -649,8 +663,10 @@ DYNAMIC_TABLE_IMPORTS = Imports(
             module="typing",
             objects=[
                 ObjectImport(name="ClassVar"),
+                ObjectImport(name="Generic"),
                 ObjectImport(name="Iterable"),
                 ObjectImport(name="Tuple"),
+                ObjectImport(name="TypeVar"),
                 ObjectImport(name="overload"),
             ],
         ),
@@ -677,6 +693,7 @@ VectorData is purposefully excluded as an import or an inject so that it will be
 resolved to the VectorData definition in the generated module
 """
 DYNAMIC_TABLE_INJECTS = [
+    T_INJECT,
     VectorDataMixin,
     VectorIndexMixin,
     DynamicTableRegionMixin,
@@ -689,13 +706,27 @@ TSRVD_IMPORTS = Imports(
         Import(
             module="typing",
             objects=[
-                ObjectImport(name="overload"),
+                ObjectImport(name="Generic"),
                 ObjectImport(name="Iterable"),
                 ObjectImport(name="Tuple"),
+                ObjectImport(name="TypeVar"),
+                ObjectImport(name="overload"),
             ],
         ),
         Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
     ]
 )
 """Imports for TimeSeriesReferenceVectorData"""
-TSRVD_INJECTS = [VectorDataMixin, TimeSeriesReferenceVectorDataMixin]
+TSRVD_INJECTS = [T_INJECT, VectorDataMixin, TimeSeriesReferenceVectorDataMixin]
+
+if "pytest" in sys.modules:
+    # during testing define concrete subclasses...
+    class VectorData(VectorDataMixin):
+        """VectorData subclass for testing"""
+
+        pass
+
+    class VectorIndex(VectorIndexMixin):
+        """VectorIndex subclass for testing"""
+
+        pass
