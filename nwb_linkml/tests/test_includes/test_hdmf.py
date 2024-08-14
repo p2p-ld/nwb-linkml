@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import pytest
 from numpydantic import NDArray, Shape
+from pydantic import ValidationError
 
 from nwb_linkml.includes import hdmf
 from nwb_linkml.includes.hdmf import DynamicTableMixin, VectorDataMixin, VectorIndexMixin
@@ -289,17 +291,125 @@ def test_dynamictable_mixin_getattr():
     """
 
     class MyDT(DynamicTableMixin):
-        existing_col: NDArray[Shape["* col"], int]
-
-    class AModel(DynamicTableMixin):
-        col: hdmf.VectorData[NDArray[Shape["3, 3"], int]]
+        existing_col: hdmf.VectorData[NDArray[Shape["* col"], int]]
 
     col = hdmf.VectorData(value=np.arange(10))
     inst = MyDT(existing_col=col)
-    # regular lookup for attrs that exist
 
-    # pdb.set_trace()
-    # inst.existing_col
-    # assert inst.existing_col == col
-    # df lookup otherwise
-    # inst.columns
+    # regular lookup for attrs that exist
+    assert isinstance(inst.existing_col, hdmf.VectorData)
+    assert all(inst.existing_col.value == col.value)
+
+    # df lookup for thsoe that don't
+    assert isinstance(inst.columns, pd.Index)
+
+
+def test_dynamictable_coercion():
+    """
+    Dynamictable should coerce arrays into vectordata objects for known and unknown cols
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: hdmf.VectorData[NDArray[Shape["* col"], int]]
+
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": np.arange(10),
+    }
+    inst = MyDT(**cols)
+    assert isinstance(inst.existing_col, hdmf.VectorData)
+    assert isinstance(inst.new_col_1, hdmf.VectorData)
+    assert all(inst.existing_col.value == np.arange(10))
+    assert all(inst.new_col_1.value == np.arange(10))
+
+
+def test_dynamictable_create_id():
+    class MyDT(DynamicTableMixin):
+        existing_col: hdmf.VectorData[NDArray[Shape["* col"], int]]
+
+    cols = {
+        "existing_col": np.arange(10),
+    }
+    inst = MyDT(**cols)
+
+    assert all(inst.id == np.arange(10))
+
+
+def test_dynamictable_resolve_index():
+    """
+    Dynamictable should resolve and connect data to indices, explicit and implicit
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: hdmf.VectorData[NDArray[Shape["* col"], int]]
+
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": hdmf.VectorData(value=np.arange(10)),
+        "new_col_2": hdmf.VectorData(value=np.arange(10)),
+    }
+    # explicit index with mismatching name
+    cols["weirdname_index"] = hdmf.VectorIndex(value=np.arange(10), target=cols["new_col_1"])
+    # implicit index with matching name
+    cols["new_col_2_index"] = hdmf.VectorIndex(value=np.arange(10))
+
+    inst = MyDT(**cols)
+    assert inst.weirdname_index.target is inst.new_col_1
+    assert inst.new_col_2_index.target is inst.new_col_2
+    assert inst.new_col_1._index is inst.weirdname_index
+    assert inst.new_col_2._index is inst.new_col_2_index
+
+
+def dynamictable_assert_equal_length():
+    """
+    Dynamictable validates that columns are of equal length
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: NDArray[Shape["* col"], int]
+
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": hdmf.VectorData(value=np.arange(11)),
+    }
+    with pytest.raises(ValidationError, pattern="Columns are not of equal length"):
+        _ = MyDT(**cols)
+
+    cols = {
+        "existing_col": np.arange(11),
+        "new_col_1": hdmf.VectorData(value=np.arange(10)),
+    }
+    with pytest.raises(ValidationError, pattern="Columns are not of equal length"):
+        _ = MyDT(**cols)
+
+    # wrong lengths are fine as long as the index is good
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": hdmf.VectorData(value=np.arange(100)),
+        "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 10) + 10),
+    }
+    _ = MyDT(**cols)
+
+    # but not fine if the index is not good
+    cols = {
+        "existing_col": np.arange(10),
+        "new_col_1": hdmf.VectorData(value=np.arange(100)),
+        "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 5) + 5),
+    }
+    with pytest.raises(ValidationError, pattern="Columns are not of equal length"):
+        _ = MyDT(**cols)
+
+
+def test_vectordata_generic_numpydantic_validation():
+    """
+    Using VectorData as a generic with a numpydantic array annotation should still validate
+
+    Simple test here because numpydantic validation is tested in numpydantic itself,
+    we just want to check that the annotations work as validation and it doesn't just
+    """
+
+    class MyDT(DynamicTableMixin):
+        existing_col: NDArray[Shape["3 col"], int]
+
+    with pytest.raises(ValidationError):
+        _ = MyDT(existing_col=np.zeros((4, 5, 6), dtype=int))

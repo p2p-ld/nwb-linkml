@@ -49,7 +49,7 @@ class DynamicTableMixin(BaseModel):
     """
 
     model_config = ConfigDict(extra="allow")
-    __pydantic_extra__: Dict[str, Union[list, "NDArray", "VectorDataMixin"]]
+    __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "name",
         "colnames",
@@ -249,8 +249,9 @@ class DynamicTableMixin(BaseModel):
             model["colnames"] = colnames
         return model
 
-    @model_validator(mode="after")
-    def cast_extra_columns(self) -> "DynamicTableMixin":
+    @model_validator(mode="before")
+    @classmethod
+    def cast_extra_columns(cls, model: Dict[str, Any]) -> Dict:
         """
         If extra columns are passed as just lists or arrays, cast to VectorData
         before we resolve targets for VectorData and VectorIndex pairs.
@@ -258,22 +259,20 @@ class DynamicTableMixin(BaseModel):
         See :meth:`.cast_specified_columns` for handling columns in the class specification
         """
         # if columns are not in the specification, cast to a generic VectorData
-        for key, val in self.__pydantic_extra__.items():
+        for key, val in model.items():
+            if key in cls.model_fields:
+                continue
             if not isinstance(val, (VectorData, VectorIndex)):
                 try:
                     if key.endswith("_index"):
-                        self.__pydantic_extra__[key] = VectorIndex(
-                            name=key, description="", value=val
-                        )
+                        model[key] = VectorIndex(name=key, description="", value=val)
                     else:
-                        self.__pydantic_extra__[key] = VectorData(
-                            name=key, description="", value=val
-                        )
+                        model[key] = VectorData(name=key, description="", value=val)
                 except ValidationError as e:
                     raise ValidationError(
                         f"field {key} cannot be cast to VectorData from {val}"
                     ) from e
-        return self
+        return model
 
     @model_validator(mode="after")
     def resolve_targets(self) -> "DynamicTableMixin":
@@ -285,6 +284,8 @@ class DynamicTableMixin(BaseModel):
                 # find an index
                 idx = None
                 for field_name in self.model_fields_set:
+                    if field_name in self.NON_COLUMN_FIELDS or field_name == key:
+                        continue
                     # implicit name-based index
                     field = getattr(self, field_name)
                     if isinstance(field, VectorIndex) and (
@@ -323,17 +324,23 @@ class DynamicTableMixin(BaseModel):
         """
         try:
             return handler(val)
-        except ValidationError:
+        except ValidationError as e:
             annotation = cls.model_fields[info.field_name].annotation
             if type(annotation).__name__ == "_UnionGenericAlias":
                 annotation = annotation.__args__[0]
-            return handler(
-                annotation(
-                    val,
-                    name=info.field_name,
-                    description=cls.model_fields[info.field_name].description,
+            try:
+                # should pass if we're supposed to be a VectorData column
+                # don't want to override intention here by insisting that it is
+                # *actually* a VectorData column in case an NDArray has been specified for now
+                return handler(
+                    annotation(
+                        val,
+                        name=info.field_name,
+                        description=cls.model_fields[info.field_name].description,
+                    )
                 )
-            )
+            except Exception:
+                raise e
 
 
 class VectorDataMixin(BaseModel, Generic[T]):
