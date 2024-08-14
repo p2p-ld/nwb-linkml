@@ -2,10 +2,10 @@
 Loading/saving NWB Schema yaml files
 """
 
+import warnings
 from pathlib import Path
 from pprint import pprint
 from typing import Optional
-import warnings
 
 from linkml_runtime.loaders import yaml_loader
 
@@ -155,7 +155,9 @@ def _resolve_hdmf(
         maybe_repo_root = path / NWB_CORE_REPO.imports["hdmf-common"]
         if maybe_repo_root.exists():
             return load_namespace_adapter(namespace=maybe_repo_root)
-    warnings.warn(f"Could not locate hdmf-common from namespace {namespace} and path {path}")
+    warnings.warn(
+        f"Could not locate hdmf-common from namespace {namespace} and path {path}", stacklevel=1
+    )
     return None
 
 
