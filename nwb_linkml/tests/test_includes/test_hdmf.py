@@ -241,7 +241,7 @@ def test_dynamictable_resolve_index():
     assert inst.new_col_2._index is inst.new_col_2_index
 
 
-def dynamictable_assert_equal_length():
+def test_dynamictable_assert_equal_length():
     """
     Dynamictable validates that columns are of equal length
     """
@@ -277,7 +277,7 @@ def dynamictable_assert_equal_length():
         "new_col_1": hdmf.VectorData(value=np.arange(100)),
         "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 5) + 5),
     }
-    with pytest.raises(ValidationError, pattern="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="Columns are not of equal length"):
         _ = MyDT(**cols)
 
 
@@ -324,6 +324,15 @@ def test_vectordata_indexing():
     assert data[0] == 1
     data[0] = 0
 
+    # indexes by themselves are the same
+    index_notarget = hdmf.VectorIndex(value=index_array)
+    assert index_notarget[0] == index_array[0]
+    assert all(index_notarget[0:3] == index_array[0:3])
+    oldval = index_array[0]
+    index_notarget[0] = 5
+    assert index_notarget[0] == 5
+    index_notarget[0] = oldval
+
     index = hdmf.VectorIndex(value=index_array, target=data)
     data._index = index
 
@@ -338,8 +347,16 @@ def test_vectordata_indexing():
             assert all(subitem == i)
 
     # setting uses the same indexing logic
-    data[0][:] = 5
+    data[0] = 5
     assert all(data[0] == 5)
+    data[0:3] = [5, 4, 3]
+    assert all(data[0] == 5)
+    assert all(data[1] == 4)
+    assert all(data[2] == 3)
+    data[0:3] = 6
+    assert all(data[0] == 6)
+    assert all(data[1] == 6)
+    assert all(data[2] == 6)
 
 
 def test_vectordata_getattr():
