@@ -909,4 +909,6 @@ if "pytest" in sys.modules:
         pass
 
     class TimeSeriesReferenceVectorData(TimeSeriesReferenceVectorDataMixin):
+        """TimeSeriesReferenceVectorData subclass for testing"""
+
         pass
