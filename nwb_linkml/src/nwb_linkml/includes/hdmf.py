@@ -48,9 +48,10 @@ class DynamicTableMixin(BaseModel):
     but simplifying along the way :)
     """
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
     __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
+        "id",
         "name",
         "colnames",
         "description",
@@ -116,6 +117,7 @@ class DynamicTableMixin(BaseModel):
             return self._columns[item]
         if isinstance(item, (int, slice, np.integer, np.ndarray)):
             data = self._slice_range(item)
+            index = self.id[item]
         elif isinstance(item, tuple):
             if len(item) != 2:
                 raise ValueError(
@@ -133,11 +135,15 @@ class DynamicTableMixin(BaseModel):
                 return self._columns[cols][rows]
 
             data = self._slice_range(rows, cols)
+            index = self.id[rows]
         else:
             raise ValueError(f"Unsure how to get item with key {item}")
 
         # cast to DF
-        return pd.DataFrame(data)
+        if not isinstance(index, Iterable):
+            index = [index]
+        index = pd.Index(data=index)
+        return pd.DataFrame(data, index=index)
 
     def _slice_range(
         self, rows: Union[int, slice, np.ndarray], cols: Optional[Union[str, List[str]]] = None
@@ -149,30 +155,39 @@ class DynamicTableMixin(BaseModel):
         data = {}
         for k in cols:
             if isinstance(rows, np.ndarray):
+                # help wanted - this is probably cr*zy slow
                 val = [self._columns[k][i] for i in rows]
             else:
                 val = self._columns[k][rows]
 
             # scalars need to be wrapped in series for pandas
+            # do this by the iterability of the rows index not the value because
+            # we want all lengths from this method to be equal, and if the rows are
+            # scalar, that means length == 1
             if not isinstance(rows, (Iterable, slice)):
-                val = pd.Series([val])
+                val = [val]
 
             data[k] = val
         return data
 
     def __setitem__(self, key: str, value: Any) -> None:
-        raise NotImplementedError("TODO")
+        raise NotImplementedError("TODO")  # pragma: no cover
 
     def __setattr__(self, key: str, value: Union[list, "NDArray", "VectorData"]):
         """
         Add a column, appending it to ``colnames``
         """
         # don't use this while building the model
-        if not getattr(self, "__pydantic_complete__", False):
+        if not getattr(self, "__pydantic_complete__", False):  # pragma: no cover
             return super().__setattr__(key, value)
 
         if key not in self.model_fields_set and not key.endswith("_index"):
             self.colnames.append(key)
+
+        # we get a recursion error if we setattr without having first added to
+        # extras if we need it to be there
+        if key not in self.model_fields and key not in self.__pydantic_extra__:
+            self.__pydantic_extra__[key] = value
 
         return super().__setattr__(key, value)
 
@@ -303,8 +318,8 @@ class DynamicTableMixin(BaseModel):
         """
         Ensure that all columns are equal length
         """
-        lengths = [len(v) for v in self._columns.values()]
-        assert [length == lengths[0] for length in lengths], (
+        lengths = [len(v) for v in self._columns.values()] + [len(self.id)]
+        assert all([length == lengths[0] for length in lengths]), (
             "Columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
@@ -430,9 +445,21 @@ class VectorIndexMixin(BaseModel, Generic[T]):
                 raise AttributeError(f"Could not index with {item}")
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-        if self._index:
-            # VectorIndex is the thing that knows how to do the slicing
-            self._index[key] = value
+        """
+        Set a value on the :attr:`.target` .
+
+        .. note::
+
+            Even though we correct the indexing logic from HDMF where the
+            _data_ is the thing that is provided by the API when one accesses
+            table.data (rather than table.data_index as hdmf does),
+            we will set to the target here (rather than to the index)
+            to be consistent. To modify the index, modify `self.value` directly
+
+        """
+        if self.target:
+            # __getitem__ will return the indexed reference to the target
+            self[key] = value
         else:
             self.value[key] = value
 
@@ -463,9 +490,19 @@ class DynamicTableRegionMixin(BaseModel):
     _index: Optional["VectorIndex"] = None
 
     table: "DynamicTableMixin"
-    value: Optional[NDArray] = None
+    value: Optional[NDArray[Shape["*"], int]] = None
 
-    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
+    @overload
+    def __getitem__(self, item: int) -> pd.DataFrame: ...
+
+    @overload
+    def __getitem__(
+        self, item: Union[slice, Iterable]
+    ) -> List[pd.DataFrame]: ...
+
+    def __getitem__(
+        self, item: Union[int, slice, Iterable]
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Use ``value`` to index the table. Works analogously to ``VectorIndex`` despite
         this being a subclass of ``VectorData``
@@ -486,6 +523,10 @@ class DynamicTableRegionMixin(BaseModel):
             if isinstance(item, (int, np.integer)):
                 return self.table[self.value[item]]
             elif isinstance(item, (slice, Iterable)):
+                # Return a list of dataframe rows because this is most often used
+                # as a column in a DynamicTable, so while it would normally be
+                # ideal to just return the slice as above as a single df,
+                # we need each row to be separate to fill the column
                 if isinstance(item, slice):
                     item = range(*item.indices(len(self.value)))
                 return [self.table[self.value[i]] for i in item]
@@ -735,5 +776,10 @@ if "pytest" in sys.modules:
 
     class VectorIndex(VectorIndexMixin):
         """VectorIndex subclass for testing"""
+
+        pass
+
+    class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
+        """DynamicTableRegion subclass for testing"""
 
         pass
