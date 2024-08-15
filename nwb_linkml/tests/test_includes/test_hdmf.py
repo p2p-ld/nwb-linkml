@@ -153,7 +153,7 @@ def test_dynamictable_mixin_colnames_ordered():
     assert all([key1 == key2 for key1, key2 in zip(order, inst._columns)])
     assert all(inst[0].columns == order)
 
-    # partial lists should append unnamed columsn at the end
+    # partial lists should append unnamed columns at the end
     partial_order = ["new_col_3", "new_col_2"]
     inst = MyDT(**cols, colnames=partial_order)
     assert inst.colnames == [*partial_order, "existing_col", "new_col_1"]
