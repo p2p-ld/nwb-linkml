@@ -611,6 +611,35 @@ def test_mixed_aligned_dynamictable(aligned_table):
             assert len(array) == index_array[i]
 
 
+def test_timeseriesreferencevectordata_index():
+    """
+    TimeSeriesReferenceVectorData should be able to do the thing it does
+    """
+    generator = np.random.default_rng()
+    timeseries = np.array([np.arange(100)] * 10)
+
+    counts = generator.integers(1, 10, (10,))
+    idx_start = np.arange(0, 100, 10)
+
+    response = hdmf.TimeSeriesReferenceVectorData(
+        idx_start=idx_start,
+        count=counts,
+        timeseries=timeseries,
+    )
+    for i in range(len(counts)):
+        assert len(response[i]) == counts[i]
+    items = response[3:5]
+    assert all(items[0] == timeseries[3][idx_start[3] : idx_start[3] + counts[3]])
+    assert all(items[1] == timeseries[4][idx_start[4] : idx_start[4] + counts[4]])
+
+    response[0] = np.zeros((counts[0],))
+    assert all(response[0] == 0)
+
+    response[1:3] = [np.zeros((counts[1],)), np.ones((counts[2],))]
+    assert all(response[1] == 0)
+    assert all(response[2] == 1)
+
+
 # --------------------------------------------------
 # Model-based tests
 # --------------------------------------------------
@@ -623,7 +652,6 @@ def test_dynamictable_indexing_electricalseries(electrical_series):
     series, electrodes = electrical_series
 
     colnames = [
-        "id",
         "x",
         "y",
         "group",
@@ -632,20 +660,19 @@ def test_dynamictable_indexing_electricalseries(electrical_series):
         "extra_column",
     ]
     dtypes = [
-        np.dtype("int64"),
         np.dtype("float64"),
         np.dtype("float64"),
     ] + ([np.dtype("O")] * 4)
 
     row = electrodes[0]
     # successfully get a single row :)
-    assert row.shape == (1, 7)
+    assert row.shape == (1, 6)
     assert row.dtypes.values.tolist() == dtypes
     assert row.columns.tolist() == colnames
 
     # slice a range of rows
     rows = electrodes[0:3]
-    assert rows.shape == (3, 7)
+    assert rows.shape == (3, 6)
     assert rows.dtypes.values.tolist() == dtypes
     assert rows.columns.tolist() == colnames
 
@@ -656,7 +683,7 @@ def test_dynamictable_indexing_electricalseries(electrical_series):
     # get a single cell
     val = electrodes[0, "y"]
     assert val == 5
-    val = electrodes[0, 2]
+    val = electrodes[0, 1]
     assert val == 5
 
     # get a slice of rows and columns
@@ -698,8 +725,8 @@ def test_dynamictable_region_basic_electricalseries(electrical_series):
     # b) every other object in the chain is strictly validated,
     # so we assume if we got a right shaped df that it is the correct one.
     # feel free to @ me when i am wrong about this
-    assert all(row.id == 4)
-    assert row.shape == (1, 7)
+    assert all(row.index == 4)
+    assert row.shape == (1, 6)
     # and we should still be preserving the model that is the contents of the cell of this row
     # so this is a dataframe row with a column "group" that contains an array of ElectrodeGroup
     # objects and that's as far as we are going to chase the recursion in this basic indexing test
@@ -709,7 +736,7 @@ def test_dynamictable_region_basic_electricalseries(electrical_series):
     # getting a list of table rows is actually correct behavior here because
     # this list of table rows is actually the cell of another table
     rows = series.electrodes[0:3]
-    assert all([all(row.id == idx) for row, idx in zip(rows, [4, 3, 2])])
+    assert all([all(row.index == idx) for row, idx in zip(rows, [4, 3, 2])])
 
 
 def test_aligned_dynamictable_ictable(intracellular_recordings_table):

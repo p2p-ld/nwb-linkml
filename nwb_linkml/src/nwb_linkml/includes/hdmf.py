@@ -748,9 +748,9 @@ class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
     for index, span, and timeseries
     """
 
-    idx_start: NDArray[Any, int]
-    count: NDArray[Any, int]
-    timeseries: NDArray[Any, BaseModel]
+    idx_start: NDArray[Shape["*"], int]
+    count: NDArray[Shape["*"], int]
+    timeseries: NDArray
 
     @model_validator(mode="after")
     def ensure_equal_length(self) -> "TimeSeriesReferenceVectorDataMixin":
@@ -789,11 +789,11 @@ class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
             )
 
         if isinstance(item, (int, np.integer)):
-            return self.timeseries[self._slice_helper(item)]
-        elif isinstance(item, slice):
-            return [self.timeseries[subitem] for subitem in self._slice_helper(item)]
-        elif isinstance(item, Iterable):
-            return [self.timeseries[self._slice_helper(subitem)] for subitem in item]
+            return self.timeseries[item][self._slice_helper(item)]
+        elif isinstance(item, (slice, Iterable)):
+            if isinstance(item, slice):
+                item = range(*item.indices(len(self.idx_start)))
+            return [self.timeseries[subitem][self._slice_helper(subitem)] for subitem in item]
         else:
             raise ValueError(
                 f"Dont know how to index with {item}, must be an int, slice, or iterable"
@@ -806,13 +806,22 @@ class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
                 " never done in the core schema."
             )
         if isinstance(key, (int, np.integer)):
-            self.timeseries[self._slice_helper(key)] = value
-        elif isinstance(key, slice):
-            for subitem in self._slice_helper(key):
-                self.timeseries[subitem] = value
-        elif isinstance(key, Iterable):
-            for subitem in key:
-                self.timeseries[self._slice_helper(subitem)] = value
+            self.timeseries[key][self._slice_helper(key)] = value
+        elif isinstance(key, (slice, Iterable)):
+            if isinstance(key, slice):
+                key = range(*key.indices(len(self.idx_start)))
+
+            if isinstance(value, Iterable):
+                if len(key) != len(value):
+                    raise ValueError(
+                        "Can only assign equal-length iterable to a slice, manually index the"
+                        " target Timeseries object if you need more control"
+                    )
+                for subitem, subvalue in zip(key, value):
+                    self.timeseries[subitem][self._slice_helper(subitem)] = subvalue
+            else:
+                for subitem in key:
+                    self.timeseries[subitem][self._slice_helper(subitem)] = value
         else:
             raise ValueError(
                 f"Dont know how to index with {key}, must be an int, slice, or iterable"
@@ -897,4 +906,7 @@ if "pytest" in sys.modules:
     class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
         """DynamicTableRegion subclass for testing"""
 
+        pass
+
+    class TimeSeriesReferenceVectorData(TimeSeriesReferenceVectorDataMixin):
         pass
