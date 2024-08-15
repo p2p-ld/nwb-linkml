@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Type
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,12 @@ from numpydantic import NDArray, Shape
 from pydantic import ValidationError
 
 from nwb_linkml.includes import hdmf
-from nwb_linkml.includes.hdmf import DynamicTableMixin, VectorDataMixin, VectorIndexMixin
+from nwb_linkml.includes.hdmf import (
+    AlignedDynamicTableMixin,
+    DynamicTableMixin,
+    VectorDataMixin,
+    VectorIndexMixin,
+)
 
 # FIXME: Make this just be the output of the provider by patching into import machinery
 from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
@@ -37,6 +42,33 @@ def basic_table() -> tuple[DynamicTableMixin, dict[str, NDArray[Shape["10"], int
         "col_5": np.arange(10),
     }
     return MyData, cols
+
+
+@pytest.fixture()
+def aligned_table() -> tuple[Type[AlignedDynamicTableMixin], dict[str, DynamicTableMixin]]:
+    class Table1(DynamicTableMixin):
+        col1: hdmf.VectorData[NDArray[Shape["*"], int]]
+        col2: hdmf.VectorData[NDArray[Shape["*"], int]]
+
+    class Table2(DynamicTableMixin):
+        col3: hdmf.VectorData[NDArray[Shape["*"], int]]
+        col4: hdmf.VectorData[NDArray[Shape["*"], int]]
+
+    class Table3(DynamicTableMixin):
+        col5: hdmf.VectorData[NDArray[Shape["*"], int]]
+        col6: hdmf.VectorData[NDArray[Shape["*"], int]]
+
+    array = np.arange(10)
+
+    table1 = Table1(col1=array, col2=array)
+    table2 = Table2(col3=array, col4=array)
+    table3 = Table3(col5=array, col6=array)
+
+    class AlignedTable(AlignedDynamicTableMixin):
+        table1: Table1
+        table2: Table2
+
+    return AlignedTable, {"table1": table1, "table2": table2, "table3": table3}
 
 
 def test_dynamictable_mixin_indexing(basic_table):
@@ -357,6 +389,8 @@ def test_vectordata_indexing():
     assert all(data[0] == 6)
     assert all(data[1] == 6)
     assert all(data[2] == 6)
+    with pytest.raises(ValueError, match=".*equal-length.*"):
+        data[0:3] = [5, 4]
 
 
 def test_vectordata_getattr():
@@ -504,6 +538,77 @@ def test_dynamictable_region_ragged():
     rows = inst2[0:3]
     for i, df in enumerate(rows.iloc[:, 0]):
         assert df.equals(region[i])
+
+
+def test_aligned_dynamictable_indexing(aligned_table):
+    """
+    Should be able to index aligned dynamic tables to yield a multi-index df
+    """
+    AlignedTable, tables = aligned_table
+    atable = AlignedTable(**tables)
+
+    row = atable[0]
+    assert all(
+        row.columns
+        == pd.MultiIndex.from_tuples(
+            [
+                ("table1", "index"),
+                ("table1", "col1"),
+                ("table1", "col2"),
+                ("table2", "index"),
+                ("table2", "col3"),
+                ("table2", "col4"),
+                ("table3", "index"),
+                ("table3", "col5"),
+                ("table3", "col6"),
+            ]
+        )
+    )
+    for i in range(len(atable)):
+        vals = atable[i]
+        assert vals.shape == (1, 9)
+        assert all(vals == i)
+
+    # mildly different, indexing with a slice.
+    rows = atable[0:3]
+    for i, row in enumerate(rows.iterrows()):
+        vals = row[1]
+        assert len(vals) == 9
+        assert all(vals == i)
+
+    # index just a single table
+    row = atable[0:3, "table3"]
+    assert all(row.columns.to_numpy() == ["col5", "col6"])
+    assert row.shape == (3, 2)
+
+    # index out of order
+    rows = atable[np.array([0, 2, 1])]
+    assert all(rows.iloc[:, 0] == [0, 2, 1])
+
+
+def test_mixed_aligned_dynamictable(aligned_table):
+    """
+    Aligned dynamictable should also accept vectordata/vector index pairs
+    """
+
+    AlignedTable, cols = aligned_table
+    value_array, index_array = _ragged_array(10)
+    value_array = np.concat(value_array)
+
+    data = hdmf.VectorData(value=value_array)
+    index = hdmf.VectorIndex(value=index_array)
+
+    atable = AlignedTable(**cols, extra_col=data, extra_col_index=index)
+    atable[0]
+    assert atable[0].columns[-1] == ("extra_col", "extra_col")
+
+    for i, row in enumerate(atable[:].extra_col.iterrows()):
+        array = row[1].iloc[0]
+        assert all(array == i)
+        if i > 0:
+            assert len(array) == index_array[i] - index_array[i - 1]
+        else:
+            assert len(array) == index_array[i]
 
 
 # --------------------------------------------------
