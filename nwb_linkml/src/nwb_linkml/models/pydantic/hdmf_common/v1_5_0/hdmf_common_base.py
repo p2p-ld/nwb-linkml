@@ -26,6 +26,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -91,7 +100,7 @@ class SimpleMultiContainer(Container):
         {"from_schema": "hdmf-common.base", "tree_root": True}
     )
 
-    children: Optional[List[Container]] = Field(
+    value: Optional[List[Container]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "Container"}]}}
     )
     name: str = Field(...)

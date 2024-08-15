@@ -104,6 +104,17 @@ classes:
         range: text
         required: false
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: false
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
   ImageSeries__external_file:
     name: ImageSeries__external_file
@@ -133,8 +144,10 @@ classes:
           (and so there is a single element in the 'external_file' dataset), then
           this attribute should have value [0].
         range: int32
-      array:
-        name: array
+        required: true
+        multivalued: true
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_files
@@ -152,6 +165,17 @@ classes:
         name: name
         range: string
         required: true
+      masked_imageseries:
+        name: masked_imageseries
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ImageSeries
+        - range: string
     tree_root: true
   OpticalSeries:
     name: OpticalSeries
@@ -237,4 +261,15 @@ classes:
         range: int32
         required: true
         multivalued: false
+      indexed_timeseries:
+        name: indexed_timeseries
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ImageSeries
+        - range: string
     tree_root: true

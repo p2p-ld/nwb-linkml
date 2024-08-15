@@ -20,6 +20,11 @@
 
 ### DynamicTable
 
+```{note}
+See the [DynamicTable](https://hdmf-common-schema.readthedocs.io/en/stable/format_description.html#dynamictable)
+reference docs
+```
+
 One of the major special cases in NWB is the use of `DynamicTable` to contain tabular data that
 contains columns that are not in the base spec. 
 
@@ -284,8 +289,35 @@ When generating pydantic models we...
 
 There are several different ways to create references between objects in nwb/hdmf:
 
-- ...
+- [`links`](https://schema-language.readthedocs.io/en/latest/description.html#sec-link-spec) are group-level
+  properties that can reference other groups or datasets like this:
+  ```yaml
+  links:
+  - name: Link name
+    doc: Required string with the description of the link
+    target_type: Type of target
+    quantity: Optional quantity identifier for the group (default=1).
+  ```
+- [Reference `dtype`](https://schema-language.readthedocs.io/en/latest/description.html#reference-dtype)s are
+  dataset, and attribute-level properties that can reference both other objects and regions within other objects:
+  ```yaml
+  dtype:
+    target_type: ElectrodeGroup
+    reftype: object
+  ```
+- `TimeSeriesReferenceVectorData` is a compound dtype that behaves like VectorData and VectorIndex combined
+  into a single type. It is slightly different in that each row of the vector can refer to a different table,
+  and has a different way of handling selection (with `start` and `count` 
+  rather than a series of indices for the end of each cell)
+- Implicitly, hdmf creates references between objects according to some naming conventions, eg.
+  an attribute/dataset that is a `VectorIndex` named `mydata_index` will be linked to a `VectorData`
+  object `mydata`.
+- There is currently a note in the schema language docs that there will be an additional
+  [Relationships](https://schema-language.readthedocs.io/en/latest/description.html#relationships) system
+  that explicitly models relationships, but it is unclear how that would be different than references. 
 
+We represent all of these by just directly referring to the object type, preserving the source type
+in an annotation, when necessary.
 
 
 ## LinkML to Everything

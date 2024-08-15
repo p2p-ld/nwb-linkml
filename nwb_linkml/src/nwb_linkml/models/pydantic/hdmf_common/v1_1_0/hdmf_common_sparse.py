@@ -7,6 +7,7 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "1.1.0"
@@ -26,6 +27,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -44,6 +54,7 @@ class LinkMLMeta(RootModel):
         return key in self.root
 
 
+NUMPYDANTIC_VERSION = "1.2.1"
 linkml_meta = LinkMLMeta(
     {
         "annotations": {
@@ -68,7 +79,13 @@ class CSRMatrix(ConfiguredBaseModel):
     )
 
     name: str = Field(...)
-    shape: Optional[int] = Field(None, description="""the shape of this sparse matrix""")
+    shape: NDArray[Shape["2 null"], int] = Field(
+        ...,
+        description="""the shape of this sparse matrix""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "null", "exact_cardinality": 2}]}}
+        },
+    )
     indices: CSRMatrixIndices = Field(..., description="""column indices""")
     indptr: CSRMatrixIndptr = Field(..., description="""index pointer""")
     data: CSRMatrixData = Field(..., description="""values in the matrix""")

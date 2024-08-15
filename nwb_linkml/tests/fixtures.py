@@ -1,6 +1,7 @@
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import ModuleType
 from typing import Dict, Optional
 
 import pytest
@@ -15,6 +16,8 @@ from linkml_runtime.linkml_model import (
 
 from nwb_linkml.adapters.namespaces import NamespacesAdapter
 from nwb_linkml.io import schema as io
+from nwb_linkml.providers import LinkMLProvider, PydanticProvider
+from nwb_linkml.providers.linkml import LinkMLSchemaBuild
 from nwb_schema_language import Attribute, Dataset, Group
 
 __all__ = [
@@ -79,13 +82,30 @@ def tmp_output_dir_mod(tmp_output_dir) -> Path:
 @pytest.fixture(scope="session", params=[{"core_version": "2.7.0", "hdmf_version": "1.8.0"}])
 def nwb_core_fixture(request) -> NamespacesAdapter:
     nwb_core = io.load_nwb_core(**request.param)
-    nwb_core.populate_imports()
     assert (
         request.param["core_version"] in nwb_core.versions["core"]
     )  # 2.6.0 is actually 2.6.0-alpha
     assert nwb_core.versions["hdmf-common"] == request.param["hdmf_version"]
 
     return nwb_core
+
+
+@pytest.fixture(scope="session")
+def nwb_core_linkml(nwb_core_fixture, tmp_output_dir) -> LinkMLSchemaBuild:
+    provider = LinkMLProvider(tmp_output_dir, allow_repo=False, verbose=False)
+    result = provider.build(ns_adapter=nwb_core_fixture, force=True)
+    return result["core"]
+
+
+@pytest.fixture(scope="session")
+def nwb_core_module(nwb_core_linkml: LinkMLSchemaBuild, tmp_output_dir) -> ModuleType:
+    """
+    Generated pydantic namespace from nwb core
+    """
+    provider = PydanticProvider(tmp_output_dir, verbose=False)
+    result = provider.build(nwb_core_linkml.namespace, force=True)
+    mod = provider.get("core", version=nwb_core_linkml.version, allow_repo=False)
+    return mod
 
 
 @pytest.fixture(scope="session")

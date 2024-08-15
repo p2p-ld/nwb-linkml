@@ -15,15 +15,14 @@ dependencies = [
     "rich>=13.5.2",
     #"linkml>=1.7.10",
     "linkml @ git+https://github.com/sneakers-the-rat/linkml@nwb-linkml",
-    "nptyping>=2.5.0",
     "pydantic>=2.3.0",
     "h5py>=3.9.0",
     "pydantic-settings>=2.0.3",
-    "dask>=2023.9.2",
     "tqdm>=4.66.1",
     'typing-extensions>=4.12.2;python_version<"3.11"',
-    "numpydantic>=1.2.1",
+    "numpydantic>=1.3.3",
     "black>=24.4.2",
+    "pandas>=2.2.2",
 ]
 
 [project.urls]
@@ -37,21 +36,16 @@ plot = [
     "dash-cytoscape<1.0.0,>=0.3.0",
 ]
 tests = [
-    "nwb-linkml[plot]",
-    "pytest<8.0.0,>=7.4.0",
+    "nwb-linkml",
+    "pytest>=8.0.0",
     "pytest-depends<2.0.0,>=1.0.1",
-    "coverage<7.0.0,>=6.1.1",
-    "pytest-md<1.0.0,>=0.2.0",
     "pytest-cov<5.0.0,>=4.1.0",
-    "coveralls<4.0.0,>=3.3.1",
-    "pytest-profiling<2.0.0,>=1.7.0",
-    "sybil<6.0.0,>=5.0.3",
+    "sybil>=6.0.3",
     "requests-cache>=1.2.1",
 ]
 dev = [
     "nwb-linkml[tests]",
     "ruff>=0.5.0",
-    "black>=24.4.2",
 ]
 
 [tool.pdm]
@@ -75,7 +69,9 @@ addopts = [
 ]
 markers = [
     "dev: tests that are just for development rather than testing correctness",
-    "provider: tests for providers!"
+    "provider: tests for providers!",
+    "linkml: tests related to linkml generation",
+    "pydantic: tests related to pydantic generation"
 ]
 testpaths = [
     "src/nwb_linkml",

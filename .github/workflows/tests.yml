@@ -2,6 +2,11 @@ name: Tests
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   test:
@@ -34,8 +39,20 @@ jobs:
         run: pytest
         working-directory: nwb_linkml
 
-      - name: Report coverage
-        working-directory: nwb_linkml
-        run: "coveralls --service=github"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@v2.3.0
+        if: runner.os != 'macOS'
+        with:
+          flag-name: run-${{ join(matrix.*, '-') }}
+          parallel: true
+          debug: true
+
+  finish-coverage:
+    needs: test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2.3.0
+        with:
+          parallel-finished: true

@@ -23,7 +23,13 @@ classes:
       shape:
         name: shape
         description: the shape of this sparse matrix
+        array:
+          dimensions:
+          - alias: 'null'
+            exact_cardinality: 2
         range: int
+        required: true
+        multivalued: false
       indices:
         name: indices
         description: column indices

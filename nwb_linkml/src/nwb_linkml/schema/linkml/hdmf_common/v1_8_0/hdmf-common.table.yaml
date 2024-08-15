@@ -33,8 +33,9 @@ classes:
         name: description
         description: Description of what these vectors represent.
         range: text
-      array:
-        name: array
+        required: true
+      value:
+        name: value
         range: AnyType
         any_of:
         - array:
@@ -73,6 +74,7 @@ classes:
         name: target
         description: Reference to the target dataset that this index applies to.
         range: VectorData
+        required: true
     tree_root: true
   ElementIdentifiers:
     name: ElementIdentifiers
@@ -108,10 +110,12 @@ classes:
         description: Reference to the DynamicTable object that this region applies
           to.
         range: DynamicTable
+        required: true
       description:
         name: description
         description: Description of what this table region points to.
         range: text
+        required: true
     tree_root: true
   DynamicTable:
     name: DynamicTable
@@ -144,10 +148,13 @@ classes:
         description: The names of the columns in this table. This should be used to
           specify an order to the columns.
         range: text
+        required: true
+        multivalued: true
       description:
         name: description
         description: Description of what is in this dynamic table.
         range: text
+        required: true
       id:
         name: id
         description: Array of unique identifiers for the rows of this dynamic table.
@@ -175,8 +182,8 @@ classes:
       by a separate DynamicTable stored within the group.
     is_a: DynamicTable
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false

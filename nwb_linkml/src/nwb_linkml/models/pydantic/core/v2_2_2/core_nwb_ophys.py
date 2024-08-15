@@ -16,8 +16,9 @@ from pydantic import (
     ValidationInfo,
     BeforeValidator,
 )
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTableRegion, DynamicTable
+from ...core.v2_2_2.core_nwb_device import Device
+from numpydantic import NDArray, Shape
 from ...core.v2_2_2.core_nwb_base import (
     TimeSeriesStartingTime,
     TimeSeriesSync,
@@ -44,6 +45,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -69,7 +79,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -109,24 +119,30 @@ class TwoPhotonSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    pmt_gain: Optional[np.float32] = Field(None, description="""Photomultiplier gain.""")
-    scan_line_rate: Optional[np.float32] = Field(
+    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
+    scan_line_rate: Optional[float] = Field(
         None,
         description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     field_of_view: Optional[
-        Union[
-            NDArray[Shape["2 width_height"], np.float32],
-            NDArray[Shape["3 width_height"], np.float32],
-        ]
+        Union[NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height"], float]]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
+    imaging_plane: Union[ImagingPlane, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "ImagingPlane"}, {"range": "string"}],
+            }
+        },
+    )
     data: Optional[
         Union[
-            NDArray[Shape["* frame, * x, * y"], np.number],
-            NDArray[Shape["* frame, * x, * y, * z"], np.number],
+            NDArray[Shape["* frame, * x, * y"], float],
+            NDArray[Shape["* frame, * x, * y, * z"], float],
         ]
     ] = Field(None, description="""Binary data representing images across frames.""")
-    dimension: Optional[NDArray[Shape["* rank"], np.int32]] = Field(
+    dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "rank"}]}}},
@@ -139,21 +155,26 @@ class TwoPhotonSeries(ImageSeries):
         None,
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -182,31 +203,40 @@ class RoiResponseSeries(TimeSeries):
 
     name: str = Field(...)
     data: Union[
-        NDArray[Shape["* num_times"], np.number],
-        NDArray[Shape["* num_times, * num_rois"], np.number],
+        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
     ] = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -233,7 +263,7 @@ class DfOverF(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -248,7 +278,7 @@ class Fluorescence(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[List[RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -263,7 +293,7 @@ class ImageSegmentation(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[DynamicTable]] = Field(
+    value: Optional[List[DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     name: str = Field(...)
@@ -278,10 +308,152 @@ class ImagingPlane(NWBContainer):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[NWBContainer]] = Field(
-        None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBContainer"}]}}
-    )
     name: str = Field(...)
+    description: Optional[str] = Field(None, description="""Description of the imaging plane.""")
+    excitation_lambda: float = Field(..., description="""Excitation wavelength, in nm.""")
+    imaging_rate: float = Field(..., description="""Rate that images are acquired, in Hz.""")
+    indicator: str = Field(..., description="""Calcium indicator.""")
+    location: str = Field(
+        ...,
+        description="""Location of the imaging plane. Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
+    )
+    manifold: Optional[ImagingPlaneManifold] = Field(
+        None,
+        description="""DEPRECATED Physical position of each pixel. 'xyz' represents the position of the pixel relative to the defined coordinate space. Deprecated in favor of origin_coords and grid_spacing.""",
+    )
+    origin_coords: Optional[ImagingPlaneOriginCoords] = Field(
+        None,
+        description="""Physical location of the first element of the imaging plane (0, 0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the physical location is relative to (e.g., bregma).""",
+    )
+    grid_spacing: Optional[ImagingPlaneGridSpacing] = Field(
+        None,
+        description="""Space between pixels in (x, y) or voxels in (x, y, z) directions, in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame to interpret the grid.""",
+    )
+    reference_frame: Optional[str] = Field(
+        None,
+        description="""Describes reference frame of origin_coords and grid_spacing. For example, this can be a text description of the anatomical location and orientation of the grid defined by origin_coords and grid_spacing or the vectors needed to transform or rotate the grid to a common anatomical axis (e.g., AP/DV/ML). This field is necessary to interpret origin_coords and grid_spacing. If origin_coords and grid_spacing are not present, then this field is not required. For example, if the microscope takes 10 x 10 x 2 images, where the first value of the data matrix (index (0, 0, 0)) corresponds to (-1.2, -0.6, -2) mm relative to bregma, the spacing between pixels is 0.2 mm in x, 0.2 mm in y and 0.5 mm in z, and larger numbers in x means more anterior, larger numbers in y means more rightward, and larger numbers in z means more ventral, then enter the following -- origin_coords = (-1.2, -0.6, -2) grid_spacing = (0.2, 0.2, 0.5) reference_frame = \"Origin coordinates are relative to bregma. First dimension corresponds to anterior-posterior axis (larger index = more anterior). Second dimension corresponds to medial-lateral axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral axis (larger index = more ventral).\"""",
+    )
+    optical_channel: List[OpticalChannel] = Field(
+        ..., description="""An optical channel used to record from an imaging plane."""
+    )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
+    )
+
+
+class ImagingPlaneManifold(ConfiguredBaseModel):
+    """
+    DEPRECATED Physical position of each pixel. 'xyz' represents the position of the pixel relative to the defined coordinate space. Deprecated in favor of origin_coords and grid_spacing.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["manifold"] = Field(
+        "manifold",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "manifold", "ifabsent": "string(manifold)"}
+        },
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as pixels from x = -500 to 499, y = -500 to 499 that correspond to a 2 m x 2 m range, then the 'conversion' multiplier to get from raw data acquisition pixel units to meters is 2/1000.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    unit: Optional[str] = Field(
+        "meters",
+        description="""Base unit of measurement for working with the data. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* height, * width, 3 x_y_z"], float],
+            NDArray[Shape["* height, * width, * depth, 3 x_y_z"], float],
+        ]
+    ] = Field(None)
+
+
+class ImagingPlaneOriginCoords(ConfiguredBaseModel):
+    """
+    Physical location of the first element of the imaging plane (0, 0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for what the physical location is relative to (e.g., bregma).
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["origin_coords"] = Field(
+        "origin_coords",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "origin_coords", "ifabsent": "string(origin_coords)"}
+        },
+    )
+    unit: str = Field(
+        "meters",
+        description="""Measurement units for origin_coords. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
+    )
+    value: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
+        None,
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {
+                    "dimensions": [
+                        {"alias": "x_y", "exact_cardinality": 2},
+                        {"alias": "x_y_z", "exact_cardinality": 3},
+                    ]
+                }
+            }
+        },
+    )
+
+
+class ImagingPlaneGridSpacing(ConfiguredBaseModel):
+    """
+    Space between pixels in (x, y) or voxels in (x, y, z) directions, in the specified unit. Assumes imaging plane is a regular grid. See also reference_frame to interpret the grid.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["grid_spacing"] = Field(
+        "grid_spacing",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "grid_spacing", "ifabsent": "string(grid_spacing)"}
+        },
+    )
+    unit: str = Field(
+        "meters",
+        description="""Measurement units for grid_spacing. The default value is 'meters'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
+    )
+    value: Optional[NDArray[Shape["2 x_y, 3 x_y_z"], float]] = Field(
+        None,
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {
+                    "dimensions": [
+                        {"alias": "x_y", "exact_cardinality": 2},
+                        {"alias": "x_y_z", "exact_cardinality": 3},
+                    ]
+                }
+            }
+        },
+    )
+
+
+class OpticalChannel(NWBContainer):
+    """
+    An optical channel used to record from an imaging plane.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: str = Field(...)
+    description: str = Field(..., description="""Description or other notes about the channel.""")
+    emission_lambda: float = Field(..., description="""Emission wavelength for channel, in nm.""")
 
 
 class MotionCorrection(NWBDataInterface):
@@ -293,7 +465,7 @@ class MotionCorrection(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    children: Optional[List[NWBDataInterface]] = Field(
+    value: Optional[List[NWBDataInterface]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "NWBDataInterface"}]}}
     )
     name: str = Field(...)
@@ -307,4 +479,8 @@ DfOverF.model_rebuild()
 Fluorescence.model_rebuild()
 ImageSegmentation.model_rebuild()
 ImagingPlane.model_rebuild()
+ImagingPlaneManifold.model_rebuild()
+ImagingPlaneOriginCoords.model_rebuild()
+ImagingPlaneGridSpacing.model_rebuild()
+OpticalChannel.model_rebuild()
 MotionCorrection.model_rebuild()

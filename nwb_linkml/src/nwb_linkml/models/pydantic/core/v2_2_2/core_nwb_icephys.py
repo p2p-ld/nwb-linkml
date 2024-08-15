@@ -11,6 +11,7 @@ from ...core.v2_2_2.core_nwb_base import (
     TimeSeriesSync,
     NWBContainer,
 )
+from ...core.v2_2_2.core_nwb_device import Device
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
 from pydantic import (
     BaseModel,
@@ -42,6 +43,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -67,7 +77,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -106,32 +116,46 @@ class PatchClampSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
     data: PatchClampSeriesData = Field(..., description="""Recorded voltage or current.""")
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -160,11 +184,11 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: str = Field(
+        ...,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    array: Optional[NDArray[Shape["* num_times"], np.number]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -180,36 +204,50 @@ class CurrentClampSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
-    bias_current: Optional[np.float32] = Field(None, description="""Bias current, in amps.""")
-    bridge_balance: Optional[np.float32] = Field(None, description="""Bridge balance, in ohms.""")
-    capacitance_compensation: Optional[np.float32] = Field(
+    bias_current: Optional[float] = Field(None, description="""Bias current, in amps.""")
+    bridge_balance: Optional[float] = Field(None, description="""Bridge balance, in ohms.""")
+    capacitance_compensation: Optional[float] = Field(
         None, description="""Capacitance compensation, in farads."""
     )
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -238,9 +276,10 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["volts"] = Field(
+        "volts",
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
     value: Any = Field(...)
 
@@ -255,39 +294,51 @@ class IZeroClampSeries(CurrentClampSeries):
     )
 
     name: str = Field(...)
-    bias_current: np.float32 = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
-    bridge_balance: np.float32 = Field(
-        ..., description="""Bridge balance, in ohms, fixed to 0.0."""
-    )
-    capacitance_compensation: np.float32 = Field(
+    bias_current: float = Field(..., description="""Bias current, in amps, fixed to 0.0.""")
+    bridge_balance: float = Field(..., description="""Bridge balance, in ohms, fixed to 0.0.""")
+    capacitance_compensation: float = Field(
         ..., description="""Capacitance compensation, in farads, fixed to 0.0."""
     )
     data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -316,31 +367,45 @@ class CurrentClampStimulusSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: CurrentClampStimulusSeriesData = Field(..., description="""Stimulus current applied.""")
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -369,9 +434,12 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["amperes"] = Field(
+        "amperes",
         description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
+        },
     )
     value: Any = Field(...)
 
@@ -408,31 +476,45 @@ class VoltageClampSeries(PatchClampSeries):
     whole_cell_series_resistance_comp: Optional[VoltageClampSeriesWholeCellSeriesResistanceComp] = (
         Field(None, description="""Whole cell series resistance compensation, in ohms.""")
     )
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -461,9 +543,12 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["amperes"] = Field(
+        "amperes",
         description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
+        },
     )
     value: Any = Field(...)
 
@@ -484,11 +569,14 @@ class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["farads"] = Field(
+        "farads",
         description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "farads", "ifabsent": "string(farads)"}
+        },
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
@@ -507,11 +595,14 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["farads"] = Field(
+        "farads",
         description="""Unit of measurement for capacitance_fast, which is fixed to 'farads'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "farads", "ifabsent": "string(farads)"}
+        },
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
@@ -530,11 +621,12 @@ class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["hertz"] = Field(
+        "hertz",
         description="""Unit of measurement for resistance_comp_bandwidth, which is fixed to 'hertz'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "hertz", "ifabsent": "string(hertz)"}},
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
@@ -553,11 +645,14 @@ class VoltageClampSeriesResistanceCompCorrection(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["percent"] = Field(
+        "percent",
         description="""Unit of measurement for resistance_comp_correction, which is fixed to 'percent'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "percent", "ifabsent": "string(percent)"}
+        },
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
@@ -576,11 +671,14 @@ class VoltageClampSeriesResistanceCompPrediction(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["percent"] = Field(
+        "percent",
         description="""Unit of measurement for resistance_comp_prediction, which is fixed to 'percent'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "percent", "ifabsent": "string(percent)"}
+        },
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
@@ -599,11 +697,14 @@ class VoltageClampSeriesWholeCellCapacitanceComp(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["farads"] = Field(
+        "farads",
         description="""Unit of measurement for whole_cell_capacitance_comp, which is fixed to 'farads'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "farads", "ifabsent": "string(farads)"}
+        },
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
@@ -622,11 +723,12 @@ class VoltageClampSeriesWholeCellSeriesResistanceComp(ConfiguredBaseModel):
             }
         },
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["ohms"] = Field(
+        "ohms",
         description="""Unit of measurement for whole_cell_series_resistance_comp, which is fixed to 'ohms'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "ohms", "ifabsent": "string(ohms)"}},
     )
-    value: np.float32 = Field(...)
+    value: float = Field(...)
 
 
 class VoltageClampStimulusSeries(PatchClampSeries):
@@ -640,31 +742,45 @@ class VoltageClampStimulusSeries(PatchClampSeries):
 
     name: str = Field(...)
     data: VoltageClampStimulusSeriesData = Field(..., description="""Stimulus voltage applied.""")
-    stimulus_description: Optional[str] = Field(
-        None, description="""Protocol/stimulus name for this patch-clamp dataset."""
+    stimulus_description: str = Field(
+        ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
-    sweep_number: Optional[np.uint32] = Field(
+    sweep_number: Optional[int] = Field(
         None, description="""Sweep number, allows to group different PatchClampSeries together."""
     )
-    gain: Optional[np.float32] = Field(
+    gain: Optional[float] = Field(
         None,
         description="""Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt (c-clamp).""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    electrode: Union[IntracellularElectrode, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "IntracellularElectrode"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -693,9 +809,10 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: Literal["volts"] = Field(
+        "volts",
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
     value: Any = Field(...)
 
@@ -726,6 +843,15 @@ class IntracellularElectrode(NWBContainer):
     slice: Optional[str] = Field(
         None, description="""Information about slice used for recording."""
     )
+    device: Union[Device, str] = Field(
+        ...,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "Device"}, {"range": "string"}],
+            }
+        },
+    )
 
 
 class SweepTable(DynamicTable):
@@ -738,7 +864,7 @@ class SweepTable(DynamicTable):
     )
 
     name: str = Field(...)
-    sweep_number: NDArray[Any, np.uint32] = Field(
+    sweep_number: VectorData[NDArray[Any, int]] = Field(
         ...,
         description="""Sweep number of the PatchClampSeries in that row.""",
         json_schema_extra={
@@ -754,17 +880,20 @@ class SweepTable(DynamicTable):
         ...,
         description="""Index for series.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

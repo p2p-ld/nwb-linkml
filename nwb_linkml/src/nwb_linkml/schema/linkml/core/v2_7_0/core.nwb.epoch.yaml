@@ -57,6 +57,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index for tags.
         range: VectorIndex
         required: false
@@ -67,6 +70,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: An index into a TimeSeries object.
         range: TimeSeriesReferenceVectorData
         required: false
@@ -77,6 +83,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index for timeseries.
         range: VectorIndex
         required: false

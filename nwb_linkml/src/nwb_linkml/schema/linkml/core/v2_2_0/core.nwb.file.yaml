@@ -37,7 +37,10 @@ classes:
         name: nwb_version
         description: File version string. Use semantic versioning, e.g. 1.2.1. This
           will be the name of the format with trailing major, minor and patch numbers.
+        ifabsent: string(2.1.0)
         range: text
+        required: true
+        equals_string: 2.1.0
       file_create_date:
         name: file_create_date
         description: 'A record of the date the file was created and of subsequent
@@ -192,14 +195,9 @@ classes:
           having a particular scientific goal, trials (see trials subgroup) during
           an experiment, or epochs (see epochs subgroup) deriving from analysis of
           data.
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: TimeIntervals
-        - range: TimeIntervals
-        - range: TimeIntervals
-        - range: TimeIntervals
+        range: NWBFile__intervals
+        required: false
+        multivalued: false
       units:
         name: units
         description: Data about sorted spike units.
@@ -359,7 +357,7 @@ classes:
         name: source_script
         description: Script file or link to public source code used to create this
           NWB file.
-        range: NWBFile__general__source_script
+        range: general__source_script
         required: false
         multivalued: false
       stimulus:
@@ -408,13 +406,13 @@ classes:
       extracellular_ephys:
         name: extracellular_ephys
         description: Metadata related to extracellular electrophysiology.
-        range: NWBFile__general__extracellular_ephys
+        range: general__extracellular_ephys
         required: false
         multivalued: false
       intracellular_ephys:
         name: intracellular_ephys
         description: Metadata related to intracellular electrophysiology.
-        range: NWBFile__general__intracellular_ephys
+        range: general__intracellular_ephys
         required: false
         multivalued: false
       optogenetics:
@@ -433,8 +431,8 @@ classes:
         inlined_as_list: false
         any_of:
         - range: ImagingPlane
-  NWBFile__general__source_script:
-    name: NWBFile__general__source_script
+  general__source_script:
+    name: general__source_script
     description: Script file or link to public source code used to create this NWB
       file.
     attributes:
@@ -448,6 +446,7 @@ classes:
         name: file_name
         description: Name of script file.
         range: text
+        required: true
       value:
         name: value
         range: text
@@ -513,8 +512,8 @@ classes:
         range: text
         required: false
         multivalued: false
-  NWBFile__general__extracellular_ephys:
-    name: NWBFile__general__extracellular_ephys
+  general__extracellular_ephys:
+    name: general__extracellular_ephys
     description: Metadata related to extracellular electrophysiology.
     attributes:
       name:
@@ -532,11 +531,11 @@ classes:
       electrodes:
         name: electrodes
         description: A table of all electrodes (i.e. channels) used for recording.
-        range: NWBFile__general__extracellular_ephys__electrodes
+        range: extracellular_ephys__electrodes
         required: false
         multivalued: false
-  NWBFile__general__extracellular_ephys__electrodes:
-    name: NWBFile__general__extracellular_ephys__electrodes
+  extracellular_ephys__electrodes:
+    name: extracellular_ephys__electrodes
     description: A table of all electrodes (i.e. channels) used for recording.
     is_a: DynamicTable
     attributes:
@@ -653,8 +652,8 @@ classes:
         range: text
         required: false
         multivalued: false
-  NWBFile__general__intracellular_ephys:
-    name: NWBFile__general__intracellular_ephys
+  general__intracellular_ephys:
+    name: general__intracellular_ephys
     description: Metadata related to intracellular electrophysiology.
     attributes:
       name:
@@ -683,3 +682,41 @@ classes:
         range: SweepTable
         required: false
         multivalued: false
+  NWBFile__intervals:
+    name: NWBFile__intervals
+    description: Experimental intervals, whether that be logically distinct sub-experiments
+      having a particular scientific goal, trials (see trials subgroup) during an
+      experiment, or epochs (see epochs subgroup) deriving from analysis of data.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(intervals)
+        range: string
+        required: true
+        equals_string: intervals
+      epochs:
+        name: epochs
+        description: Divisions in time marking experimental stages or sub-divisions
+          of a single recording session.
+        range: TimeIntervals
+        required: false
+        multivalued: false
+      trials:
+        name: trials
+        description: Repeated experimental events that have a logical grouping.
+        range: TimeIntervals
+        required: false
+        multivalued: false
+      invalid_times:
+        name: invalid_times
+        description: Time intervals that should be removed from analysis.
+        range: TimeIntervals
+        required: false
+        multivalued: false
+      time_intervals:
+        name: time_intervals
+        description: Optional additional table(s) for describing other experimental
+          time intervals.
+        range: TimeIntervals
+        required: false
+        multivalued: true

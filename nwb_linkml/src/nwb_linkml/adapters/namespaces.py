@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import Annotation, SchemaDefinition
-from pydantic import Field, PrivateAttr
+from pydantic import Field, model_validator
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
@@ -30,12 +30,6 @@ class NamespacesAdapter(Adapter):
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
     imported: List["NamespacesAdapter"] = Field(default_factory=list)
-
-    _imports_populated: bool = PrivateAttr(False)
-
-    def __init__(self, **kwargs: dict):
-        super().__init__(**kwargs)
-        self._populate_schema_namespaces()
 
     @classmethod
     def from_yaml(cls, path: Path) -> "NamespacesAdapter":
@@ -70,8 +64,6 @@ class NamespacesAdapter(Adapter):
         """
         Build the NWB namespace to the LinkML Schema
         """
-        if not self._imports_populated and not skip_imports:
-            self.populate_imports()
 
         sch_result = BuildResult()
         for sch in self.schemas:
@@ -129,6 +121,7 @@ class NamespacesAdapter(Adapter):
 
         return sch_result
 
+    @model_validator(mode="after")
     def _populate_schema_namespaces(self) -> None:
         """
         annotate for each schema which namespace imports it
@@ -143,6 +136,7 @@ class NamespacesAdapter(Adapter):
                     sch.namespace = ns.name
                     sch.version = ns.version
                     break
+        return self
 
     def find_type_source(self, name: str) -> SchemaAdapter:
         """
@@ -182,7 +176,8 @@ class NamespacesAdapter(Adapter):
         else:
             raise KeyError(f"No schema found that define {name}")
 
-    def populate_imports(self) -> None:
+    @model_validator(mode="after")
+    def populate_imports(self) -> "NamespacesAdapter":
         """
         Populate the imports that are needed for each schema file
 
@@ -199,11 +194,7 @@ class NamespacesAdapter(Adapter):
                 if depends_on not in sch.imports:
                     sch.imports.append(depends_on)
 
-        # do so recursively
-        for imported in self.imported:
-            imported.populate_imports()
-
-        self._imports_populated = True
+        return self
 
     def to_yaml(self, base_dir: Path) -> None:
         """
@@ -266,10 +257,7 @@ class NamespacesAdapter(Adapter):
         else:
             ns = ns[0]
 
-        schema_names = []
-        for sch in ns.schema_:
-            if sch.source is not None:
-                schema_names.append(sch.source)
+        schema_names = [sch.source for sch in ns.schema_ if sch.source is not None]
         return schema_names
 
     def schema_namespace(self, name: str) -> Optional[str]:

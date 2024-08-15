@@ -62,6 +62,9 @@ from ...core.v2_6_0_alpha.core_nwb_ophys import (
     PlaneSegmentationPixelMask,
     PlaneSegmentationVoxelMask,
     ImagingPlane,
+    ImagingPlaneManifold,
+    ImagingPlaneOriginCoords,
+    ImagingPlaneGridSpacing,
     OpticalChannel,
     MotionCorrection,
     CorrectedImageStack,
@@ -152,10 +155,11 @@ from ...core.v2_6_0_alpha.core_nwb_file import (
     NWBFile,
     NWBFileStimulus,
     NWBFileGeneral,
-    NWBFileGeneralSourceScript,
-    NWBFileGeneralExtracellularEphys,
-    NWBFileGeneralExtracellularEphysElectrodes,
-    NWBFileGeneralIntracellularEphys,
+    GeneralSourceScript,
+    GeneralExtracellularEphys,
+    ExtracellularEphysElectrodes,
+    GeneralIntracellularEphys,
+    NWBFileIntervals,
     LabMetaData,
     Subject,
     SubjectAge,
@@ -179,6 +183,15 @@ class ConfiguredBaseModel(BaseModel):
         None, description="The absolute path that this object is stored in an NWB file"
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
 
 
 class LinkMLMeta(RootModel):

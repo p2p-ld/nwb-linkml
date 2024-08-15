@@ -1,0 +1,223 @@
+name: hdmf-experimental.resources
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-experimental
+id: hdmf-experimental.resources
+version: 0.3.0
+imports:
+- ../../hdmf_common/v1_6_0/namespace
+- hdmf-experimental.nwb.language
+default_prefix: hdmf-experimental.resources/
+classes:
+  ExternalResources:
+    name: ExternalResources
+    description: 'A set of five tables for tracking external resource references in
+      a file. NOTE: this data type is experimental and is subject to change in a later
+      version.'
+    is_a: Container
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      keys:
+        name: keys
+        description: A table for storing user terms that are used to refer to external
+          resources.
+        range: ExternalResources__keys
+        required: true
+        multivalued: false
+      files:
+        name: files
+        description: A table for storing object ids of files used in external resources.
+        range: ExternalResources__files
+        required: true
+        multivalued: false
+      entities:
+        name: entities
+        description: A table for mapping user terms (i.e., keys) to resource entities.
+        range: ExternalResources__entities
+        required: true
+        multivalued: false
+      objects:
+        name: objects
+        description: A table for identifying which objects in a file contain references
+          to external resources.
+        range: ExternalResources__objects
+        required: true
+        multivalued: false
+      object_keys:
+        name: object_keys
+        description: A table for identifying which objects use which keys.
+        range: ExternalResources__object_keys
+        required: true
+        multivalued: false
+    tree_root: true
+  ExternalResources__keys:
+    name: ExternalResources__keys
+    description: A table for storing user terms that are used to refer to external
+      resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(keys)
+        range: string
+        required: true
+        equals_string: keys
+      key:
+        name: key
+        description: The user term that maps to one or more resources in the `resources`
+          table, e.g., "human".
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__files:
+    name: ExternalResources__files
+    description: A table for storing object ids of files used in external resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(files)
+        range: string
+        required: true
+        equals_string: files
+      file_object_id:
+        name: file_object_id
+        description: The object id (UUID) of a file that contains objects that refers
+          to external resources.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__entities:
+    name: ExternalResources__entities
+    description: A table for mapping user terms (i.e., keys) to resource entities.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(entities)
+        range: string
+        required: true
+        equals_string: entities
+      keys_idx:
+        name: keys_idx
+        description: The row index to the key in the `keys` table.
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false
+      entity_id:
+        name: entity_id
+        description: The compact uniform resource identifier (CURIE) of the entity,
+          in the form [prefix]:[unique local identifier], e.g., 'NCBI_TAXON:9606'.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      entity_uri:
+        name: entity_uri
+        description: The URI for the entity this reference applies to. This can be
+          an empty string. e.g., https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=9606
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__objects:
+    name: ExternalResources__objects
+    description: A table for identifying which objects in a file contain references
+      to external resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(objects)
+        range: string
+        required: true
+        equals_string: objects
+      files_idx:
+        name: files_idx
+        description: The row index to the file in the `files` table containing the
+          object.
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false
+      object_id:
+        name: object_id
+        description: The object id (UUID) of the object.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      object_type:
+        name: object_type
+        description: The data type of the object.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      relative_path:
+        name: relative_path
+        description: The relative path from the data object with the `object_id` to
+          the dataset or attribute with the value(s) that is associated with an external
+          resource. This can be an empty string if the object is a dataset that contains
+          the value(s) that is associated with an external resource.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      field:
+        name: field
+        description: The field within the compound data type using an external resource.
+          This is used only if the dataset or attribute is a compound data type; otherwise
+          this should be an empty string.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__object_keys:
+    name: ExternalResources__object_keys
+    description: A table for identifying which objects use which keys.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(object_keys)
+        range: string
+        required: true
+        equals_string: object_keys
+      objects_idx:
+        name: objects_idx
+        description: The row index to the object in the `objects` table that holds
+          the key
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false
+      keys_idx:
+        name: keys_idx
+        description: The row index to the key in the `keys` table.
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false

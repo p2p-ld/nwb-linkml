@@ -12,7 +12,7 @@ from linkml_runtime.linkml_model import (
     TypeDefinition,
 )
 
-from nwb_linkml.maps import flat_to_linkml, flat_to_np
+from nwb_linkml.maps import flat_to_linkml
 
 
 def _make_dtypes() -> List[TypeDefinition]:
@@ -27,12 +27,15 @@ def _make_dtypes() -> List[TypeDefinition]:
         if nwbtype.startswith("uint"):
             amin = 0
 
-        np_type = flat_to_np[nwbtype]
+        # FIXME: Restore numpy types when we wrap them :)
+        # np_type = flat_to_np[nwbtype]
 
-        repr_string = f"np.{np_type.__name__}" if np_type.__module__ == "numpy" else None
+        # repr_string = f"np.{np_type.__name__}" if np_type.__module__ == "numpy" else None
 
         atype = TypeDefinition(
-            name=nwbtype, minimum_value=amin, typeof=linkmltype, repr=repr_string
+            name=nwbtype,
+            minimum_value=amin,
+            typeof=linkmltype,  # repr=repr_string
         )
         DTypeTypes.append(atype)
     return DTypeTypes

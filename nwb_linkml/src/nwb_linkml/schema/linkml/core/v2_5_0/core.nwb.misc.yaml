@@ -72,9 +72,11 @@ classes:
         description: Since there can be different units for different features, store
           the units in 'feature_units'. The default value for this attribute is "see
           'feature_units'".
+        ifabsent: string(see 'feature_units')
         range: text
-      array:
-        name: array
+        required: false
+      value:
+        name: value
         range: numeric
         any_of:
         - array:
@@ -158,6 +160,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion pointer to the channels that this decomposition
           series was generated from.
         range: DynamicTableRegion
@@ -170,6 +175,17 @@ classes:
         range: DecompositionSeries__bands
         required: true
         multivalued: false
+      source_timeseries:
+        name: source_timeseries
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: false
+        multivalued: false
+        any_of:
+        - range: TimeSeries
+        - range: string
     tree_root: true
   DecompositionSeries__data:
     name: DecompositionSeries__data
@@ -186,9 +202,11 @@ classes:
         description: Base unit of measurement for working with the data. Actual stored
           values are not necessarily stored in these units. To access the data in
           these units, multiply 'data' by 'conversion'.
+        ifabsent: string(no unit)
         range: text
-      array:
-        name: array
+        required: true
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_times
@@ -263,6 +281,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into the spike_times dataset.
         range: VectorIndex
         required: false
@@ -279,6 +300,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into the obs_intervals dataset.
         range: VectorIndex
         required: false
@@ -300,6 +324,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into electrodes.
         range: VectorIndex
         required: false
@@ -310,6 +337,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
         range: DynamicTableRegion
         required: false
@@ -390,6 +420,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into the waveforms dataset. One value for every spike event.
           See 'waveforms' for more detail.
         range: VectorIndex
@@ -401,6 +434,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: Index into the waveforms_index dataset. One value for every unit
           (row in the table). See 'waveforms' for more detail.
         range: VectorIndex
@@ -426,3 +462,4 @@ classes:
           if the acquisition time series was smoothed/interpolated and it is possible
           for the spike time to be between samples.
         range: float64
+        required: false

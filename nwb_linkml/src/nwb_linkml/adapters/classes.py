@@ -9,9 +9,10 @@ from linkml_runtime.linkml_model import ClassDefinition, SlotDefinition
 from pydantic import field_validator
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
+from nwb_linkml.adapters.attribute import AttributeAdapter
 from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset, DTypeType, FlatDtype, Group, ReferenceDtype
+from nwb_schema_language import Dataset, Group
 
 T = TypeVar("T", bound=Type[Dataset] | Type[Group])
 TI = TypeVar("TI", bound=Dataset | Group)
@@ -118,22 +119,35 @@ class ClassAdapter(Adapter):
         Returns:
             list[:class:`.SlotDefinition`]
         """
-        attrs = [
-            SlotDefinition(
-                name=attr.name,
-                description=attr.doc,
-                range=self.handle_dtype(attr.dtype),
-            )
-            for attr in cls.attributes
-        ]
-
-        return attrs
+        if cls.attributes is not None:
+            results = [AttributeAdapter(cls=attr).build() for attr in cls.attributes]
+            slots = [r.slots[0] for r in results]
+            return slots
+        else:
+            return []
 
     def _get_full_name(self) -> str:
         """The full name of the object in the generated linkml
 
         Distinct from 'name' which is the thing that's used to define position in
-        a hierarchical data setting
+        a hierarchical data setting.
+
+        Combines names from ``parent``, if present, using ``"__"`` .
+        Rather than concatenating the full series of names with ``__`` like
+
+        * ``Parent``
+        * ``Parent__child1``
+        * ``Parent__child1__child2``
+
+        we only keep the last parent, so
+
+        * ``Parent``
+        * ``Parent__child1``
+        * ``child1__child2``
+
+        The assumption is that a child name may not be unique, but the combination of
+        a parent/child pair should be unique enough to avoid name shadowing without
+        making humongous and cumbersome names.
         """
         if self.cls.neurodata_type_def:
             name = self.cls.neurodata_type_def
@@ -141,7 +155,8 @@ class ClassAdapter(Adapter):
             # not necessarily a unique name, so we combine parent names
             name_parts = []
             if self.parent is not None:
-                name_parts.append(self.parent._get_full_name())
+                parent_name = self.parent._get_full_name().split("__")[-1]
+                name_parts.append(parent_name)
 
             name_parts.append(self.cls.name)
             name = "__".join(name_parts)
@@ -186,37 +201,6 @@ class ClassAdapter(Adapter):
             raise ValueError(f"Class has no name!: {self.cls}")
 
         return name
-
-    @classmethod
-    def handle_dtype(cls, dtype: DTypeType | None) -> str:
-        """
-        Get the string form of a dtype
-
-        Args:
-            dtype (:class:`.DTypeType`): Dtype to stringify
-
-        Returns:
-            str
-        """
-        if isinstance(dtype, ReferenceDtype):
-            return dtype.target_type
-        elif dtype is None or dtype == []:
-            # Some ill-defined datasets are "abstract" despite that not being in the schema language
-            return "AnyType"
-        elif isinstance(dtype, FlatDtype):
-            return dtype.value
-        elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
-            # there is precisely one class that uses compound dtypes:
-            # TimeSeriesReferenceVectorData
-            # compoundDtypes are able to define a ragged table according to the schema
-            # but are used in this single case equivalently to attributes.
-            # so we'll... uh... treat them as slots.
-            # TODO
-            return "AnyType"
-
-        else:
-            # flat dtype
-            return dtype
 
     def build_name_slot(self) -> SlotDefinition:
         """

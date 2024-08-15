@@ -43,6 +43,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -68,7 +77,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -120,21 +129,26 @@ class AbstractFeatureSeries(TimeSeries):
         description="""Description of the features represented in TimeSeries::data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_features"}]}}},
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -164,13 +178,14 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
-        None,
+        "see 'feature_units'",
         description="""Since there can be different units for different features, store the units in 'feature_units'. The default value for this attribute is \"see 'feature_units'\".""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(see 'feature_units')"}},
     )
-    array: Optional[
+    value: Optional[
         Union[
-            NDArray[Shape["* num_times"], np.number],
-            NDArray[Shape["* num_times, * num_features"], np.number],
+            NDArray[Shape["* num_times"], float],
+            NDArray[Shape["* num_times, * num_features"], float],
         ]
     ] = Field(None)
 
@@ -190,21 +205,26 @@ class AnnotationSeries(TimeSeries):
         description="""Annotations made during an experiment.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -232,26 +252,31 @@ class IntervalSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], np.int8] = Field(
+    data: NDArray[Shape["* num_times"], int] = Field(
         ...,
         description="""Use values >0 if interval started, <0 if interval ended.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -287,21 +312,35 @@ class DecompositionSeries(TimeSeries):
         ...,
         description="""Table for describing the bands that this series was generated from. There should be one row in this table for each band.""",
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
-    comments: Optional[str] = Field(
+    source_timeseries: Optional[Union[TimeSeries, str]] = Field(
         None,
+        json_schema_extra={
+            "linkml_meta": {
+                "annotations": {"source_type": {"tag": "source_type", "value": "link"}},
+                "any_of": [{"range": "TimeSeries"}, {"range": "string"}],
+            }
+        },
+    )
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
+    comments: Optional[str] = Field(
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -330,11 +369,12 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
-    unit: Optional[str] = Field(
-        None,
+    unit: str = Field(
+        "no unit",
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no unit)"}},
     )
-    array: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], np.number]] = Field(
+    value: Optional[NDArray[Shape["* num_times, * num_channels, * num_bands"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -361,7 +401,7 @@ class DecompositionSeriesBands(DynamicTable):
         "bands",
         json_schema_extra={"linkml_meta": {"equals_string": "bands", "ifabsent": "string(bands)"}},
     )
-    band_name: NDArray[Any, str] = Field(
+    band_name: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Name of the band, e.g. theta.""",
         json_schema_extra={
@@ -370,7 +410,7 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_limits: NDArray[Shape["* num_bands, 2 low_high"], np.float32] = Field(
+    band_limits: VectorData[NDArray[Shape["* num_bands, 2 low_high"], float]] = Field(
         ...,
         description="""Low and high limit of each band in Hz. If it is a Gaussian filter, use 2 SD on either side of the center.""",
         json_schema_extra={
@@ -384,24 +424,22 @@ class DecompositionSeriesBands(DynamicTable):
             }
         },
     )
-    band_mean: NDArray[Shape["* num_bands"], np.float32] = Field(
+    band_mean: VectorData[NDArray[Shape["* num_bands"], float]] = Field(
         ...,
         description="""The mean Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
     )
-    band_stdev: NDArray[Shape["* num_bands"], np.float32] = Field(
+    band_stdev: VectorData[NDArray[Shape["* num_bands"], float]] = Field(
         ...,
         description="""The standard deviation of Gaussian filters, in Hz.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_bands"}]}}},
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -428,7 +466,12 @@ class Units(DynamicTable):
         None,
         description="""Index into the spike_times dataset.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     spike_times: Optional[UnitsSpikeTimes] = Field(
@@ -438,60 +481,79 @@ class Units(DynamicTable):
         None,
         description="""Index into the obs_intervals dataset.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
-        },
-    )
-    obs_intervals: Optional[NDArray[Shape["* num_intervals, 2 start_end"], np.float64]] = Field(
-        None,
-        description="""Observation intervals for each unit.""",
-        json_schema_extra={
             "linkml_meta": {
-                "array": {
-                    "dimensions": [
-                        {"alias": "num_intervals"},
-                        {"alias": "start_end", "exact_cardinality": 2},
-                    ]
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
                 }
             }
         },
+    )
+    obs_intervals: VectorData[Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
+        Field(
+            None,
+            description="""Observation intervals for each unit.""",
+            json_schema_extra={
+                "linkml_meta": {
+                    "array": {
+                        "dimensions": [
+                            {"alias": "num_intervals"},
+                            {"alias": "start_end", "exact_cardinality": 2},
+                        ]
+                    }
+                }
+            },
+        )
     )
     electrodes_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index into electrodes.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     electrodes: Named[Optional[DynamicTableRegion]] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Electrode group that each spike unit came from."""
     )
-    waveform_mean: Optional[
-        Union[
-            NDArray[Shape["* num_units, * num_samples"], np.float32],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], np.float32],
+    waveform_mean: VectorData[
+        Optional[
+            Union[
+                NDArray[Shape["* num_units, * num_samples"], float],
+                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+            ]
         ]
     ] = Field(None, description="""Spike waveform mean for each spike unit.""")
-    waveform_sd: Optional[
-        Union[
-            NDArray[Shape["* num_units, * num_samples"], np.float32],
-            NDArray[Shape["* num_units, * num_samples, * num_electrodes"], np.float32],
+    waveform_sd: VectorData[
+        Optional[
+            Union[
+                NDArray[Shape["* num_units, * num_samples"], float],
+                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
+            ]
         ]
     ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -517,13 +579,11 @@ class UnitsSpikeTimes(VectorData):
             "linkml_meta": {"equals_string": "spike_times", "ifabsent": "string(spike_times)"}
         },
     )
-    resolution: Optional[np.float64] = Field(
+    resolution: Optional[float] = Field(
         None,
         description="""The smallest possible difference between two spike times. Usually 1 divided by the acquisition sampling rate from which spike times were extracted, but could be larger if the acquisition time series was downsampled or smaller if the acquisition time series was smoothed/interpolated and it is possible for the spike time to be between samples.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what these vectors represent."""
-    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
 
 
 # Model rebuild

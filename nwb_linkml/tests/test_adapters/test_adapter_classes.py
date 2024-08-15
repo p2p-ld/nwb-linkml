@@ -2,6 +2,7 @@ import pytest
 from linkml_runtime.linkml_model import SlotDefinition
 
 from nwb_linkml.adapters import DatasetAdapter, GroupAdapter
+from nwb_linkml.maps.dtype import handle_dtype
 from nwb_schema_language import CompoundDtype, Dataset, Group, ReferenceDtype
 
 
@@ -89,7 +90,7 @@ def test_get_full_name():
     parent.cls.neurodata_type_def = None
     parent.cls.name = "ParentName"
     parent.parent = grandparent
-    assert adapter._get_full_name() == "Grandparent__ParentName__ChildName"
+    assert adapter._get_full_name() == "ParentName__ChildName"
 
     # if it has none, raise value error
     adapter.cls.name = None
@@ -179,9 +180,9 @@ def test_handle_dtype(nwb_schema):
         CompoundDtype(name="reference", doc="reference!", dtype=reftype),
     ]
 
-    assert cls.handle_dtype(reftype) == "TargetClass"
-    assert cls.handle_dtype(None) == "AnyType"
-    assert cls.handle_dtype([]) == "AnyType"
+    assert handle_dtype(reftype) == "TargetClass"
+    assert handle_dtype(None) == "AnyType"
+    assert handle_dtype([]) == "AnyType"
     # handling compound types is currently TODO
-    assert cls.handle_dtype(compoundtype) == "AnyType"
-    assert cls.handle_dtype("int32") == "int32"
+    assert handle_dtype(compoundtype) == "AnyType"
+    assert handle_dtype("int32") == "int32"

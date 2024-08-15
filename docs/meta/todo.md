@@ -7,6 +7,7 @@ NWB schema translation
 - handle compound `dtype` like in ophys.PlaneSegmentation.pixel_mask
 - handle compound `dtype` like in TimeSeriesReferenceVectorData
 - Create a validator that checks if all the lists in a compound dtype dataset are same length
+- [ ] Move making `target` optional in vectorIndex from pydantic generator to linkml generators!
 
 Cleanup
 - [ ] Update pydantic generator
@@ -22,7 +23,7 @@ Cleanup
                 
 - [ ] Make a minimal pydanticgen-only package to slim linkml deps?
 - [ ] Disambiguate "maps" terminology - split out simple maps from the eg. dataset mapping classes
-- [ ] Remove unnecessary imports
+- [x] Remove unnecessary imports
   - dask
   - nptyping
 - [ ] Adapt the split generation to the new split generator style 

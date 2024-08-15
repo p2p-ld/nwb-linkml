@@ -1,0 +1,17 @@
+name: hdmf-experimental
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: true
+  namespace:
+    tag: namespace
+    value: hdmf-experimental
+description: Experimental data structures provided by HDMF. These are not guaranteed
+  to be available in the future.
+id: hdmf-experimental
+version: 0.3.0
+imports:
+- hdmf-experimental.experimental
+- hdmf-experimental.resources
+- hdmf-experimental.nwb.language
+default_prefix: hdmf-experimental/

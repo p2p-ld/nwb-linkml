@@ -1,0 +1,176 @@
+name: hdmf-common.resources
+annotations:
+  is_namespace:
+    tag: is_namespace
+    value: false
+  namespace:
+    tag: namespace
+    value: hdmf-common
+id: hdmf-common.resources
+version: 1.3.0
+imports:
+- hdmf-common.base
+- hdmf-common.nwb.language
+default_prefix: hdmf-common.resources/
+classes:
+  ExternalResources:
+    name: ExternalResources
+    description: 'A set of four tables for tracking external resource references in
+      a file. NOTE: this data type is in beta testing and is subject to change in
+      a later version.'
+    is_a: Container
+    attributes:
+      name:
+        name: name
+        range: string
+        required: true
+      keys:
+        name: keys
+        description: A table for storing user terms that are used to refer to external
+          resources.
+        range: ExternalResources__keys
+        required: true
+        multivalued: false
+      resources:
+        name: resources
+        description: A table for mapping user terms (i.e., keys) to resource entities.
+        range: ExternalResources__resources
+        required: true
+        multivalued: false
+      objects:
+        name: objects
+        description: A table for identifying which objects in a file contain references
+          to external resources.
+        range: ExternalResources__objects
+        required: true
+        multivalued: false
+      object_keys:
+        name: object_keys
+        description: A table for identifying which objects use which keys.
+        range: ExternalResources__object_keys
+        required: true
+        multivalued: false
+    tree_root: true
+  ExternalResources__keys:
+    name: ExternalResources__keys
+    description: A table for storing user terms that are used to refer to external
+      resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(keys)
+        range: string
+        required: true
+        equals_string: keys
+      key_name:
+        name: key_name
+        description: The user term that maps to one or more resources in the 'resources'
+          table.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__resources:
+    name: ExternalResources__resources
+    description: A table for mapping user terms (i.e., keys) to resource entities.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(resources)
+        range: string
+        required: true
+        equals_string: resources
+      keytable_idx:
+        name: keytable_idx
+        description: The index to the key in the 'keys' table.
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false
+      resource_name:
+        name: resource_name
+        description: The name of the online resource (e.g., website, database) that
+          has the entity.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      resource_id:
+        name: resource_id
+        description: The unique identifier for the resource entity at the resource.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      uri:
+        name: uri
+        description: The URI for the resource entity this reference applies to. This
+          can be an empty string.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__objects:
+    name: ExternalResources__objects
+    description: A table for identifying which objects in a file contain references
+      to external resources.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(objects)
+        range: string
+        required: true
+        equals_string: objects
+      object_id:
+        name: object_id
+        description: The UUID for the object.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+      field:
+        name: field
+        description: The field of the object. This can be an empty string if the object
+          is a dataset and the field is the dataset values.
+        array:
+          exact_number_dimensions: 1
+        range: text
+        required: true
+        multivalued: false
+  ExternalResources__object_keys:
+    name: ExternalResources__object_keys
+    description: A table for identifying which objects use which keys.
+    is_a: Data
+    attributes:
+      name:
+        name: name
+        ifabsent: string(object_keys)
+        range: string
+        required: true
+        equals_string: object_keys
+      objecttable_idx:
+        name: objecttable_idx
+        description: The index to the 'objects' table for the object that holds the
+          key.
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false
+      keytable_idx:
+        name: keytable_idx
+        description: The index to the 'keys' table for the key.
+        array:
+          exact_number_dimensions: 1
+        range: uint
+        required: true
+        multivalued: false

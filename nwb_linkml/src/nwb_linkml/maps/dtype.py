@@ -3,10 +3,11 @@ Dtype mappings
 """
 
 from datetime import datetime
-from typing import Any, Type
+from typing import Any
 
-import nptyping
 import numpy as np
+
+from nwb_schema_language import CompoundDtype, DTypeType, FlatDtype, ReferenceDtype
 
 flat_to_linkml = {
     "float": "float",
@@ -37,37 +38,6 @@ flat_to_linkml = {
 """
 Map between the flat data types and the simpler linkml base types
 """
-
-flat_to_nptyping = {
-    "float": "Float",
-    "float32": "Float32",
-    "double": "Double",
-    "float64": "Float64",
-    "long": "LongLong",
-    "int64": "Int64",
-    "int": "Int",
-    "int32": "Int32",
-    "int16": "Int16",
-    "short": "Short",
-    "int8": "Int8",
-    "uint": "UInt",
-    "uint32": "UInt32",
-    "uint16": "UInt16",
-    "uint8": "UInt8",
-    "uint64": "UInt64",
-    "numeric": "Number",
-    "text": "String",
-    "utf": "Unicode",
-    "utf8": "Unicode",
-    "utf_8": "Unicode",
-    "string": "Unicode",
-    "str": "Unicode",
-    "ascii": "String",
-    "bool": "Bool",
-    "isodatetime": "Datetime64",
-    "AnyType": "Any",
-    "object": "Object",
-}
 
 flat_to_np = {
     "float": float,
@@ -130,10 +100,9 @@ np_to_python = {
             np.float64,
             np.single,
             np.double,
-            np.float_,
         )
     },
-    **{n: str for n in (np.character, np.str_, np.string_, np.unicode_)},
+    **{n: str for n in (np.character, np.str_)},
 }
 
 allowed_precisions = {
@@ -173,15 +142,32 @@ https://github.com/hdmf-dev/hdmf/blob/ddc842b5c81d96e0b957b96e88533b16c137e206/s
 """
 
 
-def struct_from_dtype(dtype: np.dtype) -> Type[nptyping.Structure]:
+def handle_dtype(dtype: DTypeType | None) -> str:
     """
-    Create a nptyping Structure from a compound numpy dtype
+    Get the string form of a dtype
 
-    nptyping structures have the form::
+    Args:
+        dtype (:class:`.DTypeType`): Dtype to stringify
 
-        Structure["name: Str, age: Int"]
-
+    Returns:
+        str
     """
-    struct_pieces = [f"{k}: {flat_to_nptyping[v[0].name]}" for k, v in dtype.fields.items()]
-    struct_dtype = ", ".join(struct_pieces)
-    return nptyping.Structure[struct_dtype]
+    if isinstance(dtype, ReferenceDtype):
+        return dtype.target_type
+    elif dtype is None or dtype == []:
+        # Some ill-defined datasets are "abstract" despite that not being in the schema language
+        return "AnyType"
+    elif isinstance(dtype, FlatDtype):
+        return dtype.value
+    elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
+        # there is precisely one class that uses compound dtypes:
+        # TimeSeriesReferenceVectorData
+        # compoundDtypes are able to define a ragged table according to the schema
+        # but are used in this single case equivalently to attributes.
+        # so we'll... uh... treat them as slots.
+        # TODO
+        return "AnyType"
+
+    else:
+        # flat dtype
+        return dtype

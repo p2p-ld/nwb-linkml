@@ -7,13 +7,13 @@ from typing import ClassVar, Optional, Type
 
 from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
-from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.adapter import BuildResult, has_attrs, is_1d, is_compound
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
-from nwb_linkml.maps.dtype import flat_to_linkml
+from nwb_linkml.maps.dtype import flat_to_linkml, handle_dtype
 from nwb_linkml.maps.naming import camel_to_snake
-from nwb_schema_language import CompoundDtype, Dataset
+from nwb_schema_language import Dataset
 
 
 class DatasetMap(Map):
@@ -106,7 +106,7 @@ class MapScalar(DatasetMap):
         this_slot = SlotDefinition(
             name=cls.name,
             description=cls.doc,
-            range=ClassAdapter.handle_dtype(cls.dtype),
+            range=handle_dtype(cls.dtype),
             **QUANTITY_MAP[cls.quantity],
         )
         res = BuildResult(slots=[this_slot])
@@ -154,10 +154,14 @@ class MapScalarAttributes(DatasetMap):
                       name: rate
                       description: Sampling rate, in Hz.
                       range: float32
+                      required: true
                     unit:
                       name: unit
                       description: Unit of measurement for time, which is fixed to 'seconds'.
+                      ifabsent: string(seconds)
                       range: text
+                      required: true
+                      equals_string: seconds
                     value:
                       name: value
                       range: float64
@@ -203,9 +207,7 @@ class MapScalarAttributes(DatasetMap):
         """
         Map to a scalar attribute with an adjoining "value" slot
         """
-        value_slot = SlotDefinition(
-            name="value", range=ClassAdapter.handle_dtype(cls.dtype), required=True
-        )
+        value_slot = SlotDefinition(name="value", range=handle_dtype(cls.dtype), required=True)
         res.classes[0].attributes["value"] = value_slot
         return res
 
@@ -216,8 +218,8 @@ class MapListlike(DatasetMap):
 
     Used exactly once in the core schema, in ``ImageReferences`` -
     an array of references to other ``Image`` datasets. We ignore the
-    usual array structure and unnest the implicit array into a slot names from the
-    target type rather than the oddly-named ``num_images`` dimension so that
+    usual array structure and unnest the implicit array into a slot named "value"
+    rather than the oddly-named ``num_images`` dimension so that
     ultimately in the pydantic model we get a nicely behaved single-level list.
 
     Examples:
@@ -245,12 +247,16 @@ class MapListlike(DatasetMap):
                       name: name
                       range: string
                       required: true
-                    image:
-                      name: image
+                    value:
+                      name: value
+                      annotations:
+                        source_type:
+                          tag: source_type
+                          value: reference
                       description: Ordered dataset of references to Image objects.
-                      multivalued: true
                       range: Image
                       required: true
+                      multivalued: true
                   tree_root: true
 
     """
@@ -271,7 +277,7 @@ class MapListlike(DatasetMap):
             * - ``dtype``
               - ``Class``
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             cls.neurodata_type_inc != "VectorData"
             and is_1d(cls)
@@ -286,15 +292,15 @@ class MapListlike(DatasetMap):
         """
         Map to a list of the given class
         """
-        dtype = camel_to_snake(ClassAdapter.handle_dtype(cls.dtype))
         slot = SlotDefinition(
-            name=dtype,
+            name="value",
             multivalued=True,
-            range=ClassAdapter.handle_dtype(cls.dtype),
+            range=handle_dtype(cls.dtype),
             description=cls.doc,
             required=cls.quantity not in ("*", "?"),
+            annotations=[{"source_type": "reference"}],
         )
-        res.classes[0].attributes[dtype] = slot
+        res.classes[0].attributes["value"] = slot
         return res
 
 
@@ -378,7 +384,7 @@ class MapArraylike(DatasetMap):
               - ``False``
 
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             cls.name
             and (all([cls.dims, cls.shape]) or cls.neurodata_type_inc == "VectorData")
@@ -409,7 +415,7 @@ class MapArraylike(DatasetMap):
                 SlotDefinition(
                     name=name,
                     multivalued=False,
-                    range=ClassAdapter.handle_dtype(cls.dtype),
+                    range=handle_dtype(cls.dtype),
                     description=cls.doc,
                     required=cls.quantity not in ("*", "?"),
                     **expressions,
@@ -478,12 +484,14 @@ class MapArrayLikeAttributes(DatasetMap):
                       name: resolution
                       description: Pixel resolution of the image, in pixels per centimeter.
                       range: float32
+                      required: false
                     description:
                       name: description
                       description: Description of the image.
                       range: text
-                    array:
-                      name: array
+                      required: false
+                    value:
+                      name: value
                       range: numeric
                       any_of:
                       - array:
@@ -513,7 +521,7 @@ class MapArrayLikeAttributes(DatasetMap):
         """
         Check that we're an array with some additional metadata
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             all([cls.dims, cls.shape])
             and cls.neurodata_type_inc != "VectorData"
@@ -532,10 +540,8 @@ class MapArrayLikeAttributes(DatasetMap):
         array_adapter = ArrayAdapter(cls.dims, cls.shape)
         expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
-        array_slot = SlotDefinition(
-            name="array", range=ClassAdapter.handle_dtype(cls.dtype), **expressions
-        )
-        res.classes[0].attributes.update({"array": array_slot})
+        array_slot = SlotDefinition(name="value", range=handle_dtype(cls.dtype), **expressions)
+        res.classes[0].attributes.update({"value": array_slot})
         return res
 
 
@@ -572,7 +578,7 @@ class MapClassRange(DatasetMap):
             name=cls.name,
             description=cls.doc,
             range=f"{cls.neurodata_type_inc}",
-            annotations=[{"named": True}],
+            annotations=[{"named": True}, {"source_type": "neurodata_type_inc"}],
             **QUANTITY_MAP[cls.quantity],
         )
         res = BuildResult(slots=[this_slot])
@@ -596,7 +602,7 @@ class MapVectorClassRange(DatasetMap):
         Check that we are a VectorData object without any additional attributes
         with a dtype that refers to another class
         """
-        dtype = ClassAdapter.handle_dtype(cls.dtype)
+        dtype = handle_dtype(cls.dtype)
         return (
             cls.neurodata_type_inc == "VectorData"
             and cls.name
@@ -617,7 +623,7 @@ class MapVectorClassRange(DatasetMap):
             name=cls.name,
             description=cls.doc,
             multivalued=True,
-            range=ClassAdapter.handle_dtype(cls.dtype),
+            range=handle_dtype(cls.dtype),
             required=cls.quantity not in ("*", "?"),
         )
         res = BuildResult(slots=[this_slot])
@@ -672,7 +678,7 @@ class MapVectorClassRange(DatasetMap):
 #         this_slot = SlotDefinition(
 #             name=cls.name,
 #             description=cls.doc,
-#             range=ClassAdapter.handle_dtype(cls.dtype),
+#             range=handle_dtype(cls.dtype),
 #             multivalued=True,
 #         )
 #         # No need to make a class for us, so we replace the existing build results
@@ -686,17 +692,28 @@ class MapNVectors(DatasetMap):
 
     Most commonly: ``VectorData`` is subclassed without a name and with a '*' quantity to indicate
     arbitrary columns.
+
+    Used twice:
+    - Images
+    - DynamicTable (and all its uses)
+
+    DynamicTable (and the slot VectorData where this is called for)
+    is handled specially and just dropped, because we handle the possibility for
+    arbitrary extra VectorData in the :mod:`nwb_linkml.includes.hdmf` module mixin classes.
+
+    So really this is just a handler for the `Images` case
     """
 
     @classmethod
     def check(c, cls: Dataset) -> bool:
         """
-        Check for being an unnamed multivalued vector class
+        Check for being an unnamed multivalued vector class that isn't VectorData
         """
         return (
             cls.name is None
             and cls.neurodata_type_def is None
             and cls.neurodata_type_inc
+            and cls.neurodata_type_inc != "VectorData"
             and cls.quantity in ("*", "+")
         )
 
@@ -724,6 +741,10 @@ class MapCompoundDtype(DatasetMap):
 
     We render them just as a class with each of the dtypes as slots - they are
     typically used by other datasets to create a table.
+
+    Since there is exactly one class (``TimeSeriesReferenceVectorData``) that uses compound dtypes
+    meaningfully, we just hardcode the behavior of inheriting the array shape from the VectorData
+    parent classes. Otherwise, linkml schemas correctly propagate the ``value`` property.
 
     Eg. ``base.TimeSeriesReferenceVectorData``
 
@@ -772,10 +793,14 @@ class MapCompoundDtype(DatasetMap):
             slots[a_dtype.name] = SlotDefinition(
                 name=a_dtype.name,
                 description=a_dtype.doc,
-                range=ClassAdapter.handle_dtype(a_dtype.dtype),
+                range=handle_dtype(a_dtype.dtype),
+                array=ArrayExpression(exact_number_dimensions=1),
                 **QUANTITY_MAP[cls.quantity],
             )
         res.classes[0].attributes.update(slots)
+
+        if "value" in res.classes[0].attributes:
+            del res.classes[0].attributes["value"]
         return res
 
 
@@ -825,36 +850,3 @@ class DatasetAdapter(ClassAdapter):
             return None
         else:
             return matches[0]
-
-
-def is_1d(cls: Dataset) -> bool:
-    """
-    Check if the values of a dataset are 1-dimensional.
-
-    Specifically:
-    * a single-layer dim/shape list of length 1, or
-    * a nested dim/shape list where every nested spec is of length 1
-    """
-    return (
-        not any([isinstance(dim, list) for dim in cls.dims]) and len(cls.dims) == 1
-    ) or (  # nested list
-        all([isinstance(dim, list) for dim in cls.dims])
-        and len(cls.dims) == 1
-        and len(cls.dims[0]) == 1
-    )
-
-
-def is_compound(cls: Dataset) -> bool:
-    """Check if dataset has a compound dtype"""
-    return (
-        isinstance(cls.dtype, list)
-        and len(cls.dtype) > 0
-        and isinstance(cls.dtype[0], CompoundDtype)
-    )
-
-
-def has_attrs(cls: Dataset) -> bool:
-    """
-    Check if a dataset has any attributes at all without defaults
-    """
-    return len(cls.attributes) > 0 and all([not a.value for a in cls.attributes])

@@ -37,6 +37,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -62,7 +71,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -96,7 +105,7 @@ class TimeIntervals(DynamicTable):
     )
 
     name: str = Field(...)
-    start_time: NDArray[Any, np.float32] = Field(
+    start_time: VectorData[NDArray[Any, float]] = Field(
         ...,
         description="""Start time of epoch, in seconds.""",
         json_schema_extra={
@@ -105,7 +114,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    stop_time: NDArray[Any, np.float32] = Field(
+    stop_time: VectorData[NDArray[Any, float]] = Field(
         ...,
         description="""Stop time of epoch, in seconds.""",
         json_schema_extra={
@@ -114,7 +123,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    tags: Optional[NDArray[Any, str]] = Field(
+    tags: VectorData[Optional[NDArray[Any, str]]] = Field(
         None,
         description="""User-defined tags that identify or categorize events.""",
         json_schema_extra={
@@ -127,31 +136,44 @@ class TimeIntervals(DynamicTable):
         None,
         description="""Index for tags.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     timeseries: Named[Optional[TimeSeriesReferenceVectorData]] = Field(
         None,
         description="""An index into a TimeSeries object.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     timeseries_index: Named[Optional[VectorIndex]] = Field(
         None,
         description="""Index for timeseries.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},

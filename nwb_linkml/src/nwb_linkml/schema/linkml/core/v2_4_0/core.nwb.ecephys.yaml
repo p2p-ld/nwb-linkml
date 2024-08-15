@@ -37,6 +37,7 @@ classes:
           at 300 Hz". If a non-standard filter type is used, provide as much detail
           about the filter properties as possible.
         range: text
+        required: false
       data:
         name: data
         description: Recorded voltage data.
@@ -62,6 +63,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion pointer to the electrodes that this time series
           was generated from.
         range: DynamicTableRegion
@@ -177,6 +181,9 @@ classes:
           named:
             tag: named
             value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
         description: DynamicTableRegion pointer to the electrodes that this time series
           was generated from.
         range: DynamicTableRegion
@@ -221,6 +228,17 @@ classes:
         range: float64
         required: true
         multivalued: false
+      source_electricalseries:
+        name: source_electricalseries
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: ElectricalSeries
+        - range: string
     tree_root: true
   EventWaveform:
     name: EventWaveform
@@ -229,8 +247,8 @@ classes:
       during experiment acquisition.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -252,8 +270,8 @@ classes:
       the ElectricalSeries 'filtering' attribute.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -267,8 +285,8 @@ classes:
       properties should be noted in the ElectricalSeries 'filtering' attribute.
     is_a: NWBDataInterface
     attributes:
-      children:
-        name: children
+      value:
+        name: value
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -288,18 +306,31 @@ classes:
         name: description
         description: Description of this electrode group.
         range: text
+        required: true
       location:
         name: location
         description: Location of electrode group. Specify the area, layer, comments
           on estimation of area/layer, etc. Use standard atlas names for anatomical
           regions when possible.
         range: text
+        required: true
       position:
         name: position
         description: stereotaxic or common framework coordinates
         range: ElectrodeGroup__position
         required: false
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
   ElectrodeGroup__position:
     name: ElectrodeGroup__position
@@ -314,18 +345,24 @@ classes:
       x:
         name: x
         description: x coordinate
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false
       y:
         name: y
         description: y coordinate
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false
       z:
         name: z
         description: z coordinate
+        array:
+          exact_number_dimensions: 1
         range: float32
         required: false
         multivalued: false
@@ -374,6 +411,17 @@ classes:
         range: float32
         required: true
         multivalued: false
+      clustering_interface:
+        name: clustering_interface
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Clustering
+        - range: string
     tree_root: true
   Clustering:
     name: Clustering

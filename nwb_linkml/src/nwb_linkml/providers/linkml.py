@@ -3,8 +3,9 @@ Provider for LinkML schema built from NWB schema
 """
 
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, TypedDict
+from typing import Dict, Optional
 
 from linkml_runtime import SchemaView
 from linkml_runtime.dumpers import yaml_dumper
@@ -19,7 +20,8 @@ from nwb_linkml.ui import AdapterProgress
 from nwb_schema_language import Namespaces
 
 
-class LinkMLSchemaBuild(TypedDict):
+@dataclass
+class LinkMLSchemaBuild:
     """Build result from :meth:`.LinkMLProvider.build`"""
 
     version: str
@@ -283,4 +285,4 @@ class LinkMLProvider(Provider):
             )
         ns_file = ns_repo.provide_from_git(commit=version)
         res = self.build_from_yaml(ns_file)
-        return res[namespace]["namespace"]
+        return res[namespace].namespace

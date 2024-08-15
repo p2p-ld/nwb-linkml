@@ -36,6 +36,14 @@ class NamespaceRepo(BaseModel):
         ),
         default_factory=list,
     )
+    imports: Optional[dict[str, Path]] = Field(
+        None,
+        description=(
+            "Any named imports that are included eg. as submodules within their repository. Dict"
+            " mapping schema name (used in the namespace field) to the namespace file relative to"
+            " the directory containing the **namespace.yaml file** (not the repo root)"
+        ),
+    )
 
     def provide_from_git(self, commit: str | None = None) -> Path:
         """Provide a namespace file from a git repo"""
@@ -61,6 +69,7 @@ NWB_CORE_REPO = NamespaceRepo(
         "2.6.0",
         "2.7.0",
     ],
+    imports={"hdmf-common": Path("../hdmf-common-schema") / "common" / "namespace.yaml"},
 )
 
 HDMF_COMMON_REPO = NamespaceRepo(
@@ -86,7 +95,7 @@ HDMF_COMMON_REPO = NamespaceRepo(
 
 DEFAULT_REPOS = {
     repo.name: repo for repo in [NWB_CORE_REPO, HDMF_COMMON_REPO]
-}  # type: Dict[str, NamespaceRepo]
+}  # type: dict[str, NamespaceRepo]
 
 
 class GitError(OSError):
@@ -112,7 +121,7 @@ class GitRepo:
         self.namespace = namespace
         self._commit = commit
 
-    def _git_call(self, *args: List[str]) -> subprocess.CompletedProcess:
+    def _git_call(self, *args: str) -> subprocess.CompletedProcess:
         res = subprocess.run(["git", "-C", self.temp_directory, *args], capture_output=True)
         if res.returncode != 0:
             raise GitError(
@@ -138,8 +147,11 @@ class GitRepo:
         """
         URL for "origin" remote
         """
-        res = self._git_call("remote", "get-url", "origin")
-        return res.stdout.decode("utf-8").strip()
+        try:
+            res = self._git_call("remote", "get-url", "origin")
+            return res.stdout.decode("utf-8").strip()
+        except GitError:
+            return ""
 
     @property
     def active_commit(self) -> str:
@@ -156,6 +168,16 @@ class GitRepo:
         Local path to the indicated namespace file.
         """
         return self.temp_directory / self.namespace.path
+
+    @property
+    def import_namespaces(self) -> dict[str, Path]:
+        """
+        Absolute location of each of the imported namespaces specified in
+        :attr:`.NamespaceRepo.imports`
+        """
+        if self.namespace.imports is None:
+            return {}
+        return {k: (self.namespace_file / v).resolve() for k, v in self.namespace.imports.items()}
 
     @property
     def commit(self) -> Optional[str]:

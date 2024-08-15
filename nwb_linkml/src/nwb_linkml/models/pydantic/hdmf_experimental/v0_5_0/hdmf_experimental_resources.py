@@ -8,6 +8,7 @@ from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
 from ...hdmf_common.v1_8_0.hdmf_common_base import Container, Data
+from numpydantic import NDArray, Shape
 
 metamodel_version = "None"
 version = "0.5.0"
@@ -27,6 +28,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -45,6 +55,7 @@ class LinkMLMeta(RootModel):
         return key in self.root
 
 
+NUMPYDANTIC_VERSION = "1.2.1"
 linkml_meta = LinkMLMeta(
     {
         "annotations": {
@@ -102,9 +113,10 @@ class HERDKeys(Data):
         "keys",
         json_schema_extra={"linkml_meta": {"equals_string": "keys", "ifabsent": "string(keys)"}},
     )
-    key: str = Field(
+    key: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The user term that maps to one or more resources in the `resources` table, e.g., \"human\".""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -119,9 +131,10 @@ class HERDFiles(Data):
         "files",
         json_schema_extra={"linkml_meta": {"equals_string": "files", "ifabsent": "string(files)"}},
     )
-    file_object_id: str = Field(
+    file_object_id: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The object id (UUID) of a file that contains objects that refers to external resources.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -138,13 +151,15 @@ class HERDEntities(Data):
             "linkml_meta": {"equals_string": "entities", "ifabsent": "string(entities)"}
         },
     )
-    entity_id: str = Field(
+    entity_id: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The compact uniform resource identifier (CURIE) of the entity, in the form [prefix]:[unique local identifier], e.g., 'NCBI_TAXON:9606'.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    entity_uri: str = Field(
+    entity_uri: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The URI for the entity this reference applies to. This can be an empty string. e.g., https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=9606""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -161,18 +176,30 @@ class HERDObjects(Data):
             "linkml_meta": {"equals_string": "objects", "ifabsent": "string(objects)"}
         },
     )
-    files_idx: np.uint64 = Field(
-        ..., description="""The row index to the file in the `files` table containing the object."""
+    files_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The row index to the file in the `files` table containing the object.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    object_id: str = Field(..., description="""The object id (UUID) of the object.""")
-    object_type: str = Field(..., description="""The data type of the object.""")
-    relative_path: str = Field(
+    object_id: NDArray[Shape["*"], str] = Field(
+        ...,
+        description="""The object id (UUID) of the object.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    object_type: NDArray[Shape["*"], str] = Field(
+        ...,
+        description="""The data type of the object.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
+    )
+    relative_path: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The relative path from the data object with the `object_id` to the dataset or attribute with the value(s) that is associated with an external resource. This can be an empty string if the object is a dataset that contains the value(s) that is associated with an external resource.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    field: str = Field(
+    field: NDArray[Shape["*"], str] = Field(
         ...,
         description="""The field within the compound data type using an external resource. This is used only if the dataset or attribute is a compound data type; otherwise this should be an empty string.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -189,11 +216,15 @@ class HERDObjectKeys(Data):
             "linkml_meta": {"equals_string": "object_keys", "ifabsent": "string(object_keys)"}
         },
     )
-    objects_idx: np.uint64 = Field(
-        ..., description="""The row index to the object in the `objects` table that holds the key"""
+    objects_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The row index to the object in the `objects` table that holds the key""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    keys_idx: np.uint64 = Field(
-        ..., description="""The row index to the key in the `keys` table."""
+    keys_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The row index to the key in the `keys` table.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 
@@ -210,11 +241,15 @@ class HERDEntityKeys(Data):
             "linkml_meta": {"equals_string": "entity_keys", "ifabsent": "string(entity_keys)"}
         },
     )
-    entities_idx: np.uint64 = Field(
-        ..., description="""The row index to the entity in the `entities` table."""
+    entities_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The row index to the entity in the `entities` table.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    keys_idx: np.uint64 = Field(
-        ..., description="""The row index to the key in the `keys` table."""
+    keys_idx: NDArray[Shape["*"], int] = Field(
+        ...,
+        description="""The row index to the key in the `keys` table.""",
+        json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
 
 

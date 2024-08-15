@@ -34,6 +34,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -84,21 +93,26 @@ class SpatialSeries(TimeSeries):
     reference_frame: Optional[str] = Field(
         None, description="""Description defining what exactly 'straight-ahead' means."""
     )
-    description: Optional[str] = Field(None, description="""Description of the time series.""")
+    description: Optional[str] = Field(
+        "no description",
+        description="""Description of the time series.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no description)"}},
+    )
     comments: Optional[str] = Field(
-        None,
+        "no comments",
         description="""Human-readable comments about the TimeSeries. This second descriptive field can be used to store additional information, or descriptive information if the primary description field is populated with a computer-readable string.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(no comments)"}},
     )
     starting_time: Optional[TimeSeriesStartingTime] = Field(
         None,
         description="""Timestamp of the first sample in seconds. When timestamps are uniformly spaced, the timestamp of the first sample can be specified and all subsequent ones calculated from the sampling rate attribute.""",
     )
-    timestamps: Optional[NDArray[Shape["* num_times"], np.float64]] = Field(
+    timestamps: Optional[NDArray[Shape["* num_times"], float]] = Field(
         None,
         description="""Timestamps for samples stored in data, in seconds, relative to the common experiment master-clock stored in NWBFile.timestamps_reference_time.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
     )
-    control: Optional[NDArray[Shape["* num_times"], np.uint8]] = Field(
+    control: Optional[NDArray[Shape["* num_times"], int]] = Field(
         None,
         description="""Numerical labels that apply to each time point in data for the purpose of querying and slicing data by these values. If present, the length of this array should be the same size as the first dimension of data.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
@@ -128,13 +142,14 @@ class SpatialSeriesData(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
-        None,
+        "meters",
         description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(meters)"}},
     )
-    array: Optional[
+    value: Optional[
         Union[
-            NDArray[Shape["* num_times"], np.number],
-            NDArray[Shape["* num_times, * num_features"], np.number],
+            NDArray[Shape["* num_times"], float],
+            NDArray[Shape["* num_times, * num_features"], float],
         ]
     ] = Field(None)
 
@@ -148,7 +163,7 @@ class BehavioralEpochs(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[IntervalSeries]] = Field(
+    value: Optional[List[IntervalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "IntervalSeries"}]}}
     )
     name: str = Field(...)
@@ -163,7 +178,7 @@ class BehavioralEvents(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[TimeSeries]] = Field(
+    value: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
     name: str = Field(...)
@@ -178,7 +193,7 @@ class BehavioralTimeSeries(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[TimeSeries]] = Field(
+    value: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
     name: str = Field(...)
@@ -193,7 +208,7 @@ class PupilTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[TimeSeries]] = Field(
+    value: Optional[List[TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
     name: str = Field(...)
@@ -208,7 +223,7 @@ class EyeTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[SpatialSeries]] = Field(
+    value: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
     name: str = Field(...)
@@ -223,7 +238,7 @@ class CompassDirection(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[SpatialSeries]] = Field(
+    value: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
     name: str = Field(...)
@@ -238,7 +253,7 @@ class Position(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    children: Optional[List[SpatialSeries]] = Field(
+    value: Optional[List[SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
     name: str = Field(...)

@@ -28,6 +28,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -71,17 +80,17 @@ class CSRMatrix(Container):
     )
 
     name: str = Field(...)
-    shape: Optional[np.uint64] = Field(
-        None, description="""The shape (number of rows, number of columns) of this sparse matrix."""
+    shape: List[int] = Field(
+        ..., description="""The shape (number of rows, number of columns) of this sparse matrix."""
     )
-    indices: NDArray[Shape["* number_of_non_zero_values"], np.uint64] = Field(
+    indices: NDArray[Shape["* number_of_non_zero_values"], int] = Field(
         ...,
         description="""The column indices.""",
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "number_of_non_zero_values"}]}}
         },
     )
-    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], np.uint64] = Field(
+    indptr: NDArray[Shape["* number_of_rows_in_the_matrix_1"], int] = Field(
         ...,
         description="""The row index pointer.""",
         json_schema_extra={

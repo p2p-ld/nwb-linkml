@@ -37,6 +37,15 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -62,7 +71,7 @@ ModelType = TypeVar("ModelType", bound=Type[BaseModel])
 
 def _get_name(item: ModelType | dict, info: ValidationInfo) -> Union[ModelType, dict]:
     """Get the name of the slot that refers to this object"""
-    assert isinstance(item, (BaseModel, dict))
+    assert isinstance(item, (BaseModel, dict)), f"{item} was not a BaseModel or a dict!"
     name = info.field_name
     if isinstance(item, BaseModel):
         item.name = name
@@ -96,14 +105,12 @@ class RetinotopyMap(NWBData):
     )
 
     name: str = Field(...)
-    dimension: Optional[np.int32] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
@@ -121,22 +128,18 @@ class AxisMap(RetinotopyMap):
     )
 
     name: str = Field(...)
-    unit: Optional[str] = Field(
-        None, description="""Unit that axis data is stored in (e.g., degrees)."""
-    )
-    array: Optional[NDArray[Shape["* num_rows, * num_cols"], np.float32]] = Field(
+    unit: str = Field(..., description="""Unit that axis data is stored in (e.g., degrees).""")
+    value: Optional[NDArray[Shape["* num_rows, * num_cols"], float]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}, {"alias": "num_cols"}]}}
         },
     )
-    dimension: Optional[np.int32] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
 
 
 class RetinotopyImage(GrayscaleImage):
@@ -149,29 +152,25 @@ class RetinotopyImage(GrayscaleImage):
     )
 
     name: str = Field(...)
-    bits_per_pixel: Optional[np.int32] = Field(
-        None,
+    bits_per_pixel: int = Field(
+        ...,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
     )
-    dimension: Optional[np.int32] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
-    format: Optional[str] = Field(
-        None, description="""Format of image. Right now only 'raw' is supported."""
-    )
-    resolution: Optional[np.float32] = Field(
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
+    format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 
@@ -193,35 +192,60 @@ class ImagingRetinotopy(NWBDataInterface):
         ...,
         description="""Phase response to stimulus on the first measured axis.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     axis_1_power_map: Named[Optional[AxisMap]] = Field(
         None,
         description="""Power response on the first measured axis. Response is scaled so 0.0 is no power in the response and 1.0 is maximum relative power.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     axis_2_phase_map: Named[AxisMap] = Field(
         ...,
         description="""Phase response to stimulus on the second measured axis.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     axis_2_power_map: Named[Optional[AxisMap]] = Field(
         None,
         description="""Power response to stimulus on the second measured axis.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     sign_map: Named[RetinotopyMap] = Field(
         ...,
         description="""Sine of the angle between the direction of the gradient in axis_1 and axis_2.""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
     axis_descriptions: NDArray[Shape["2 num_axes"], str] = Field(
@@ -241,7 +265,12 @@ class ImagingRetinotopy(NWBDataInterface):
         ...,
         description="""Gray-scale anatomical image of cortical surface. Array structure: [rows][columns]""",
         json_schema_extra={
-            "linkml_meta": {"annotations": {"named": {"tag": "named", "value": True}}}
+            "linkml_meta": {
+                "annotations": {
+                    "named": {"tag": "named", "value": True},
+                    "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
+                }
+            }
         },
     )
 
@@ -262,32 +291,26 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
             }
         },
     )
-    focal_depth: Optional[np.float32] = Field(
-        None, description="""Focal depth offset, in meters."""
-    )
-    bits_per_pixel: Optional[np.int32] = Field(
-        None,
+    focal_depth: float = Field(..., description="""Focal depth offset, in meters.""")
+    bits_per_pixel: int = Field(
+        ...,
         description="""Number of bits used to represent each value. This is necessary to determine maximum (white) pixel value.""",
     )
-    dimension: Optional[np.int32] = Field(
-        None,
+    dimension: List[int] = Field(
+        ...,
         description="""Number of rows and columns in the image. NOTE: row, column representation is equivalent to height, width.""",
     )
-    field_of_view: Optional[np.float32] = Field(
-        None, description="""Size of viewing area, in meters."""
-    )
-    format: Optional[str] = Field(
-        None, description="""Format of image. Right now only 'raw' is supported."""
-    )
-    resolution: Optional[np.float32] = Field(
+    field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
+    format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
+    resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    array: Optional[
+    value: Optional[
         Union[
-            NDArray[Shape["* x, * y"], np.number],
-            NDArray[Shape["* x, * y, 3 r_g_b"], np.number],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], np.number],
+            NDArray[Shape["* x, * y"], float],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
         ]
     ] = Field(None)
 

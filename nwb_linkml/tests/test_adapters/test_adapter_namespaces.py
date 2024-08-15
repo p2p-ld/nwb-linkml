@@ -46,3 +46,17 @@ def test_skip_imports(nwb_core_fixture):
     # we shouldn't have any of the hdmf-common schema in with us
     namespaces = [sch.annotations["namespace"].value for sch in res.schemas]
     assert all([ns == "core" for ns in namespaces])
+
+
+@pytest.mark.skip()
+def test_populate_inheritance(nwb_core_fixture):
+    """
+    Classes should receive and override the properties of their parents
+    when they have neurodata_type_inc
+    Args:
+        nwb_core_fixture:
+
+    Returns:
+
+    """
+    pass

@@ -242,10 +242,7 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
 
     def _find_references(name: str, obj: h5py.Group | h5py.Dataset) -> None:
         pbar.update()
-        refs = []
-        for attr in obj.attrs.values():
-            if isinstance(attr, h5py.h5r.Reference):
-                refs.append(attr)
+        refs = [attr for attr in obj.attrs.values() if isinstance(attr, h5py.h5r.Reference)]
 
         if isinstance(obj, h5py.Dataset):
             # dataset is all references

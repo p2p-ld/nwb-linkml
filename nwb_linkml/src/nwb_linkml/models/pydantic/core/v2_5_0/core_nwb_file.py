@@ -7,7 +7,6 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...core.v2_5_0.core_nwb_epoch import TimeIntervals
 from ...core.v2_5_0.core_nwb_misc import Units
 from ...core.v2_5_0.core_nwb_device import Device
 from ...core.v2_5_0.core_nwb_ogen import OptogeneticStimulusSite
@@ -24,6 +23,7 @@ from ...core.v2_5_0.core_nwb_icephys import (
     RepetitionsTable,
     ExperimentalConditionsTable,
 )
+from ...core.v2_5_0.core_nwb_epoch import TimeIntervals
 from ...core.v2_5_0.core_nwb_base import (
     NWBData,
     NWBContainer,
@@ -50,6 +50,15 @@ class ConfiguredBaseModel(BaseModel):
         None, description="The absolute path that this object is stored in an NWB file"
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
+
+    def __getitem__(self, val: Union[int, slice]) -> Any:
+        """Try and get a value from value or "data" if we have it"""
+        if hasattr(self, "value") and self.value is not None:
+            return self.value[val]
+        elif hasattr(self, "data") and self.data is not None:
+            return self.data[val]
+        else:
+            raise KeyError("No value or data field to index from")
 
 
 class LinkMLMeta(RootModel):
@@ -105,9 +114,7 @@ class ScratchData(NWBData):
     )
 
     name: str = Field(...)
-    notes: Optional[str] = Field(
-        None, description="""Any notes the user has about the dataset being stored"""
-    )
+    notes: str = Field(..., description="""Any notes the user has about the dataset being stored""")
 
 
 class NWBFile(NWBContainer):
@@ -123,11 +130,12 @@ class NWBFile(NWBContainer):
         "root",
         json_schema_extra={"linkml_meta": {"equals_string": "root", "ifabsent": "string(root)"}},
     )
-    nwb_version: Optional[str] = Field(
-        None,
+    nwb_version: Literal["2.5.0"] = Field(
+        "2.5.0",
         description="""File version string. Use semantic versioning, e.g. 1.2.1. This will be the name of the format with trailing major, minor and patch numbers.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "2.5.0", "ifabsent": "string(2.5.0)"}},
     )
-    file_create_date: NDArray[Shape["* num_modifications"], np.datetime64] = Field(
+    file_create_date: NDArray[Shape["* num_modifications"], datetime] = Field(
         ...,
         description="""A record of the date the file was created and of subsequent modifications. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted strings: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds. The file can be created after the experiment was run, so this may differ from the experiment start time. Each modification to the nwb file adds a new entry to the array.""",
         json_schema_extra={
@@ -141,11 +149,11 @@ class NWBFile(NWBContainer):
     session_description: str = Field(
         ..., description="""A description of the experimental session and data in the file."""
     )
-    session_start_time: np.datetime64 = Field(
+    session_start_time: datetime = Field(
         ...,
         description="""Date and time of the experiment/session start. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds.""",
     )
-    timestamps_reference_time: np.datetime64 = Field(
+    timestamps_reference_time: datetime = Field(
         ...,
         description="""Date and time corresponding to time zero of all timestamps. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds. All times stored in the file use this time as reference (i.e., time zero).""",
     )
@@ -183,19 +191,9 @@ class NWBFile(NWBContainer):
         ...,
         description="""Experimental metadata, including protocol, notes and description of hardware device(s).  The metadata stored in this section should be used to describe the experiment. Metadata necessary for interpreting the data is stored with the data. General experimental metadata, including animal strain, experimental protocols, experimenter, devices, etc, are stored under 'general'. Core metadata (e.g., that required to interpret data fields) is stored with the data itself, and implicitly defined by the file specification (e.g., time is in seconds). The strategy used here for storing non-core metadata is to use free-form text fields, such as would appear in sentences or paragraphs from a Methods section. Metadata fields are text to enable them to be more general, for example to represent ranges instead of numerical values. Machine-readable metadata is stored as attributes to these free-form datasets. All entries in the below table are to be included when data is present. Unused groups (e.g., intracellular_ephys in an optophysiology experiment) should not be created unless there is data to store within them.""",
     )
-    intervals: Optional[List[TimeIntervals]] = Field(
+    intervals: Optional[NWBFileIntervals] = Field(
         None,
         description="""Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "any_of": [
-                    {"range": "TimeIntervals"},
-                    {"range": "TimeIntervals"},
-                    {"range": "TimeIntervals"},
-                    {"range": "TimeIntervals"},
-                ]
-            }
-        },
     )
     units: Optional[Units] = Field(None, description="""Data about sorted spike units.""")
 
@@ -283,7 +281,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Description of slices, including information about preparation thickness, orientation, temperature, and bath solution.""",
     )
-    source_script: Optional[NWBFileGeneralSourceScript] = Field(
+    source_script: Optional[GeneralSourceScript] = Field(
         None,
         description="""Script file or link to public source code used to create this NWB file.""",
     )
@@ -311,10 +309,10 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Information about the animal or person from which the data was measured.""",
     )
-    extracellular_ephys: Optional[NWBFileGeneralExtracellularEphys] = Field(
+    extracellular_ephys: Optional[GeneralExtracellularEphys] = Field(
         None, description="""Metadata related to extracellular electrophysiology."""
     )
-    intracellular_ephys: Optional[NWBFileGeneralIntracellularEphys] = Field(
+    intracellular_ephys: Optional[GeneralIntracellularEphys] = Field(
         None, description="""Metadata related to intracellular electrophysiology."""
     )
     optogenetics: Optional[List[OptogeneticStimulusSite]] = Field(
@@ -329,7 +327,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
     )
 
 
-class NWBFileGeneralSourceScript(ConfiguredBaseModel):
+class GeneralSourceScript(ConfiguredBaseModel):
     """
     Script file or link to public source code used to create this NWB file.
     """
@@ -342,11 +340,11 @@ class NWBFileGeneralSourceScript(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "source_script", "ifabsent": "string(source_script)"}
         },
     )
-    file_name: Optional[str] = Field(None, description="""Name of script file.""")
+    file_name: str = Field(..., description="""Name of script file.""")
     value: str = Field(...)
 
 
-class NWBFileGeneralExtracellularEphys(ConfiguredBaseModel):
+class GeneralExtracellularEphys(ConfiguredBaseModel):
     """
     Metadata related to extracellular electrophysiology.
     """
@@ -365,12 +363,12 @@ class NWBFileGeneralExtracellularEphys(ConfiguredBaseModel):
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Physical group of electrodes."""
     )
-    electrodes: Optional[NWBFileGeneralExtracellularEphysElectrodes] = Field(
+    electrodes: Optional[ExtracellularEphysElectrodes] = Field(
         None, description="""A table of all electrodes (i.e. channels) used for recording."""
     )
 
 
-class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
+class ExtracellularEphysElectrodes(DynamicTable):
     """
     A table of all electrodes (i.e. channels) used for recording.
     """
@@ -383,7 +381,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             "linkml_meta": {"equals_string": "electrodes", "ifabsent": "string(electrodes)"}
         },
     )
-    x: Optional[NDArray[Any, np.float32]] = Field(
+    x: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""x coordinate of the channel location in the brain (+x is posterior).""",
         json_schema_extra={
@@ -392,7 +390,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    y: Optional[NDArray[Any, np.float32]] = Field(
+    y: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""y coordinate of the channel location in the brain (+y is inferior).""",
         json_schema_extra={
@@ -401,7 +399,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    z: Optional[NDArray[Any, np.float32]] = Field(
+    z: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""z coordinate of the channel location in the brain (+z is right).""",
         json_schema_extra={
@@ -410,7 +408,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    imp: Optional[NDArray[Any, np.float32]] = Field(
+    imp: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""Impedance of the channel, in ohms.""",
         json_schema_extra={
@@ -419,7 +417,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    location: NDArray[Any, str] = Field(
+    location: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Location of the electrode (channel). Specify the area, layer, comments on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use standard atlas names for anatomical regions when possible.""",
         json_schema_extra={
@@ -428,7 +426,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    filtering: Optional[NDArray[Any, str]] = Field(
+    filtering: VectorData[Optional[NDArray[Any, str]]] = Field(
         None,
         description="""Description of hardware filtering, including the filter name and frequency cutoffs.""",
         json_schema_extra={
@@ -440,7 +438,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
     group: List[ElectrodeGroup] = Field(
         ..., description="""Reference to the ElectrodeGroup this electrode is a part of."""
     )
-    group_name: NDArray[Any, str] = Field(
+    group_name: VectorData[NDArray[Any, str]] = Field(
         ...,
         description="""Name of the ElectrodeGroup this electrode is a part of.""",
         json_schema_extra={
@@ -449,7 +447,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_x: Optional[NDArray[Any, np.float32]] = Field(
+    rel_x: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""x coordinate in electrode group""",
         json_schema_extra={
@@ -458,7 +456,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_y: Optional[NDArray[Any, np.float32]] = Field(
+    rel_y: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""y coordinate in electrode group""",
         json_schema_extra={
@@ -467,7 +465,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_z: Optional[NDArray[Any, np.float32]] = Field(
+    rel_z: VectorData[Optional[NDArray[Any, float]]] = Field(
         None,
         description="""z coordinate in electrode group""",
         json_schema_extra={
@@ -476,7 +474,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    reference: Optional[NDArray[Any, str]] = Field(
+    reference: VectorData[Optional[NDArray[Any, str]]] = Field(
         None,
         description="""Description of the reference electrode and/or reference scheme used for this electrode, e.g., \"stainless steel skull screw\" or \"online common average referencing\".""",
         json_schema_extra={
@@ -485,14 +483,12 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    colnames: Optional[str] = Field(
-        None,
+    colnames: List[str] = Field(
+        ...,
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
-    description: Optional[str] = Field(
-        None, description="""Description of what is in this dynamic table."""
-    )
-    id: NDArray[Shape["* num_rows"], int] = Field(
+    description: str = Field(..., description="""Description of what is in this dynamic table.""")
+    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
@@ -502,7 +498,7 @@ class NWBFileGeneralExtracellularEphysElectrodes(DynamicTable):
     )
 
 
-class NWBFileGeneralIntracellularEphys(ConfiguredBaseModel):
+class GeneralIntracellularEphys(ConfiguredBaseModel):
     """
     Metadata related to intracellular electrophysiology.
     """
@@ -551,6 +547,35 @@ class NWBFileGeneralIntracellularEphys(ConfiguredBaseModel):
     )
 
 
+class NWBFileIntervals(ConfiguredBaseModel):
+    """
+    Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.file"})
+
+    name: Literal["intervals"] = Field(
+        "intervals",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "intervals", "ifabsent": "string(intervals)"}
+        },
+    )
+    epochs: Optional[TimeIntervals] = Field(
+        None,
+        description="""Divisions in time marking experimental stages or sub-divisions of a single recording session.""",
+    )
+    trials: Optional[TimeIntervals] = Field(
+        None, description="""Repeated experimental events that have a logical grouping."""
+    )
+    invalid_times: Optional[TimeIntervals] = Field(
+        None, description="""Time intervals that should be removed from analysis."""
+    )
+    time_intervals: Optional[List[TimeIntervals]] = Field(
+        None,
+        description="""Optional additional table(s) for describing other experimental time intervals.""",
+    )
+
+
 class LabMetaData(NWBContainer):
     """
     Lab-specific meta-data.
@@ -576,7 +601,7 @@ class Subject(NWBContainer):
     age: Optional[str] = Field(
         None, description="""Age of subject. Can be supplied instead of 'date_of_birth'."""
     )
-    date_of_birth: Optional[np.datetime64] = Field(
+    date_of_birth: Optional[datetime] = Field(
         None, description="""Date of birth of subject. Can be supplied instead of 'age'."""
     )
     description: Optional[str] = Field(
@@ -605,9 +630,10 @@ ScratchData.model_rebuild()
 NWBFile.model_rebuild()
 NWBFileStimulus.model_rebuild()
 NWBFileGeneral.model_rebuild()
-NWBFileGeneralSourceScript.model_rebuild()
-NWBFileGeneralExtracellularEphys.model_rebuild()
-NWBFileGeneralExtracellularEphysElectrodes.model_rebuild()
-NWBFileGeneralIntracellularEphys.model_rebuild()
+GeneralSourceScript.model_rebuild()
+GeneralExtracellularEphys.model_rebuild()
+ExtracellularEphysElectrodes.model_rebuild()
+GeneralIntracellularEphys.model_rebuild()
+NWBFileIntervals.model_rebuild()
 LabMetaData.model_rebuild()
 Subject.model_rebuild()

@@ -39,6 +39,17 @@ classes:
             dimensions:
             - alias: num_times
             - alias: num_rois
+      site:
+        name: site
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: OptogeneticStimulusSite
+        - range: string
     tree_root: true
   OptogeneticStimulusSite:
     name: OptogeneticStimulusSite
@@ -69,4 +80,15 @@ classes:
         range: text
         required: true
         multivalued: false
+      device:
+        name: device
+        annotations:
+          source_type:
+            tag: source_type
+            value: link
+        required: true
+        multivalued: false
+        any_of:
+        - range: Device
+        - range: string
     tree_root: true
