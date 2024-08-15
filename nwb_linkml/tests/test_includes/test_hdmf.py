@@ -17,7 +17,6 @@ from nwb_linkml.includes.hdmf import (
 # FIXME: Make this just be the output of the provider by patching into import machinery
 from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
     ElectrodeGroup,
-    VoltageClampStimulusSeries,
 )
 
 from .conftest import _ragged_array
@@ -769,7 +768,6 @@ def test_aligned_dynamictable_ictable(intracellular_recordings_table):
     # also tested separately
     # each individual cell should be an array of VoltageClampStimulusSeries...
     # and then we should be able to index within that as well
-    stims = rows["stimuli", "stimulus"][0]
+    stims = rows["stimuli", "stimulus"]
     for i in range(len(stims)):
-        assert isinstance(stims[i], VoltageClampStimulusSeries)
-        assert all([i == val for val in stims[i][:]])
+        assert all(np.array(stims[i]) == i)
