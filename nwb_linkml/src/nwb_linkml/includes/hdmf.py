@@ -496,9 +496,7 @@ class DynamicTableRegionMixin(BaseModel):
     def __getitem__(self, item: int) -> pd.DataFrame: ...
 
     @overload
-    def __getitem__(
-        self, item: Union[slice, Iterable]
-    ) -> List[pd.DataFrame]: ...
+    def __getitem__(self, item: Union[slice, Iterable]) -> List[pd.DataFrame]: ...
 
     def __getitem__(
         self, item: Union[int, slice, Iterable]
