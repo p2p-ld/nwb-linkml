@@ -149,31 +149,62 @@ class VectorIndexMixin(BaseModel, Generic[T]):
             kwargs["value"] = value
         super().__init__(**kwargs)
 
-    def _getitem_helper(self, arg: int) -> Union[list, NDArray]:
+    def _slice(self, arg: int) -> slice:
         """
         Mimicking :func:`hdmf.common.table.VectorIndex.__getitem_helper`
         """
         start = 0 if arg == 0 else self.value[arg - 1]
         end = self.value[arg]
-        return self.target.value[slice(start, end)]
+        return slice(start, end)
 
     def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
         if self.target is None:
             return self.value[item]
         else:
             if isinstance(item, (int, np.integer)):
-                return self._getitem_helper(item)
+                return self.target.value[self._slice(item)]
             elif isinstance(item, (slice, Iterable)):
                 if isinstance(item, slice):
                     item = range(*item.indices(len(self.value)))
-                return [self._getitem_helper(i) for i in item]
-            else:
+                return [self.target.value[self._slice(i)] for i in item]
+            else:  # pragma: no cover
                 raise AttributeError(f"Could not index with {item}")
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-        if self._index:
-            # VectorIndex is the thing that knows how to do the slicing
-            self._index[key] = value
+        """
+        Set a value on the :attr:`.target` .
+
+        .. note::
+
+            Even though we correct the indexing logic from HDMF where the
+            _data_ is the thing that is provided by the API when one accesses
+            table.data (rather than table.data_index as hdmf does),
+            we will set to the target here (rather than to the index)
+            to be consistent. To modify the index, modify `self.value` directly
+
+        """
+        if self.target:
+            if isinstance(key, (int, np.integer)):
+                self.target.value[self._slice(key)] = value
+            elif isinstance(key, (slice, Iterable)):
+                if isinstance(key, slice):
+                    key = range(*key.indices(len(self.value)))
+
+                if isinstance(value, Iterable):
+                    if len(key) != len(value):
+                        raise ValueError(
+                            "Can only assign equal-length iterable to a slice, manually index the"
+                            " ragged values of of the target VectorData object if you need more"
+                            " control"
+                        )
+                    for i, subval in zip(key, value):
+                        self.target.value[self._slice(i)] = subval
+                else:
+                    for i in key:
+                        self.target.value[self._slice(i)] = value
+            else:  # pragma: no cover
+                raise AttributeError(f"Could not index with {key}")
+
         else:
             self.value[key] = value
 
@@ -204,9 +235,17 @@ class DynamicTableRegionMixin(BaseModel):
     _index: Optional["VectorIndex"] = None
 
     table: "DynamicTableMixin"
-    value: Optional[NDArray] = None
+    value: Optional[NDArray[Shape["*"], int]] = None
 
-    def __getitem__(self, item: Union[int, slice, Iterable]) -> Any:
+    @overload
+    def __getitem__(self, item: int) -> pd.DataFrame: ...
+
+    @overload
+    def __getitem__(self, item: Union[slice, Iterable]) -> List[pd.DataFrame]: ...
+
+    def __getitem__(
+        self, item: Union[int, slice, Iterable]
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Use ``value`` to index the table. Works analogously to ``VectorIndex`` despite
         this being a subclass of ``VectorData``
@@ -221,20 +260,27 @@ class DynamicTableRegionMixin(BaseModel):
                 # so we index table with an array to construct
                 # a list of lists of rows
                 return [self.table[idx] for idx in self._index[item]]
-            else:
+            else:  # pragma: no cover
                 raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
         else:
             if isinstance(item, (int, np.integer)):
                 return self.table[self.value[item]]
             elif isinstance(item, (slice, Iterable)):
+                # Return a list of dataframe rows because this is most often used
+                # as a column in a DynamicTable, so while it would normally be
+                # ideal to just return the slice as above as a single df,
+                # we need each row to be separate to fill the column
                 if isinstance(item, slice):
                     item = range(*item.indices(len(self.value)))
                 return [self.table[self.value[i]] for i in item]
-            else:
+            else:  # pragma: no cover
                 raise ValueError(f"Dont know how to index with {item}, need an int or a slice")
 
     def __setitem__(self, key: Union[int, str, slice], value: Any) -> None:
-        self.table[self.value[key]] = value
+        # self.table[self.value[key]] = value
+        raise NotImplementedError(
+            "Assigning values to tables is not implemented yet!"
+        )  # pragma: no cover
 
 
 class DynamicTableMixin(BaseModel):
@@ -245,9 +291,10 @@ class DynamicTableMixin(BaseModel):
     but simplifying along the way :)
     """
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
     __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
+        "id",
         "name",
         "colnames",
         "description",
@@ -260,10 +307,6 @@ class DynamicTableMixin(BaseModel):
     @property
     def _columns(self) -> Dict[str, Union[list, "NDArray", "VectorDataMixin"]]:
         return {k: getattr(self, k) for i, k in enumerate(self.colnames)}
-
-    @property
-    def _columns_list(self) -> List[Union[list, "NDArray", "VectorDataMixin"]]:
-        return [getattr(self, k) for i, k in enumerate(self.colnames)]
 
     @overload
     def __getitem__(self, item: str) -> Union[list, "NDArray", "VectorDataMixin"]: ...
@@ -313,6 +356,7 @@ class DynamicTableMixin(BaseModel):
             return self._columns[item]
         if isinstance(item, (int, slice, np.integer, np.ndarray)):
             data = self._slice_range(item)
+            index = self.id[item]
         elif isinstance(item, tuple):
             if len(item) != 2:
                 raise ValueError(
@@ -330,11 +374,15 @@ class DynamicTableMixin(BaseModel):
                 return self._columns[cols][rows]
 
             data = self._slice_range(rows, cols)
+            index = self.id[rows]
         else:
             raise ValueError(f"Unsure how to get item with key {item}")
 
         # cast to DF
-        return pd.DataFrame(data)
+        if not isinstance(index, Iterable):
+            index = [index]
+        index = pd.Index(data=index)
+        return pd.DataFrame(data, index=index)
 
     def _slice_range(
         self, rows: Union[int, slice, np.ndarray], cols: Optional[Union[str, List[str]]] = None
@@ -346,30 +394,39 @@ class DynamicTableMixin(BaseModel):
         data = {}
         for k in cols:
             if isinstance(rows, np.ndarray):
+                # help wanted - this is probably cr*zy slow
                 val = [self._columns[k][i] for i in rows]
             else:
                 val = self._columns[k][rows]
 
             # scalars need to be wrapped in series for pandas
+            # do this by the iterability of the rows index not the value because
+            # we want all lengths from this method to be equal, and if the rows are
+            # scalar, that means length == 1
             if not isinstance(rows, (Iterable, slice)):
-                val = pd.Series([val])
+                val = [val]
 
             data[k] = val
         return data
 
     def __setitem__(self, key: str, value: Any) -> None:
-        raise NotImplementedError("TODO")
+        raise NotImplementedError("TODO")  # pragma: no cover
 
     def __setattr__(self, key: str, value: Union[list, "NDArray", "VectorData"]):
         """
         Add a column, appending it to ``colnames``
         """
         # don't use this while building the model
-        if not getattr(self, "__pydantic_complete__", False):
+        if not getattr(self, "__pydantic_complete__", False):  # pragma: no cover
             return super().__setattr__(key, value)
 
         if key not in self.model_fields_set and not key.endswith("_index"):
             self.colnames.append(key)
+
+        # we get a recursion error if we setattr without having first added to
+        # extras if we need it to be there
+        if key not in self.model_fields and key not in self.__pydantic_extra__:
+            self.__pydantic_extra__[key] = value
 
         return super().__setattr__(key, value)
 
@@ -397,6 +454,8 @@ class DynamicTableMixin(BaseModel):
         """
         Create ID column if not provided
         """
+        if not isinstance(model, dict):
+            return model
         if "id" not in model:
             lengths = []
             for key, val in model.items():
@@ -421,6 +480,8 @@ class DynamicTableMixin(BaseModel):
         the model dict is ordered after python3.6, so we can use that minus
         anything in :attr:`.NON_COLUMN_FIELDS` to determine order implied from passage order
         """
+        if not isinstance(model, dict):
+            return model
         if "colnames" not in model:
             colnames = [
                 k
@@ -456,19 +517,21 @@ class DynamicTableMixin(BaseModel):
         See :meth:`.cast_specified_columns` for handling columns in the class specification
         """
         # if columns are not in the specification, cast to a generic VectorData
-        for key, val in model.items():
-            if key in cls.model_fields:
-                continue
-            if not isinstance(val, (VectorData, VectorIndex)):
-                try:
-                    if key.endswith("_index"):
-                        model[key] = VectorIndex(name=key, description="", value=val)
-                    else:
-                        model[key] = VectorData(name=key, description="", value=val)
-                except ValidationError as e:
-                    raise ValidationError(
-                        f"field {key} cannot be cast to VectorData from {val}"
-                    ) from e
+
+        if isinstance(model, dict):
+            for key, val in model.items():
+                if key in cls.model_fields:
+                    continue
+                if not isinstance(val, (VectorData, VectorIndex)):
+                    try:
+                        if key.endswith("_index"):
+                            model[key] = VectorIndex(name=key, description="", value=val)
+                        else:
+                            model[key] = VectorData(name=key, description="", value=val)
+                    except ValidationError as e:  # pragma: no cover
+                        raise ValidationError(
+                            f"field {key} cannot be cast to VectorData from {val}"
+                        ) from e
         return model
 
     @model_validator(mode="after")
@@ -500,8 +563,8 @@ class DynamicTableMixin(BaseModel):
         """
         Ensure that all columns are equal length
         """
-        lengths = [len(v) for v in self._columns.values()]
-        assert [length == lengths[0] for length in lengths], (
+        lengths = [len(v) for v in self._columns.values()] + [len(self.id)]
+        assert all([length == lengths[0] for length in lengths]), (
             "Columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
@@ -537,15 +600,19 @@ class DynamicTableMixin(BaseModel):
                     )
                 )
             except Exception:
-                raise e
+                raise e from None
 
 
-class AlignedDynamicTableMixin(DynamicTableMixin):
+class AlignedDynamicTableMixin(BaseModel):
     """
     Mixin to allow indexing multiple tables that are aligned on a common ID
+
+    A great deal of code duplication because we need to avoid diamond inheritance
+    and also it's not so easy to copy a pydantic validator method.
     """
 
-    __pydantic_extra__: Dict[str, "DynamicTableMixin"]
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    __pydantic_extra__: Dict[str, Union["DynamicTableMixin", "VectorDataMixin", "VectorIndexMixin"]]
 
     NON_CATEGORY_FIELDS: ClassVar[tuple[str]] = (
         "name",
@@ -563,7 +630,7 @@ class AlignedDynamicTableMixin(DynamicTableMixin):
         return {k: getattr(self, k) for i, k in enumerate(self.categories)}
 
     def __getitem__(
-        self, item: Union[int, str, slice, Tuple[Union[int, slice], str]]
+        self, item: Union[int, str, slice, NDArray[Shape["*"], int], Tuple[Union[int, slice], str]]
     ) -> pd.DataFrame:
         """
         Mimic hdmf:
@@ -581,24 +648,77 @@ class AlignedDynamicTableMixin(DynamicTableMixin):
         elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[1], str):
             # get a slice of a single table
             return self._categories[item[1]][item[0]]
-        elif isinstance(item, (int, slice)):
+        elif isinstance(item, (int, slice, Iterable)):
             # get a slice of all the tables
             ids = self.id[item]
             if not isinstance(ids, Iterable):
                 ids = pd.Series([ids])
             ids = pd.DataFrame({"id": ids})
-            tables = [ids] + [table[item].reset_index() for table in self._categories.values()]
+            tables = [ids]
+            for category_name, category in self._categories.items():
+                table = category[item]
+                if isinstance(table, pd.DataFrame):
+                    table = table.reset_index()
+                elif isinstance(table, np.ndarray):
+                    table = pd.DataFrame({category_name: [table]})
+                elif isinstance(table, Iterable):
+                    table = pd.DataFrame({category_name: table})
+                else:
+                    raise ValueError(
+                        f"Don't know how to construct category table for {category_name}"
+                    )
+                tables.append(table)
+
             names = [self.name] + self.categories
             # construct below in case we need to support array indexing in the future
         else:
             raise ValueError(
                 f"Dont know how to index with {item}, "
-                "need an int, string, slice, or tuple[int | slice, str]"
+                "need an int, string, slice, ndarray, or tuple[int | slice, str]"
             )
 
         df = pd.concat(tables, axis=1, keys=names)
         df.set_index((self.name, "id"), drop=True, inplace=True)
         return df
+
+    def __getattr__(self, item: str) -> Any:
+        """Try and use pandas df attrs if we don't have them"""
+        try:
+            return BaseModel.__getattr__(self, item)
+        except AttributeError as e:
+            try:
+                return getattr(self[:], item)
+            except AttributeError:
+                raise e from None
+
+    def __len__(self) -> int:
+        """
+        Use the id column to determine length.
+
+        If the id column doesn't represent length accurately, it's a bug
+        """
+        return len(self.id)
+
+    @model_validator(mode="before")
+    @classmethod
+    def create_id(cls, model: Dict[str, Any]) -> Dict:
+        """
+        Create ID column if not provided
+        """
+        if "id" not in model:
+            lengths = []
+            for key, val in model.items():
+                # don't get lengths of columns with an index
+                if (
+                    f"{key}_index" in model
+                    or (isinstance(val, VectorData) and val._index)
+                    or key in cls.NON_CATEGORY_FIELDS
+                ):
+                    continue
+                lengths.append(len(val))
+            model["id"] = np.arange(np.max(lengths))
+
+        return model
 
     @model_validator(mode="before")
     @classmethod
@@ -625,6 +745,42 @@ class AlignedDynamicTableMixin(DynamicTableMixin):
             ]
             model["categories"].extend(categories)
         return model
+
+    @model_validator(mode="after")
+    def resolve_targets(self) -> "DynamicTableMixin":
+        """
+        Ensure that any implicitly indexed columns are linked, and create backlinks
+        """
+        for key, col in self._categories.items():
+            if isinstance(col, VectorData):
+                # find an index
+                idx = None
+                for field_name in self.model_fields_set:
+                    if field_name in self.NON_CATEGORY_FIELDS or field_name == key:
+                        continue
+                    # implicit name-based index
+                    field = getattr(self, field_name)
+                    if isinstance(field, VectorIndex) and (
+                        field_name == f"{key}_index" or field.target is col
+                    ):
+                        idx = field
+                        break
+                if idx is not None:
+                    col._index = idx
+                    idx.target = col
+        return self
+
+    @model_validator(mode="after")
+    def ensure_equal_length_cols(self) -> "DynamicTableMixin":
+        """
+        Ensure that all columns are equal length
+        """
+        lengths = [len(v) for v in self._categories.values()] + [len(self.id)]
+        assert all([length == lengths[0] for length in lengths]), (
+            "Columns are not of equal length! "
+            f"Got colnames:\n{self.categories}\nand lengths: {lengths}"
+        )
+        return self
 
 
 linkml_meta = LinkMLMeta(
