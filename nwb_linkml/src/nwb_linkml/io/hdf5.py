@@ -38,8 +38,8 @@ from tqdm import tqdm
 from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf
 
 if TYPE_CHECKING:
-    from nwb_models.models import NWBFile
     from nwb_linkml.providers.schema import SchemaProvider
+    from nwb_models.models import NWBFile
 
 if sys.version_info.minor >= 11:
     from typing import Never
