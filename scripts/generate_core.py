@@ -199,13 +199,13 @@ def parser() -> ArgumentParser:
         "--yaml",
         help="directory to export linkML schema to",
         type=Path,
-        default=Path(__file__).parent.parent / "nwb_linkml" / "src" / "nwb_linkml" / "schema",
+        default=Path(__file__).parent.parent / "nwb_models" / "src" / "nwb_models" / "schema",
     )
     parser.add_argument(
         "--pydantic",
         help="directory to export pydantic models",
         type=Path,
-        default=Path(__file__).parent.parent / "nwb_linkml" / "src" / "nwb_linkml" / "models",
+        default=Path(__file__).parent.parent / "nwb_models" / "src" / "nwb_models" / "models",
     )
     parser.add_argument("--hdmf", help="Only generate the HDMF namespaces", action="store_true")
     parser.add_argument(

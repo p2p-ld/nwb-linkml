@@ -9,6 +9,7 @@ license = {text = "AGPL-3.0"}
 readme = "README.md"
 requires-python = "<3.13,>=3.10"
 dependencies = [
+    "nwb-models>=0.1.0",
     "pyyaml>=6.0",
     "linkml-runtime>=1.7.7",
     "nwb-schema-language>=0.1.3",
@@ -64,7 +65,6 @@ addopts = [
     "--cov-config=.coveragerc",
     "-p no:doctest",
     "--ignore=tests/__tmp__",
-    "--ignore=src/nwb_linkml/models",
     "--ignore=src/nwb_linkml/schema"
 ]
 markers = [

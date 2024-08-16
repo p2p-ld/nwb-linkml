@@ -29,7 +29,7 @@ build-backend = "pdm.backend"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.lock,*.css,./nwb_linkml/src/nwb_linkml/models,./nwb_linkml/src/nwb_linkml/schema'
+skip = '.git*,*.lock,*.css,./nwb_models/src/nwb_models/models,./nwb_linkml/src/nwb_linkml/schema'
 check-hidden = true
 # ignore-regex = ''
 # ignore-words-list = ''

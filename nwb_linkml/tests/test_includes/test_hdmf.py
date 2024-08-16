@@ -15,7 +15,7 @@ from nwb_linkml.includes.hdmf import (
 )
 
 # FIXME: Make this just be the output of the provider by patching into import machinery
-from nwb_linkml.models.pydantic.core.v2_7_0.namespace import (
+from nwb_models.models.pydantic.core.v2_7_0.namespace import (
     ElectrodeGroup,
 )
 

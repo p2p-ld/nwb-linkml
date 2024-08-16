@@ -234,7 +234,7 @@ class PydanticProvider(Provider):
 
         e.g.::
 
-            nwb_linkml.models.pydantic.{namespace}.{version}
+            nwb_models.models.pydantic.{namespace}.{version}
         """
         name_pieces = [
             "nwb_linkml",
@@ -296,7 +296,7 @@ class PydanticProvider(Provider):
         Get the imported module for a given namespace and version.
 
         A given namespace will be stored in :data:`sys.modules` as
-        ``nwb_linkml.models.{namespace}``,
+        ``nwb_models.models.{namespace}``,
         so first check if there is any already-imported module, and return that if so.
 
         Then we check in the temporary directory for an already-built ``namespace.py`` file
@@ -306,12 +306,12 @@ class PydanticProvider(Provider):
 
         Notes:
             The imported modules shadow the "actual"
-            ``nwb_linkml.models`` module as would be imported from the usual location
+            ``nwb_models.models`` module as would be imported from the usual location
             within the package directory.
             This is intentional, as models can then be used as if they were
             integrated parts of the package,
             and also so the active version of a namespace can be cleanly accessed
-            (ie. without ``from nwb_linkml.models.core import v2_2_0 as core`` ).
+            (ie. without ``from nwb_models.models.core import v2_2_0 as core`` ).
             Accordingly, we assume that people will only be using a single version of NWB in a given
             Python session.
 
@@ -324,7 +324,7 @@ class PydanticProvider(Provider):
             version (Optional[str]): Version to import. If ``None``,
                 get the most recently build module
             allow_repo (bool): Allow getting modules provided within
-                :mod:`nwb_linkml.models.pydantic`
+                :mod:`nwb_models.models.pydantic`
 
         Returns:
             The imported :class:`types.ModuleType` object that has all the built
@@ -367,7 +367,7 @@ class PydanticProvider(Provider):
         repo_base = Path(__file__).parents[1]
         deletes = []
         for k, v in sys.modules.items():
-            if not k.startswith("nwb_linkml.models.pydantic"):
+            if not k.startswith("nwb_models.models.pydantic"):
                 continue
             try:
                 Path(v.__file__).relative_to(repo_base)
@@ -428,7 +428,7 @@ class EctopicModelFinder(MetaPathFinder):
 
     """
 
-    MODEL_STEM = "nwb_linkml.models.pydantic"
+    MODEL_STEM = "nwb_models.models.pydantic"
 
     def __init__(self, path: Path, *args, **kwargs):
         super().__init__(*args, **kwargs)

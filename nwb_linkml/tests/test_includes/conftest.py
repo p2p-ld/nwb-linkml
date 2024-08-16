@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 import pytest
 
-from nwb_linkml.models import (
+from nwb_models.models import (
     Device,
     DynamicTableRegion,
     ElectricalSeries,
