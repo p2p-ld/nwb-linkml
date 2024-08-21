@@ -24,8 +24,9 @@ jobs:
             nwb_schema_language/pyproject.toml
       - name: Install packages
         run: |
-          python -m pip install ./nwb_schema_language
-          python -m pip install ./nwb_linkml
+          python -m pip install -e ./nwb_schema_language
+          python -m pip install -e ./nwb_linkml
+          python -m pip install -e ./nwb_models
       - name: Build models
         run: |
           python ./scripts/generate_core.py
