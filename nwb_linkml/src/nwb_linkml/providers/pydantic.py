@@ -182,7 +182,7 @@ class PydanticProvider(Provider):
         imported_schema: dict[str, SchemaDefinition] = {
             gen.generate_module_import(sch): sch for sch in gen.schemaview.schema_map.values()
         }
-        generated_imports = [i for i in rendered.python_imports if i.schema]
+        generated_imports = [i for i in rendered.python_imports if i.is_schema]
         # each task has an expected output file a corresponding SchemaDefinition
         import_paths = [
             (ns_file.parent / _import_to_path(an_import.module)).resolve()
