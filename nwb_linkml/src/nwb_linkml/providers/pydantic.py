@@ -3,14 +3,14 @@ Provider for pydantic models.
 """
 
 import importlib
+import multiprocessing as mp
 import re
 import sys
 from importlib.abc import MetaPathFinder
 from importlib.machinery import ModuleSpec
 from pathlib import Path
 from types import ModuleType
-from typing import List, Optional, Type, TYPE_CHECKING
-import multiprocessing as mp
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from linkml.generators.pydanticgen.pydanticgen import SplitMode, _ensure_inits, _import_to_path
 from pydantic import BaseModel
@@ -179,7 +179,7 @@ class PydanticProvider(Provider):
         res.append(serialized)
 
         # then each of the other schemas :)
-        imported_schema: dict[str, "SchemaDefinition"] = {
+        imported_schema: dict[str, SchemaDefinition] = {
             gen.generate_module_import(sch): sch for sch in gen.schemaview.schema_map.values()
         }
         generated_imports = [i for i in rendered.python_imports if i.schema]
@@ -208,10 +208,10 @@ class PydanticProvider(Provider):
             with mp.Pool(min(mp.cpu_count(), len(tasks))) as pool:
                 mp_results = [pool.apply_async(self._generate_single, t) for t in tasks]
                 for result in mp_results:
-                    res.append(result.get())
+                    res.append(result.get())  # noqa: PERF401 - false positive
         else:
             for task in tasks:
-                res.append(self._generate_single(*task))
+                res.append(self._generate_single(*task))  # noqa: PERF401 - false positive
 
         # make __init__.py files if we generated any files
         if len(module_paths) > 0:

@@ -15,8 +15,8 @@ from typing import ClassVar, Dict, List, Optional, Tuple
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
 from linkml.generators.pydanticgen.build import ClassResult, SlotResult
-from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule
 from linkml.generators.pydanticgen.pydanticgen import SplitMode
+from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule
 from linkml_runtime.linkml_model.meta import (
     ArrayExpression,
     SchemaDefinition,
@@ -96,6 +96,10 @@ class NWBPydanticGenerator(PydanticGenerator):
                 raise ValueError("Slot cannot have both range and any_of defined")
 
     def render(self) -> PydanticModule:
+        """
+        Override of super's render method to switch the split_mode before generation depending
+        on whether it's a namespace schema or not
+        """
         is_namespace = False
         ns_annotation = self.schemaview.schema.annotations.get("is_namespace", None)
         if ns_annotation:
