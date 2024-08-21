@@ -94,7 +94,7 @@ class Provider(ABC):
         namespace_path = self.path / namespace_module
         if not namespace_path.exists() and namespace in ("core", "hdmf-common") and allow_repo:
             # return builtins
-            module_path = Path(importlib.util.find_spec("nwb_linkml").origin).parent
+            module_path = Path(importlib.util.find_spec("nwb_models").origin).parent
 
             if self.PROVIDES == "linkml":
                 namespace_path = module_path / "schema" / "linkml" / namespace
@@ -131,7 +131,7 @@ class Provider(ABC):
 
         # first get any builtins provided by the package itself
         # these get overwritten by
-        module_path = Path(importlib.util.find_spec("nwb_linkml").origin).parent
+        module_path = Path(importlib.util.find_spec("nwb_models").origin).parent
         builtin_namespaces = []
         if self.PROVIDES == "linkml":
             namespace_path = module_path / "schema" / "linkml"

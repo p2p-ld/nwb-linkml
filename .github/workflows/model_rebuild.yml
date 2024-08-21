@@ -1,0 +1,46 @@
+name: Model Rebuild
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_models:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            nwb_linkml/pyproject.toml
+            nwb_schema_language/pyproject.toml
+      - name: Install packages
+        run: |
+          python -m pip install -e ./nwb_schema_language
+          python -m pip install -e ./nwb_linkml
+          python -m pip install -e ./nwb_models
+      - name: Build models
+        run: |
+          python ./scripts/generate_core.py
+          python ./scripts/generate_core.py --hdmf
+      - name: Test for uncommitted changes
+        run: |
+          if [ -z "$(git status --porcelain)" ];
+          then
+            echo "No changes detected"
+            exit 0
+          else
+            echo "Changes to models detected"
+            echo "$(git status)"
+            echo "$(git diff)"
+            exit 1
+          fi
+          

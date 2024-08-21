@@ -34,7 +34,7 @@ from pydantic import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from nwb_linkml.models import VectorData, VectorIndex
+    from nwb_models.models import VectorData, VectorIndex
 
 T = TypeVar("T", bound=NDArray)
 T_INJECT = 'T = TypeVar("T", bound=NDArray)'

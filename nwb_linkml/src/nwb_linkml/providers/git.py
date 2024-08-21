@@ -117,7 +117,11 @@ class GitRepo:
             path (:class:`pathlib.Path`): A directory to clone to -
                 if ``None``, use :attr:`~.Config.git_dir` / :attr:`.NamespaceRepo.name`
         """
-        self._temp_directory = path
+        if path is None:
+            self._base_directory = Config().git_dir
+        else:
+            self._base_directory = Path(path)
+        self._temp_directory = None
         self.namespace = namespace
         self._commit = commit
 
@@ -135,8 +139,7 @@ class GitRepo:
         Temporary directory where this repository will be cloned to
         """
         if self._temp_directory is None:
-            git_dir = Config().git_dir
-            self._temp_directory = git_dir / self.namespace.name
+            self._temp_directory = self._base_directory / self.namespace.name
             if not self._temp_directory.exists():
                 self._temp_directory.mkdir(parents=True)
 

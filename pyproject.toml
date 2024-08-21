@@ -7,6 +7,7 @@ requires-python = "<3.13,>=3.10"
 dev = [
     '-e nwb-linkml @ file:///${PROJECT_ROOT}/nwb_linkml',
     '-e nwb-schema-language @ file:///${PROJECT_ROOT}/nwb_schema_language',
+    '-e nwb-models @ file:///${PROJECT_ROOT/nwb_models',
     '-e docs @ file:///${PROJECT_ROOT}/docs',
     "ruff>=0.5.0",
     "black>=24.4.2",
@@ -14,7 +15,7 @@ dev = [
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.lock,*.css,./nwb_linkml/src/nwb_linkml/models,./nwb_linkml/src/nwb_linkml/schema'
+skip = '.git*,*.lock,*.css,./nwb_models/src/nwb_models/models,./nwb_models/src/nwb_models/schema'
 check-hidden = true
 # ignore-regex = ''
 # ignore-words-list = ''
@@ -24,11 +25,10 @@ target-version = "py311"
 include = ["nwb_linkml/**/*.py", "nwb_schema_language/src/**/*.py", "pyproject.toml"]
 exclude = [
     "docs",
-    "nwb_linkml/src/nwb_linkml/models/**/*.py",
+    "nwb_models/src/nwb_models/models/**/*.py",
     "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_language.py",
     "nwb_schema_language/src/nwb_schema_language/datamodel/nwb_schema_pydantic.py",
     "tests/__tmp__/**/*"
-    # "nwb_linkml/src/nwb_linkml/models/**/*.py"
 ]
 line-length = 100
 
@@ -82,7 +82,7 @@ fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**.py" = ["D", "ANN", "E501", "F841", "F722"]
-"nwb_linkml/src/nwb_linkml/models/**/*.py" = ["ANN202", "E501", "D", "F722", "UP036", "F403"]
+"nwb_models/src/nwb_models/models/**/*.py" = ["ANN202", "E501", "D", "F722", "UP036", "F403"]
 
 [tool.mypy]
 plugins = [
@@ -101,5 +101,5 @@ warn_unreachable = true
 target-version = ['py38', 'py39', 'py310', 'py311']
 enable-unstable-feature = ["string_processing"]
 preview = true
-include = "nwb_linkml/.*\\.py$|nwb_schema_language/.*\\.py$"
+include = "nwb_linkml/.*\\.py$|nwb_schema_language/.*\\.py$|nwb_models/.*\\.py$"
 line-length = 100

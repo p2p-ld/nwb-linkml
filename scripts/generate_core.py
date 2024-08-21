@@ -50,6 +50,18 @@ def generate_core_pydantic(yaml_path: Path, output_path: Path, dry_run: bool = F
                 pfile.write(gen_pydantic)
 
 
+def make_tmp_dir(clear: bool = False) -> Path:
+    # use a directory underneath this one as the temporary directory rather than
+    # the default hidden one
+    tmp_dir = Path(__file__).parent / "__tmp__"
+    if tmp_dir.exists() and clear:
+        for p in tmp_dir.iterdir():
+            if p.is_dir() and not p.name == "git":
+                shutil.rmtree(tmp_dir)
+    tmp_dir.mkdir(exist_ok=True)
+    return tmp_dir
+
+
 def generate_versions(
     yaml_path: Path,
     pydantic_path: Path,
@@ -64,12 +76,7 @@ def generate_versions(
     # repo.clone(force=True)
     repo.clone()
 
-    # use a directory underneath this one as the temporary directory rather than
-    # the default hidden one
-    tmp_dir = Path(__file__).parent / "__tmp__"
-    if tmp_dir.exists():
-        shutil.rmtree(tmp_dir)
-    tmp_dir.mkdir()
+    tmp_dir = make_tmp_dir()
 
     linkml_provider = LinkMLProvider(path=tmp_dir, verbose=False)
     pydantic_provider = PydanticProvider(path=tmp_dir, verbose=False)
@@ -199,13 +206,13 @@ def parser() -> ArgumentParser:
         "--yaml",
         help="directory to export linkML schema to",
         type=Path,
-        default=Path(__file__).parent.parent / "nwb_linkml" / "src" / "nwb_linkml" / "schema",
+        default=Path(__file__).parent.parent / "nwb_models" / "src" / "nwb_models" / "schema",
     )
     parser.add_argument(
         "--pydantic",
         help="directory to export pydantic models",
         type=Path,
-        default=Path(__file__).parent.parent / "nwb_linkml" / "src" / "nwb_linkml" / "models",
+        default=Path(__file__).parent.parent / "nwb_models" / "src" / "nwb_models" / "models",
     )
     parser.add_argument("--hdmf", help="Only generate the HDMF namespaces", action="store_true")
     parser.add_argument(
@@ -227,10 +234,15 @@ def parser() -> ArgumentParser:
 
 def main():
     args = parser().parse_args()
+
+    tmp_dir = make_tmp_dir(clear=True)
+    git_dir = tmp_dir / "git"
+    git_dir.mkdir(exist_ok=True)
+
     if args.hdmf:
-        repo = GitRepo(HDMF_COMMON_REPO)
+        repo = GitRepo(HDMF_COMMON_REPO, path=git_dir)
     else:
-        repo = GitRepo(NWB_CORE_REPO)
+        repo = GitRepo(NWB_CORE_REPO, path=git_dir)
 
     if not args.dry_run:
         args.yaml.mkdir(exist_ok=True)
