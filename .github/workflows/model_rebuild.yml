@@ -39,6 +39,7 @@ jobs:
           else
             echo "Changes to models detected"
             echo "$(git status)"
+            echo "$(git diff)"
             exit 1
           fi
           
