@@ -101,5 +101,5 @@ warn_unreachable = true
 target-version = ['py38', 'py39', 'py310', 'py311']
 enable-unstable-feature = ["string_processing"]
 preview = true
-include = "nwb_linkml/.*\\.py$|nwb_schema_language/.*\\.py$"
+include = "nwb_linkml/.*\\.py$|nwb_schema_language/.*\\.py$|nwb_models/.*\\.py$"
 line-length = 100
