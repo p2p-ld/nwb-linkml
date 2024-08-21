@@ -110,13 +110,12 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: RoiResponseSeries
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: RoiResponseSeries
     tree_root: true
   Fluorescence:
     name: Fluorescence
@@ -125,13 +124,12 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: RoiResponseSeries
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: RoiResponseSeries
     tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
@@ -144,13 +142,12 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: DynamicTable
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: DynamicTable
     tree_root: true
   ImagingPlane:
     name: ImagingPlane
@@ -388,11 +385,10 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: NWBDataInterface
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: NWBDataInterface
     tree_root: true

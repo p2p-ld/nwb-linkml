@@ -7,15 +7,7 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_common.v1_3_0.hdmf_common_resources import (
-    ExternalResources,
-    ExternalResourcesKeys,
-    ExternalResourcesResources,
-    ExternalResourcesObjects,
-    ExternalResourcesObjectKeys,
-)
 from ...hdmf_common.v1_3_0.hdmf_common_base import Data, Container, SimpleMultiContainer
-from ...hdmf_common.v1_3_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
 from ...hdmf_common.v1_3_0.hdmf_common_table import (
     VectorData,
     VectorIndex,
@@ -23,6 +15,14 @@ from ...hdmf_common.v1_3_0.hdmf_common_table import (
     DynamicTableRegion,
     VocabData,
     DynamicTable,
+)
+from ...hdmf_common.v1_3_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_common.v1_3_0.hdmf_common_resources import (
+    ExternalResources,
+    ExternalResourcesKeys,
+    ExternalResourcesResources,
+    ExternalResourcesObjects,
+    ExternalResourcesObjectKeys,
 )
 
 metamodel_version = "None"

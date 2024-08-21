@@ -7,32 +7,6 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_common.v1_1_3.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
-)
-from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    Data,
-    Index,
-    VectorData,
-    VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
-    Container,
-    DynamicTable,
-)
-from ...core.v2_2_4.core_nwb_retinotopy import (
-    ImagingRetinotopy,
-    ImagingRetinotopyAxis1PhaseMap,
-    ImagingRetinotopyAxis1PowerMap,
-    ImagingRetinotopyAxis2PhaseMap,
-    ImagingRetinotopyAxis2PowerMap,
-    ImagingRetinotopyFocalDepthImage,
-    ImagingRetinotopySignMap,
-    ImagingRetinotopyVasculatureImage,
-)
 from ...core.v2_2_4.core_nwb_base import (
     NWBData,
     Image,
@@ -45,25 +19,8 @@ from ...core.v2_2_4.core_nwb_base import (
     ProcessingModule,
     Images,
 )
-from ...core.v2_2_4.core_nwb_ophys import (
-    TwoPhotonSeries,
-    RoiResponseSeries,
-    DfOverF,
-    Fluorescence,
-    ImageSegmentation,
-    PlaneSegmentation,
-    PlaneSegmentationImageMask,
-    PlaneSegmentationPixelMask,
-    PlaneSegmentationVoxelMask,
-    ImagingPlane,
-    ImagingPlaneManifold,
-    ImagingPlaneOriginCoords,
-    ImagingPlaneGridSpacing,
-    OpticalChannel,
-    MotionCorrection,
-    CorrectedImageStack,
-)
 from ...core.v2_2_4.core_nwb_device import Device
+from ...core.v2_2_4.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
 from ...core.v2_2_4.core_nwb_image import (
     GrayscaleImage,
     RGBImage,
@@ -74,7 +31,19 @@ from ...core.v2_2_4.core_nwb_image import (
     OpticalSeries,
     IndexSeries,
 )
-from ...core.v2_2_4.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
+from ...core.v2_2_4.core_nwb_ecephys import (
+    ElectricalSeries,
+    SpikeEventSeries,
+    FeatureExtraction,
+    EventDetection,
+    EventWaveform,
+    FilteredEphys,
+    LFP,
+    ElectrodeGroup,
+    ElectrodeGroupPosition,
+    ClusterWaveforms,
+    Clustering,
+)
 from ...core.v2_2_4.core_nwb_icephys import (
     PatchClampSeries,
     PatchClampSeriesData,
@@ -97,29 +66,24 @@ from ...core.v2_2_4.core_nwb_icephys import (
     IntracellularElectrode,
     SweepTable,
 )
-from ...core.v2_2_4.core_nwb_ecephys import (
-    ElectricalSeries,
-    SpikeEventSeries,
-    FeatureExtraction,
-    EventDetection,
-    EventWaveform,
-    FilteredEphys,
-    LFP,
-    ElectrodeGroup,
-    ElectrodeGroupPosition,
-    ClusterWaveforms,
-    Clustering,
-)
-from ...core.v2_2_4.core_nwb_behavior import (
-    SpatialSeries,
-    SpatialSeriesData,
-    BehavioralEpochs,
-    BehavioralEvents,
-    BehavioralTimeSeries,
-    PupilTracking,
-    EyeTracking,
-    CompassDirection,
-    Position,
+from ...core.v2_2_4.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
+from ...core.v2_2_4.core_nwb_ophys import (
+    TwoPhotonSeries,
+    RoiResponseSeries,
+    DfOverF,
+    Fluorescence,
+    ImageSegmentation,
+    PlaneSegmentation,
+    PlaneSegmentationImageMask,
+    PlaneSegmentationPixelMask,
+    PlaneSegmentationVoxelMask,
+    ImagingPlane,
+    ImagingPlaneManifold,
+    ImagingPlaneOriginCoords,
+    ImagingPlaneGridSpacing,
+    OpticalChannel,
+    MotionCorrection,
+    CorrectedImageStack,
 )
 from ...core.v2_2_4.core_nwb_misc import (
     AbstractFeatureSeries,
@@ -145,7 +109,43 @@ from ...core.v2_2_4.core_nwb_file import (
     LabMetaData,
     Subject,
 )
-from ...core.v2_2_4.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
+from ...core.v2_2_4.core_nwb_behavior import (
+    SpatialSeries,
+    SpatialSeriesData,
+    BehavioralEpochs,
+    BehavioralEvents,
+    BehavioralTimeSeries,
+    PupilTracking,
+    EyeTracking,
+    CompassDirection,
+    Position,
+)
+from ...core.v2_2_4.core_nwb_retinotopy import (
+    ImagingRetinotopy,
+    ImagingRetinotopyAxis1PhaseMap,
+    ImagingRetinotopyAxis1PowerMap,
+    ImagingRetinotopyAxis2PhaseMap,
+    ImagingRetinotopyAxis2PowerMap,
+    ImagingRetinotopyFocalDepthImage,
+    ImagingRetinotopySignMap,
+    ImagingRetinotopyVasculatureImage,
+)
+from ...hdmf_common.v1_1_3.hdmf_common_table import (
+    Data,
+    Index,
+    VectorData,
+    VectorIndex,
+    ElementIdentifiers,
+    DynamicTableRegion,
+    Container,
+    DynamicTable,
+)
+from ...hdmf_common.v1_1_3.hdmf_common_sparse import (
+    CSRMatrix,
+    CSRMatrixIndices,
+    CSRMatrixIndptr,
+    CSRMatrixData,
+)
 
 metamodel_version = "None"
 version = "2.2.4"

@@ -236,13 +236,12 @@ classes:
       during experiment acquisition.
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: SpikeEventSeries
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: SpikeEventSeries
     tree_root: true
   FilteredEphys:
     name: FilteredEphys
@@ -259,13 +258,12 @@ classes:
       the ElectricalSeries.
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: ElectricalSeries
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: ElectricalSeries
     tree_root: true
   LFP:
     name: LFP
@@ -274,13 +272,12 @@ classes:
       properties should be noted in the ElectricalSeries description or comments field.
     is_a: NWBDataInterface
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: ElectricalSeries
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: ElectricalSeries
     tree_root: true
   ElectrodeGroup:
     name: ElectrodeGroup

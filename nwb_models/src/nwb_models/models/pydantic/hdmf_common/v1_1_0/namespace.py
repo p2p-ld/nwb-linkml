@@ -7,12 +7,6 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_common.v1_1_0.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
-)
 from ...hdmf_common.v1_1_0.hdmf_common_table import (
     Data,
     Index,
@@ -22,6 +16,12 @@ from ...hdmf_common.v1_1_0.hdmf_common_table import (
     DynamicTableRegion,
     Container,
     DynamicTable,
+)
+from ...hdmf_common.v1_1_0.hdmf_common_sparse import (
+    CSRMatrix,
+    CSRMatrixIndices,
+    CSRMatrixIndptr,
+    CSRMatrixData,
 )
 
 metamodel_version = "None"

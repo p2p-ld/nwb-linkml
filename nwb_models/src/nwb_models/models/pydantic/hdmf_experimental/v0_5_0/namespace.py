@@ -7,16 +7,7 @@ import sys
 from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 import numpy as np
-from ...hdmf_experimental.v0_5_0.hdmf_experimental_resources import (
-    HERD,
-    HERDKeys,
-    HERDFiles,
-    HERDEntities,
-    HERDObjects,
-    HERDObjectKeys,
-    HERDEntityKeys,
-)
-from ...hdmf_common.v1_8_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_experimental.v0_5_0.hdmf_experimental_experimental import EnumData
 from ...hdmf_common.v1_8_0.hdmf_common_base import Data, Container, SimpleMultiContainer
 from ...hdmf_common.v1_8_0.hdmf_common_table import (
     VectorData,
@@ -26,7 +17,16 @@ from ...hdmf_common.v1_8_0.hdmf_common_table import (
     DynamicTable,
     AlignedDynamicTable,
 )
-from ...hdmf_experimental.v0_5_0.hdmf_experimental_experimental import EnumData
+from ...hdmf_common.v1_8_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_experimental.v0_5_0.hdmf_experimental_resources import (
+    HERD,
+    HERDKeys,
+    HERDFiles,
+    HERDEntities,
+    HERDObjects,
+    HERDObjectKeys,
+    HERDEntityKeys,
+)
 
 metamodel_version = "None"
 version = "0.5.0"
