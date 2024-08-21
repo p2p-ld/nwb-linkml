@@ -9,15 +9,18 @@ from importlib.abc import MetaPathFinder
 from importlib.machinery import ModuleSpec
 from pathlib import Path
 from types import ModuleType
-from typing import List, Optional, Type
+from typing import List, Optional, Type, TYPE_CHECKING
+import multiprocessing as mp
 
 from linkml.generators.pydanticgen.pydanticgen import SplitMode, _ensure_inits, _import_to_path
-from linkml_runtime.linkml_model.meta import SchemaDefinition
 from pydantic import BaseModel
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 from nwb_linkml.maps.naming import module_case, version_module_case
 from nwb_linkml.providers import LinkMLProvider, Provider
+
+if TYPE_CHECKING:
+    from linkml_runtime.linkml_model.meta import SchemaDefinition
 
 
 class PydanticProvider(Provider):
@@ -65,6 +68,7 @@ class PydanticProvider(Provider):
         split: bool = True,
         dump: bool = True,
         force: bool = False,
+        parallel: bool = False,
         **kwargs: dict,
     ) -> str | List[str]:
         """
@@ -88,6 +92,8 @@ class PydanticProvider(Provider):
                 otherwise just return the serialized string of built pydantic model
             force (bool): If ``False`` (default), don't build the model if it already exists,
                 if ``True`` , delete and rebuild any model
+            parallel (bool): If ``True``, build imported models using multiprocessing,
+                if ``False`` (default), don't.
             **kwargs: Passed to :class:`.NWBPydanticGenerator`
 
         Returns:
@@ -136,7 +142,9 @@ class PydanticProvider(Provider):
 
         return serialized
 
-    def _build_split(self, path: Path, dump: bool, force: bool, **kwargs) -> List[str]:
+    def _build_split(
+        self, path: Path, dump: bool, force: bool, parallel: bool = False, **kwargs
+    ) -> List[str]:
         # FIXME: This is messy as all fuck, we're just getting it to work again
         # so we can start iterating on the models themselves
         res = []
@@ -171,50 +179,83 @@ class PydanticProvider(Provider):
         res.append(serialized)
 
         # then each of the other schemas :)
-        imported_schema: dict[str, SchemaDefinition] = {
+        imported_schema: dict[str, "SchemaDefinition"] = {
             gen.generate_module_import(sch): sch for sch in gen.schemaview.schema_map.values()
         }
-        for generated_import in [i for i in rendered.python_imports if i.schema]:
-            import_file = (ns_file.parent / _import_to_path(generated_import.module)).resolve()
+        generated_imports = [i for i in rendered.python_imports if i.schema]
+        # each task has an expected output file a corresponding SchemaDefinition
+        import_paths = [
+            (ns_file.parent / _import_to_path(an_import.module)).resolve()
+            for an_import in generated_imports
+        ]
+        import_schemas = [
+            Path(path).parent / imported_schema[an_import.module].source_file
+            for an_import in generated_imports
+        ]
 
-            if not import_file.exists() or force:
-                import_file.parent.mkdir(exist_ok=True, parents=True)
-                schema = imported_schema[generated_import.module]
-                is_namespace = False
-                ns_annotation = schema.annotations.get("is_namespace", None)
-                if ns_annotation:
-                    is_namespace = ns_annotation.value
+        tasks = [
+            (
+                import_path,
+                import_schema,
+                force,
+                self.SPLIT_PATTERN,
+                dump,
+            )
+            for import_path, import_schema in zip(import_paths, import_schemas)
+        ]
 
-                # fix schema source to absolute path so schemaview can find imports
-                schema.source_file = (
-                    Path(gen.schemaview.schema.source_file).parent / schema.source_file
-                ).resolve()
-
-                import_gen = NWBPydanticGenerator(
-                    schema,
-                    split=True,
-                    split_pattern=self.SPLIT_PATTERN,
-                    split_mode=SplitMode.FULL if is_namespace else SplitMode.AUTO,
-                )
-                serialized = import_gen.serialize()
-                if dump:
-                    with open(import_file, "w") as ofile:
-                        ofile.write(serialized)
-                    module_paths.append(import_file)
-
-            else:
-                with open(import_file) as ofile:
-                    serialized = ofile.read()
-
-            res.append(serialized)
+        if parallel:
+            with mp.Pool(min(mp.cpu_count(), len(tasks))) as pool:
+                mp_results = [pool.apply_async(self._generate_single, t) for t in tasks]
+                for result in mp_results:
+                    res.append(result.get())
+        else:
+            for task in tasks:
+                res.append(self._generate_single(*task))
 
         # make __init__.py files if we generated any files
         if len(module_paths) > 0:
-            _ensure_inits(module_paths)
+            _ensure_inits(import_paths)
             # then extra_inits that usually aren't generated bc we're one layer deeper
             self._make_inits(ns_file)
 
         return res
+
+    @staticmethod
+    def _generate_single(
+        import_file: Path,
+        # schema: "SchemaDefinition",
+        schema: Path,
+        force: bool,
+        split_pattern: str,
+        dump: bool,
+    ) -> str:
+        """
+        Interior generator method for _build_split to be called in parallel
+
+        .. TODO::
+
+            split up and consolidate this build behavior, very spaghetti.
+
+        """
+
+        if not import_file.exists() or force:
+            import_file.parent.mkdir(exist_ok=True, parents=True)
+
+            import_gen = NWBPydanticGenerator(
+                schema,
+                split=True,
+                split_pattern=split_pattern,
+            )
+            serialized = import_gen.serialize()
+            if dump:
+                with open(import_file, "w") as ofile:
+                    ofile.write(serialized)
+
+        else:
+            with open(import_file) as ofile:
+                serialized = ofile.read()
+        return serialized
 
     def _make_inits(self, out_file: Path) -> None:
         """

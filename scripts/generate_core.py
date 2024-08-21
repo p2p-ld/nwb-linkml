@@ -57,7 +57,7 @@ def make_tmp_dir(clear: bool = False) -> Path:
     if tmp_dir.exists() and clear:
         for p in tmp_dir.iterdir():
             if p.is_dir() and not p.name == "git":
-                shutil.rmtree(tmp_dir)
+                shutil.rmtree(p)
     tmp_dir.mkdir(exist_ok=True)
     return tmp_dir
 
@@ -139,7 +139,9 @@ def generate_versions(
                     for schema in ns_files:
                         pbar_string = schema.parts[-3]
                         build_progress.update(pydantic_task, action=pbar_string)
-                        pydantic_provider.build(schema, versions=core_ns.versions, split=True)
+                        pydantic_provider.build(
+                            schema, versions=core_ns.versions, split=True, parallel=True
+                        )
                         build_progress.update(pydantic_task, advance=1)
                     build_progress.update(pydantic_task, action="Built Pydantic")
 

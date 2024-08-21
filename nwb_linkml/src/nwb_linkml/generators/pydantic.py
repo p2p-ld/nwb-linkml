@@ -16,6 +16,7 @@ from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
 from linkml.generators.pydanticgen.build import ClassResult, SlotResult
 from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule
+from linkml.generators.pydanticgen.pydanticgen import SplitMode
 from linkml_runtime.linkml_model.meta import (
     ArrayExpression,
     SchemaDefinition,
@@ -60,7 +61,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     array_representations: List[ArrayRepresentation] = field(
         default_factory=lambda: [ArrayRepresentation.NUMPYDANTIC]
     )
-    black: bool = True
+    black: bool = False
     inlined: bool = True
     emit_metadata: bool = True
     gen_classvars: bool = True
@@ -93,6 +94,15 @@ class NWBPydanticGenerator(PydanticGenerator):
                 base_range_subsumes_any_of = True
             if not base_range_subsumes_any_of:
                 raise ValueError("Slot cannot have both range and any_of defined")
+
+    def render(self) -> PydanticModule:
+        is_namespace = False
+        ns_annotation = self.schemaview.schema.annotations.get("is_namespace", None)
+        if ns_annotation:
+            is_namespace = ns_annotation.value
+        self.split_mode = SplitMode.FULL if is_namespace else SplitMode.AUTO
+
+        return super().render()
 
     def before_generate_slot(self, slot: SlotDefinition, sv: SchemaView) -> SlotDefinition:
         """
