@@ -30,6 +30,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+          cache-dependency-path: |
+            nwb_linkml/pyproject.toml
+            nwb_schema_language/pyproject.toml
+            nwb_models/pyproject.toml
 
       - name: Install dependencies
         run: pip install -e .[tests]
