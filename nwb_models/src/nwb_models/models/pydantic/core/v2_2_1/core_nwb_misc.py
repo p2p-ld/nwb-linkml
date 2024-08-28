@@ -1,29 +1,33 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from typing import Annotated, Any, ClassVar, Dict, List, Literal, Optional, Type, TypeVar, Union
+
 import numpy as np
-from ...core.v2_2_1.core_nwb_base import TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
+from numpydantic import NDArray, Shape
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
     RootModel,
-    field_validator,
     ValidationInfo,
-    BeforeValidator,
+    field_validator,
 )
+
+from ...core.v2_2_1.core_nwb_base import TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
 from ...core.v2_2_1.core_nwb_ecephys import ElectrodeGroup
-from numpydantic import NDArray, Shape
 from ...hdmf_common.v1_1_2.hdmf_common_table import (
     DynamicTable,
+    DynamicTableRegion,
     VectorData,
     VectorIndex,
-    DynamicTableRegion,
 )
+
 
 metamodel_version = "None"
 version = "2.2.1"
@@ -178,7 +182,7 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
     unit: Optional[str] = Field(
-        "see 'feature_units'",
+        "see ",
         description="""Since there can be different units for different features, store the units in 'feature_units'. The default value for this attribute is \"see 'feature_units'\".""",
         json_schema_extra={"linkml_meta": {"ifabsent": "string(see 'feature_units')"}},
     )

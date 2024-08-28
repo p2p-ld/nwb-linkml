@@ -1,39 +1,43 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
-import numpy as np
-from ...hdmf_common.v1_5_0.hdmf_common_base import Data, Container
-from numpydantic import NDArray, Shape
-from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData, DynamicTable
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
 from typing import (
+    Annotated,
     Any,
     ClassVar,
-    List,
-    Literal,
     Dict,
-    Optional,
-    Union,
     Generic,
     Iterable,
+    List,
+    Literal,
+    Optional,
     Tuple,
-    TypeVar,
-    overload,
-    Annotated,
     Type,
+    TypeVar,
+    Union,
+    overload,
 )
+
+import numpy as np
+from numpydantic import NDArray, Shape
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
     RootModel,
+    ValidationInfo,
     field_validator,
     model_validator,
-    ValidationInfo,
-    BeforeValidator,
 )
+
+from ...hdmf_common.v1_5_0.hdmf_common_base import Container, Data
+from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable, VectorData
+
 
 metamodel_version = "None"
 version = "2.6.0-alpha"

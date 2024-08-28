@@ -1,14 +1,18 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+
 import numpy as np
-from ...hdmf_common.v1_5_1.hdmf_common_base import Container
 from numpydantic import NDArray, Shape
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+
+from ...hdmf_common.v1_5_1.hdmf_common_base import Container
+
 
 metamodel_version = "None"
 version = "1.5.1"

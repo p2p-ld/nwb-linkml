@@ -1,28 +1,32 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+
 import numpy as np
-from ...core.v2_2_5.core_nwb_misc import Units
-from ...core.v2_2_5.core_nwb_device import Device
-from ...core.v2_2_5.core_nwb_ogen import OptogeneticStimulusSite
-from ...core.v2_2_5.core_nwb_ophys import ImagingPlane
-from ...core.v2_2_5.core_nwb_ecephys import ElectrodeGroup
 from numpydantic import NDArray, Shape
-from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, VectorData, VectorIndex
-from ...core.v2_2_5.core_nwb_icephys import IntracellularElectrode, SweepTable
-from ...core.v2_2_5.core_nwb_epoch import TimeIntervals
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+
 from ...core.v2_2_5.core_nwb_base import (
-    NWBData,
     NWBContainer,
+    NWBData,
     NWBDataInterface,
     ProcessingModule,
     TimeSeries,
 )
+from ...core.v2_2_5.core_nwb_device import Device
+from ...core.v2_2_5.core_nwb_ecephys import ElectrodeGroup
+from ...core.v2_2_5.core_nwb_epoch import TimeIntervals
+from ...core.v2_2_5.core_nwb_icephys import IntracellularElectrode, SweepTable
+from ...core.v2_2_5.core_nwb_misc import Units
+from ...core.v2_2_5.core_nwb_ogen import OptogeneticStimulusSite
+from ...core.v2_2_5.core_nwb_ophys import ImagingPlane
+from ...hdmf_common.v1_1_3.hdmf_common_table import DynamicTable, VectorData, VectorIndex
+
 
 metamodel_version = "None"
 version = "2.2.5"
