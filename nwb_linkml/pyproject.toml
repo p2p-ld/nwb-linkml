@@ -16,8 +16,7 @@ dependencies = [
     "rich>=13.5.2",
     #"linkml>=1.7.10",
     "linkml @ git+https://github.com/sneakers-the-rat/linkml@nwb-linkml",
-    # until recursive imports gets released
-    "linkml-runtime @ git+https://github.com/linkml/linkml-runtime@main",
+    "linkml-runtime>=1.8.2",
     "pydantic>=2.3.0",
     "h5py>=3.9.0",
     "pydantic-settings>=2.0.3",

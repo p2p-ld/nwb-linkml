@@ -7,11 +7,14 @@ requires-python = "<3.13,>=3.10"
 dev = [
     '-e nwb-linkml @ file:///${PROJECT_ROOT}/nwb_linkml',
     '-e nwb-schema-language @ file:///${PROJECT_ROOT}/nwb_schema_language',
-    '-e nwb-models @ file:///${PROJECT_ROOT/nwb_models',
+    '-e nwb-models @ file:///${PROJECT_ROOT}/nwb_models',
     '-e docs @ file:///${PROJECT_ROOT}/docs',
     "ruff>=0.5.0",
     "black>=24.4.2",
 ]
+
+[tool.pdm.scripts]
+build-models = "python scripts/generate_core.py"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file

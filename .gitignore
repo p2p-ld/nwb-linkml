@@ -168,3 +168,4 @@ jupyter_execute
 .venv*
 
 requests-cache.sqlite
+*.pstats
