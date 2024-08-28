@@ -1,27 +1,127 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+
 import numpy as np
-from ...hdmf_common.v1_1_3.hdmf_common_sparse import (
-    CSRMatrix,
-    CSRMatrixIndices,
-    CSRMatrixIndptr,
-    CSRMatrixData,
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+
+from ...core.v2_2_4.core_nwb_base import (
+    Image,
+    Images,
+    NWBContainer,
+    NWBData,
+    NWBDataInterface,
+    ProcessingModule,
+    TimeSeries,
+    TimeSeriesData,
+    TimeSeriesStartingTime,
+    TimeSeriesSync,
 )
-from ...hdmf_common.v1_1_3.hdmf_common_table import (
-    Data,
-    Index,
-    VectorData,
-    VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
-    Container,
-    DynamicTable,
+from ...core.v2_2_4.core_nwb_behavior import (
+    BehavioralEpochs,
+    BehavioralEvents,
+    BehavioralTimeSeries,
+    CompassDirection,
+    EyeTracking,
+    Position,
+    PupilTracking,
+    SpatialSeries,
+    SpatialSeriesData,
+)
+from ...core.v2_2_4.core_nwb_device import Device
+from ...core.v2_2_4.core_nwb_ecephys import (
+    ClusterWaveforms,
+    Clustering,
+    ElectricalSeries,
+    ElectrodeGroup,
+    ElectrodeGroupPosition,
+    EventDetection,
+    EventWaveform,
+    FeatureExtraction,
+    FilteredEphys,
+    LFP,
+    SpikeEventSeries,
+)
+from ...core.v2_2_4.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
+from ...core.v2_2_4.core_nwb_file import (
+    ExtracellularEphysElectrodes,
+    GeneralExtracellularEphys,
+    GeneralIntracellularEphys,
+    GeneralSourceScript,
+    LabMetaData,
+    NWBFile,
+    NWBFileGeneral,
+    NWBFileIntervals,
+    NWBFileStimulus,
+    ScratchData,
+    Subject,
+)
+from ...core.v2_2_4.core_nwb_icephys import (
+    CurrentClampSeries,
+    CurrentClampSeriesData,
+    CurrentClampStimulusSeries,
+    CurrentClampStimulusSeriesData,
+    IZeroClampSeries,
+    IntracellularElectrode,
+    PatchClampSeries,
+    PatchClampSeriesData,
+    SweepTable,
+    VoltageClampSeries,
+    VoltageClampSeriesCapacitanceFast,
+    VoltageClampSeriesCapacitanceSlow,
+    VoltageClampSeriesData,
+    VoltageClampSeriesResistanceCompBandwidth,
+    VoltageClampSeriesResistanceCompCorrection,
+    VoltageClampSeriesResistanceCompPrediction,
+    VoltageClampSeriesWholeCellCapacitanceComp,
+    VoltageClampSeriesWholeCellSeriesResistanceComp,
+    VoltageClampStimulusSeries,
+    VoltageClampStimulusSeriesData,
+)
+from ...core.v2_2_4.core_nwb_image import (
+    GrayscaleImage,
+    ImageMaskSeries,
+    ImageSeries,
+    ImageSeriesExternalFile,
+    IndexSeries,
+    OpticalSeries,
+    RGBAImage,
+    RGBImage,
+)
+from ...core.v2_2_4.core_nwb_misc import (
+    AbstractFeatureSeries,
+    AbstractFeatureSeriesData,
+    AnnotationSeries,
+    DecompositionSeries,
+    DecompositionSeriesBands,
+    DecompositionSeriesData,
+    IntervalSeries,
+    Units,
+    UnitsSpikeTimes,
+)
+from ...core.v2_2_4.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
+from ...core.v2_2_4.core_nwb_ophys import (
+    CorrectedImageStack,
+    DfOverF,
+    Fluorescence,
+    ImageSegmentation,
+    ImagingPlane,
+    ImagingPlaneGridSpacing,
+    ImagingPlaneManifold,
+    ImagingPlaneOriginCoords,
+    MotionCorrection,
+    OpticalChannel,
+    PlaneSegmentation,
+    PlaneSegmentationImageMask,
+    PlaneSegmentationPixelMask,
+    PlaneSegmentationVoxelMask,
+    RoiResponseSeries,
+    TwoPhotonSeries,
 )
 from ...core.v2_2_4.core_nwb_retinotopy import (
     ImagingRetinotopy,
@@ -33,119 +133,23 @@ from ...core.v2_2_4.core_nwb_retinotopy import (
     ImagingRetinotopySignMap,
     ImagingRetinotopyVasculatureImage,
 )
-from ...core.v2_2_4.core_nwb_base import (
-    NWBData,
-    Image,
-    NWBContainer,
-    NWBDataInterface,
-    TimeSeries,
-    TimeSeriesData,
-    TimeSeriesStartingTime,
-    TimeSeriesSync,
-    ProcessingModule,
-    Images,
+from ...hdmf_common.v1_1_3.hdmf_common_sparse import (
+    CSRMatrix,
+    CSRMatrixData,
+    CSRMatrixIndices,
+    CSRMatrixIndptr,
 )
-from ...core.v2_2_4.core_nwb_ophys import (
-    TwoPhotonSeries,
-    RoiResponseSeries,
-    DfOverF,
-    Fluorescence,
-    ImageSegmentation,
-    PlaneSegmentation,
-    PlaneSegmentationImageMask,
-    PlaneSegmentationPixelMask,
-    PlaneSegmentationVoxelMask,
-    ImagingPlane,
-    ImagingPlaneManifold,
-    ImagingPlaneOriginCoords,
-    ImagingPlaneGridSpacing,
-    OpticalChannel,
-    MotionCorrection,
-    CorrectedImageStack,
+from ...hdmf_common.v1_1_3.hdmf_common_table import (
+    Container,
+    Data,
+    DynamicTable,
+    DynamicTableRegion,
+    ElementIdentifiers,
+    Index,
+    VectorData,
+    VectorIndex,
 )
-from ...core.v2_2_4.core_nwb_device import Device
-from ...core.v2_2_4.core_nwb_image import (
-    GrayscaleImage,
-    RGBImage,
-    RGBAImage,
-    ImageSeries,
-    ImageSeriesExternalFile,
-    ImageMaskSeries,
-    OpticalSeries,
-    IndexSeries,
-)
-from ...core.v2_2_4.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
-from ...core.v2_2_4.core_nwb_icephys import (
-    PatchClampSeries,
-    PatchClampSeriesData,
-    CurrentClampSeries,
-    CurrentClampSeriesData,
-    IZeroClampSeries,
-    CurrentClampStimulusSeries,
-    CurrentClampStimulusSeriesData,
-    VoltageClampSeries,
-    VoltageClampSeriesData,
-    VoltageClampSeriesCapacitanceFast,
-    VoltageClampSeriesCapacitanceSlow,
-    VoltageClampSeriesResistanceCompBandwidth,
-    VoltageClampSeriesResistanceCompCorrection,
-    VoltageClampSeriesResistanceCompPrediction,
-    VoltageClampSeriesWholeCellCapacitanceComp,
-    VoltageClampSeriesWholeCellSeriesResistanceComp,
-    VoltageClampStimulusSeries,
-    VoltageClampStimulusSeriesData,
-    IntracellularElectrode,
-    SweepTable,
-)
-from ...core.v2_2_4.core_nwb_ecephys import (
-    ElectricalSeries,
-    SpikeEventSeries,
-    FeatureExtraction,
-    EventDetection,
-    EventWaveform,
-    FilteredEphys,
-    LFP,
-    ElectrodeGroup,
-    ElectrodeGroupPosition,
-    ClusterWaveforms,
-    Clustering,
-)
-from ...core.v2_2_4.core_nwb_behavior import (
-    SpatialSeries,
-    SpatialSeriesData,
-    BehavioralEpochs,
-    BehavioralEvents,
-    BehavioralTimeSeries,
-    PupilTracking,
-    EyeTracking,
-    CompassDirection,
-    Position,
-)
-from ...core.v2_2_4.core_nwb_misc import (
-    AbstractFeatureSeries,
-    AbstractFeatureSeriesData,
-    AnnotationSeries,
-    IntervalSeries,
-    DecompositionSeries,
-    DecompositionSeriesData,
-    DecompositionSeriesBands,
-    Units,
-    UnitsSpikeTimes,
-)
-from ...core.v2_2_4.core_nwb_file import (
-    ScratchData,
-    NWBFile,
-    NWBFileStimulus,
-    NWBFileGeneral,
-    GeneralSourceScript,
-    GeneralExtracellularEphys,
-    ExtracellularEphysElectrodes,
-    GeneralIntracellularEphys,
-    NWBFileIntervals,
-    LabMetaData,
-    Subject,
-)
-from ...core.v2_2_4.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
+
 
 metamodel_version = "None"
 version = "2.2.4"

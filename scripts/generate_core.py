@@ -57,7 +57,7 @@ def make_tmp_dir(clear: bool = False) -> Path:
     if tmp_dir.exists() and clear:
         for p in tmp_dir.iterdir():
             if p.is_dir() and not p.name == "git":
-                shutil.rmtree(tmp_dir)
+                shutil.rmtree(p)
     tmp_dir.mkdir(exist_ok=True)
     return tmp_dir
 
@@ -139,7 +139,9 @@ def generate_versions(
                     for schema in ns_files:
                         pbar_string = schema.parts[-3]
                         build_progress.update(pydantic_task, action=pbar_string)
-                        pydantic_provider.build(schema, versions=core_ns.versions, split=True)
+                        pydantic_provider.build(
+                            schema, versions=core_ns.versions, split=True, parallel=True
+                        )
                         build_progress.update(pydantic_task, advance=1)
                     build_progress.update(pydantic_task, action="Built Pydantic")
 
@@ -164,29 +166,17 @@ def generate_versions(
                     pydantic_task = None
 
         if not dry_run:
-            if hdmf_only:
-                shutil.rmtree(yaml_path / "linkml" / "hdmf_common")
-                shutil.rmtree(yaml_path / "linkml" / "hdmf_experimental")
-                shutil.rmtree(pydantic_path / "pydantic" / "hdmf_common")
-                shutil.rmtree(pydantic_path / "pydantic" / "hdmf_experimental")
-                shutil.move(tmp_dir / "linkml" / "hdmf_common", yaml_path / "linkml")
-                shutil.move(tmp_dir / "linkml" / "hdmf_experimental", yaml_path / "linkml")
-                shutil.move(tmp_dir / "pydantic" / "hdmf_common", pydantic_path / "pydantic")
-                shutil.move(tmp_dir / "pydantic" / "hdmf_experimental", pydantic_path / "pydantic")
-            else:
-                shutil.rmtree(yaml_path / "linkml")
-                shutil.rmtree(pydantic_path / "pydantic")
-                shutil.move(tmp_dir / "linkml", yaml_path)
-                shutil.move(tmp_dir / "pydantic", pydantic_path)
+            shutil.copytree(tmp_dir / "linkml", yaml_path, dirs_exist_ok=True)
+            shutil.copytree(tmp_dir / "pydantic", pydantic_path, dirs_exist_ok=True)
+            shutil.rmtree(tmp_dir / "linkml")
+            shutil.rmtree(tmp_dir / "pydantic")
 
             # import the most recent version of the schemaz we built
-            latest_version = sorted(
-                (pydantic_path / "pydantic" / "core").glob("v*"), key=os.path.getmtime
-            )[-1]
+            latest_version = sorted((pydantic_path / "core").glob("v*"), key=os.path.getmtime)[-1]
 
             # make inits to use the schema! we don't usually do this in the
             # provider class because we directly import the files there.
-            with open(pydantic_path / "pydantic" / "__init__.py", "w") as initfile:
+            with open(pydantic_path / "__init__.py", "w") as initfile:
                 initfile.write(" ")
 
             with open(pydantic_path / "__init__.py", "w") as initfile:
@@ -206,13 +196,23 @@ def parser() -> ArgumentParser:
         "--yaml",
         help="directory to export linkML schema to",
         type=Path,
-        default=Path(__file__).parent.parent / "nwb_models" / "src" / "nwb_models" / "schema",
+        default=Path(__file__).parent.parent
+        / "nwb_models"
+        / "src"
+        / "nwb_models"
+        / "schema"
+        / "linkml",
     )
     parser.add_argument(
         "--pydantic",
         help="directory to export pydantic models",
         type=Path,
-        default=Path(__file__).parent.parent / "nwb_models" / "src" / "nwb_models" / "models",
+        default=Path(__file__).parent.parent
+        / "nwb_models"
+        / "src"
+        / "nwb_models"
+        / "models"
+        / "pydantic",
     )
     parser.add_argument("--hdmf", help="Only generate the HDMF namespaces", action="store_true")
     parser.add_argument(

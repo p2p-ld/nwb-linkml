@@ -1,0 +1,9 @@
+nwb_models/src/nwb_models/models/** linguist-generated
+nwb_models/src/nwb_models/schema/** linguist-generated
+
+nwb_models/src/nwb_models/models/pydantic/core/v2_7_0/** -linguist-generated
+nwb_models/src/nwb_models/models/pydantic/hdmf_common/v1_8_0/** -linguist-generated
+nwb_models/src/nwb_models/models/pydantic/hdmf_experimental/v0_5_0/** -linguist-generated
+nwb_models/src/nwb_models/schema/linkml/core/v2_7_0/** -linguist-generated
+nwb_models/src/nwb_models/schema/linkml/hdmf_common/v1_8_0/** -linguist-generated
+nwb_models/src/nwb_models/schema/linkml/hdmf_experimental/v0_5_0/** -linguist-generated

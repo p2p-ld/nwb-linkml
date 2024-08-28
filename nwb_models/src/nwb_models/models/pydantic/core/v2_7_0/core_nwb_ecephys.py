@@ -1,30 +1,34 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from typing import Annotated, Any, ClassVar, Dict, List, Literal, Optional, Type, TypeVar, Union
+
 import numpy as np
-from ...hdmf_common.v1_8_0.hdmf_common_table import DynamicTableRegion
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union, Annotated, Type, TypeVar
+from numpydantic import NDArray, Shape
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
     RootModel,
-    field_validator,
     ValidationInfo,
-    BeforeValidator,
+    field_validator,
 )
-from ...core.v2_7_0.core_nwb_device import Device
+
 from ...core.v2_7_0.core_nwb_base import (
+    NWBContainer,
+    NWBDataInterface,
     TimeSeries,
     TimeSeriesStartingTime,
     TimeSeriesSync,
-    NWBDataInterface,
-    NWBContainer,
 )
-from numpydantic import NDArray, Shape
+from ...core.v2_7_0.core_nwb_device import Device
+from ...hdmf_common.v1_8_0.hdmf_common_table import DynamicTableRegion
+
 
 metamodel_version = "None"
 version = "2.7.0"

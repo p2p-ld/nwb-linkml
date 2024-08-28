@@ -1,38 +1,42 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
-from ...hdmf_common.v1_2_1.hdmf_common_base import Data, Container
-import pandas as pd
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
 from typing import (
     Any,
     ClassVar,
-    List,
-    Literal,
     Dict,
-    Optional,
-    Union,
     Generic,
     Iterable,
+    List,
+    Literal,
+    Optional,
     Tuple,
     TypeVar,
+    Union,
     overload,
 )
+
+import numpy as np
+import pandas as pd
 from numpydantic import NDArray, Shape
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
     RootModel,
-    field_validator,
-    model_validator,
+    ValidationError,
     ValidationInfo,
     ValidatorFunctionWrapHandler,
-    ValidationError,
+    field_validator,
+    model_validator,
 )
-import numpy as np
+
+from ...hdmf_common.v1_2_1.hdmf_common_base import Container, Data
+
 
 metamodel_version = "None"
 version = "1.2.1"

@@ -182,11 +182,10 @@ classes:
       by a separate DynamicTable stored within the group.
     is_a: DynamicTable
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: DynamicTable
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: DynamicTable
     tree_root: true

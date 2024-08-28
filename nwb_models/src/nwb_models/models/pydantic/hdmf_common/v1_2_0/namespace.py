@@ -1,27 +1,31 @@
 from __future__ import annotations
-from datetime import datetime, date
-from decimal import Decimal
-from enum import Enum
+
 import re
 import sys
-from typing import Any, ClassVar, List, Literal, Dict, Optional, Union
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+
 import numpy as np
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+
+from ...hdmf_common.v1_2_0.hdmf_common_base import Container, Data
 from ...hdmf_common.v1_2_0.hdmf_common_sparse import (
     CSRMatrix,
+    CSRMatrixData,
     CSRMatrixIndices,
     CSRMatrixIndptr,
-    CSRMatrixData,
 )
 from ...hdmf_common.v1_2_0.hdmf_common_table import (
+    DynamicTable,
+    DynamicTableRegion,
+    ElementIdentifiers,
     VectorData,
     VectorIndex,
-    ElementIdentifiers,
-    DynamicTableRegion,
     VocabData,
-    DynamicTable,
 )
-from ...hdmf_common.v1_2_0.hdmf_common_base import Data, Container
+
 
 metamodel_version = "None"
 version = "1.2.0"

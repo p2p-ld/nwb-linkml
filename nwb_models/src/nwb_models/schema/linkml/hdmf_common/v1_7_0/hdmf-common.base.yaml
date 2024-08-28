@@ -36,11 +36,10 @@ classes:
     description: A simple Container for holding onto multiple containers.
     is_a: Container
     attributes:
-      value:
-        name: value
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
-        any_of:
-        - range: Container
+    - name: value
+      multivalued: true
+      inlined: true
+      inlined_as_list: false
+      any_of:
+      - range: Container
     tree_root: true
