@@ -859,7 +859,7 @@ def get_references(obj: h5py.Dataset | h5py.Group) -> List[str]:
             # scalar
             if isinstance(obj[()], h5py.h5r.Reference):
                 refs.append(obj[()])
-        elif isinstance(obj[0], h5py.h5r.Reference):
+        elif len(obj) > 0 and isinstance(obj[0], h5py.h5r.Reference):
             # single-column
             refs.extend(obj[:].tolist())
         elif len(obj.dtype) > 1:

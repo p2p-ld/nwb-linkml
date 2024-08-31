@@ -349,6 +349,8 @@ def nwb_file(tmp_output_dir) -> Path:
     generator = np.random.default_rng()
 
     nwb_path = tmp_output_dir / "test_nwb.nwb"
+    if nwb_path.exists():
+        return nwb_path
 
     nwbfile = NWBFile(
         session_description="All that you touch, you change.",  # required

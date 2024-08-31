@@ -5,7 +5,7 @@
 groups = ["default", "dev", "plot", "tests"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:aaf3c34a5f39fc7db0c5dce91a0693eb78358a255d6b0a72f2e1f988eb7e899f"
+content_hash = "sha256:1c297e11f6dc9e4f6b8d29df872177d2ce65bbd334c0b65aa5175dfb125c4d9f"
 
 [[metadata.targets]]
 requires_python = ">=3.10,<3.13"
@@ -996,7 +996,7 @@ name = "networkx"
 version = "3.3"
 requires_python = ">=3.10"
 summary = "Python package for creating and manipulating graphs and networks"
-groups = ["dev", "tests"]
+groups = ["default", "dev", "tests"]
 files = [
     {file = "networkx-3.3-py3-none-any.whl", hash = "sha256:28575580c6ebdaf4505b22c6256a2b9de86b316dc63ba9e93abde3d78dfdbcf2"},
     {file = "networkx-3.3.tar.gz", hash = "sha256:0c127d8b2f4865f59ae9cb8aafcd60b5c70f3241ebd66f7defad7c4ab90126c9"},

@@ -25,6 +25,7 @@ dependencies = [
     "numpydantic>=1.3.3",
     "black>=24.4.2",
     "pandas>=2.2.2",
+    "networkx>=3.3",
 ]
 
 [project.urls]

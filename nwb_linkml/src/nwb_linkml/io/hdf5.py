@@ -22,6 +22,7 @@ Other TODO:
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -31,11 +32,12 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Dict, List, Optional, Union, overload
 
 import h5py
+import networkx as nx
 import numpy as np
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf
+from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf, get_references
 
 if TYPE_CHECKING:
     from nwb_linkml.providers.schema import SchemaProvider
@@ -45,6 +47,85 @@ if sys.version_info.minor >= 11:
     from typing import Never
 else:
     from typing_extensions import Never
+
+
+def hdf_dependency_graph(h5f: Path | h5py.File) -> nx.DiGraph:
+    """
+    Directed dependency graph of dataset and group nodes in an NWBFile such that
+    each node ``n_i`` is connected to node ``n_j`` if
+
+    * ``n_j`` is ``n_i``'s child
+    * ``n_i`` contains a reference to ``n_j``
+
+    Resolve references in
+
+    * Attributes
+    * Dataset columns
+    * Compound dtypes
+
+    Args:
+        h5f (:class:`pathlib.Path` | :class:`h5py.File`): NWB file to graph
+
+    Returns:
+        :class:`networkx.DiGraph`
+    """
+    # detect nodes to skip
+    skip_pattern = re.compile("^/specifications.*")
+
+    if isinstance(h5f, (Path, str)):
+        h5f = h5py.File(h5f, "r")
+
+    g = nx.DiGraph()
+
+    def _visit_item(name: str, node: h5py.Dataset | h5py.Group) -> None:
+        if skip_pattern.match(name):
+            return
+        # find references in attributes
+        refs = get_references(node)
+        if isinstance(node, h5py.Group):
+            refs.extend([child.name for child in node.values()])
+        refs = set(refs)
+
+        # add edges
+        edges = [(node.name, ref) for ref in refs]
+        g.add_edges_from(edges)
+
+        # ensure node added to graph
+        if len(edges) == 0:
+            g.add_node(node.name)
+
+        # store attrs in node
+        g.nodes[node.name].update(node.attrs)
+
+    # apply to root
+    _visit_item(h5f.name, h5f)
+
+    h5f.visititems(_visit_item)
+    return g
+
+
+def filter_dependency_graph(g: nx.DiGraph) -> nx.DiGraph:
+    """
+    Remove nodes from a dependency graph if they
+
+    * have no neurodata type AND
+    * have no outbound edges
+
+    OR
+
+    * are a VectorIndex (which are handled by the dynamictable mixins)
+    """
+    remove_nodes = []
+    node: str
+    for node in g.nodes.keys():
+        ndtype = g.nodes[node].get("neurodata_type", None)
+        if ndtype == "VectorData":
+            remove_nodes.append(node)
+        elif not ndtype and g.out_degree(node) == 0:
+            remove_nodes.append(node)
+
+    g.remove_nodes_from(remove_nodes)
+    return g
 
 
 class HDF5IO:

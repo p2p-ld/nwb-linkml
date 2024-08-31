@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 import pytest
 
-from nwb_linkml.io.hdf5 import HDF5IO, truncate_file
+from nwb_linkml.io.hdf5 import HDF5IO, truncate_file, hdf_dependency_graph, filter_dependency_graph
 
 
 @pytest.mark.skip()
@@ -98,3 +98,12 @@ def test_flatten_hdf():
     assert not any(["specifications" in v.path for v in flat.values()])
     pdb.set_trace()
     raise NotImplementedError("Just a stub for local testing for now, finish me!")
+
+
+def test_dependency_graph(nwb_file):
+    """
+    dependency graph is correctly constructed from an HDF5 file
+    """
+    graph = hdf_dependency_graph(nwb_file)
+    graph = filter_dependency_graph(graph)
+    pass

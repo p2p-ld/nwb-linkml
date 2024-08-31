@@ -1,46 +1,28 @@
 # manually transcribed target version of nwb-linkml dataset
 # matching the one created by fixtures.py:nwb_file
----
-id: my_dataset
+meta:
+  id: my_dataset
 
-prefixes:
-  nwbfile:
-    - path: "test_nwb.nwb"
-    - hash: "blake2b:blahblahblahblah"
+  prefixes:
+    nwbfile:
+      - path: "test_nwb.nwb"
+      - hash: "blake2b:blahblahblahblah"
 
-imports:
-  core:
-    as: nwb
-    version: "2.7.0"
-    from:
-      - pypi:
-          package: nwb-models
----
-
-  hdmf-common:
-    as: hdmf
-    version: "1.8.0"
-    from:
-      - pypi:
-          package: nwb-models
----
+  imports:
+    core:
+      as: nwb
+      version: "2.7.0"
+      from:
+        - pypi:
+            package: nwb-models
+    hdmf-common:
+      as: hdmf
+      version: "1.8.0"
+      from:
+        - pypi:
+            package: nwb-models
 
 extracellular_ephys: &ecephys
-  electrodes:
-    group:
-      - @shank{{i}}
-      - @shank{{i}}
-      - @shank{{i}}
-      # could have expression here like { range(3) } => i
-      # - ... { range(3) } => i
-      # or blank ... implies use expression from outer scope
-      - ...
-    shank{{i}}:
-      device: @general.devices.array
-    ...: { range(3) } => i
-
-# expands to
-extracellular_ephys:
   electrodes:
     group:
       - @shank0
@@ -54,7 +36,7 @@ extracellular_ephys:
       device: @general.devices.array
     # etc.
 
-data: !{{ nwb.NWBFile }} <== :nwbfile
+data: !nwb.NWBFile
   file_create_date: [ 2024-01-01 ]
   identifier: "1111-1111-1111-1111"
   session_description: All that you touch, you change.
@@ -63,11 +45,12 @@ data: !{{ nwb.NWBFile }} <== :nwbfile
     devices:
       - Heka ITC-1600:
       - Microscope:
+          description: My two-photon microscope
+          manufacturer: The best microscope manufacturer
       - array:
           description: old reliable
           manufacturer: diy
-    extracellular_ephys: *ecephys
-
+    extracellular_ephys: nwbfile:/general/extracellular_ephys
     experiment_description: All that you change, changes you.
     experimenter: [ "Lauren Oya Olamina" ]
     institution: Earthseed Research Institute
