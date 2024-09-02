@@ -1,25 +1,13 @@
-import shutil
-from dataclasses import dataclass, field
 from datetime import datetime
 from itertools import product
 from pathlib import Path
-from types import ModuleType
-from typing import Dict, Optional
 
 import numpy as np
 import pytest
-from linkml_runtime.dumpers import yaml_dumper
-from linkml_runtime.linkml_model import (
-    ClassDefinition,
-    Prefix,
-    SchemaDefinition,
-    SlotDefinition,
-    TypeDefinition,
-)
+from hdmf.common import DynamicTable, VectorData
 from pynwb import NWBHDF5IO, NWBFile, TimeSeries
 from pynwb.base import TimeSeriesReference, TimeSeriesReferenceVectorData
 from pynwb.behavior import Position, SpatialSeries
-from pynwb.core import DynamicTable, VectorData
 from pynwb.ecephys import LFP, ElectricalSeries
 from pynwb.file import Subject
 from pynwb.icephys import VoltageClampSeries, VoltageClampStimulusSeries
@@ -35,323 +23,9 @@ from pynwb.ophys import (
     TwoPhotonSeries,
 )
 
-from nwb_linkml.adapters.namespaces import NamespacesAdapter
-from nwb_linkml.io import schema as io
-from nwb_linkml.providers import LinkMLProvider, PydanticProvider
-from nwb_linkml.providers.linkml import LinkMLSchemaBuild
-from nwb_schema_language import Attribute, Dataset, Group
-
-__all__ = [
-    "NWBSchemaTest",
-    "TestSchemas",
-    "data_dir",
-    "linkml_schema",
-    "linkml_schema_bare",
-    "nwb_core_fixture",
-    "nwb_file",
-    "nwb_schema",
-    "tmp_output_dir",
-    "tmp_output_dir_func",
-    "tmp_output_dir_mod",
-]
-
 
 @pytest.fixture(scope="session")
-def tmp_output_dir() -> Path:
-    path = Path(__file__).parent.resolve() / "__tmp__"
-    if path.exists():
-        for subdir in path.iterdir():
-            if subdir.name == "git":
-                # don't wipe out git repos every time, they don't rly change
-                continue
-            elif subdir.is_file() and subdir.parent != path:
-                continue
-            elif subdir.is_file():
-                subdir.unlink(missing_ok=True)
-            else:
-                shutil.rmtree(str(subdir))
-    path.mkdir(exist_ok=True)
-
-    return path
-
-
-@pytest.fixture(scope="function")
-def tmp_output_dir_func(tmp_output_dir) -> Path:
-    """
-    tmp output dir that gets cleared between every function
-    cleans at the start rather than at cleanup in case the output is to be inspected
-    """
-    subpath = tmp_output_dir / "__tmpfunc__"
-    if subpath.exists():
-        shutil.rmtree(str(subpath))
-    subpath.mkdir()
-    return subpath
-
-
-@pytest.fixture(scope="module")
-def tmp_output_dir_mod(tmp_output_dir) -> Path:
-    """
-    tmp output dir that gets cleared between every function
-    cleans at the start rather than at cleanup in case the output is to be inspected
-    """
-    subpath = tmp_output_dir / "__tmpmod__"
-    if subpath.exists():
-        shutil.rmtree(str(subpath))
-    subpath.mkdir()
-    return subpath
-
-
-@pytest.fixture(scope="session", params=[{"core_version": "2.7.0", "hdmf_version": "1.8.0"}])
-def nwb_core_fixture(request) -> NamespacesAdapter:
-    nwb_core = io.load_nwb_core(**request.param)
-    assert (
-        request.param["core_version"] in nwb_core.versions["core"]
-    )  # 2.6.0 is actually 2.6.0-alpha
-    assert nwb_core.versions["hdmf-common"] == request.param["hdmf_version"]
-
-    return nwb_core
-
-
-@pytest.fixture(scope="session")
-def nwb_core_linkml(nwb_core_fixture, tmp_output_dir) -> LinkMLSchemaBuild:
-    provider = LinkMLProvider(tmp_output_dir, allow_repo=False, verbose=False)
-    result = provider.build(ns_adapter=nwb_core_fixture, force=True)
-    return result["core"]
-
-
-@pytest.fixture(scope="session")
-def nwb_core_module(nwb_core_linkml: LinkMLSchemaBuild, tmp_output_dir) -> ModuleType:
-    """
-    Generated pydantic namespace from nwb core
-    """
-    provider = PydanticProvider(tmp_output_dir, verbose=False)
-    result = provider.build(nwb_core_linkml.namespace, force=True)
-    mod = provider.get("core", version=nwb_core_linkml.version, allow_repo=False)
-    return mod
-
-
-@pytest.fixture(scope="session")
-def data_dir() -> Path:
-    path = Path(__file__).parent.resolve() / "data"
-    return path
-
-
-@dataclass
-class TestSchemas:
-    __test__ = False
-    core: SchemaDefinition
-    imported: SchemaDefinition
-    namespace: SchemaDefinition
-    core_path: Optional[Path] = None
-    imported_path: Optional[Path] = None
-    namespace_path: Optional[Path] = None
-
-
-@pytest.fixture(scope="module")
-def linkml_schema_bare() -> TestSchemas:
-
-    schema = TestSchemas(
-        core=SchemaDefinition(
-            name="core",
-            id="core",
-            version="1.0.1",
-            imports=["imported", "linkml:types"],
-            default_prefix="core",
-            prefixes={"linkml": Prefix("linkml", "https://w3id.org/linkml")},
-            description="Test core schema",
-            classes=[
-                ClassDefinition(
-                    name="MainTopLevel",
-                    description="The main class we are testing!",
-                    is_a="MainThing",
-                    tree_root=True,
-                    attributes=[
-                        SlotDefinition(
-                            name="name",
-                            description="A fixed property that should use Literal and be frozen",
-                            range="string",
-                            required=True,
-                            ifabsent="string(toplevel)",
-                            equals_string="toplevel",
-                            identifier=True,
-                        ),
-                        SlotDefinition(name="array", range="MainTopLevel__Array"),
-                        SlotDefinition(
-                            name="SkippableSlot", description="A slot that was meant to be skipped!"
-                        ),
-                        SlotDefinition(
-                            name="inline_dict",
-                            description=(
-                                "This should be inlined as a dictionary despite this class having"
-                                " an identifier"
-                            ),
-                            multivalued=True,
-                            inlined=True,
-                            inlined_as_list=False,
-                            any_of=[{"range": "OtherClass"}, {"range": "StillAnotherClass"}],
-                        ),
-                    ],
-                ),
-                ClassDefinition(
-                    name="MainTopLevel__Array",
-                    description="Main class's array",
-                    is_a="Arraylike",
-                    attributes=[
-                        SlotDefinition(name="x", range="numeric", required=True),
-                        SlotDefinition(name="y", range="numeric", required=True),
-                        SlotDefinition(
-                            name="z",
-                            range="numeric",
-                            required=False,
-                            maximum_cardinality=3,
-                            minimum_cardinality=3,
-                        ),
-                        SlotDefinition(
-                            name="a",
-                            range="numeric",
-                            required=False,
-                            minimum_cardinality=4,
-                            maximum_cardinality=4,
-                        ),
-                    ],
-                ),
-                ClassDefinition(
-                    name="skippable",
-                    description="A class that lives to be skipped!",
-                ),
-                ClassDefinition(
-                    name="OtherClass",
-                    description="Another class yno!",
-                    attributes=[
-                        SlotDefinition(name="name", range="string", required=True, identifier=True)
-                    ],
-                ),
-                ClassDefinition(
-                    name="StillAnotherClass",
-                    description="And yet another!",
-                    attributes=[
-                        SlotDefinition(name="name", range="string", required=True, identifier=True)
-                    ],
-                ),
-            ],
-            types=[TypeDefinition(name="numeric", typeof="float")],
-        ),
-        imported=SchemaDefinition(
-            name="imported",
-            id="imported",
-            version="1.4.5",
-            default_prefix="core",
-            imports=["linkml:types"],
-            prefixes={"linkml": Prefix("linkml", "https://w3id.org/linkml")},
-            classes=[
-                ClassDefinition(
-                    name="MainThing",
-                    description="Class imported by our main thing class!",
-                    attributes=[SlotDefinition(name="meta_slot", range="string")],
-                ),
-                ClassDefinition(name="Arraylike", abstract=True),
-            ],
-        ),
-        namespace=SchemaDefinition(
-            name="namespace",
-            id="namespace",
-            version="1.1.1",
-            default_prefix="namespace",
-            annotations=[
-                {"tag": "is_namespace", "value": "True"},
-                {"tag": "namespace", "value": "core"},
-            ],
-            description="A namespace package that should import all other classes",
-            imports=["core", "imported"],
-        ),
-    )
-    return schema
-
-
-@pytest.fixture(scope="module")
-def linkml_schema(tmp_output_dir_mod, linkml_schema_bare) -> TestSchemas:
-    """
-    A test schema that includes
-
-    - Two schemas, one importing from the other
-    - Arraylike
-    - Required/static "name" field
-    - linkml metadata like tree_root
-    - skipping classes
-    """
-    schema = linkml_schema_bare
-
-    test_schema_path = tmp_output_dir_mod / "test_schema"
-    test_schema_path.mkdir()
-
-    core_path = test_schema_path / "core.yaml"
-    imported_path = test_schema_path / "imported.yaml"
-    namespace_path = test_schema_path / "namespace.yaml"
-
-    schema.core_path = core_path
-    schema.imported_path = imported_path
-    schema.namespace_path = namespace_path
-
-    yaml_dumper.dump(schema.core, schema.core_path)
-    yaml_dumper.dump(schema.imported, schema.imported_path)
-    yaml_dumper.dump(schema.namespace, schema.namespace_path)
-    return schema
-
-
-@dataclass
-class NWBSchemaTest:
-    datasets: Dict[str, Dataset] = field(default_factory=dict)
-    groups: Dict[str, Group] = field(default_factory=dict)
-
-
-@pytest.fixture()
-def nwb_schema() -> NWBSchemaTest:
-    """Minimal NWB schema for testing"""
-    image = Dataset(
-        neurodata_type_def="Image",
-        dtype="numeric",
-        neurodata_type_inc="NWBData",
-        dims=[["x", "y"], ["x", "y", "r, g, b"], ["x", "y", "r, g, b, a"]],
-        shape=[[None, None], [None, None, 3], [None, None, 4]],
-        doc="An image!",
-        attributes=[
-            Attribute(dtype="float32", name="resolution", doc="resolution!"),
-            Attribute(dtype="text", name="description", doc="Description!"),
-        ],
-    )
-    images = Group(
-        neurodata_type_def="Images",
-        neurodata_type_inc="NWBDataInterface",
-        default_name="Images",
-        doc="Images!",
-        attributes=[Attribute(dtype="text", name="description", doc="description!")],
-        datasets=[
-            Dataset(neurodata_type_inc="Image", quantity="+", doc="images!"),
-            Dataset(
-                neurodata_type_inc="ImageReferences",
-                name="order_of_images",
-                doc="Image references!",
-                quantity="?",
-            ),
-        ],
-    )
-    return NWBSchemaTest(datasets={"image": image}, groups={"images": images})
-
-
-@pytest.fixture(scope="session")
-def nwb_file(tmp_output_dir) -> Path:
-    """
-    NWB File created with pynwb that uses all the weird language features
-
-    Borrowing code from pynwb docs in one humonogous fixture function
-    since there's not really a reason to
-    """
-    generator = np.random.default_rng()
-
-    nwb_path = tmp_output_dir / "test_nwb.nwb"
-    if nwb_path.exists():
-        return nwb_path
-
+def nwb_file_base() -> NWBFile:
     nwbfile = NWBFile(
         session_description="All that you touch, you change.",  # required
         identifier="1111-1111-1111-1111",  # required
@@ -373,7 +47,10 @@ def nwb_file(tmp_output_dir) -> Path:
         sex="M",
     )
     nwbfile.subject = subject
+    return nwbfile
 
+
+def _nwb_timeseries(nwbfile: NWBFile) -> NWBFile:
     data = np.arange(100, 200, 10)
     timestamps = np.arange(10.0)
     time_series_with_timestamps = TimeSeries(
@@ -384,7 +61,10 @@ def nwb_file(tmp_output_dir) -> Path:
         timestamps=timestamps,
     )
     nwbfile.add_acquisition(time_series_with_timestamps)
+    return nwbfile
 
+
+def _nwb_position(nwbfile: NWBFile) -> NWBFile:
     position_data = np.array([np.linspace(0, 10, 50), np.linspace(0, 8, 50)]).T
     position_timestamps = np.linspace(0, 50).astype(float) / 200
 
@@ -408,11 +88,15 @@ def nwb_file(tmp_output_dir) -> Path:
     )
     nwbfile.add_trial(start_time=1.0, stop_time=5.0, correct=True)
     nwbfile.add_trial(start_time=6.0, stop_time=10.0, correct=False)
+    return nwbfile
 
-    # --------------------------------------------------
-    # Extracellular Ephys
-    # https://pynwb.readthedocs.io/en/latest/tutorials/domain/ecephys.html
-    # --------------------------------------------------
+
+def _nwb_ecephys(nwbfile: NWBFile) -> NWBFile:
+    """
+    Extracellular Ephys
+    https://pynwb.readthedocs.io/en/latest/tutorials/domain/ecephys.html
+    """
+    generator = np.random.default_rng()
     device = nwbfile.create_device(name="array", description="old reliable", manufacturer="diy")
     nwbfile.add_electrode_column(name="label", description="label of electrode")
 
@@ -455,6 +139,7 @@ def nwb_file(tmp_output_dir) -> Path:
     # --------------------------------------------------
     # LFP
     # --------------------------------------------------
+    generator = np.random.default_rng()
     lfp_data = generator.standard_normal((50, 12))
     lfp_electrical_series = ElectricalSeries(
         name="ElectricalSeries",
@@ -470,6 +155,11 @@ def nwb_file(tmp_output_dir) -> Path:
     )
     ecephys_module.add(lfp)
 
+    return nwbfile
+
+
+def _nwb_units(nwbfile: NWBFile) -> NWBFile:
+    generator = np.random.default_rng()
     # Spike Times
     nwbfile.add_unit_column(name="quality", description="sorting quality")
     firing_rate = 20
@@ -479,10 +169,10 @@ def nwb_file(tmp_output_dir) -> Path:
     for _ in range(n_units):
         spike_times = np.where(generator.random(res * duration) < (firing_rate / res))[0] / res
         nwbfile.add_unit(spike_times=spike_times, quality="good")
+    return nwbfile
 
-    # --------------------------------------------------
-    # Intracellular ephys
-    # --------------------------------------------------
+
+def _nwb_icephys(nwbfile: NWBFile) -> NWBFile:
     device = nwbfile.create_device(name="Heka ITC-1600")
     electrode = nwbfile.create_icephys_electrode(
         name="elec0", description="a mock intracellular electrode", device=device
@@ -602,11 +292,15 @@ def nwb_file(tmp_output_dir) -> Path:
         data=np.arange(1),
         description="integer tag for a experimental condition",
     )
+    return nwbfile
 
-    # --------------------------------------------------
-    # Calcium Imaging
-    # https://pynwb.readthedocs.io/en/latest/tutorials/domain/ophys.html
-    # --------------------------------------------------
+
+def _nwb_ca_imaging(nwbfile: NWBFile) -> NWBFile:
+    """
+    Calcium Imaging
+    https://pynwb.readthedocs.io/en/latest/tutorials/domain/ophys.html
+    """
+    generator = np.random.default_rng()
     device = nwbfile.create_device(
         name="Microscope",
         description="My two-photon microscope",
@@ -755,6 +449,27 @@ def nwb_file(tmp_output_dir) -> Path:
     )
     fl = Fluorescence(roi_response_series=roi_resp_series)
     ophys_module.add(fl)
+    return nwbfile
+
+
+@pytest.fixture(scope="session")
+def nwb_file(tmp_output_dir, nwb_file_base, request: pytest.FixtureRequest) -> Path:
+    """
+    NWB File created with pynwb that uses all the weird language features
+
+    Borrowing code from pynwb docs in one humonogous fixture function
+    since there's not really a reason to
+    """
+    nwb_path = tmp_output_dir / "test_nwb.nwb"
+    if nwb_path.exists() and not request.config.getoption('--clean'):
+        return nwb_path
+
+    nwbfile = nwb_file_base
+    nwbfile = _nwb_timeseries(nwbfile)
+    nwbfile = _nwb_position(nwbfile)
+    nwbfile = _nwb_ecephys(nwbfile)
+    nwbfile = _nwb_units(nwbfile)
+    nwbfile = _nwb_icephys(nwbfile)
 
     with NWBHDF5IO(nwb_path, "w") as io:
         io.write(nwbfile)

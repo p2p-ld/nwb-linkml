@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 import pytest
 
-from nwb_linkml.io.hdf5 import HDF5IO, truncate_file, hdf_dependency_graph, filter_dependency_graph
+from nwb_linkml.io.hdf5 import HDF5IO, filter_dependency_graph, hdf_dependency_graph, truncate_file
 
 
 @pytest.mark.skip()

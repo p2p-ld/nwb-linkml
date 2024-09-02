@@ -117,11 +117,9 @@ def filter_dependency_graph(g: nx.DiGraph) -> nx.DiGraph:
     """
     remove_nodes = []
     node: str
-    for node in g.nodes.keys():
+    for node in g.nodes:
         ndtype = g.nodes[node].get("neurodata_type", None)
-        if ndtype == "VectorData":
-            remove_nodes.append(node)
-        elif not ndtype and g.out_degree(node) == 0:
+        if ndtype == "VectorData" or not ndtype and g.out_degree(node) == 0:
             remove_nodes.append(node)
 
     g.remove_nodes_from(remove_nodes)

@@ -344,7 +344,7 @@ def test_vectordata_indexing():
     """
     n_rows = 50
     value_array, index_array = _ragged_array(n_rows)
-    value_array = np.concat(value_array)
+    value_array = np.concatenate(value_array)
 
     data = hdmf.VectorData(value=value_array)
 
@@ -592,7 +592,7 @@ def test_mixed_aligned_dynamictable(aligned_table):
 
     AlignedTable, cols = aligned_table
     value_array, index_array = _ragged_array(10)
-    value_array = np.concat(value_array)
+    value_array = np.concatenate(value_array)
 
     data = hdmf.VectorData(value=value_array)
     index = hdmf.VectorIndex(value=index_array)
