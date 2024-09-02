@@ -8,7 +8,7 @@ import pytest
 def tmp_output_dir(request: pytest.FixtureRequest) -> Path:
     path = Path(__file__).parent.resolve() / "__tmp__"
     if path.exists():
-        if request.config.getoption('--clean'):
+        if request.config.getoption("--clean"):
             shutil.rmtree(path)
         else:
             for subdir in path.iterdir():

@@ -461,7 +461,7 @@ def nwb_file(tmp_output_dir, nwb_file_base, request: pytest.FixtureRequest) -> P
     since there's not really a reason to
     """
     nwb_path = tmp_output_dir / "test_nwb.nwb"
-    if nwb_path.exists() and not request.config.getoption('--clean'):
+    if nwb_path.exists() and not request.config.getoption("--clean"):
         return nwb_path
 
     nwbfile = nwb_file_base
