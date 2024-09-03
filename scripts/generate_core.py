@@ -171,16 +171,10 @@ def generate_versions(
             shutil.rmtree(tmp_dir / "linkml")
             shutil.rmtree(tmp_dir / "pydantic")
 
-            # import the most recent version of the schemaz we built
-            latest_version = sorted((pydantic_path / "core").glob("v*"), key=os.path.getmtime)[-1]
-
             # make inits to use the schema! we don't usually do this in the
             # provider class because we directly import the files there.
             with open(pydantic_path / "__init__.py", "w") as initfile:
                 initfile.write(" ")
-
-            with open(pydantic_path / "__init__.py", "w") as initfile:
-                initfile.write(f"from .pydantic.core.{latest_version.name}.namespace import *")
 
             subprocess.run(["black", "."])
 

@@ -858,6 +858,10 @@ class ElementIdentifiers(Data):
     name: str = Field(
         "element_id", json_schema_extra={"linkml_meta": {"ifabsent": "string(element_id)"}}
     )
+    value: Optional[NDArray[Shape["* num_elements"], int]] = Field(
+        None,
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_elements"}]}}},
+    )
 
 
 class DynamicTableRegion(DynamicTableRegionMixin, VectorData):

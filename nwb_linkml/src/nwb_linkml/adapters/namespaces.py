@@ -56,6 +56,8 @@ class NamespacesAdapter(Adapter):
                 needed_adapter = NamespacesAdapter.from_yaml(needed_source_ns)
                 ns_adapter.imported.append(needed_adapter)
 
+        ns_adapter.populate_imports()
+
         return ns_adapter
 
     def build(
@@ -176,7 +178,6 @@ class NamespacesAdapter(Adapter):
         else:
             raise KeyError(f"No schema found that define {name}")
 
-    @model_validator(mode="after")
     def populate_imports(self) -> "NamespacesAdapter":
         """
         Populate the imports that are needed for each schema file

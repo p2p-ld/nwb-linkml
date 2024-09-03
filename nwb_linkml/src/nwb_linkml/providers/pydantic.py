@@ -278,7 +278,7 @@ class PydanticProvider(Provider):
             nwb_models.models.pydantic.{namespace}.{version}
         """
         name_pieces = [
-            "nwb_linkml",
+            "nwb_models",
             "models",
             "pydantic",
             module_case(namespace),

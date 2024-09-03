@@ -430,6 +430,10 @@ class MapArrayLikeAttributes(DatasetMap):
     The most general case - treat everything that isn't handled by one of the special cases
     as an array!
 
+    We specifically include classes that have no attributes but also don't have a name,
+    as they still require their own class (unlike :class:`.MapArrayLike` above, where we
+    just generate an anonymous slot.)
+
     Examples:
 
         .. adapter:: DatasetAdapter
@@ -525,7 +529,7 @@ class MapArrayLikeAttributes(DatasetMap):
         return (
             all([cls.dims, cls.shape])
             and cls.neurodata_type_inc != "VectorData"
-            and has_attrs(cls)
+            and (has_attrs(cls) or not cls.name)
             and not is_compound(cls)
             and (dtype == "AnyType" or dtype in flat_to_linkml)
         )
