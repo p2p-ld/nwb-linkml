@@ -23,6 +23,13 @@ classes:
         name: name
         range: string
         required: true
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: x
+          - alias: y
+        range: numeric
     tree_root: true
   RGBImage:
     name: RGBImage
@@ -33,6 +40,15 @@ classes:
         name: name
         range: string
         required: true
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: x
+          - alias: y
+          - alias: r_g_b
+            exact_cardinality: 3
+        range: numeric
     tree_root: true
   RGBAImage:
     name: RGBAImage
@@ -43,6 +59,15 @@ classes:
         name: name
         range: string
         required: true
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: x
+          - alias: y
+          - alias: r_g_b_a
+            exact_cardinality: 4
+        range: numeric
     tree_root: true
   ImageSeries:
     name: ImageSeries

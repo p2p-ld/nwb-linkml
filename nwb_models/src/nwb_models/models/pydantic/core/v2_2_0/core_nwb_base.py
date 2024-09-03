@@ -22,7 +22,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -40,6 +40,21 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                if hasattr(v, "value"):
+                    return handler(v.value)
+                else:
+                    return handler(v["value"])
+            except Exception as e2:
+                raise e2 from e1
 
 
 class LinkMLMeta(RootModel):

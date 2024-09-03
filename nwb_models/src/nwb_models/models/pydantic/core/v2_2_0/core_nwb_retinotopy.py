@@ -31,7 +31,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -49,6 +49,21 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                if hasattr(v, "value"):
+                    return handler(v.value)
+                else:
+                    return handler(v["value"])
+            except Exception as e2:
+                raise e2 from e1
 
 
 class LinkMLMeta(RootModel):
@@ -166,17 +181,16 @@ class RetinotopyImage(GrayscaleImage):
     )
     field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
     format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
+    value: Optional[NDArray[Shape["* x, * y"], float]] = Field(
+        None,
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "x"}, {"alias": "y"}]}}
+        },
+    )
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    value: Optional[
-        Union[
-            NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r_g_b"], float],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
-        ]
-    ] = Field(None)
 
 
 class ImagingRetinotopy(NWBDataInterface):
@@ -306,17 +320,16 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
     )
     field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
     format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
+    value: Optional[NDArray[Shape["* x, * y"], float]] = Field(
+        None,
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "x"}, {"alias": "y"}]}}
+        },
+    )
     resolution: Optional[float] = Field(
         None, description="""Pixel resolution of the image, in pixels per centimeter."""
     )
     description: Optional[str] = Field(None, description="""Description of the image.""")
-    value: Optional[
-        Union[
-            NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r_g_b"], float],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
-        ]
-    ] = Field(None)
 
 
 # Model rebuild

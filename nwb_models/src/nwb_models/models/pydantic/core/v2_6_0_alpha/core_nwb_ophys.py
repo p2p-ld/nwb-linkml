@@ -31,6 +31,7 @@ from ...core.v2_6_0_alpha.core_nwb_image import ImageSeries, ImageSeriesExternal
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTable,
     DynamicTableRegion,
+    ElementIdentifiers,
     VectorData,
     VectorIndex,
 )
@@ -44,7 +45,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -62,6 +63,21 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                if hasattr(v, "value"):
+                    return handler(v.value)
+                else:
+                    return handler(v["value"])
+            except Exception as e2:
+                raise e2 from e1
 
 
 class LinkMLMeta(RootModel):
@@ -483,7 +499,7 @@ class PlaneSegmentation(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
+    id: ElementIdentifiers = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
