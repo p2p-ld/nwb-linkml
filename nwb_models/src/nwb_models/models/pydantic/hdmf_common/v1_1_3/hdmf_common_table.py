@@ -300,6 +300,8 @@ class DynamicTableMixin(BaseModel):
         "name",
         "colnames",
         "description",
+        "hdf5_path",
+        "object_id",
     )
 
     # overridden by subclass but implemented here for testing and typechecking purposes :)
@@ -621,6 +623,8 @@ class AlignedDynamicTableMixin(BaseModel):
         "categories",
         "colnames",
         "description",
+        "hdf5_path",
+        "object_id",
     )
 
     name: str = "aligned_table"
