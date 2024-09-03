@@ -524,7 +524,7 @@ class DynamicTableMixin(BaseModel):
 
         if isinstance(model, dict):
             for key, val in model.items():
-                if key in cls.model_fields:
+                if key in cls.model_fields or key in cls.NON_COLUMN_FIELDS:
                     continue
                 if not isinstance(val, (VectorData, VectorIndex)):
                     try:
@@ -533,8 +533,15 @@ class DynamicTableMixin(BaseModel):
                         else:
                             model[key] = VectorData(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
-                        raise ValidationError(
-                            f"field {key} cannot be cast to VectorData from {val}"
+                        raise ValidationError.from_exception_data(
+                            title=f"field {key} cannot be cast to VectorData from {val}",
+                            line_errors=[
+                                {
+                                    "type": "ValueError",
+                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "input": val,
+                                }
+                            ],
                         ) from e
         return model
 
