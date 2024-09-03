@@ -12,3 +12,20 @@ BASEMODEL_GETITEM = """
         else:
             raise KeyError("No value or data field to index from")
 """
+
+BASEMODEL_COERCE_VALUE = """
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        \"\"\"Try to rescue instantiation by using the value field\"\"\"
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                if hasattr(v, "value"):
+                    return handler(v.value)
+                else:
+                    return handler(v["value"])
+            except Exception as e2:
+                raise e2 from e1
+"""

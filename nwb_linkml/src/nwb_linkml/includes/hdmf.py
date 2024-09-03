@@ -253,6 +253,8 @@ class DynamicTableMixin(BaseModel):
         else:
             # add any columns not explicitly given an order at the end
             colnames = model["colnames"].copy()
+            if isinstance(colnames, np.ndarray):
+                colnames = colnames.tolist()
             colnames.extend(
                 [
                     k
@@ -284,9 +286,13 @@ class DynamicTableMixin(BaseModel):
                 if not isinstance(val, (VectorData, VectorIndex)):
                     try:
                         if key.endswith("_index"):
-                            model[key] = VectorIndex(name=key, description="", value=val)
+                            to_cast = VectorIndex
                         else:
-                            model[key] = VectorData(name=key, description="", value=val)
+                            to_cast = VectorData
+                        if isinstance(val, dict):
+                            model[key] = to_cast(**val)
+                        else:
+                            model[key] = VectorIndex(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
                         raise ValidationError.from_exception_data(
                             title=f"field {key} cannot be cast to VectorData from {val}",
@@ -379,10 +385,10 @@ class VectorDataMixin(BaseModel, Generic[T]):
     # redefined in `VectorData`, but included here for testing and type checking
     value: Optional[T] = None
 
-    def __init__(self, value: Optional[NDArray] = None, **kwargs):
-        if value is not None and "value" not in kwargs:
-            kwargs["value"] = value
-        super().__init__(**kwargs)
+    # def __init__(self, value: Optional[NDArray] = None, **kwargs):
+    #     if value is not None and "value" not in kwargs:
+    #         kwargs["value"] = value
+    #     super().__init__(**kwargs)
 
     def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
         if self._index:
@@ -703,14 +709,19 @@ class AlignedDynamicTableMixin(BaseModel):
             model["categories"] = categories
         else:
             # add any columns not explicitly given an order at the end
-            categories = [
-                k
-                for k in model
-                if k not in cls.NON_COLUMN_FIELDS
-                and not k.endswith("_index")
-                and k not in model["categories"]
-            ]
-            model["categories"].extend(categories)
+            categories = model["categories"].copy()
+            if isinstance(categories, np.ndarray):
+                categories = categories.tolist()
+            categories.extend(
+                [
+                    k
+                    for k in model
+                    if k not in cls.NON_CATEGORY_FIELDS
+                    and not k.endswith("_index")
+                    and k not in model["categories"]
+                ]
+            )
+            model["categories"] = categories
         return model
 
     @model_validator(mode="after")
@@ -839,6 +850,13 @@ class TimeSeriesReferenceVectorDataMixin(VectorDataMixin):
             )
 
 
+class ElementIdentifiersMixin(VectorDataMixin):
+    """
+    Mixin class for ElementIdentifiers - allow treating
+    as generic, and give general indexing methods from VectorData
+    """
+
+
 DYNAMIC_TABLE_IMPORTS = Imports(
     imports=[
         Import(module="pandas", alias="pd"),
@@ -882,6 +900,7 @@ DYNAMIC_TABLE_INJECTS = [
     DynamicTableRegionMixin,
     DynamicTableMixin,
     AlignedDynamicTableMixin,
+    ElementIdentifiersMixin,
 ]
 
 TSRVD_IMPORTS = Imports(
@@ -921,5 +940,10 @@ if "pytest" in sys.modules:
 
     class TimeSeriesReferenceVectorData(TimeSeriesReferenceVectorDataMixin):
         """TimeSeriesReferenceVectorData subclass for testing"""
+
+        pass
+
+    class ElementIdentifiers(ElementIdentifiersMixin):
+        """ElementIdentifiers subclass for testing"""
 
         pass

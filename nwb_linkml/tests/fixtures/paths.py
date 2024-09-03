@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture(scope="session")
 def tmp_output_dir(request: pytest.FixtureRequest) -> Path:
-    path = Path(__file__).parent.resolve() / "__tmp__"
+    path = Path(__file__).parents[1].resolve() / "__tmp__"
     if path.exists():
         if request.config.getoption("--clean"):
             shutil.rmtree(path)

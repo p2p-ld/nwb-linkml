@@ -97,9 +97,9 @@ class Provider(ABC):
             module_path = Path(importlib.util.find_spec("nwb_models").origin).parent
 
             if self.PROVIDES == "linkml":
-                namespace_path = module_path / "schema" / "linkml" / namespace
+                namespace_path = module_path / "schema" / "linkml" / namespace_module
             elif self.PROVIDES == "pydantic":
-                namespace_path = module_path / "models" / "pydantic" / namespace
+                namespace_path = module_path / "models" / "pydantic" / namespace_module
 
         if version is not None:
             version_path = namespace_path / version_module_case(version)

@@ -1,6 +1,7 @@
 import pdb
 
 import h5py
+import networkx as nx
 import numpy as np
 import pytest
 
@@ -100,10 +101,15 @@ def test_flatten_hdf():
     raise NotImplementedError("Just a stub for local testing for now, finish me!")
 
 
-def test_dependency_graph(nwb_file):
+@pytest.mark.dev
+def test_dependency_graph(nwb_file, tmp_output_dir):
     """
     dependency graph is correctly constructed from an HDF5 file
     """
     graph = hdf_dependency_graph(nwb_file)
+    A_unfiltered = nx.nx_agraph.to_agraph(graph)
+    A_unfiltered.draw(tmp_output_dir / "test_nwb_unfiltered.png", prog="dot")
     graph = filter_dependency_graph(graph)
+    A_filtered = nx.nx_agraph.to_agraph(graph)
+    A_filtered.draw(tmp_output_dir / "test_nwb_filtered.png", prog="dot")
     pass

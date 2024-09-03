@@ -22,6 +22,7 @@ Other TODO:
 
 import json
 import os
+import pdb
 import re
 import shutil
 import subprocess
@@ -34,10 +35,11 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union, overload
 import h5py
 import networkx as nx
 import numpy as np
+from numpydantic.interface.hdf5 import H5ArrayPath
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf, get_references
+from nwb_linkml.maps.hdf5 import get_references
 
 if TYPE_CHECKING:
     from nwb_linkml.providers.schema import SchemaProvider
@@ -49,7 +51,11 @@ else:
     from typing_extensions import Never
 
 
-def hdf_dependency_graph(h5f: Path | h5py.File) -> nx.DiGraph:
+SKIP_PATTERN = re.compile("^/specifications.*")
+"""Nodes to always skip in reading e.g. because they are handled elsewhere"""
+
+
+def hdf_dependency_graph(h5f: Path | h5py.File | h5py.Group) -> nx.DiGraph:
     """
     Directed dependency graph of dataset and group nodes in an NWBFile such that
     each node ``n_i`` is connected to node ``n_j`` if
@@ -63,14 +69,15 @@ def hdf_dependency_graph(h5f: Path | h5py.File) -> nx.DiGraph:
     * Dataset columns
     * Compound dtypes
 
+    Edges are labeled with ``reference`` or ``child`` depending on the type of edge it is,
+    and attributes from the hdf5 file are added as node attributes.
+
     Args:
         h5f (:class:`pathlib.Path` | :class:`h5py.File`): NWB file to graph
 
     Returns:
         :class:`networkx.DiGraph`
     """
-    # detect nodes to skip
-    skip_pattern = re.compile("^/specifications.*")
 
     if isinstance(h5f, (Path, str)):
         h5f = h5py.File(h5f, "r")
@@ -78,17 +85,19 @@ def hdf_dependency_graph(h5f: Path | h5py.File) -> nx.DiGraph:
     g = nx.DiGraph()
 
     def _visit_item(name: str, node: h5py.Dataset | h5py.Group) -> None:
-        if skip_pattern.match(name):
+        if SKIP_PATTERN.match(node.name):
             return
         # find references in attributes
         refs = get_references(node)
-        if isinstance(node, h5py.Group):
-            refs.extend([child.name for child in node.values()])
-        refs = set(refs)
+        # add edges from references
+        edges = [(node.name, ref) for ref in refs if not SKIP_PATTERN.match(ref)]
+        g.add_edges_from(edges, label="reference")
 
-        # add edges
-        edges = [(node.name, ref) for ref in refs]
-        g.add_edges_from(edges)
+        # add children, if group
+        if isinstance(node, h5py.Group):
+            children = [child.name for child in node.values() if not SKIP_PATTERN.match(child.name)]
+            edges = [(node.name, ref) for ref in children if not SKIP_PATTERN.match(ref)]
+            g.add_edges_from(edges, label="child")
 
         # ensure node added to graph
         if len(edges) == 0:
@@ -119,11 +128,123 @@ def filter_dependency_graph(g: nx.DiGraph) -> nx.DiGraph:
     node: str
     for node in g.nodes:
         ndtype = g.nodes[node].get("neurodata_type", None)
-        if ndtype == "VectorData" or not ndtype and g.out_degree(node) == 0:
+        if (ndtype is None and g.out_degree(node) == 0) or SKIP_PATTERN.match(node):
             remove_nodes.append(node)
 
     g.remove_nodes_from(remove_nodes)
     return g
+
+
+def _load_node(
+    path: str, h5f: h5py.File, provider: "SchemaProvider", context: dict
+) -> dict | BaseModel:
+    """
+    Load an individual node in the graph, then removes it from the graph
+    Args:
+        path:
+        g:
+        context:
+
+    Returns:
+
+    """
+    obj = h5f.get(path)
+
+    if isinstance(obj, h5py.Dataset):
+        args = _load_dataset(obj, h5f, context)
+    elif isinstance(obj, h5py.Group):
+        args = _load_group(obj, h5f, context)
+    else:
+        raise TypeError(f"Nodes can only be h5py Datasets and Groups, got {obj}")
+
+    # if obj.name == "/general/intracellular_ephys/simultaneous_recordings/recordings":
+    #     pdb.set_trace()
+
+    # resolve attr references
+    for k, v in args.items():
+        if isinstance(v, h5py.h5r.Reference):
+            ref_path = h5f[v].name
+            args[k] = context[ref_path]
+
+    model = provider.get_class(obj.attrs["namespace"], obj.attrs["neurodata_type"])
+
+    # add additional needed params
+    args["hdf5_path"] = path
+    args["name"] = path.split("/")[-1]
+    return model(**args)
+
+
+def _load_dataset(
+    dataset: h5py.Dataset, h5f: h5py.File, context: dict
+) -> Union[dict, str, int, float]:
+    """
+    Resolves datasets that do not have a ``neurodata_type`` as a dictionary or a scalar.
+
+    If the dataset is a single value without attrs, load it and return as a scalar value.
+    Otherwise return a :class:`.H5ArrayPath` as a reference to the dataset in the `value` key.
+    """
+    res = {}
+    if dataset.shape == ():
+        val = dataset[()]
+        if isinstance(val, h5py.h5r.Reference):
+            val = context.get(h5f[val].name)
+        # if this is just a scalar value, return it
+        if not dataset.attrs:
+            return val
+
+        res["value"] = val
+    elif len(dataset) > 0 and isinstance(dataset[0], h5py.h5r.Reference):
+        # vector of references
+        res["value"] = [context.get(h5f[ref].name) for ref in dataset[:]]
+    elif len(dataset.dtype) > 1:
+        # compound dataset - check if any of the fields are references
+        for name in dataset.dtype.names:
+            if isinstance(dataset[name][0], h5py.h5r.Reference):
+                res[name] = [context.get(h5f[ref].name) for ref in dataset[name]]
+            else:
+                res[name] = H5ArrayPath(h5f.filename, dataset.name, name)
+    else:
+        res["value"] = H5ArrayPath(h5f.filename, dataset.name)
+
+    res.update(dataset.attrs)
+    if "namespace" in res:
+        del res["namespace"]
+    if "neurodata_type" in res:
+        del res["neurodata_type"]
+    res["name"] = dataset.name.split("/")[-1]
+    res["hdf5_path"] = dataset.name
+
+    if len(res) == 1:
+        return res["value"]
+    else:
+        return res
+
+
+def _load_group(group: h5py.Group, h5f: h5py.File, context: dict) -> dict:
+    """
+    Load a group!
+    """
+    res = {}
+    res.update(group.attrs)
+    for child_name, child in group.items():
+        if child.name in context:
+            res[child_name] = context[child.name]
+        elif isinstance(child, h5py.Dataset):
+            res[child_name] = _load_dataset(child, h5f, context)
+        elif isinstance(child, h5py.Group):
+            res[child_name] = _load_group(child, h5f, context)
+        else:
+            raise TypeError(
+                "Can only handle preinstantiated child objects in context, datasets, and group,"
+                f" got {child} for {child_name}"
+            )
+    if "namespace" in res:
+        del res["namespace"]
+    if "neurodata_type" in res:
+        del res["neurodata_type"]
+    res["name"] = group.name.split("/")[-1]
+    res["hdf5_path"] = group.name
+    return res
 
 
 class HDF5IO:
@@ -185,28 +306,20 @@ class HDF5IO:
 
         h5f = h5py.File(str(self.path))
         src = h5f.get(path) if path else h5f
+        graph = hdf_dependency_graph(src)
+        graph = filter_dependency_graph(graph)
 
-        # get all children of selected item
-        if isinstance(src, (h5py.File, h5py.Group)):
-            children = flatten_hdf(src)
-        else:
-            raise NotImplementedError("directly read individual datasets")
+        # topo sort to get read order
+        # TODO: This could be parallelized using `topological_generations`,
+        # but it's not clear what the perf bonus would be because there are many generations
+        # with few items
+        topo_order = list(reversed(list(nx.topological_sort(graph))))
+        context = {}
+        for node in topo_order:
+            res = _load_node(node, h5f, provider, context)
+            context[node] = res
 
-        queue = ReadQueue(h5f=self.path, queue=children, provider=provider)
-
-        # Apply initial planning phase of reading
-        queue.apply_phase(ReadPhases.plan)
-        # Read operations gather the data before casting into models
-        queue.apply_phase(ReadPhases.read)
-        # Construction operations actually cast the models
-        # this often needs to run several times as models with dependencies wait for their
-        # dependents to be cast
-        queue.apply_phase(ReadPhases.construct)
-
-        if path is None:
-            return queue.completed["/"].result
-        else:
-            return queue.completed[path].result
+        pdb.set_trace()
 
     def write(self, path: Path) -> Never:
         """
@@ -246,7 +359,7 @@ class HDF5IO:
         """
         from nwb_linkml.providers.schema import SchemaProvider
 
-        h5f = h5py.File(str(self.path))
+        h5f = h5py.File(str(self.path), "r")
         schema = read_specs_as_dicts(h5f.get("specifications"))
 
         # get versions for each namespace
@@ -260,7 +373,7 @@ class HDF5IO:
         provider = SchemaProvider(versions=versions)
 
         # build schema so we have them cached
-        provider.build_from_dicts(schema)
+        # provider.build_from_dicts(schema)
         h5f.close()
         return provider
 
