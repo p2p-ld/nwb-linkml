@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pdb
 import re
 import sys
 from datetime import date, datetime, time
@@ -50,6 +51,7 @@ class ConfiguredBaseModel(BaseModel):
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
+        validation_error_cause=True,
     )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
@@ -67,18 +69,35 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
+                return handler(v.value)
+            except AttributeError:
+                try:
                     return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                except (KeyError, TypeError):
+                    raise e1
+            # try:
+            #     if hasattr(v, "value"):
+            #     else:
+            #         return handler(v["value"])
+            # except Exception as e2:
+            #     raise e2 from e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            annotation = annotation.__args__[0] if hasattr(annotation, "__args__") else annotation
+            if issubclass(annotation, type(v)) and annotation is not type(v):
+                v = annotation(**v.__dict__)
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -310,11 +329,12 @@ class DynamicTableMixin(BaseModel):
     but simplifying along the way :)
     """
 
-    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    model_config = ConfigDict(extra="allow", validate_assignment=True, validation_error_cause=True)
     __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "id",
         "name",
+        "categories",
         "colnames",
         "description",
         "hdf5_path",
@@ -510,6 +530,7 @@ class DynamicTableMixin(BaseModel):
                 if k not in cls.NON_COLUMN_FIELDS
                 and not k.endswith("_index")
                 and not isinstance(model[k], VectorIndexMixin)
+                and model[k] is not None
             ]
             model["colnames"] = colnames
         else:
@@ -525,6 +546,7 @@ class DynamicTableMixin(BaseModel):
                     and not k.endswith("_index")
                     and k not in model["colnames"]
                     and not isinstance(model[k], VectorIndexMixin)
+                    and model[k] is not None
                 ]
             )
             model["colnames"] = colnames
@@ -597,9 +619,9 @@ class DynamicTableMixin(BaseModel):
         """
         Ensure that all columns are equal length
         """
-        lengths = [len(v) for v in self._columns.values()] + [len(self.id)]
+        lengths = [len(v) for v in self._columns.values() if v is not None] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "Columns are not of equal length! "
+            "DynamicTable Columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
         return self
@@ -645,7 +667,7 @@ class AlignedDynamicTableMixin(BaseModel):
     and also it's not so easy to copy a pydantic validator method.
     """
 
-    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    model_config = ConfigDict(extra="allow", validate_assignment=True, validation_error_cause=True)
     __pydantic_extra__: Dict[str, Union["DynamicTableMixin", "VectorDataMixin", "VectorIndexMixin"]]
 
     NON_CATEGORY_FIELDS: ClassVar[tuple[str]] = (
@@ -654,6 +676,7 @@ class AlignedDynamicTableMixin(BaseModel):
         "colnames",
         "description",
         "hdf5_path",
+        "id",
         "object_id",
     )
 
@@ -684,7 +707,7 @@ class AlignedDynamicTableMixin(BaseModel):
         elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[1], str):
             # get a slice of a single table
             return self._categories[item[1]][item[0]]
-        elif isinstance(item, (int, slice, Iterable)):
+        elif isinstance(item, (int, slice, Iterable, np.int_)):
             # get a slice of all the tables
             ids = self.id[item]
             if not isinstance(ids, Iterable):
@@ -696,9 +719,9 @@ class AlignedDynamicTableMixin(BaseModel):
                 if isinstance(table, pd.DataFrame):
                     table = table.reset_index()
                 elif isinstance(table, np.ndarray):
-                    table = pd.DataFrame({category_name: [table]})
+                    table = pd.DataFrame({category_name: [table]}, index=ids.index)
                 elif isinstance(table, Iterable):
-                    table = pd.DataFrame({category_name: table})
+                    table = pd.DataFrame({category_name: table}, index=ids.index)
                 else:
                     raise ValueError(
                         f"Don't know how to construct category table for {category_name}"
@@ -708,6 +731,7 @@ class AlignedDynamicTableMixin(BaseModel):
             names = [self.name] + self.categories
             # construct below in case we need to support array indexing in the future
         else:
+            pdb.set_trace()
             raise ValueError(
                 f"Dont know how to index with {item}, "
                 "need an int, string, slice, ndarray, or tuple[int | slice, str]"
@@ -818,7 +842,7 @@ class AlignedDynamicTableMixin(BaseModel):
         """
         lengths = [len(v) for v in self._categories.values()] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "Columns are not of equal length! "
+            "AlignedDynamicTable Columns are not of equal length! "
             f"Got colnames:\n{self.categories}\nand lengths: {lengths}"
         )
         return self

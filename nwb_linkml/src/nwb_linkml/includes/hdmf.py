@@ -53,6 +53,7 @@ class DynamicTableMixin(BaseModel):
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "id",
         "name",
+        "categories",
         "colnames",
         "description",
         "hdf5_path",

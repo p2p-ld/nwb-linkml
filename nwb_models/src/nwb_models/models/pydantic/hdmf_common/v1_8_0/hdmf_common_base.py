@@ -46,12 +46,23 @@ class ConfiguredBaseModel(BaseModel):
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
+                return handler(v.value)
+            except AttributeError:
+                try:
                     return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                except (KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            annotation = annotation.__args__[0] if hasattr(annotation, "__args__") else annotation
+            if issubclass(annotation, type(v)) and annotation is not type(v):
+                v = annotation(**v.__dict__)
+        return v
 
 
 class LinkMLMeta(RootModel):

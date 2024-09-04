@@ -147,7 +147,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    tags: VectorData[Optional[NDArray[Any, str]]] = Field(
+    tags: Optional[VectorData[NDArray[Any, str]]] = Field(
         None,
         description="""User-defined tags that identify or categorize events.""",
         json_schema_extra={
@@ -168,7 +168,7 @@ class TimeIntervals(DynamicTable):
             }
         },
     )
-    timeseries: Named[Optional[TimeSeriesReferenceVectorData]] = Field(
+    timeseries: Optional[Named[TimeSeriesReferenceVectorData]] = Field(
         None,
         description="""An index into a TimeSeries object.""",
         json_schema_extra={

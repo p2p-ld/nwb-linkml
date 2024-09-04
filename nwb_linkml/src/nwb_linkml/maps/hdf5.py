@@ -844,7 +844,7 @@ def resolve_references(
     return res, errors, completes
 
 
-def resolve_hardlink(obj: Union[h5py.Group, h5py.Dataset]) -> HDF5_Path:
+def resolve_hardlink(obj: Union[h5py.Group, h5py.Dataset]) -> str:
     """
     Unhelpfully, hardlinks are pretty challenging to detect with h5py, so we have
     to do extra work to check if an item is "real" or a hardlink to another item.
@@ -856,4 +856,4 @@ def resolve_hardlink(obj: Union[h5py.Group, h5py.Dataset]) -> HDF5_Path:
     We basically dereference the object and return that path instead of the path
     given by the object's ``name``
     """
-    return HDF5_Path(obj.file[obj.ref].name)
+    return obj.file[obj.ref].name

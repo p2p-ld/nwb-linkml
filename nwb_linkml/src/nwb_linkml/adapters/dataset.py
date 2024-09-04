@@ -854,3 +854,12 @@ class DatasetAdapter(ClassAdapter):
             return None
         else:
             return matches[0]
+
+    def special_cases(self, res: BuildResult) -> BuildResult:
+        """
+        Apply special cases to build result
+        """
+        res = self._datetime_or_str(res)
+
+    def _datetime_or_str(self, res: BuildResult) -> BuildResult:
+        """HDF5 doesn't support datetime, so"""

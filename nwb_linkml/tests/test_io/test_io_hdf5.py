@@ -113,3 +113,17 @@ def test_dependency_graph(nwb_file, tmp_output_dir):
     A_filtered = nx.nx_agraph.to_agraph(graph)
     A_filtered.draw(tmp_output_dir / "test_nwb_filtered.png", prog="dot")
     pass
+
+
+@pytest.mark.skip
+def test_dependencies_hardlink(nwb_file):
+    """
+    Test that hardlinks are resolved (eg. from /processing/ecephys/LFP/ElectricalSeries/electrodes
+    to /acquisition/ElectricalSeries/electrodes
+    Args:
+        nwb_file:
+
+    Returns:
+
+    """
+    pass

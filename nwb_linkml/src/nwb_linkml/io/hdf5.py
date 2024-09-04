@@ -39,7 +39,7 @@ from numpydantic.interface.hdf5 import H5ArrayPath
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from nwb_linkml.maps.hdf5 import get_references
+from nwb_linkml.maps.hdf5 import get_references, resolve_hardlink
 
 if TYPE_CHECKING:
     from nwb_linkml.providers.schema import SchemaProvider
@@ -51,7 +51,7 @@ else:
     from typing_extensions import Never
 
 
-SKIP_PATTERN = re.compile("^/specifications.*")
+SKIP_PATTERN = re.compile("(^/specifications.*)|(\.specloc)")
 """Nodes to always skip in reading e.g. because they are handled elsewhere"""
 
 
@@ -95,7 +95,11 @@ def hdf_dependency_graph(h5f: Path | h5py.File | h5py.Group) -> nx.DiGraph:
 
         # add children, if group
         if isinstance(node, h5py.Group):
-            children = [child.name for child in node.values() if not SKIP_PATTERN.match(child.name)]
+            children = [
+                resolve_hardlink(child)
+                for child in node.values()
+                if not SKIP_PATTERN.match(child.name)
+            ]
             edges = [(node.name, ref) for ref in children if not SKIP_PATTERN.match(ref)]
             g.add_edges_from(edges, label="child")
 
@@ -157,21 +161,15 @@ def _load_node(
     else:
         raise TypeError(f"Nodes can only be h5py Datasets and Groups, got {obj}")
 
-    # if obj.name == "/general/intracellular_ephys/simultaneous_recordings/recordings":
-    #     pdb.set_trace()
-
-    # resolve attr references
-    for k, v in args.items():
-        if isinstance(v, h5py.h5r.Reference):
-            ref_path = h5f[v].name
-            args[k] = context[ref_path]
-
-    model = provider.get_class(obj.attrs["namespace"], obj.attrs["neurodata_type"])
-
-    # add additional needed params
-    args["hdf5_path"] = path
-    args["name"] = path.split("/")[-1]
-    return model(**args)
+    if "neurodata_type" in obj.attrs:
+        model = provider.get_class(obj.attrs["namespace"], obj.attrs["neurodata_type"])
+        return model(**args)
+    else:
+        if "name" in args:
+            del args["name"]
+        if "hdf5_path" in args:
+            del args["hdf5_path"]
+        return args
 
 
 def _load_dataset(
@@ -214,6 +212,15 @@ def _load_dataset(
     res["name"] = dataset.name.split("/")[-1]
     res["hdf5_path"] = dataset.name
 
+    # resolve attr references
+    for k, v in res.items():
+        if isinstance(v, h5py.h5r.Reference):
+            ref_path = h5f[v].name
+            if SKIP_PATTERN.match(ref_path):
+                res[k] = ref_path
+            else:
+                res[k] = context[ref_path]
+
     if len(res) == 1:
         return res["value"]
     else:
@@ -242,8 +249,20 @@ def _load_group(group: h5py.Group, h5f: h5py.File, context: dict) -> dict:
         del res["namespace"]
     if "neurodata_type" in res:
         del res["neurodata_type"]
-    res["name"] = group.name.split("/")[-1]
-    res["hdf5_path"] = group.name
+        name = group.name.split("/")[-1]
+        if name:
+            res["name"] = name
+        res["hdf5_path"] = group.name
+
+    # resolve attr references
+    for k, v in res.items():
+        if isinstance(v, h5py.h5r.Reference):
+            ref_path = h5f[v].name
+            if SKIP_PATTERN.match(ref_path):
+                res[k] = ref_path
+            else:
+                res[k] = context[ref_path]
+
     return res
 
 
@@ -318,6 +337,10 @@ class HDF5IO:
         for node in topo_order:
             res = _load_node(node, h5f, provider, context)
             context[node] = res
+
+        if path is None:
+            path = "/"
+        return context[path]
 
         pdb.set_trace()
 

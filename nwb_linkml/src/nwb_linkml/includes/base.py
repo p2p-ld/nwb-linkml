@@ -22,10 +22,16 @@ BASEMODEL_COERCE_VALUE = """
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
-                    return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                return handler(v.value)
+            except:
+                raise e1
+"""
+
+BASEMODEL_COERCE_CHILD = """
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        \"\"\"Recast parent classes into child classes\"\"\"
+        return v
+        pdb.set_trace()
 """
