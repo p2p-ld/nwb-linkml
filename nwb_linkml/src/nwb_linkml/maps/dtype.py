@@ -3,7 +3,7 @@ Dtype mappings
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 
@@ -160,14 +160,28 @@ def handle_dtype(dtype: DTypeType | None) -> str:
     elif isinstance(dtype, FlatDtype):
         return dtype.value
     elif isinstance(dtype, list) and isinstance(dtype[0], CompoundDtype):
-        # there is precisely one class that uses compound dtypes:
-        # TimeSeriesReferenceVectorData
-        # compoundDtypes are able to define a ragged table according to the schema
-        # but are used in this single case equivalently to attributes.
-        # so we'll... uh... treat them as slots.
-        # TODO
+        # Compound Dtypes are handled by the MapCompoundDtype dataset map,
+        # but this function is also used within ``check`` methods, so we should always
+        # return something from it rather than raise
         return "AnyType"
 
     else:
         # flat dtype
         return dtype
+
+
+def inlined(dtype: DTypeType | None) -> Optional[bool]:
+    """
+    Check if a slot should be inlined based on its dtype
+
+    for now that is equivalent to checking whether that dtype is another a reference dtype,
+    but the function remains semantically reserved for answering this question w.r.t. dtype.
+
+    Returns ``None`` if not inlined to not clutter generated models with unnecessary props
+    """
+    return (
+        True
+        if isinstance(dtype, ReferenceDtype)
+        or (isinstance(dtype, CompoundDtype) and isinstance(dtype.dtype, ReferenceDtype))
+        else None
+    )

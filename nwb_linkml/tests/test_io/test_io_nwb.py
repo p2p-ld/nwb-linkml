@@ -10,6 +10,7 @@ def test_read_from_nwbfile(nwb_file):
     Read data from a pynwb HDF5 NWB file
     """
     res = HDF5IO(nwb_file).read()
+    res.model_dump_json()
 
 
 def test_read_from_yaml(nwb_file):

@@ -11,7 +11,7 @@ from nwb_linkml.adapters.adapter import BuildResult, has_attrs, is_1d, is_compou
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
-from nwb_linkml.maps.dtype import flat_to_linkml, handle_dtype
+from nwb_linkml.maps.dtype import flat_to_linkml, handle_dtype, inlined
 from nwb_linkml.maps.naming import camel_to_snake
 from nwb_schema_language import Dataset
 
@@ -299,6 +299,8 @@ class MapListlike(DatasetMap):
             description=cls.doc,
             required=cls.quantity not in ("*", "?"),
             annotations=[{"source_type": "reference"}],
+            inlined=True,
+            inlined_as_list=True,
         )
         res.classes[0].attributes["value"] = slot
         return res
@@ -544,7 +546,9 @@ class MapArrayLikeAttributes(DatasetMap):
         array_adapter = ArrayAdapter(cls.dims, cls.shape)
         expressions = array_adapter.make_slot()
         # make a slot for the arraylike class
-        array_slot = SlotDefinition(name="value", range=handle_dtype(cls.dtype), **expressions)
+        array_slot = SlotDefinition(
+            name="value", range=handle_dtype(cls.dtype), inlined=inlined(cls.dtype), **expressions
+        )
         res.classes[0].attributes.update({"value": array_slot})
         return res
 
@@ -583,6 +587,7 @@ class MapClassRange(DatasetMap):
             description=cls.doc,
             range=f"{cls.neurodata_type_inc}",
             annotations=[{"named": True}, {"source_type": "neurodata_type_inc"}],
+            inlined=True,
             **QUANTITY_MAP[cls.quantity],
         )
         res = BuildResult(slots=[this_slot])
@@ -799,6 +804,7 @@ class MapCompoundDtype(DatasetMap):
                 description=a_dtype.doc,
                 range=handle_dtype(a_dtype.dtype),
                 array=ArrayExpression(exact_number_dimensions=1),
+                inlined=inlined(a_dtype.dtype),
                 **QUANTITY_MAP[cls.quantity],
             )
         res.classes[0].attributes.update(slots)
@@ -830,6 +836,8 @@ class DatasetAdapter(ClassAdapter):
         if map is not None:
             res = map.apply(self.cls, res, self._get_full_name())
 
+        if self.debug:
+            res = self._amend_debug(res, map)
         return res
 
     def match(self) -> Optional[Type[DatasetMap]]:
@@ -855,11 +863,13 @@ class DatasetAdapter(ClassAdapter):
         else:
             return matches[0]
 
-    def special_cases(self, res: BuildResult) -> BuildResult:
-        """
-        Apply special cases to build result
-        """
-        res = self._datetime_or_str(res)
-
-    def _datetime_or_str(self, res: BuildResult) -> BuildResult:
-        """HDF5 doesn't support datetime, so"""
+    def _amend_debug(self, res: BuildResult, map: Optional[Type[DatasetMap]] = None) -> BuildResult:
+        if map is None:
+            map_name = "None"
+        else:
+            map_name = map.__name__
+        for cls in res.classes:
+            cls.annotations["dataset_map"] = {"tag": "dataset_map", "value": map_name}
+        for slot in res.slots:
+            slot.annotations["dataset_map"] = {"tag": "dataset_map", "value": map_name}
+        return res

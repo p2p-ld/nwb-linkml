@@ -23,8 +23,11 @@ BASEMODEL_COERCE_VALUE = """
         except Exception as e1:
             try:
                 return handler(v.value)
-            except:
-                raise e1
+            except AttributeError:
+                try:
+                    return handler(v["value"])
+                except (KeyError, TypeError):
+                    raise e1
 """
 
 BASEMODEL_COERCE_CHILD = """
@@ -32,6 +35,10 @@ BASEMODEL_COERCE_CHILD = """
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
         \"\"\"Recast parent classes into child classes\"\"\"
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            annotation = annotation.__args__[0] if hasattr(annotation, "__args__") else annotation
+            if issubclass(annotation, type(v)) and annotation is not type(v):
+                v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
         return v
-        pdb.set_trace()
 """

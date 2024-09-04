@@ -2,6 +2,7 @@
 Adapters to linkML classes
 """
 
+import os
 from abc import abstractmethod
 from typing import List, Optional, Type, TypeVar
 
@@ -31,6 +32,14 @@ class ClassAdapter(Adapter):
 
     cls: TI
     parent: Optional["ClassAdapter"] = None
+
+    _debug: Optional[bool] = None
+
+    @property
+    def debug(self) -> bool:
+        if self._debug is None:
+            self._debug = bool(os.environ.get("NWB_LINKML_DEBUG", False))
+        return self._debug
 
     @field_validator("cls", mode="before")
     @classmethod
@@ -91,6 +100,13 @@ class ClassAdapter(Adapter):
         kwargs["attributes"] = [name_slot]
         # Get vanilla top-level attributes
         kwargs["attributes"].extend(self.build_attrs(self.cls))
+
+        if self.debug:
+            kwargs["annotations"] = {}
+            kwargs["annotations"]["group_adapter"] = {
+                "tag": "group_adapter",
+                "value": "container_slot",
+            }
 
         if extra_attrs is not None:
             if isinstance(extra_attrs, SlotDefinition):
@@ -230,18 +246,22 @@ class ClassAdapter(Adapter):
                 ifabsent=f"string({name})",
                 equals_string=equals_string,
                 range="string",
+                identifier=True,
             )
         else:
-            name_slot = SlotDefinition(name="name", required=True, range="string")
+            name_slot = SlotDefinition(name="name", required=True, range="string", identifier=True)
         return name_slot
 
     def build_self_slot(self) -> SlotDefinition:
         """
         If we are a child class, we make a slot so our parent can refer to us
         """
-        return SlotDefinition(
+        slot = SlotDefinition(
             name=self._get_slot_name(),
             description=self.cls.doc,
             range=self._get_full_name(),
             **QUANTITY_MAP[self.cls.quantity],
         )
+        if self.debug:
+            slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "self_slot"}
+        return slot

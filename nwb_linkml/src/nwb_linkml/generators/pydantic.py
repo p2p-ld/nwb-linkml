@@ -5,6 +5,7 @@ customized to support NWB models.
 See class and module docstrings for details :)
 """
 
+import pdb
 import re
 import sys
 from dataclasses import dataclass, field
@@ -27,7 +28,11 @@ from linkml_runtime.utils.compile_python import file_text
 from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
-from nwb_linkml.includes.base import BASEMODEL_GETITEM, BASEMODEL_COERCE_VALUE
+from nwb_linkml.includes.base import (
+    BASEMODEL_GETITEM,
+    BASEMODEL_COERCE_VALUE,
+    BASEMODEL_COERCE_CHILD,
+)
 from nwb_linkml.includes.hdmf import (
     DYNAMIC_TABLE_IMPORTS,
     DYNAMIC_TABLE_INJECTS,
@@ -36,7 +41,7 @@ from nwb_linkml.includes.hdmf import (
 )
 from nwb_linkml.includes.types import ModelTypeString, NamedImports, NamedString, _get_name
 
-OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
+OPTIONAL_PATTERN = re.compile(r"Optional\[(.*)\]")
 
 
 @dataclass
@@ -53,6 +58,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
         BASEMODEL_GETITEM,
         BASEMODEL_COERCE_VALUE,
+        BASEMODEL_COERCE_CHILD,
     )
     split: bool = True
     imports: list[Import] = field(default_factory=lambda: [Import(module="numpy", alias="np")])
@@ -134,6 +140,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         cls = AfterGenerateClass.inject_dynamictable(cls)
         cls = AfterGenerateClass.wrap_dynamictable_columns(cls, sv)
         cls = AfterGenerateClass.inject_elementidentifiers(cls, sv, self._get_element_import)
+        cls = AfterGenerateClass.strip_vector_data_slots(cls, sv)
         return cls
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
@@ -227,7 +234,8 @@ class AfterGenerateSlot:
         """
 
         if "named" in slot.source.annotations and slot.source.annotations["named"].value:
-            slot.attribute.range = f"Named[{slot.attribute.range}]"
+
+            slot.attribute.range = wrap_preserving_optional(slot.attribute.range, "Named")
             named_injects = [ModelTypeString, _get_name, NamedString]
             if slot.injected_classes is None:
                 slot.injected_classes = named_injects
@@ -325,7 +333,9 @@ class AfterGenerateClass:
                     else:
                         wrap_cls = "VectorData"
 
-                    cls.cls.attributes[an_attr].range = "".join([wrap_cls, "[", slot_range, "]"])
+                    cls.cls.attributes[an_attr].range = wrap_preserving_optional(
+                        slot_range, wrap_cls
+                    )
 
         return cls
 
@@ -341,6 +351,15 @@ class AfterGenerateClass:
         ) and sv.schema.name != "hdmf-common.table":
             imp = import_method("ElementIdentifiers")
             cls.imports += [imp]
+        return cls
+
+    @staticmethod
+    def strip_vector_data_slots(cls: ClassResult, sv: SchemaView) -> ClassResult:
+        """
+        Remove spurious ``vector_data`` slots from DynamicTables
+        """
+        if "vector_data" in cls.cls.attributes:
+            del cls.cls.attributes["vector_data"]
         return cls
 
 
@@ -364,3 +383,26 @@ def compile_python(
     exec(spec, module.__dict__)
     sys.modules[module_name] = module
     return module
+
+
+def wrap_preserving_optional(annotation: str, wrap: str) -> str:
+    """
+    Add a wrapping type to a type annotation string,
+    preserving any `Optional[]` annotation, bumping it to the outside
+
+    Examples:
+
+        >>> wrap_preserving_optional('Optional[list[str]]', 'NewType')
+        'Optional[NewType[list[str]]]'
+
+    """
+
+    is_optional = OPTIONAL_PATTERN.match(annotation)
+    if is_optional:
+        annotation = is_optional.groups()[0]
+        annotation = f"Optional[{wrap}[{annotation}]]"
+    else:
+        if "Optional" in annotation:
+            pdb.set_trace()
+        annotation = f"{wrap}[{annotation}]"
+    return annotation

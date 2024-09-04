@@ -249,6 +249,7 @@ class DynamicTableMixin(BaseModel):
                 if k not in cls.NON_COLUMN_FIELDS
                 and not k.endswith("_index")
                 and not isinstance(model[k], VectorIndexMixin)
+                and model[k] is not None
             ]
             model["colnames"] = colnames
         else:
@@ -264,6 +265,7 @@ class DynamicTableMixin(BaseModel):
                     and not k.endswith("_index")
                     and k not in model["colnames"]
                     and not isinstance(model[k], VectorIndexMixin)
+                    and model[k] is not None
                 ]
             )
             model["colnames"] = colnames
@@ -336,9 +338,9 @@ class DynamicTableMixin(BaseModel):
         """
         Ensure that all columns are equal length
         """
-        lengths = [len(v) for v in self._columns.values()] + [len(self.id)]
+        lengths = [len(v) for v in self._columns.values() if v is not None] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "Columns are not of equal length! "
+            "DynamicTable columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
         return self
@@ -385,11 +387,6 @@ class VectorDataMixin(BaseModel, Generic[T]):
 
     # redefined in `VectorData`, but included here for testing and type checking
     value: Optional[T] = None
-
-    # def __init__(self, value: Optional[NDArray] = None, **kwargs):
-    #     if value is not None and "value" not in kwargs:
-    #         kwargs["value"] = value
-    #     super().__init__(**kwargs)
 
     def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
         if self._index:
@@ -587,6 +584,7 @@ class AlignedDynamicTableMixin(BaseModel):
     __pydantic_extra__: Dict[str, Union["DynamicTableMixin", "VectorDataMixin", "VectorIndexMixin"]]
 
     NON_CATEGORY_FIELDS: ClassVar[tuple[str]] = (
+        "id",
         "name",
         "categories",
         "colnames",
@@ -622,7 +620,7 @@ class AlignedDynamicTableMixin(BaseModel):
         elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[1], str):
             # get a slice of a single table
             return self._categories[item[1]][item[0]]
-        elif isinstance(item, (int, slice, Iterable)):
+        elif isinstance(item, (int, slice, Iterable, np.int_)):
             # get a slice of all the tables
             ids = self.id[item]
             if not isinstance(ids, Iterable):
@@ -634,9 +632,9 @@ class AlignedDynamicTableMixin(BaseModel):
                 if isinstance(table, pd.DataFrame):
                     table = table.reset_index()
                 elif isinstance(table, np.ndarray):
-                    table = pd.DataFrame({category_name: [table]})
+                    table = pd.DataFrame({category_name: [table]}, index=ids.index)
                 elif isinstance(table, Iterable):
-                    table = pd.DataFrame({category_name: table})
+                    table = pd.DataFrame({category_name: table}, index=ids.index)
                 else:
                     raise ValueError(
                         f"Don't know how to construct category table for {category_name}"
@@ -756,7 +754,7 @@ class AlignedDynamicTableMixin(BaseModel):
         """
         lengths = [len(v) for v in self._categories.values()] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "Columns are not of equal length! "
+            "AlignedDynamicTableColumns are not of equal length! "
             f"Got colnames:\n{self.categories}\nand lengths: {lengths}"
         )
         return self
