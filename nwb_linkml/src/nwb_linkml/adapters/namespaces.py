@@ -48,7 +48,16 @@ class NamespacesAdapter(Adapter):
 
         need_imports = []
         for needed in ns_adapter.needed_imports.values():
-            need_imports.extend([n for n in needed if n not in ns_adapter.needed_imports])
+            # try to locate imports implied by the namespace schema,
+            # but are either not provided by the current namespace
+            # or are otherwise already provided in `imported` by the loader function
+            need_imports.extend(
+                [
+                    n
+                    for n in needed
+                    if n not in ns_adapter.needed_imports and n not in ns_adapter.versions
+                ]
+            )
 
         for needed in need_imports:
             if needed in DEFAULT_REPOS:

@@ -147,6 +147,7 @@ class MapScalarAttributes(DatasetMap):
                     name:
                       name: name
                       ifabsent: string(starting_time)
+                      identifier: true
                       range: string
                       required: true
                       equals_string: starting_time
@@ -245,6 +246,7 @@ class MapListlike(DatasetMap):
                   attributes:
                     name:
                       name: name
+                      identifier: true
                       range: string
                       required: true
                     value:
@@ -257,6 +259,8 @@ class MapListlike(DatasetMap):
                       range: Image
                       required: true
                       multivalued: true
+                      inlined: true
+                      inlined_as_list: true
                   tree_root: true
 
     """
@@ -386,13 +390,11 @@ class MapArraylike(DatasetMap):
               - ``False``
 
         """
-        dtype = handle_dtype(cls.dtype)
         return (
             cls.name
             and (all([cls.dims, cls.shape]) or cls.neurodata_type_inc == "VectorData")
             and not has_attrs(cls)
             and not is_compound(cls)
-            and dtype in flat_to_linkml
         )
 
     @classmethod
@@ -420,6 +422,7 @@ class MapArraylike(DatasetMap):
                     range=handle_dtype(cls.dtype),
                     description=cls.doc,
                     required=cls.quantity not in ("*", "?"),
+                    inlined=inlined(cls.dtype),
                     **expressions,
                 )
             ]
@@ -484,6 +487,7 @@ class MapArrayLikeAttributes(DatasetMap):
                   attributes:
                     name:
                       name: name
+                      identifier: true
                       range: string
                       required: true
                     resolution:
@@ -597,103 +601,6 @@ class MapClassRange(DatasetMap):
 # --------------------------------------------------
 # DynamicTable special cases
 # --------------------------------------------------
-
-
-class MapVectorClassRange(DatasetMap):
-    """
-    Map a ``VectorData`` class that is a reference to another class as simply
-    a multivalued slot range, rather than an independent class
-    """
-
-    @classmethod
-    def check(c, cls: Dataset) -> bool:
-        """
-        Check that we are a VectorData object without any additional attributes
-        with a dtype that refers to another class
-        """
-        dtype = handle_dtype(cls.dtype)
-        return (
-            cls.neurodata_type_inc == "VectorData"
-            and cls.name
-            and not has_attrs(cls)
-            and not (cls.shape or cls.dims)
-            and not is_compound(cls)
-            and dtype not in flat_to_linkml
-        )
-
-    @classmethod
-    def apply(
-        c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
-    ) -> BuildResult:
-        """
-        Create a slot that replaces the base class just as a list[ClassRef]
-        """
-        this_slot = SlotDefinition(
-            name=cls.name,
-            description=cls.doc,
-            multivalued=True,
-            range=handle_dtype(cls.dtype),
-            required=cls.quantity not in ("*", "?"),
-        )
-        res = BuildResult(slots=[this_slot])
-        return res
-
-
-#
-# class Map1DVector(DatasetMap):
-#     """
-#     ``VectorData`` is subclassed with a name but without dims or attributes,
-#     treat this as a normal 1D array slot that replaces any class that would be built for this
-#
-#     eg. all the datasets in epoch.TimeIntervals:
-#
-#     .. code-block:: yaml
-#
-#         groups:
-#         - neurodata_type_def: TimeIntervals
-#           neurodata_type_inc: DynamicTable
-#           doc: A container for aggregating epoch data and the TimeSeries that each epoch applies
-#             to.
-#           datasets:
-#           - name: start_time
-#             neurodata_type_inc: VectorData
-#             dtype: float32
-#             doc: Start time of epoch, in seconds.
-#
-#     """
-#
-#     @classmethod
-#     def check(c, cls: Dataset) -> bool:
-#         """
-#         Check that we're a 1d VectorData class
-#         """
-#         return (
-#             cls.neurodata_type_inc == "VectorData"
-#             and not cls.dims
-#             and not cls.shape
-#             and not cls.attributes
-#             and not cls.neurodata_type_def
-#             and not is_compound(cls)
-#             and cls.name
-#         )
-#
-#     @classmethod
-#     def apply(
-#         c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
-#     ) -> BuildResult:
-#         """
-#         Return a simple multivalued slot
-#         """
-#         this_slot = SlotDefinition(
-#             name=cls.name,
-#             description=cls.doc,
-#             range=handle_dtype(cls.dtype),
-#             multivalued=True,
-#         )
-#         # No need to make a class for us, so we replace the existing build results
-#         res = BuildResult(slots=[this_slot])
-#         return res
-
 
 class MapNVectors(DatasetMap):
     """
@@ -864,10 +771,7 @@ class DatasetAdapter(ClassAdapter):
             return matches[0]
 
     def _amend_debug(self, res: BuildResult, map: Optional[Type[DatasetMap]] = None) -> BuildResult:
-        if map is None:
-            map_name = "None"
-        else:
-            map_name = map.__name__
+        map_name = "None" if map is None else map.__name__
         for cls in res.classes:
             cls.annotations["dataset_map"] = {"tag": "dataset_map", "value": map_name}
         for slot in res.slots:

@@ -288,14 +288,11 @@ class DynamicTableMixin(BaseModel):
                     continue
                 if not isinstance(val, (VectorData, VectorIndex)):
                     try:
-                        if key.endswith("_index"):
-                            to_cast = VectorIndex
-                        else:
-                            to_cast = VectorData
+                        to_cast = VectorIndex if key.endswith("_index") else VectorData
                         if isinstance(val, dict):
                             model[key] = to_cast(**val)
                         else:
-                            model[key] = VectorIndex(name=key, description="", value=val)
+                            model[key] = to_cast(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
                         raise ValidationError.from_exception_data(
                             title=f"field {key} cannot be cast to VectorData from {val}",
@@ -387,6 +384,11 @@ class VectorDataMixin(BaseModel, Generic[T]):
 
     # redefined in `VectorData`, but included here for testing and type checking
     value: Optional[T] = None
+
+    def __init__(self, value: Optional[T] = None, **kwargs):
+        if value is not None and "value" not in kwargs:
+            kwargs["value"] = value
+        super().__init__(**kwargs)
 
     def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
         if self._index:

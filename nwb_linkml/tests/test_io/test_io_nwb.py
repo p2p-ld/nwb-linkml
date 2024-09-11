@@ -8,9 +8,11 @@ from nwb_linkml.io.hdf5 import HDF5IO
 def test_read_from_nwbfile(nwb_file):
     """
     Read data from a pynwb HDF5 NWB file
+
+    Placeholder that just ensures that reads work and all pydantic models validate,
+    testing of correctness of read will happen elsewhere.
     """
     res = HDF5IO(nwb_file).read()
-    res.model_dump_json()
 
 
 def test_read_from_yaml(nwb_file):

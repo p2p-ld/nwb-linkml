@@ -10,7 +10,7 @@ from linkml_runtime.linkml_model.meta import SlotDefinition
 from nwb_linkml.adapters.adapter import Adapter, BuildResult, is_1d
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.maps import Map
-from nwb_linkml.maps.dtype import handle_dtype
+from nwb_linkml.maps.dtype import handle_dtype, inlined
 from nwb_schema_language import Attribute
 
 
@@ -104,6 +104,7 @@ class MapScalar(AttributeMap):
             range=handle_dtype(attr.dtype),
             description=attr.doc,
             required=attr.required,
+            inlined=inlined(attr.dtype),
             **cls.handle_defaults(attr),
         )
         return BuildResult(slots=[slot])
@@ -151,6 +152,7 @@ class MapArray(AttributeMap):
             multivalued=multivalued,
             description=attr.doc,
             required=attr.required,
+            inlined=inlined(attr.dtype),
             **expressions,
             **cls.handle_defaults(attr),
         )
@@ -171,7 +173,10 @@ class AttributeAdapter(Adapter):
         Build the slot definitions, every attribute should have a map.
         """
         map = self.match()
-        return map.apply(self.cls)
+        res = map.apply(self.cls)
+        if self.debug:
+            res = self._amend_debug(res, map)
+        return res
 
     def match(self) -> Optional[Type[AttributeMap]]:
         """
@@ -195,3 +200,13 @@ class AttributeAdapter(Adapter):
             return None
         else:
             return matches[0]
+
+    def _amend_debug(
+        self, res: BuildResult, map: Optional[Type[AttributeMap]] = None
+    ) -> BuildResult:
+        map_name = "None" if map is None else map.__name__
+        for cls in res.classes:
+            cls.annotations["attribute_map"] = {"tag": "attribute_map", "value": map_name}
+        for slot in res.slots:
+            slot.annotations["attribute_map"] = {"tag": "attribute_map", "value": map_name}
+        return res

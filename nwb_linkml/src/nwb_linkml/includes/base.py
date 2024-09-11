@@ -26,7 +26,7 @@ BASEMODEL_COERCE_VALUE = """
             except AttributeError:
                 try:
                     return handler(v["value"])
-                except (KeyError, TypeError):
+                except (IndexError, KeyError, TypeError):
                     raise e1
 """
 
@@ -37,8 +37,13 @@ BASEMODEL_COERCE_CHILD = """
         \"\"\"Recast parent classes into child classes\"\"\"
         if isinstance(v, BaseModel):
             annotation = cls.model_fields[info.field_name].annotation
-            annotation = annotation.__args__[0] if hasattr(annotation, "__args__") else annotation
-            if issubclass(annotation, type(v)) and annotation is not type(v):
-                v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
         return v
 """

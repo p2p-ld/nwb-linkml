@@ -68,11 +68,17 @@ class GroupAdapter(ClassAdapter):
         if not self.cls.links:
             return []
 
+        annotations = [{"tag": "source_type", "value": "link"}]
+
+        if self.debug:
+            annotations.append({"tag": "group_adapter", "value": "link"})
+
         slots = [
             SlotDefinition(
                 name=link.name,
                 any_of=[{"range": link.target_type}, {"range": "string"}],
-                annotations=[{"tag": "source_type", "value": "link"}],
+                annotations=annotations,
+                inlined=True,
                 **QUANTITY_MAP[link.quantity],
             )
             for link in self.cls.links

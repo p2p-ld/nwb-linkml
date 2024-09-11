@@ -2,7 +2,6 @@
 Adapters to linkML classes
 """
 
-import os
 from abc import abstractmethod
 from typing import List, Optional, Type, TypeVar
 
@@ -32,14 +31,6 @@ class ClassAdapter(Adapter):
 
     cls: TI
     parent: Optional["ClassAdapter"] = None
-
-    _debug: Optional[bool] = None
-
-    @property
-    def debug(self) -> bool:
-        if self._debug is None:
-            self._debug = bool(os.environ.get("NWB_LINKML_DEBUG", False))
-        return self._debug
 
     @field_validator("cls", mode="before")
     @classmethod
@@ -260,6 +251,7 @@ class ClassAdapter(Adapter):
             name=self._get_slot_name(),
             description=self.cls.doc,
             range=self._get_full_name(),
+            inlined=True,
             **QUANTITY_MAP[self.cls.quantity],
         )
         if self.debug:

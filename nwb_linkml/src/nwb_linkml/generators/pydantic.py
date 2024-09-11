@@ -11,7 +11,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import ClassVar, Dict, List, Optional, Tuple, Literal
+from typing import Callable, ClassVar, Dict, List, Literal, Optional, Tuple
 
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
@@ -29,9 +29,9 @@ from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
 from nwb_linkml.includes.base import (
-    BASEMODEL_GETITEM,
-    BASEMODEL_COERCE_VALUE,
     BASEMODEL_COERCE_CHILD,
+    BASEMODEL_COERCE_VALUE,
+    BASEMODEL_GETITEM,
 )
 from nwb_linkml.includes.hdmf import (
     DYNAMIC_TABLE_IMPORTS,
@@ -265,7 +265,7 @@ class AfterGenerateClass:
         Returns:
 
         """
-        if cls.cls.name in "DynamicTable":
+        if cls.cls.name == "DynamicTable":
             cls.cls.bases = ["DynamicTableMixin", "ConfiguredBaseModel"]
 
             if cls.injected_classes is None:
@@ -328,10 +328,7 @@ class AfterGenerateClass:
                         cls.cls.attributes[an_attr].range = "ElementIdentifiers"
                         return cls
 
-                    if an_attr.endswith("_index"):
-                        wrap_cls = "VectorIndex"
-                    else:
-                        wrap_cls = "VectorData"
+                    wrap_cls = "VectorIndex" if an_attr.endswith("_index") else "VectorData"
 
                     cls.cls.attributes[an_attr].range = wrap_preserving_optional(
                         slot_range, wrap_cls
@@ -340,7 +337,9 @@ class AfterGenerateClass:
         return cls
 
     @staticmethod
-    def inject_elementidentifiers(cls: ClassResult, sv: SchemaView, import_method) -> ClassResult:
+    def inject_elementidentifiers(
+        cls: ClassResult, sv: SchemaView, import_method: Callable[[str], Import]
+    ) -> ClassResult:
         """
         Inject ElementIdentifiers into module that define dynamictables -
         needed to handle ID columns

@@ -284,14 +284,14 @@ def test_dynamictable_assert_equal_length():
         "existing_col": np.arange(10),
         "new_col_1": hdmf.VectorData(value=np.arange(11)),
     }
-    with pytest.raises(ValidationError, match="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
     cols = {
         "existing_col": np.arange(11),
         "new_col_1": hdmf.VectorData(value=np.arange(10)),
     }
-    with pytest.raises(ValidationError, match="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
     # wrong lengths are fine as long as the index is good
@@ -308,7 +308,7 @@ def test_dynamictable_assert_equal_length():
         "new_col_1": hdmf.VectorData(value=np.arange(100)),
         "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 5) + 5),
     }
-    with pytest.raises(ValidationError, match="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
 
