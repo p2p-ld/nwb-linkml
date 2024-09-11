@@ -65,12 +65,28 @@ class ConfiguredBaseModel(BaseModel):
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
+                return handler(v.value)
+            except AttributeError:
+                try:
                     return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -464,9 +480,6 @@ class DecompositionSeriesBands(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns of this dynamic table."""
-    )
     vector_index: Optional[List[VectorIndex]] = Field(
         None, description="""Indices for the vector columns of this dynamic table."""
     )
@@ -482,7 +495,7 @@ class Units(DynamicTable):
     )
 
     name: str = Field("Units", json_schema_extra={"linkml_meta": {"ifabsent": "string(Units)"}})
-    spike_times_index: Named[Optional[VectorIndex]] = Field(
+    spike_times_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into the spike_times dataset.""",
         json_schema_extra={
@@ -497,7 +510,7 @@ class Units(DynamicTable):
     spike_times: Optional[UnitsSpikeTimes] = Field(
         None, description="""Spike times for each unit."""
     )
-    obs_intervals_index: Named[Optional[VectorIndex]] = Field(
+    obs_intervals_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into the obs_intervals dataset.""",
         json_schema_extra={
@@ -509,7 +522,7 @@ class Units(DynamicTable):
             }
         },
     )
-    obs_intervals: VectorData[Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
+    obs_intervals: Optional[VectorData[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
         Field(
             None,
             description="""Observation intervals for each unit.""",
@@ -525,7 +538,7 @@ class Units(DynamicTable):
             },
         )
     )
-    electrodes_index: Named[Optional[VectorIndex]] = Field(
+    electrodes_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into electrodes.""",
         json_schema_extra={
@@ -537,7 +550,7 @@ class Units(DynamicTable):
             }
         },
     )
-    electrodes: Named[Optional[DynamicTableRegion]] = Field(
+    electrodes: Optional[Named[DynamicTableRegion]] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
         json_schema_extra={
@@ -552,16 +565,16 @@ class Units(DynamicTable):
     electrode_group: Optional[List[ElectrodeGroup]] = Field(
         None, description="""Electrode group that each spike unit came from."""
     )
-    waveform_mean: VectorData[
-        Optional[
+    waveform_mean: Optional[
+        VectorData[
             Union[
                 NDArray[Shape["* num_units, * num_samples"], float],
                 NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
             ]
         ]
     ] = Field(None, description="""Spike waveform mean for each spike unit.""")
-    waveform_sd: VectorData[
-        Optional[
+    waveform_sd: Optional[
+        VectorData[
             Union[
                 NDArray[Shape["* num_units, * num_samples"], float],
                 NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
@@ -577,9 +590,6 @@ class Units(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns of this dynamic table."""
     )
     vector_index: Optional[List[VectorIndex]] = Field(
         None, description="""Indices for the vector columns of this dynamic table."""

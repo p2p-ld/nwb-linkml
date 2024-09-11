@@ -23,6 +23,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -41,6 +42,7 @@ classes:
         range: PatchClampSeries__data
         required: true
         multivalued: false
+        inlined: true
       gain:
         name: gain
         description: Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt
@@ -56,6 +58,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: IntracellularElectrode
         - range: string
@@ -67,6 +70,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -92,6 +96,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -100,6 +105,7 @@ classes:
         range: CurrentClampSeries__data
         required: true
         multivalued: false
+        inlined: true
       bias_current:
         name: bias_current
         description: Bias current, in amps.
@@ -126,6 +132,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -153,6 +160,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -189,6 +197,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -197,6 +206,7 @@ classes:
         range: CurrentClampStimulusSeries__data
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   CurrentClampStimulusSeries__data:
     name: CurrentClampStimulusSeries__data
@@ -205,6 +215,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -231,6 +242,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -239,48 +251,56 @@ classes:
         range: VoltageClampSeries__data
         required: true
         multivalued: false
+        inlined: true
       capacitance_fast:
         name: capacitance_fast
         description: Fast capacitance, in farads.
         range: VoltageClampSeries__capacitance_fast
         required: false
         multivalued: false
+        inlined: true
       capacitance_slow:
         name: capacitance_slow
         description: Slow capacitance, in farads.
         range: VoltageClampSeries__capacitance_slow
         required: false
         multivalued: false
+        inlined: true
       resistance_comp_bandwidth:
         name: resistance_comp_bandwidth
         description: Resistance compensation bandwidth, in hertz.
         range: VoltageClampSeries__resistance_comp_bandwidth
         required: false
         multivalued: false
+        inlined: true
       resistance_comp_correction:
         name: resistance_comp_correction
         description: Resistance compensation correction, in percent.
         range: VoltageClampSeries__resistance_comp_correction
         required: false
         multivalued: false
+        inlined: true
       resistance_comp_prediction:
         name: resistance_comp_prediction
         description: Resistance compensation prediction, in percent.
         range: VoltageClampSeries__resistance_comp_prediction
         required: false
         multivalued: false
+        inlined: true
       whole_cell_capacitance_comp:
         name: whole_cell_capacitance_comp
         description: Whole cell capacitance compensation, in farads.
         range: VoltageClampSeries__whole_cell_capacitance_comp
         required: false
         multivalued: false
+        inlined: true
       whole_cell_series_resistance_comp:
         name: whole_cell_series_resistance_comp
         description: Whole cell series resistance compensation, in ohms.
         range: VoltageClampSeries__whole_cell_series_resistance_comp
         required: false
         multivalued: false
+        inlined: true
     tree_root: true
   VoltageClampSeries__data:
     name: VoltageClampSeries__data
@@ -289,6 +309,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -313,6 +334,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_fast)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_fast
@@ -334,6 +356,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_slow)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_slow
@@ -355,6 +378,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_bandwidth)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_bandwidth
@@ -377,6 +401,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_correction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_correction
@@ -399,6 +424,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_prediction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_prediction
@@ -421,6 +447,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_capacitance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_capacitance_comp
@@ -443,6 +470,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_series_resistance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_series_resistance_comp
@@ -465,6 +493,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -473,6 +502,7 @@ classes:
         range: VoltageClampStimulusSeries__data
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   VoltageClampStimulusSeries__data:
     name: VoltageClampStimulusSeries__data
@@ -481,6 +511,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -505,6 +536,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       cell_id:
@@ -565,6 +597,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string
@@ -579,6 +612,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       sweep_number:
@@ -593,9 +627,13 @@ classes:
       series:
         name: series
         description: The PatchClampSeries with the sweep number in that row.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: PatchClampSeries
         required: true
-        multivalued: true
+        multivalued: false
+        inlined: true
       series_index:
         name: series_index
         annotations:
@@ -609,6 +647,7 @@ classes:
         range: VectorIndex
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   IntracellularElectrodesTable:
     name: IntracellularElectrodesTable
@@ -617,6 +656,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -629,9 +669,13 @@ classes:
       electrode:
         name: electrode
         description: Column for storing the reference to the intracellular electrode.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: IntracellularElectrode
         required: true
-        multivalued: true
+        multivalued: false
+        inlined: true
     tree_root: true
   IntracellularStimuliTable:
     name: IntracellularStimuliTable
@@ -640,6 +684,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -663,6 +708,7 @@ classes:
         range: TimeSeriesReferenceVectorData
         required: true
         multivalued: false
+        inlined: true
       stimulus_template:
         name: stimulus_template
         annotations:
@@ -677,6 +723,7 @@ classes:
         range: TimeSeriesReferenceVectorData
         required: false
         multivalued: false
+        inlined: true
     tree_root: true
   IntracellularResponsesTable:
     name: IntracellularResponsesTable
@@ -685,6 +732,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -708,6 +756,7 @@ classes:
         range: TimeSeriesReferenceVectorData
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   IntracellularRecordingsTable:
     name: IntracellularRecordingsTable
@@ -727,6 +776,7 @@ classes:
       name:
         name: name
         ifabsent: string(intracellular_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: intracellular_recordings
@@ -748,18 +798,24 @@ classes:
         range: IntracellularElectrodesTable
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       stimuli:
         name: stimuli
         description: Table for storing intracellular stimulus related metadata.
         range: IntracellularStimuliTable
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       responses:
         name: responses
         description: Table for storing intracellular response related metadata.
         range: IntracellularResponsesTable
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: false
     tree_root: true
   SimultaneousRecordingsTable:
     name: SimultaneousRecordingsTable
@@ -771,6 +827,7 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings
@@ -781,6 +838,7 @@ classes:
         range: SimultaneousRecordingsTable__recordings
         required: true
         multivalued: false
+        inlined: true
       recordings_index:
         name: recordings_index
         annotations:
@@ -794,6 +852,7 @@ classes:
         range: VectorIndex
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   SimultaneousRecordingsTable__recordings:
     name: SimultaneousRecordingsTable__recordings
@@ -804,6 +863,7 @@ classes:
       name:
         name: name
         ifabsent: string(recordings)
+        identifier: true
         range: string
         required: true
         equals_string: recordings
@@ -814,6 +874,7 @@ classes:
           to fix the type of table that can be referenced here.
         range: IntracellularRecordingsTable
         required: true
+        inlined: true
   SequentialRecordingsTable:
     name: SequentialRecordingsTable
     description: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
@@ -825,6 +886,7 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings
@@ -835,6 +897,7 @@ classes:
         range: SequentialRecordingsTable__simultaneous_recordings
         required: true
         multivalued: false
+        inlined: true
       simultaneous_recordings_index:
         name: simultaneous_recordings_index
         annotations:
@@ -848,6 +911,7 @@ classes:
         range: VectorIndex
         required: true
         multivalued: false
+        inlined: true
       stimulus_type:
         name: stimulus_type
         description: The type of stimulus used for the sequential recording.
@@ -867,6 +931,7 @@ classes:
       name:
         name: name
         ifabsent: string(simultaneous_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: simultaneous_recordings
@@ -877,6 +942,7 @@ classes:
           to fix the type of table that can be referenced here.
         range: SimultaneousRecordingsTable
         required: true
+        inlined: true
   RepetitionsTable:
     name: RepetitionsTable
     description: A table for grouping different sequential intracellular recordings
@@ -888,6 +954,7 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions)
+        identifier: true
         range: string
         required: true
         equals_string: repetitions
@@ -898,6 +965,7 @@ classes:
         range: RepetitionsTable__sequential_recordings
         required: true
         multivalued: false
+        inlined: true
       sequential_recordings_index:
         name: sequential_recordings_index
         annotations:
@@ -911,6 +979,7 @@ classes:
         range: VectorIndex
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   RepetitionsTable__sequential_recordings:
     name: RepetitionsTable__sequential_recordings
@@ -921,6 +990,7 @@ classes:
       name:
         name: name
         ifabsent: string(sequential_recordings)
+        identifier: true
         range: string
         required: true
         equals_string: sequential_recordings
@@ -931,6 +1001,7 @@ classes:
           to fix the type of table that can be referenced here.
         range: SequentialRecordingsTable
         required: true
+        inlined: true
   ExperimentalConditionsTable:
     name: ExperimentalConditionsTable
     description: A table for grouping different intracellular recording repetitions
@@ -940,6 +1011,7 @@ classes:
       name:
         name: name
         ifabsent: string(experimental_conditions)
+        identifier: true
         range: string
         required: true
         equals_string: experimental_conditions
@@ -949,6 +1021,7 @@ classes:
         range: ExperimentalConditionsTable__repetitions
         required: true
         multivalued: false
+        inlined: true
       repetitions_index:
         name: repetitions_index
         annotations:
@@ -962,6 +1035,7 @@ classes:
         range: VectorIndex
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   ExperimentalConditionsTable__repetitions:
     name: ExperimentalConditionsTable__repetitions
@@ -971,6 +1045,7 @@ classes:
       name:
         name: name
         ifabsent: string(repetitions)
+        identifier: true
         range: string
         required: true
         equals_string: repetitions
@@ -981,3 +1056,4 @@ classes:
           to fix the type of table that can be referenced here.
         range: RepetitionsTable
         required: true
+        inlined: true

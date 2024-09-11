@@ -30,6 +30,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -38,6 +39,7 @@ classes:
         range: AbstractFeatureSeries__data
         required: true
         multivalued: false
+        inlined: true
       feature_units:
         name: feature_units
         description: Units of each feature.
@@ -64,6 +66,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -96,6 +99,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -121,6 +125,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -140,6 +145,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -148,6 +154,7 @@ classes:
         range: DecompositionSeries__data
         required: true
         multivalued: false
+        inlined: true
       metric:
         name: metric
         description: The metric used, e.g. phase, amplitude, power.
@@ -168,6 +175,7 @@ classes:
         range: DynamicTableRegion
         required: false
         multivalued: false
+        inlined: true
       bands:
         name: bands
         description: Table for describing the bands that this series was generated
@@ -175,6 +183,8 @@ classes:
         range: DecompositionSeries__bands
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: true
       source_timeseries:
         name: source_timeseries
         annotations:
@@ -183,6 +193,7 @@ classes:
             value: link
         required: false
         multivalued: false
+        inlined: true
         any_of:
         - range: TimeSeries
         - range: string
@@ -194,6 +205,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -222,6 +234,7 @@ classes:
       name:
         name: name
         ifabsent: string(bands)
+        identifier: true
         range: string
         required: true
         equals_string: bands
@@ -273,6 +286,7 @@ classes:
       name:
         name: name
         ifabsent: string(Units)
+        identifier: true
         range: string
         required: true
       spike_times_index:
@@ -288,12 +302,14 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       spike_times:
         name: spike_times
         description: Spike times for each unit.
         range: Units__spike_times
         required: false
         multivalued: false
+        inlined: true
       obs_intervals_index:
         name: obs_intervals_index
         annotations:
@@ -307,6 +323,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       obs_intervals:
         name: obs_intervals
         description: Observation intervals for each unit.
@@ -331,6 +348,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       electrodes:
         name: electrodes
         annotations:
@@ -344,12 +362,17 @@ classes:
         range: DynamicTableRegion
         required: false
         multivalued: false
+        inlined: true
       electrode_group:
         name: electrode_group
         description: Electrode group that each spike unit came from.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: ElectrodeGroup
         required: false
-        multivalued: true
+        multivalued: false
+        inlined: true
       waveform_mean:
         name: waveform_mean
         description: Spike waveform mean for each spike unit.
@@ -428,6 +451,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       waveforms_index_index:
         name: waveforms_index_index
         annotations:
@@ -442,6 +466,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
     tree_root: true
   Units__spike_times:
     name: Units__spike_times
@@ -451,6 +476,7 @@ classes:
       name:
         name: name
         ifabsent: string(spike_times)
+        identifier: true
         range: string
         required: true
         equals_string: spike_times

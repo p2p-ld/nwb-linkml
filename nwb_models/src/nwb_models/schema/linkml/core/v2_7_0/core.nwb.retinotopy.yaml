@@ -29,6 +29,7 @@ classes:
       name:
         name: name
         ifabsent: string(ImagingRetinotopy)
+        identifier: true
         range: string
         required: true
       axis_1_phase_map:
@@ -37,6 +38,7 @@ classes:
         range: ImagingRetinotopy__axis_1_phase_map
         required: true
         multivalued: false
+        inlined: true
       axis_1_power_map:
         name: axis_1_power_map
         description: Power response on the first measured axis. Response is scaled
@@ -44,12 +46,14 @@ classes:
         range: ImagingRetinotopy__axis_1_power_map
         required: false
         multivalued: false
+        inlined: true
       axis_2_phase_map:
         name: axis_2_phase_map
         description: Phase response to stimulus on the second measured axis.
         range: ImagingRetinotopy__axis_2_phase_map
         required: true
         multivalued: false
+        inlined: true
       axis_2_power_map:
         name: axis_2_power_map
         description: Power response on the second measured axis. Response is scaled
@@ -57,6 +61,7 @@ classes:
         range: ImagingRetinotopy__axis_2_power_map
         required: false
         multivalued: false
+        inlined: true
       axis_descriptions:
         name: axis_descriptions
         description: Two-element array describing the contents of the two response
@@ -76,6 +81,7 @@ classes:
         range: ImagingRetinotopy__focal_depth_image
         required: false
         multivalued: false
+        inlined: true
       sign_map:
         name: sign_map
         description: Sine of the angle between the direction of the gradient in axis_1
@@ -83,6 +89,7 @@ classes:
         range: ImagingRetinotopy__sign_map
         required: false
         multivalued: false
+        inlined: true
       vasculature_image:
         name: vasculature_image
         description: 'Gray-scale anatomical image of cortical surface. Array structure:
@@ -90,6 +97,7 @@ classes:
         range: ImagingRetinotopy__vasculature_image
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   ImagingRetinotopy__axis_1_phase_map:
     name: ImagingRetinotopy__axis_1_phase_map
@@ -98,6 +106,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_1_phase_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_1_phase_map
@@ -134,6 +143,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_1_power_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_1_power_map
@@ -169,6 +179,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_2_phase_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_2_phase_map
@@ -205,6 +216,7 @@ classes:
       name:
         name: name
         ifabsent: string(axis_2_power_map)
+        identifier: true
         range: string
         required: true
         equals_string: axis_2_power_map
@@ -241,6 +253,7 @@ classes:
       name:
         name: name
         ifabsent: string(focal_depth_image)
+        identifier: true
         range: string
         required: true
         equals_string: focal_depth_image
@@ -288,6 +301,7 @@ classes:
       name:
         name: name
         ifabsent: string(sign_map)
+        identifier: true
         range: string
         required: true
         equals_string: sign_map
@@ -319,6 +333,7 @@ classes:
       name:
         name: name
         ifabsent: string(vasculature_image)
+        identifier: true
         range: string
         required: true
         equals_string: vasculature_image

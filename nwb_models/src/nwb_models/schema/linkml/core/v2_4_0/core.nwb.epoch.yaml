@@ -22,6 +22,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       start_time:
@@ -64,12 +65,14 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       timeseries:
         name: timeseries
         description: An index into a TimeSeries object.
         range: TimeIntervals__timeseries
         required: false
         multivalued: false
+        inlined: true
       timeseries_index:
         name: timeseries_index
         annotations:
@@ -83,6 +86,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
     tree_root: true
   TimeIntervals__timeseries:
     name: TimeIntervals__timeseries
@@ -92,6 +96,7 @@ classes:
       name:
         name: name
         ifabsent: string(timeseries)
+        identifier: true
         range: string
         required: true
         equals_string: timeseries
@@ -122,3 +127,4 @@ classes:
         range: TimeSeries
         required: false
         multivalued: false
+        inlined: true

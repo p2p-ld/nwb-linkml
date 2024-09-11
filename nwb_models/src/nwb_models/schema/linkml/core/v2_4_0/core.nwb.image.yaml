@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       value:
@@ -38,6 +39,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       value:
@@ -57,6 +59,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       value:
@@ -81,6 +84,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -121,6 +125,7 @@ classes:
         range: ImageSeries__external_file
         required: false
         multivalued: false
+        inlined: true
       format:
         name: format
         description: Format of image. If this is 'external', then the attribute 'external_file'
@@ -138,6 +143,7 @@ classes:
             value: link
         required: false
         multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string
@@ -152,6 +158,7 @@ classes:
       name:
         name: name
         ifabsent: string(external_file)
+        identifier: true
         range: string
         required: true
         equals_string: external_file
@@ -189,6 +196,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       masked_imageseries:
@@ -199,6 +207,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: ImageSeries
         - range: string
@@ -214,6 +223,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       distance:
@@ -276,6 +286,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -295,6 +306,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: ImageSeries
         - range: string

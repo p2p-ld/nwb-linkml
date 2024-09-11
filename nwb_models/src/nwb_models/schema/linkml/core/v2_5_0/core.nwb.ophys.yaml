@@ -23,6 +23,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       pmt_gain:
@@ -60,6 +61,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: ImagingPlane
         - range: string
@@ -72,6 +74,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -102,6 +105,7 @@ classes:
         range: DynamicTableRegion
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   DfOverF:
     name: DfOverF
@@ -156,15 +160,28 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       image_mask:
         name: image_mask
         description: ROI masks for each ROI. Each image mask is the size of the original
           imaging plane (or volume) and members of the ROI are finite non-zero.
-        range: PlaneSegmentation__image_mask
+        range: AnyType
         required: false
         multivalued: false
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_roi
+            - alias: num_x
+            - alias: num_y
+        - array:
+            dimensions:
+            - alias: num_roi
+            - alias: num_x
+            - alias: num_y
+            - alias: num_z
       pixel_mask_index:
         name: pixel_mask_index
         annotations:
@@ -178,6 +195,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       pixel_mask:
         name: pixel_mask
         description: 'Pixel masks for each ROI: a list of indices and weights for
@@ -186,6 +204,7 @@ classes:
         range: PlaneSegmentation__pixel_mask
         required: false
         multivalued: false
+        inlined: true
       voxel_mask_index:
         name: voxel_mask_index
         annotations:
@@ -199,6 +218,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       voxel_mask:
         name: voxel_mask
         description: 'Voxel masks for each ROI: a list of indices and weights for
@@ -207,6 +227,7 @@ classes:
         range: PlaneSegmentation__voxel_mask
         required: false
         multivalued: false
+        inlined: true
       reference_images:
         name: reference_images
         description: Image stacks that the segmentation masks apply to.
@@ -223,22 +244,11 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: ImagingPlane
         - range: string
     tree_root: true
-  PlaneSegmentation__image_mask:
-    name: PlaneSegmentation__image_mask
-    description: ROI masks for each ROI. Each image mask is the size of the original
-      imaging plane (or volume) and members of the ROI are finite non-zero.
-    is_a: VectorData
-    attributes:
-      name:
-        name: name
-        ifabsent: string(image_mask)
-        range: string
-        required: true
-        equals_string: image_mask
   PlaneSegmentation__pixel_mask:
     name: PlaneSegmentation__pixel_mask
     description: 'Pixel masks for each ROI: a list of indices and weights for the
@@ -249,6 +259,7 @@ classes:
       name:
         name: name
         ifabsent: string(pixel_mask)
+        identifier: true
         range: string
         required: true
         equals_string: pixel_mask
@@ -286,6 +297,7 @@ classes:
       name:
         name: name
         ifabsent: string(voxel_mask)
+        identifier: true
         range: string
         required: true
         equals_string: voxel_mask
@@ -328,6 +340,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -371,6 +384,7 @@ classes:
         range: ImagingPlane__manifold
         required: false
         multivalued: false
+        inlined: true
       origin_coords:
         name: origin_coords
         description: Physical location of the first element of the imaging plane (0,
@@ -379,6 +393,7 @@ classes:
         range: ImagingPlane__origin_coords
         required: false
         multivalued: false
+        inlined: true
       grid_spacing:
         name: grid_spacing
         description: Space between pixels in (x, y) or voxels in (x, y, z) directions,
@@ -387,6 +402,7 @@ classes:
         range: ImagingPlane__grid_spacing
         required: false
         multivalued: false
+        inlined: true
       reference_frame:
         name: reference_frame
         description: Describes reference frame of origin_coords and grid_spacing.
@@ -415,6 +431,8 @@ classes:
         range: OpticalChannel
         required: true
         multivalued: true
+        inlined: true
+        inlined_as_list: false
       device:
         name: device
         annotations:
@@ -423,6 +441,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string
@@ -436,6 +455,7 @@ classes:
       name:
         name: name
         ifabsent: string(manifold)
+        identifier: true
         range: string
         required: true
         equals_string: manifold
@@ -485,6 +505,7 @@ classes:
       name:
         name: name
         ifabsent: string(origin_coords)
+        identifier: true
         range: string
         required: true
         equals_string: origin_coords
@@ -515,6 +536,7 @@ classes:
       name:
         name: name
         ifabsent: string(grid_spacing)
+        identifier: true
         range: string
         required: true
         equals_string: grid_spacing
@@ -543,6 +565,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -579,6 +602,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       corrected:
@@ -587,6 +611,8 @@ classes:
         range: ImageSeries
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       xy_translation:
         name: xy_translation
         description: Stores the x,y delta necessary to align each frame to the common
@@ -594,6 +620,8 @@ classes:
         range: TimeSeries
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       original:
         name: original
         annotations:
@@ -602,6 +630,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: ImageSeries
         - range: string

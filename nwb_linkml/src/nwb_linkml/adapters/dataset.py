@@ -602,6 +602,7 @@ class MapClassRange(DatasetMap):
 # DynamicTable special cases
 # --------------------------------------------------
 
+
 class MapNVectors(DatasetMap):
     """
     An unnamed container that indicates an arbitrary quantity of some other neurodata type.

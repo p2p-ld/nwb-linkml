@@ -27,6 +27,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -68,6 +69,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       target:
@@ -75,6 +77,7 @@ classes:
         description: Reference to the target dataset that this index applies to.
         range: VectorData
         required: true
+        inlined: true
     tree_root: true
   ElementIdentifiers:
     name: ElementIdentifiers
@@ -85,6 +88,7 @@ classes:
       name:
         name: name
         ifabsent: string(element_id)
+        identifier: true
         range: string
         required: true
       value:
@@ -109,6 +113,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       table:
@@ -117,6 +122,7 @@ classes:
           to.
         range: DynamicTable
         required: true
+        inlined: true
       description:
         name: description
         description: Description of what this table region points to.
@@ -147,6 +153,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       colnames:
@@ -176,6 +183,7 @@ classes:
         range: VectorData
         required: false
         multivalued: true
+        inlined: true
     tree_root: true
   AlignedDynamicTable:
     name: AlignedDynamicTable

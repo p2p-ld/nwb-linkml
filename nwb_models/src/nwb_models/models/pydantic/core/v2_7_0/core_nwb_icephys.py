@@ -72,12 +72,28 @@ class ConfiguredBaseModel(BaseModel):
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
+                return handler(v.value)
+            except AttributeError:
+                try:
                     return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -903,8 +919,14 @@ class SweepTable(DynamicTable):
             }
         },
     )
-    series: List[PatchClampSeries] = Field(
-        ..., description="""The PatchClampSeries with the sweep number in that row."""
+    series: VectorData[NDArray[Any, PatchClampSeries]] = Field(
+        ...,
+        description="""The PatchClampSeries with the sweep number in that row.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
+        },
     )
     series_index: Named[VectorIndex] = Field(
         ...,
@@ -928,9 +950,6 @@ class SweepTable(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
-    )
 
 
 class IntracellularElectrodesTable(DynamicTable):
@@ -953,8 +972,14 @@ class IntracellularElectrodesTable(DynamicTable):
             }
         },
     )
-    electrode: List[IntracellularElectrode] = Field(
-        ..., description="""Column for storing the reference to the intracellular electrode."""
+    electrode: VectorData[NDArray[Any, IntracellularElectrode]] = Field(
+        ...,
+        description="""Column for storing the reference to the intracellular electrode.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
+        },
     )
     colnames: List[str] = Field(
         ...,
@@ -964,9 +989,6 @@ class IntracellularElectrodesTable(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 
@@ -1002,7 +1024,7 @@ class IntracellularStimuliTable(DynamicTable):
             }
         },
     )
-    stimulus_template: Named[Optional[TimeSeriesReferenceVectorData]] = Field(
+    stimulus_template: Optional[Named[TimeSeriesReferenceVectorData]] = Field(
         None,
         description="""Column storing the reference to the stimulus template for the recording (rows).""",
         json_schema_extra={
@@ -1022,9 +1044,6 @@ class IntracellularStimuliTable(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 
@@ -1068,9 +1087,6 @@ class IntracellularResponsesTable(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 
@@ -1123,7 +1139,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     responses: IntracellularResponsesTable = Field(
         ..., description="""Table for storing intracellular response related metadata."""
     )
-    value: Optional[List[DynamicTable]] = Field(
+    value: Optional[Dict[str, DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     colnames: List[str] = Field(
@@ -1134,9 +1150,6 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 
@@ -1183,9 +1196,6 @@ class SimultaneousRecordingsTable(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 
@@ -1272,9 +1282,6 @@ class SequentialRecordingsTable(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
-    )
 
 
 class SequentialRecordingsTableSimultaneousRecordings(DynamicTableRegion):
@@ -1350,9 +1357,6 @@ class RepetitionsTable(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 
@@ -1431,9 +1435,6 @@ class ExperimentalConditionsTable(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 

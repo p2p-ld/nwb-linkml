@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -47,6 +48,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: OptogeneticStimulusSite
         - range: string
@@ -58,6 +60,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -88,6 +91,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string

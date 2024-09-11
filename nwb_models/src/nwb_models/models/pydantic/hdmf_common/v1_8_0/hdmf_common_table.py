@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pdb
 import re
 import sys
 from datetime import date, datetime, time
@@ -51,7 +50,6 @@ class ConfiguredBaseModel(BaseModel):
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
-        validation_error_cause=True,
     )
     hdf5_path: Optional[str] = Field(
         None, description="The absolute path that this object is stored in an NWB file"
@@ -69,7 +67,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler, info) -> Any:
+    def coerce_value(cls, v: Any, handler) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -79,14 +77,8 @@ class ConfiguredBaseModel(BaseModel):
             except AttributeError:
                 try:
                     return handler(v["value"])
-                except (KeyError, TypeError):
+                except (IndexError, KeyError, TypeError):
                     raise e1
-            # try:
-            #     if hasattr(v, "value"):
-            #     else:
-            #         return handler(v["value"])
-            # except Exception as e2:
-            #     raise e2 from e1
 
     @field_validator("*", mode="before")
     @classmethod
@@ -94,9 +86,14 @@ class ConfiguredBaseModel(BaseModel):
         """Recast parent classes into child classes"""
         if isinstance(v, BaseModel):
             annotation = cls.model_fields[info.field_name].annotation
-            annotation = annotation.__args__[0] if hasattr(annotation, "__args__") else annotation
-            if issubclass(annotation, type(v)) and annotation is not type(v):
-                v = annotation(**v.__dict__)
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
         return v
 
 
@@ -132,10 +129,10 @@ class VectorDataMixin(BaseModel, Generic[T]):
     # redefined in `VectorData`, but included here for testing and type checking
     value: Optional[T] = None
 
-    # def __init__(self, value: Optional[NDArray] = None, **kwargs):
-    #     if value is not None and "value" not in kwargs:
-    #         kwargs["value"] = value
-    #     super().__init__(**kwargs)
+    def __init__(self, value: Optional[T] = None, **kwargs):
+        if value is not None and "value" not in kwargs:
+            kwargs["value"] = value
+        super().__init__(**kwargs)
 
     def __getitem__(self, item: Union[str, int, slice, Tuple[Union[str, int, slice], ...]]) -> Any:
         if self._index:
@@ -329,7 +326,7 @@ class DynamicTableMixin(BaseModel):
     but simplifying along the way :)
     """
 
-    model_config = ConfigDict(extra="allow", validate_assignment=True, validation_error_cause=True)
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
     __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "id",
@@ -569,14 +566,11 @@ class DynamicTableMixin(BaseModel):
                     continue
                 if not isinstance(val, (VectorData, VectorIndex)):
                     try:
-                        if key.endswith("_index"):
-                            to_cast = VectorIndex
-                        else:
-                            to_cast = VectorData
+                        to_cast = VectorIndex if key.endswith("_index") else VectorData
                         if isinstance(val, dict):
                             model[key] = to_cast(**val)
                         else:
-                            model[key] = VectorIndex(name=key, description="", value=val)
+                            model[key] = to_cast(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
                         raise ValidationError.from_exception_data(
                             title=f"field {key} cannot be cast to VectorData from {val}",
@@ -621,7 +615,7 @@ class DynamicTableMixin(BaseModel):
         """
         lengths = [len(v) for v in self._columns.values() if v is not None] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "DynamicTable Columns are not of equal length! "
+            "DynamicTable columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
         return self
@@ -667,16 +661,16 @@ class AlignedDynamicTableMixin(BaseModel):
     and also it's not so easy to copy a pydantic validator method.
     """
 
-    model_config = ConfigDict(extra="allow", validate_assignment=True, validation_error_cause=True)
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
     __pydantic_extra__: Dict[str, Union["DynamicTableMixin", "VectorDataMixin", "VectorIndexMixin"]]
 
     NON_CATEGORY_FIELDS: ClassVar[tuple[str]] = (
+        "id",
         "name",
         "categories",
         "colnames",
         "description",
         "hdf5_path",
-        "id",
         "object_id",
     )
 
@@ -731,7 +725,6 @@ class AlignedDynamicTableMixin(BaseModel):
             names = [self.name] + self.categories
             # construct below in case we need to support array indexing in the future
         else:
-            pdb.set_trace()
             raise ValueError(
                 f"Dont know how to index with {item}, "
                 "need an int, string, slice, ndarray, or tuple[int | slice, str]"
@@ -842,7 +835,7 @@ class AlignedDynamicTableMixin(BaseModel):
         """
         lengths = [len(v) for v in self._categories.values()] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "AlignedDynamicTable Columns are not of equal length! "
+            "AlignedDynamicTableColumns are not of equal length! "
             f"Got colnames:\n{self.categories}\nand lengths: {lengths}"
         )
         return self
@@ -971,9 +964,6 @@ class DynamicTable(DynamicTableMixin, ConfiguredBaseModel):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
-    )
 
 
 class AlignedDynamicTable(AlignedDynamicTableMixin, DynamicTable):
@@ -985,7 +975,7 @@ class AlignedDynamicTable(AlignedDynamicTableMixin, DynamicTable):
         {"from_schema": "hdmf-common.table", "tree_root": True}
     )
 
-    value: Optional[List[DynamicTable]] = Field(
+    value: Optional[Dict[str, DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
     )
     name: str = Field(...)
@@ -998,9 +988,6 @@ class AlignedDynamicTable(AlignedDynamicTableMixin, DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 

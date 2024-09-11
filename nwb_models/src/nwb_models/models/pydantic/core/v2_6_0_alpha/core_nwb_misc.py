@@ -65,12 +65,28 @@ class ConfiguredBaseModel(BaseModel):
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
+                return handler(v.value)
+            except AttributeError:
+                try:
                     return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -328,7 +344,7 @@ class DecompositionSeries(TimeSeries):
         ..., description="""Data decomposed into frequency bands."""
     )
     metric: str = Field(..., description="""The metric used, e.g. phase, amplitude, power.""")
-    source_channels: Named[Optional[DynamicTableRegion]] = Field(
+    source_channels: Optional[Named[DynamicTableRegion]] = Field(
         None,
         description="""DynamicTableRegion pointer to the channels that this decomposition series was generated from.""",
         json_schema_extra={
@@ -476,9 +492,6 @@ class DecompositionSeriesBands(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
-    )
 
 
 class Units(DynamicTable):
@@ -491,7 +504,7 @@ class Units(DynamicTable):
     )
 
     name: str = Field("Units", json_schema_extra={"linkml_meta": {"ifabsent": "string(Units)"}})
-    spike_times_index: Named[Optional[VectorIndex]] = Field(
+    spike_times_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into the spike_times dataset.""",
         json_schema_extra={
@@ -506,7 +519,7 @@ class Units(DynamicTable):
     spike_times: Optional[UnitsSpikeTimes] = Field(
         None, description="""Spike times for each unit in seconds."""
     )
-    obs_intervals_index: Named[Optional[VectorIndex]] = Field(
+    obs_intervals_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into the obs_intervals dataset.""",
         json_schema_extra={
@@ -518,7 +531,7 @@ class Units(DynamicTable):
             }
         },
     )
-    obs_intervals: VectorData[Optional[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
+    obs_intervals: Optional[VectorData[NDArray[Shape["* num_intervals, 2 start_end"], float]]] = (
         Field(
             None,
             description="""Observation intervals for each unit.""",
@@ -534,7 +547,7 @@ class Units(DynamicTable):
             },
         )
     )
-    electrodes_index: Named[Optional[VectorIndex]] = Field(
+    electrodes_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into electrodes.""",
         json_schema_extra={
@@ -546,7 +559,7 @@ class Units(DynamicTable):
             }
         },
     )
-    electrodes: Named[Optional[DynamicTableRegion]] = Field(
+    electrodes: Optional[Named[DynamicTableRegion]] = Field(
         None,
         description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
         json_schema_extra={
@@ -558,26 +571,32 @@ class Units(DynamicTable):
             }
         },
     )
-    electrode_group: Optional[List[ElectrodeGroup]] = Field(
-        None, description="""Electrode group that each spike unit came from."""
+    electrode_group: Optional[VectorData[NDArray[Any, ElectrodeGroup]]] = Field(
+        None,
+        description="""Electrode group that each spike unit came from.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
+        },
     )
-    waveform_mean: VectorData[
-        Optional[
+    waveform_mean: Optional[
+        VectorData[
             Union[
                 NDArray[Shape["* num_units, * num_samples"], float],
                 NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
             ]
         ]
     ] = Field(None, description="""Spike waveform mean for each spike unit.""")
-    waveform_sd: VectorData[
-        Optional[
+    waveform_sd: Optional[
+        VectorData[
             Union[
                 NDArray[Shape["* num_units, * num_samples"], float],
                 NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
             ]
         ]
     ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
-    waveforms: VectorData[Optional[NDArray[Shape["* num_waveforms, * num_samples"], float]]] = (
+    waveforms: Optional[VectorData[NDArray[Shape["* num_waveforms, * num_samples"], float]]] = (
         Field(
             None,
             description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
@@ -588,7 +607,7 @@ class Units(DynamicTable):
             },
         )
     )
-    waveforms_index: Named[Optional[VectorIndex]] = Field(
+    waveforms_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into the waveforms dataset. One value for every spike event. See 'waveforms' for more detail.""",
         json_schema_extra={
@@ -600,7 +619,7 @@ class Units(DynamicTable):
             }
         },
     )
-    waveforms_index_index: Named[Optional[VectorIndex]] = Field(
+    waveforms_index_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into the waveforms_index dataset. One value for every unit (row in the table). See 'waveforms' for more detail.""",
         json_schema_extra={
@@ -621,9 +640,6 @@ class Units(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 

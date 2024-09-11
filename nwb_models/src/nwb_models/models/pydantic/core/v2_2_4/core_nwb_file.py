@@ -68,12 +68,28 @@ class ConfiguredBaseModel(BaseModel):
             return handler(v)
         except Exception as e1:
             try:
-                if hasattr(v, "value"):
-                    return handler(v.value)
-                else:
+                return handler(v.value)
+            except AttributeError:
+                try:
                     return handler(v["value"])
-            except Exception as e2:
-                raise e2 from e1
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -460,7 +476,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_x: VectorData[Optional[NDArray[Any, float]]] = Field(
+    rel_x: Optional[VectorData[NDArray[Any, float]]] = Field(
         None,
         description="""x coordinate in electrode group""",
         json_schema_extra={
@@ -469,7 +485,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_y: VectorData[Optional[NDArray[Any, float]]] = Field(
+    rel_y: Optional[VectorData[NDArray[Any, float]]] = Field(
         None,
         description="""y coordinate in electrode group""",
         json_schema_extra={
@@ -478,7 +494,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    rel_z: VectorData[Optional[NDArray[Any, float]]] = Field(
+    rel_z: Optional[VectorData[NDArray[Any, float]]] = Field(
         None,
         description="""z coordinate in electrode group""",
         json_schema_extra={
@@ -487,7 +503,7 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    reference: VectorData[Optional[NDArray[Any, str]]] = Field(
+    reference: Optional[VectorData[NDArray[Any, str]]] = Field(
         None,
         description="""Description of the reference used for this electrode.""",
         json_schema_extra={
@@ -505,9 +521,6 @@ class ExtracellularEphysElectrodes(DynamicTable):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns of this dynamic table."""
     )
     vector_index: Optional[List[VectorIndex]] = Field(
         None, description="""Indices for the vector columns of this dynamic table."""

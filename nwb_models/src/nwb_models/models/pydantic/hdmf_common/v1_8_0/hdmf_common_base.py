@@ -50,7 +50,7 @@ class ConfiguredBaseModel(BaseModel):
             except AttributeError:
                 try:
                     return handler(v["value"])
-                except (KeyError, TypeError):
+                except (IndexError, KeyError, TypeError):
                     raise e1
 
     @field_validator("*", mode="before")
@@ -59,9 +59,14 @@ class ConfiguredBaseModel(BaseModel):
         """Recast parent classes into child classes"""
         if isinstance(v, BaseModel):
             annotation = cls.model_fields[info.field_name].annotation
-            annotation = annotation.__args__[0] if hasattr(annotation, "__args__") else annotation
-            if issubclass(annotation, type(v)) and annotation is not type(v):
-                v = annotation(**v.__dict__)
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
         return v
 
 
@@ -129,7 +134,7 @@ class SimpleMultiContainer(Container):
         {"from_schema": "hdmf-common.base", "tree_root": True}
     )
 
-    value: Optional[List[Container]] = Field(
+    value: Optional[Dict[str, Container]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "Container"}]}}
     )
     name: str = Field(...)
