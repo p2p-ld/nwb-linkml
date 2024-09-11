@@ -36,7 +36,10 @@ jobs:
             nwb_models/pyproject.toml
 
       - name: Install dependencies
-        run: pip install -e .[tests]
+        run: |
+          pip install -e .[tests]
+          pip install -e ../nwb_schema_language
+          pip install -e ../nwb_models
         working-directory: nwb_linkml
 
       - name: Run Tests
