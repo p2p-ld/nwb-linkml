@@ -706,23 +706,24 @@ class AlignedDynamicTableMixin(BaseModel):
             ids = self.id[item]
             if not isinstance(ids, Iterable):
                 ids = pd.Series([ids])
-            ids = pd.DataFrame({"id": ids}, index=pd.Index(data=ids, name="id"))
-            tables = [ids]
+            ids = pd.Index(data=ids, name="id")
+            tables = []
             for category_name, category in self._categories.items():
                 table = category[item]
                 if isinstance(table, pd.DataFrame):
                     table = table.reset_index()
+                    table.index = ids
                 elif isinstance(table, np.ndarray):
-                    table = pd.DataFrame({category_name: [table]}, index=ids.index)
+                    table = pd.DataFrame({category_name: [table]}, index=ids)
                 elif isinstance(table, Iterable):
-                    table = pd.DataFrame({category_name: table}, index=ids.index)
+                    table = pd.DataFrame({category_name: table}, index=ids)
                 else:
                     raise ValueError(
                         f"Don't know how to construct category table for {category_name}"
                     )
                 tables.append(table)
 
-            names = [self.name] + self.categories
+            # names = [self.name] + self.categories
             # construct below in case we need to support array indexing in the future
         else:
             raise ValueError(
@@ -730,8 +731,7 @@ class AlignedDynamicTableMixin(BaseModel):
                 "need an int, string, slice, ndarray, or tuple[int | slice, str]"
             )
 
-        df = pd.concat(tables, axis=1, keys=names)
-        df.set_index((self.name, "id"), drop=True, inplace=True)
+        df = pd.concat(tables, axis=1, keys=self.categories)
         return df
 
     def __getattr__(self, item: str) -> Any:

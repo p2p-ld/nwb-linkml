@@ -551,13 +551,13 @@ def test_aligned_dynamictable_indexing(aligned_table):
         row.columns
         == pd.MultiIndex.from_tuples(
             [
-                ("table1", "index"),
+                ("table1", "id"),
                 ("table1", "col1"),
                 ("table1", "col2"),
-                ("table2", "index"),
+                ("table2", "id"),
                 ("table2", "col3"),
                 ("table2", "col4"),
-                ("table3", "index"),
+                ("table3", "id"),
                 ("table3", "col5"),
                 ("table3", "col6"),
             ]
@@ -754,11 +754,11 @@ def test_aligned_dynamictable_ictable(intracellular_recordings_table):
         rows.columns
         == pd.MultiIndex.from_tuples(
             [
-                ("electrodes", "index"),
+                ("electrodes", "id"),
                 ("electrodes", "electrode"),
-                ("stimuli", "index"),
+                ("stimuli", "id"),
                 ("stimuli", "stimulus"),
-                ("responses", "index"),
+                ("responses", "id"),
                 ("responses", "response"),
             ]
         )
