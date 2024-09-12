@@ -2,16 +2,18 @@
 Placeholder test module to test reading from pynwb-generated NWB file
 """
 
-import pytest
 from datetime import datetime
-from numpydantic.interface.hdf5 import H5Proxy
-from nwb_linkml.io.hdf5 import HDF5IO
-from nwb_models.models import NWBFile
-from pydantic import BaseModel
+
 import numpy as np
 import pandas as pd
+import pytest
+from numpydantic.interface.hdf5 import H5Proxy
+from pydantic import BaseModel
+from pynwb import NWBHDF5IO
+from pynwb import NWBFile as PyNWBFile
 
-from pynwb import NWBHDF5IO, NWBFile as PyNWBFile
+from nwb_linkml.io.hdf5 import HDF5IO
+from nwb_models.models import NWBFile
 
 
 def test_read_from_nwbfile(nwb_file):
