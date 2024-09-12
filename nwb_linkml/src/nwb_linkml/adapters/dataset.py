@@ -744,7 +744,7 @@ class DatasetAdapter(ClassAdapter):
         if map is not None:
             res = map.apply(self.cls, res, self._get_full_name())
 
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             res = self._amend_debug(res, map)
         return res
 
@@ -771,7 +771,9 @@ class DatasetAdapter(ClassAdapter):
         else:
             return matches[0]
 
-    def _amend_debug(self, res: BuildResult, map: Optional[Type[DatasetMap]] = None) -> BuildResult:
+    def _amend_debug(
+        self, res: BuildResult, map: Optional[Type[DatasetMap]] = None
+    ) -> BuildResult:  # pragma: no cover - only used in development
         map_name = "None" if map is None else map.__name__
         for cls in res.classes:
             cls.annotations["dataset_map"] = {"tag": "dataset_map", "value": map_name}

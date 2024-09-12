@@ -5,9 +5,7 @@ customized to support NWB models.
 See class and module docstrings for details :)
 """
 
-import pdb
 import re
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
@@ -24,7 +22,6 @@ from linkml_runtime.linkml_model.meta import (
     SlotDefinition,
     SlotDefinitionName,
 )
-from linkml_runtime.utils.compile_python import file_text
 from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
@@ -214,15 +211,17 @@ class AfterGenerateSlot:
                 # merge injects/imports from the numpydantic array without using the merge method
                 if slot.injected_classes is None:
                     slot.injected_classes = NumpydanticArray.INJECTS.copy()
-                else:
+                else:  # pragma: no cover - for completeness, shouldn't happen
                     slot.injected_classes.extend(NumpydanticArray.INJECTS.copy())
-                if isinstance(slot.imports, list):
+                if isinstance(
+                    slot.imports, list
+                ):  # pragma: no cover - for completeness, shouldn't happen
                     slot.imports = (
                         Imports(imports=slot.imports) + NumpydanticArray.IMPORTS.model_copy()
                     )
                 elif isinstance(slot.imports, Imports):
                     slot.imports += NumpydanticArray.IMPORTS.model_copy()
-                else:
+                else:  # pragma: no cover - for completeness, shouldn't happen
                     slot.imports = NumpydanticArray.IMPORTS.model_copy()
 
         return slot
@@ -239,13 +238,15 @@ class AfterGenerateSlot:
             named_injects = [ModelTypeString, _get_name, NamedString]
             if slot.injected_classes is None:
                 slot.injected_classes = named_injects
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 slot.injected_classes.extend([ModelTypeString, _get_name, NamedString])
-            if isinstance(slot.imports, list):
+            if isinstance(
+                slot.imports, list
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 slot.imports = Imports(imports=slot.imports) + NamedImports
             elif isinstance(slot.imports, Imports):
                 slot.imports += NamedImports
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 slot.imports = NamedImports
         return slot
 
@@ -268,16 +269,20 @@ class AfterGenerateClass:
         if cls.cls.name == "DynamicTable":
             cls.cls.bases = ["DynamicTableMixin", "ConfiguredBaseModel"]
 
-            if cls.injected_classes is None:
+            if (
+                cls.injected_classes is None
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.injected_classes = DYNAMIC_TABLE_INJECTS.copy()
             else:
                 cls.injected_classes.extend(DYNAMIC_TABLE_INJECTS.copy())
 
             if isinstance(cls.imports, Imports):
                 cls.imports += DYNAMIC_TABLE_IMPORTS
-            elif isinstance(cls.imports, list):
+            elif isinstance(
+                cls.imports, list
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = Imports(imports=cls.imports) + DYNAMIC_TABLE_IMPORTS
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = DYNAMIC_TABLE_IMPORTS.model_copy()
         elif cls.cls.name == "VectorData":
             cls.cls.bases = ["VectorDataMixin", "ConfiguredBaseModel"]
@@ -298,16 +303,20 @@ class AfterGenerateClass:
         elif cls.cls.name == "TimeSeriesReferenceVectorData":
             # in core.nwb.base, so need to inject and import again
             cls.cls.bases = ["TimeSeriesReferenceVectorDataMixin", "VectorData"]
-            if cls.injected_classes is None:
+            if (
+                cls.injected_classes is None
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.injected_classes = TSRVD_INJECTS.copy()
             else:
                 cls.injected_classes.extend(TSRVD_INJECTS.copy())
 
             if isinstance(cls.imports, Imports):
                 cls.imports += TSRVD_IMPORTS
-            elif isinstance(cls.imports, list):
+            elif isinstance(
+                cls.imports, list
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = Imports(imports=cls.imports) + TSRVD_IMPORTS
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = TSRVD_IMPORTS.model_copy()
 
         return cls
@@ -362,28 +371,6 @@ class AfterGenerateClass:
         return cls
 
 
-def compile_python(
-    text_or_fn: str, package_path: Path = None, module_name: str = "test"
-) -> ModuleType:
-    """
-    Compile the text or file and return the resulting module
-    @param text_or_fn: Python text or file name that references python file
-    @param package_path: Root package path.  If omitted and we've got a python file,
-    the package is the containing
-    directory
-    @return: Compiled module
-    """
-    python_txt = file_text(text_or_fn)
-    if package_path is None and python_txt != text_or_fn:
-        package_path = Path(text_or_fn)
-    spec = compile(python_txt, "<string>", "exec")
-    module = ModuleType(module_name)
-
-    exec(spec, module.__dict__)
-    sys.modules[module_name] = module
-    return module
-
-
 def wrap_preserving_optional(annotation: str, wrap: str) -> str:
     """
     Add a wrapping type to a type annotation string,
@@ -401,7 +388,5 @@ def wrap_preserving_optional(annotation: str, wrap: str) -> str:
         annotation = is_optional.groups()[0]
         annotation = f"Optional[{wrap}[{annotation}]]"
     else:
-        if "Optional" in annotation:
-            pdb.set_trace()
         annotation = f"{wrap}[{annotation}]"
     return annotation

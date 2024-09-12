@@ -174,7 +174,7 @@ class AttributeAdapter(Adapter):
         """
         map = self.match()
         res = map.apply(self.cls)
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             res = self._amend_debug(res, map)
         return res
 
@@ -203,7 +203,7 @@ class AttributeAdapter(Adapter):
 
     def _amend_debug(
         self, res: BuildResult, map: Optional[Type[AttributeMap]] = None
-    ) -> BuildResult:
+    ) -> BuildResult:  # pragma: no cover - only used in development
         map_name = "None" if map is None else map.__name__
         for cls in res.classes:
             cls.annotations["attribute_map"] = {"tag": "attribute_map", "value": map_name}

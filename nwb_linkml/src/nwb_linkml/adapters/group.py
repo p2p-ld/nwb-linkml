@@ -70,7 +70,7 @@ class GroupAdapter(ClassAdapter):
 
         annotations = [{"tag": "source_type", "value": "link"}]
 
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             annotations.append({"tag": "group_adapter", "value": "link"})
 
         slots = [
@@ -117,7 +117,7 @@ class GroupAdapter(ClassAdapter):
             inlined_as_list=False,
         )
 
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "container_group"}
 
         if self.parent is not None:
@@ -162,7 +162,7 @@ class GroupAdapter(ClassAdapter):
             **QUANTITY_MAP[cls.quantity],
         )
 
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "container_slot"}
 
         return BuildResult(slots=[slot])
@@ -214,7 +214,7 @@ class GroupAdapter(ClassAdapter):
             inlined_as_list=True,
             **QUANTITY_MAP[self.cls.quantity],
         )
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "container_slot"}
         return slot
 

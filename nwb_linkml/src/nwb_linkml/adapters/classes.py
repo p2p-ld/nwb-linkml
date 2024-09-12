@@ -92,7 +92,7 @@ class ClassAdapter(Adapter):
         # Get vanilla top-level attributes
         kwargs["attributes"].extend(self.build_attrs(self.cls))
 
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             kwargs["annotations"] = {}
             kwargs["annotations"]["group_adapter"] = {
                 "tag": "group_adapter",
@@ -254,6 +254,6 @@ class ClassAdapter(Adapter):
             inlined=True,
             **QUANTITY_MAP[self.cls.quantity],
         )
-        if self.debug:
+        if self.debug:  # pragma: no cover - only used in development
             slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "self_slot"}
         return slot
