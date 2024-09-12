@@ -25,6 +25,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       filtering:
@@ -71,6 +72,7 @@ classes:
         range: DynamicTableRegion
         required: true
         multivalued: false
+        inlined: true
       channel_conversion:
         name: channel_conversion
         description: Channel-specific conversion factor. Multiply the data in the
@@ -103,6 +105,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -143,6 +146,7 @@ classes:
       name:
         name: name
         ifabsent: string(FeatureExtraction)
+        identifier: true
         range: string
         required: true
       description:
@@ -189,6 +193,7 @@ classes:
         range: DynamicTableRegion
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   EventDetection:
     name: EventDetection
@@ -198,6 +203,7 @@ classes:
       name:
         name: name
         ifabsent: string(EventDetection)
+        identifier: true
         range: string
         required: true
       detection_method:
@@ -236,6 +242,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: ElectricalSeries
         - range: string
@@ -297,6 +304,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -317,6 +325,7 @@ classes:
         range: ElectrodeGroup__position
         required: false
         multivalued: false
+        inlined: true
       device:
         name: device
         annotations:
@@ -325,6 +334,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string
@@ -336,6 +346,7 @@ classes:
       name:
         name: name
         ifabsent: string(position)
+        identifier: true
         range: string
         required: true
         equals_string: position
@@ -376,6 +387,7 @@ classes:
       name:
         name: name
         ifabsent: string(ClusterWaveforms)
+        identifier: true
         range: string
         required: true
       waveform_filtering:
@@ -416,6 +428,7 @@ classes:
             value: link
         required: true
         multivalued: false
+        inlined: true
         any_of:
         - range: Clustering
         - range: string
@@ -429,6 +442,7 @@ classes:
       name:
         name: name
         ifabsent: string(Clustering)
+        identifier: true
         range: string
         required: true
       description:

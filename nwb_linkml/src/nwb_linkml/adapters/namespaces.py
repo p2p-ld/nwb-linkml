@@ -48,13 +48,24 @@ class NamespacesAdapter(Adapter):
 
         need_imports = []
         for needed in ns_adapter.needed_imports.values():
-            need_imports.extend([n for n in needed if n not in ns_adapter.needed_imports])
+            # try to locate imports implied by the namespace schema,
+            # but are either not provided by the current namespace
+            # or are otherwise already provided in `imported` by the loader function
+            need_imports.extend(
+                [
+                    n
+                    for n in needed
+                    if n not in ns_adapter.needed_imports and n not in ns_adapter.versions
+                ]
+            )
 
         for needed in need_imports:
             if needed in DEFAULT_REPOS:
                 needed_source_ns = DEFAULT_REPOS[needed].provide_from_git()
                 needed_adapter = NamespacesAdapter.from_yaml(needed_source_ns)
                 ns_adapter.imported.append(needed_adapter)
+
+        ns_adapter.populate_imports()
 
         return ns_adapter
 
@@ -176,7 +187,6 @@ class NamespacesAdapter(Adapter):
         else:
             raise KeyError(f"No schema found that define {name}")
 
-    @model_validator(mode="after")
     def populate_imports(self) -> "NamespacesAdapter":
         """
         Populate the imports that are needed for each schema file

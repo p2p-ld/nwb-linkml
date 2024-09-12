@@ -28,6 +28,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       notes:
@@ -45,6 +46,7 @@ classes:
       name:
         name: name
         ifabsent: string(root)
+        identifier: true
         range: string
         required: true
         equals_string: root
@@ -184,6 +186,8 @@ classes:
         range: NWBFile__stimulus
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: true
       general:
         name: general
         description: Experimental metadata, including protocol, notes and description
@@ -204,6 +208,8 @@ classes:
         range: NWBFile__general
         required: true
         multivalued: false
+        inlined: true
+        inlined_as_list: true
       intervals:
         name: intervals
         description: Experimental intervals, whether that be logically distinct sub-experiments
@@ -213,12 +219,16 @@ classes:
         range: NWBFile__intervals
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: true
       units:
         name: units
         description: Data about sorted spike units.
         range: Units
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
     tree_root: true
   NWBFile__stimulus:
     name: NWBFile__stimulus
@@ -238,6 +248,7 @@ classes:
       name:
         name: name
         ifabsent: string(stimulus)
+        identifier: true
         range: string
         required: true
         equals_string: stimulus
@@ -283,6 +294,7 @@ classes:
       name:
         name: name
         ifabsent: string(general)
+        identifier: true
         range: string
         required: true
         equals_string: general
@@ -378,6 +390,7 @@ classes:
         range: general__source_script
         required: false
         multivalued: false
+        inlined: true
       stimulus:
         name: stimulus
         description: Notes about stimuli, such as how and where they were presented.
@@ -405,6 +418,8 @@ classes:
         range: LabMetaData
         required: false
         multivalued: true
+        inlined: true
+        inlined_as_list: false
       devices:
         name: devices
         description: Description of hardware devices used during experiment, e.g.,
@@ -421,18 +436,24 @@ classes:
         range: Subject
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       extracellular_ephys:
         name: extracellular_ephys
         description: Metadata related to extracellular electrophysiology.
         range: general__extracellular_ephys
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: true
       intracellular_ephys:
         name: intracellular_ephys
         description: Metadata related to intracellular electrophysiology.
         range: general__intracellular_ephys
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: true
       optogenetics:
         name: optogenetics
         description: Metadata describing optogenetic stimuluation.
@@ -457,6 +478,7 @@ classes:
       name:
         name: name
         ifabsent: string(source_script)
+        identifier: true
         range: string
         required: true
         equals_string: source_script
@@ -476,6 +498,7 @@ classes:
       name:
         name: name
         ifabsent: string(extracellular_ephys)
+        identifier: true
         range: string
         required: true
         equals_string: extracellular_ephys
@@ -485,12 +508,16 @@ classes:
         range: ElectrodeGroup
         required: false
         multivalued: true
+        inlined: true
+        inlined_as_list: false
       electrodes:
         name: electrodes
         description: A table of all electrodes (i.e. channels) used for recording.
         range: extracellular_ephys__electrodes
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: true
   extracellular_ephys__electrodes:
     name: extracellular_ephys__electrodes
     description: A table of all electrodes (i.e. channels) used for recording.
@@ -499,6 +526,7 @@ classes:
       name:
         name: name
         ifabsent: string(electrodes)
+        identifier: true
         range: string
         required: true
         equals_string: electrodes
@@ -562,9 +590,13 @@ classes:
       group:
         name: group
         description: Reference to the ElectrodeGroup this electrode is a part of.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: ElectrodeGroup
         required: true
-        multivalued: true
+        multivalued: false
+        inlined: true
       group_name:
         name: group_name
         description: Name of the ElectrodeGroup this electrode is a part of.
@@ -619,6 +651,7 @@ classes:
       name:
         name: name
         ifabsent: string(intracellular_ephys)
+        identifier: true
         range: string
         required: true
         equals_string: intracellular_ephys
@@ -637,6 +670,8 @@ classes:
         range: IntracellularElectrode
         required: false
         multivalued: true
+        inlined: true
+        inlined_as_list: false
       sweep_table:
         name: sweep_table
         description: '[DEPRECATED] Table used to group different PatchClampSeries.
@@ -646,6 +681,8 @@ classes:
         range: SweepTable
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       intracellular_recordings:
         name: intracellular_recordings
         description: A table to group together a stimulus and response from a single
@@ -663,6 +700,8 @@ classes:
         range: IntracellularRecordingsTable
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       simultaneous_recordings:
         name: simultaneous_recordings
         description: A table for grouping different intracellular recordings from
@@ -671,6 +710,8 @@ classes:
         range: SimultaneousRecordingsTable
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       sequential_recordings:
         name: sequential_recordings
         description: A table for grouping different sequential recordings from the
@@ -680,6 +721,8 @@ classes:
         range: SequentialRecordingsTable
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       repetitions:
         name: repetitions
         description: A table for grouping different sequential intracellular recordings
@@ -689,6 +732,8 @@ classes:
         range: RepetitionsTable
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       experimental_conditions:
         name: experimental_conditions
         description: A table for grouping different intracellular recording repetitions
@@ -696,6 +741,8 @@ classes:
         range: ExperimentalConditionsTable
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
   NWBFile__intervals:
     name: NWBFile__intervals
     description: Experimental intervals, whether that be logically distinct sub-experiments
@@ -705,6 +752,7 @@ classes:
       name:
         name: name
         ifabsent: string(intervals)
+        identifier: true
         range: string
         required: true
         equals_string: intervals
@@ -715,18 +763,24 @@ classes:
         range: TimeIntervals
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       trials:
         name: trials
         description: Repeated experimental events that have a logical grouping.
         range: TimeIntervals
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       invalid_times:
         name: invalid_times
         description: Time intervals that should be removed from analysis.
         range: TimeIntervals
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: false
       time_intervals:
         name: time_intervals
         description: Optional additional table(s) for describing other experimental
@@ -734,6 +788,8 @@ classes:
         range: TimeIntervals
         required: false
         multivalued: true
+        inlined: true
+        inlined_as_list: false
   LabMetaData:
     name: LabMetaData
     description: Lab-specific meta-data.
@@ -741,6 +797,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -751,6 +808,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       age:
@@ -759,6 +817,7 @@ classes:
         range: Subject__age
         required: false
         multivalued: false
+        inlined: true
       date_of_birth:
         name: date_of_birth
         description: Date of birth of subject. Can be supplied instead of 'age'.
@@ -817,6 +876,7 @@ classes:
       name:
         name: name
         ifabsent: string(age)
+        identifier: true
         range: string
         required: true
         equals_string: age

@@ -2,6 +2,7 @@
 Base class for adapters
 """
 
+import os
 import sys
 from abc import abstractmethod
 from dataclasses import dataclass, field
@@ -101,6 +102,19 @@ class Adapter(BaseModel):
     """Abstract base class for adapters"""
 
     _logger: Optional[Logger] = None
+    _debug: Optional[bool] = None
+
+    @property
+    def debug(self) -> bool:
+        """
+        Whether we are in debug mode, which adds extra metadata in generated elements.
+
+        Set explicitly via ``_debug`` , or else checks for the truthiness of the
+        environment variable ``NWB_LINKML_DEBUG``
+        """
+        if self._debug is None:
+            self._debug = bool(os.environ.get("NWB_LINKML_DEBUG", False))
+        return self._debug
 
     @property
     def logger(self) -> Logger:

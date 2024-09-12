@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       elements:
@@ -29,4 +30,5 @@ classes:
           elements
         range: VectorData
         required: true
+        inlined: true
     tree_root: true

@@ -1,10 +1,10 @@
-import pdb
-
 import h5py
+import networkx as nx
 import numpy as np
 import pytest
 
-from nwb_linkml.io.hdf5 import HDF5IO, truncate_file
+from nwb_linkml.io.hdf5 import HDF5IO, filter_dependency_graph, hdf_dependency_graph, truncate_file
+from nwb_linkml.maps.hdf5 import resolve_hardlink
 
 
 @pytest.mark.skip()
@@ -13,7 +13,7 @@ def test_hdf_read(data_dir, dset):
     NWBFILE = data_dir / dset
     io = HDF5IO(path=NWBFILE)
     # the test for now is just whether we can read it lol
-    model = io.read()
+    _ = io.read()
 
 
 def test_truncate_file(tmp_output_dir):
@@ -86,15 +86,60 @@ def test_truncate_file(tmp_output_dir):
     assert target_h5f["data"]["dataset_contig"].attrs["anattr"] == 1
 
 
-@pytest.mark.skip()
-def test_flatten_hdf():
-    from nwb_linkml.maps.hdf5 import flatten_hdf
+def test_dependencies_hardlink(nwb_file):
+    """
+    Test that hardlinks are resolved (eg. from /processing/ecephys/LFP/ElectricalSeries/electrodes
+    to /acquisition/ElectricalSeries/electrodes
+    Args:
+        nwb_file:
 
-    path = "/Users/jonny/Dropbox/lab/p2p_ld/data/nwb/sub-738651046_ses-760693773.nwb"
-    import h5py
+    Returns:
 
-    h5f = h5py.File(path)
-    flat = flatten_hdf(h5f)
-    assert not any(["specifications" in v.path for v in flat.values()])
-    pdb.set_trace()
-    raise NotImplementedError("Just a stub for local testing for now, finish me!")
+    """
+    parent = "/processing/ecephys/LFP/ElectricalSeries"
+    source = "/processing/ecephys/LFP/ElectricalSeries/electrodes"
+    target = "/acquisition/ElectricalSeries/electrodes"
+
+    # assert that the hardlink exists in the test file
+    with h5py.File(str(nwb_file), "r") as h5f:
+        node = h5f.get(source)
+        linked_node = resolve_hardlink(node)
+        assert linked_node == target
+
+    graph = hdf_dependency_graph(nwb_file)
+    # the parent should link to the target as a child
+    assert (parent, target) in graph.edges([parent])
+    assert graph.edges[parent, target]["label"] == "child"
+
+
+@pytest.mark.dev
+def test_dependency_graph_images(nwb_file, tmp_output_dir):
+    """
+    Generate images of the dependency graph
+    """
+    graph = hdf_dependency_graph(nwb_file)
+    A_unfiltered = nx.nx_agraph.to_agraph(graph)
+    A_unfiltered.draw(tmp_output_dir / "test_nwb_unfiltered.png", prog="dot")
+    graph = filter_dependency_graph(graph)
+    A_filtered = nx.nx_agraph.to_agraph(graph)
+    A_filtered.draw(tmp_output_dir / "test_nwb_filtered.png", prog="dot")
+
+
+@pytest.mark.parametrize(
+    "dset",
+    [
+        {"name": "aibs.nwb", "source": "sub-738651046_ses-760693773.nwb"},
+        {
+            "name": "aibs_ecephys.nwb",
+            "source": "sub-738651046_ses-760693773_probe-769322820_ecephys.nwb",
+        },
+    ],
+)
+@pytest.mark.dev
+def test_make_truncated_datasets(tmp_output_dir, data_dir, dset):
+    input_file = tmp_output_dir / dset["source"]
+    output_file = data_dir / dset["name"]
+    if not input_file.exists():
+        return
+
+    truncate_file(input_file, output_file, 10)

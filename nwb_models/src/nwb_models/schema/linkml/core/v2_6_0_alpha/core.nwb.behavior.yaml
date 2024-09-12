@@ -29,6 +29,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -38,6 +39,7 @@ classes:
         range: SpatialSeries__data
         required: true
         multivalued: false
+        inlined: true
       reference_frame:
         name: reference_frame
         description: Description defining what exactly 'straight-ahead' means.
@@ -53,6 +55,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data

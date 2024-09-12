@@ -114,6 +114,12 @@ classes:
         ifabsent: string(element_id)
         range: string
         required: true
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: num_elements
+        range: int
     tree_root: true
   DynamicTableRegion:
     name: DynamicTableRegion

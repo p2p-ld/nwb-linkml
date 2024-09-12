@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       keys:
@@ -30,18 +31,21 @@ classes:
         range: HERD__keys
         required: true
         multivalued: false
+        inlined: true
       files:
         name: files
         description: A table for storing object ids of files used in external resources.
         range: HERD__files
         required: true
         multivalued: false
+        inlined: true
       entities:
         name: entities
         description: A table for mapping user terms (i.e., keys) to resource entities.
         range: HERD__entities
         required: true
         multivalued: false
+        inlined: true
       objects:
         name: objects
         description: A table for identifying which objects in a file contain references
@@ -49,18 +53,21 @@ classes:
         range: HERD__objects
         required: true
         multivalued: false
+        inlined: true
       object_keys:
         name: object_keys
         description: A table for identifying which objects use which keys.
         range: HERD__object_keys
         required: true
         multivalued: false
+        inlined: true
       entity_keys:
         name: entity_keys
         description: A table for identifying which keys use which entity.
         range: HERD__entity_keys
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   HERD__keys:
     name: HERD__keys
@@ -71,6 +78,7 @@ classes:
       name:
         name: name
         ifabsent: string(keys)
+        identifier: true
         range: string
         required: true
         equals_string: keys
@@ -91,6 +99,7 @@ classes:
       name:
         name: name
         ifabsent: string(files)
+        identifier: true
         range: string
         required: true
         equals_string: files
@@ -111,6 +120,7 @@ classes:
       name:
         name: name
         ifabsent: string(entities)
+        identifier: true
         range: string
         required: true
         equals_string: entities
@@ -141,6 +151,7 @@ classes:
       name:
         name: name
         ifabsent: string(objects)
+        identifier: true
         range: string
         required: true
         equals_string: objects
@@ -198,6 +209,7 @@ classes:
       name:
         name: name
         ifabsent: string(object_keys)
+        identifier: true
         range: string
         required: true
         equals_string: object_keys
@@ -226,6 +238,7 @@ classes:
       name:
         name: name
         ifabsent: string(entity_keys)
+        identifier: true
         range: string
         required: true
         equals_string: entity_keys

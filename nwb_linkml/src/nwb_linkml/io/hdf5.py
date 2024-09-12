@@ -22,6 +22,7 @@ Other TODO:
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -31,11 +32,18 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Dict, List, Optional, Union, overload
 
 import h5py
+import networkx as nx
 import numpy as np
+from numpydantic.interface.hdf5 import H5ArrayPath
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from nwb_linkml.maps.hdf5 import ReadPhases, ReadQueue, flatten_hdf
+from nwb_linkml.maps.hdf5 import (
+    get_attr_references,
+    get_dataset_references,
+    get_references,
+    resolve_hardlink,
+)
 
 if TYPE_CHECKING:
     from nwb_linkml.providers.schema import SchemaProvider
@@ -45,6 +53,221 @@ if sys.version_info.minor >= 11:
     from typing import Never
 else:
     from typing_extensions import Never
+
+
+SKIP_PATTERN = re.compile("(^/specifications.*)|(\.specloc)")
+"""Nodes to always skip in reading e.g. because they are handled elsewhere"""
+
+
+def hdf_dependency_graph(h5f: Path | h5py.File | h5py.Group) -> nx.DiGraph:
+    """
+    Directed dependency graph of dataset and group nodes in an NWBFile such that
+    each node ``n_i`` is connected to node ``n_j`` if
+
+    * ``n_j`` is ``n_i``'s child
+    * ``n_i`` contains a reference to ``n_j``
+
+    Resolve references in
+
+    * Attributes
+    * Dataset columns
+    * Compound dtypes
+
+    Edges are labeled with ``reference`` or ``child`` depending on the type of edge it is,
+    and attributes from the hdf5 file are added as node attributes.
+
+    Args:
+        h5f (:class:`pathlib.Path` | :class:`h5py.File`): NWB file to graph
+
+    Returns:
+        :class:`networkx.DiGraph`
+    """
+
+    if isinstance(h5f, (Path, str)):
+        h5f = h5py.File(h5f, "r")
+
+    g = nx.DiGraph()
+
+    def _visit_item(name: str, node: h5py.Dataset | h5py.Group) -> None:
+        if SKIP_PATTERN.match(node.name):
+            return
+        # find references in attributes
+        refs = get_references(node)
+        # add edges from references
+        edges = [(node.name, ref) for ref in refs if not SKIP_PATTERN.match(ref)]
+        g.add_edges_from(edges, label="reference")
+
+        # add children, if group
+        if isinstance(node, h5py.Group):
+            children = [
+                resolve_hardlink(child)
+                for child in node.values()
+                if not SKIP_PATTERN.match(child.name)
+            ]
+            edges = [(node.name, ref) for ref in children if not SKIP_PATTERN.match(ref)]
+            g.add_edges_from(edges, label="child")
+
+        # ensure node added to graph
+        if len(edges) == 0:
+            g.add_node(node.name)
+
+        # store attrs in node
+        g.nodes[node.name].update(node.attrs)
+
+    # apply to root
+    _visit_item(h5f.name, h5f)
+
+    h5f.visititems(_visit_item)
+    return g
+
+
+def filter_dependency_graph(g: nx.DiGraph) -> nx.DiGraph:
+    """
+    Remove nodes from a dependency graph if they
+
+    * have no neurodata type AND
+    * have no outbound edges
+
+    OR
+
+    * are a VectorIndex (which are handled by the dynamictable mixins)
+    """
+    remove_nodes = []
+    node: str
+    for node in g.nodes:
+        ndtype = g.nodes[node].get("neurodata_type", None)
+        if (ndtype is None and g.out_degree(node) == 0) or SKIP_PATTERN.match(node):
+            remove_nodes.append(node)
+
+    g.remove_nodes_from(remove_nodes)
+    return g
+
+
+def _load_node(
+    path: str, h5f: h5py.File, provider: "SchemaProvider", context: dict
+) -> dict | BaseModel:
+    """
+    Load an individual node in the graph, then removes it from the graph
+    Args:
+        path:
+        g:
+        context:
+
+    Returns:
+
+    """
+    obj = h5f.get(path)
+
+    if isinstance(obj, h5py.Dataset):
+        args = _load_dataset(obj, h5f, context)
+    elif isinstance(obj, h5py.Group):
+        args = _load_group(obj, h5f, context)
+    else:
+        raise TypeError(f"Nodes can only be h5py Datasets and Groups, got {obj}")
+
+    if "neurodata_type" in obj.attrs:
+        model = provider.get_class(obj.attrs["namespace"], obj.attrs["neurodata_type"])
+        return model(**args)
+    else:
+        if "name" in args:
+            del args["name"]
+        if "hdf5_path" in args:
+            del args["hdf5_path"]
+        return args
+
+
+def _load_dataset(
+    dataset: h5py.Dataset, h5f: h5py.File, context: dict
+) -> Union[dict, str, int, float]:
+    """
+    Resolves datasets that do not have a ``neurodata_type`` as a dictionary or a scalar.
+
+    If the dataset is a single value without attrs, load it and return as a scalar value.
+    Otherwise return a :class:`.H5ArrayPath` as a reference to the dataset in the `value` key.
+    """
+    res = {}
+    if dataset.shape == ():
+        val = dataset[()]
+        if isinstance(val, h5py.h5r.Reference):
+            val = context.get(h5f[val].name)
+        # if this is just a scalar value, return it
+        if not dataset.attrs:
+            return val
+
+        res["value"] = val
+    elif len(dataset) > 0 and isinstance(dataset[0], h5py.h5r.Reference):
+        # vector of references
+        res["value"] = [context.get(h5f[ref].name) for ref in dataset[:]]
+    elif len(dataset.dtype) > 1:
+        # compound dataset - check if any of the fields are references
+        for name in dataset.dtype.names:
+            if isinstance(dataset[name][0], h5py.h5r.Reference):
+                res[name] = [context.get(h5f[ref].name) for ref in dataset[name]]
+            else:
+                res[name] = H5ArrayPath(h5f.filename, dataset.name, name)
+    else:
+        res["value"] = H5ArrayPath(h5f.filename, dataset.name)
+
+    res.update(dataset.attrs)
+    if "namespace" in res:
+        del res["namespace"]
+    if "neurodata_type" in res:
+        del res["neurodata_type"]
+    res["name"] = dataset.name.split("/")[-1]
+    res["hdf5_path"] = dataset.name
+
+    # resolve attr references
+    for k, v in res.items():
+        if isinstance(v, h5py.h5r.Reference):
+            ref_path = h5f[v].name
+            if SKIP_PATTERN.match(ref_path):
+                res[k] = ref_path
+            else:
+                res[k] = context[ref_path]
+
+    if len(res) == 1:
+        return res["value"]
+    else:
+        return res
+
+
+def _load_group(group: h5py.Group, h5f: h5py.File, context: dict) -> dict:
+    """
+    Load a group!
+    """
+    res = {}
+    res.update(group.attrs)
+    for child_name, child in group.items():
+        if child.name in context:
+            res[child_name] = context[child.name]
+        elif isinstance(child, h5py.Dataset):
+            res[child_name] = _load_dataset(child, h5f, context)
+        elif isinstance(child, h5py.Group):
+            res[child_name] = _load_group(child, h5f, context)
+        else:
+            raise TypeError(
+                "Can only handle preinstantiated child objects in context, datasets, and group,"
+                f" got {child} for {child_name}"
+            )
+    if "namespace" in res:
+        del res["namespace"]
+    if "neurodata_type" in res:
+        del res["neurodata_type"]
+        name = group.name.split("/")[-1]
+        if name:
+            res["name"] = name
+        res["hdf5_path"] = group.name
+
+    # resolve attr references
+    for k, v in res.items():
+        if isinstance(v, h5py.h5r.Reference):
+            ref_path = h5f[v].name
+            if SKIP_PATTERN.match(ref_path):
+                res[k] = ref_path
+            else:
+                res[k] = context[ref_path]
+
+    return res
 
 
 class HDF5IO:
@@ -106,28 +329,22 @@ class HDF5IO:
 
         h5f = h5py.File(str(self.path))
         src = h5f.get(path) if path else h5f
+        graph = hdf_dependency_graph(src)
+        graph = filter_dependency_graph(graph)
 
-        # get all children of selected item
-        if isinstance(src, (h5py.File, h5py.Group)):
-            children = flatten_hdf(src)
-        else:
-            raise NotImplementedError("directly read individual datasets")
-
-        queue = ReadQueue(h5f=self.path, queue=children, provider=provider)
-
-        # Apply initial planning phase of reading
-        queue.apply_phase(ReadPhases.plan)
-        # Read operations gather the data before casting into models
-        queue.apply_phase(ReadPhases.read)
-        # Construction operations actually cast the models
-        # this often needs to run several times as models with dependencies wait for their
-        # dependents to be cast
-        queue.apply_phase(ReadPhases.construct)
+        # topo sort to get read order
+        # TODO: This could be parallelized using `topological_generations`,
+        # but it's not clear what the perf bonus would be because there are many generations
+        # with few items
+        topo_order = list(reversed(list(nx.topological_sort(graph))))
+        context = {}
+        for node in topo_order:
+            res = _load_node(node, h5f, provider, context)
+            context[node] = res
 
         if path is None:
-            return queue.completed["/"].result
-        else:
-            return queue.completed[path].result
+            path = "/"
+        return context[path]
 
     def write(self, path: Path) -> Never:
         """
@@ -167,7 +384,7 @@ class HDF5IO:
         """
         from nwb_linkml.providers.schema import SchemaProvider
 
-        h5f = h5py.File(str(self.path))
+        h5f = h5py.File(str(self.path), "r")
         schema = read_specs_as_dicts(h5f.get("specifications"))
 
         # get versions for each namespace
@@ -269,7 +486,7 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     return references
 
 
-def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> Path:
+def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> Path | None:
     """
     Create a truncated HDF5 file where only the first few samples are kept.
 
@@ -285,6 +502,14 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     Returns:
         :class:`pathlib.Path` path of the truncated file
     """
+    if shutil.which("h5repack") is None:
+        warnings.warn(
+            "Truncation requires h5repack to be available, "
+            "or else the truncated files will be no smaller than the originals",
+            stacklevel=2,
+        )
+        return
+
     target = source.parent / (source.stem + "_truncated.hdf5") if target is None else Path(target)
 
     source = Path(source)
@@ -300,17 +525,34 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     os.chmod(target, 0o774)
 
     to_resize = []
+    attr_refs = {}
+    dataset_refs = {}
 
     def _need_resizing(name: str, obj: h5py.Dataset | h5py.Group) -> None:
         if isinstance(obj, h5py.Dataset) and obj.size > n:
             to_resize.append(name)
 
-    print("Resizing datasets...")
+    def _find_attr_refs(name: str, obj: h5py.Dataset | h5py.Group) -> None:
+        """Find all references in object attrs"""
+        refs = get_attr_references(obj)
+        if refs:
+            attr_refs[name] = refs
+
+    def _find_dataset_refs(name: str, obj: h5py.Dataset | h5py.Group) -> None:
+        """Find all references in datasets themselves"""
+        refs = get_dataset_references(obj)
+        if refs:
+            dataset_refs[name] = refs
+
     # first we get the items that need to be resized and then resize them below
     # problems with writing to the file from within the visititems call
+    print("Planning resize...")
     h5f_target = h5py.File(str(target), "r+")
     h5f_target.visititems(_need_resizing)
+    h5f_target.visititems(_find_attr_refs)
+    h5f_target.visititems(_find_dataset_refs)
 
+    print("Resizing datasets...")
     for resize in to_resize:
         obj = h5f_target.get(resize)
         try:
@@ -320,10 +562,14 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
             # so we have to copy and create a new dataset
             tmp_name = obj.name + "__tmp"
             original_name = obj.name
+
             obj.parent.move(obj.name, tmp_name)
             old_obj = obj.parent.get(tmp_name)
-            new_obj = obj.parent.create_dataset(original_name, data=old_obj[0:n])
+            new_obj = obj.parent.create_dataset(
+                original_name, data=old_obj[0:n], dtype=old_obj.dtype
+            )
             for k, v in old_obj.attrs.items():
+
                 new_obj.attrs[k] = v
             del new_obj.parent[tmp_name]
 
@@ -331,22 +577,54 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     h5f_target.close()
 
     # use h5repack to actually remove the items from the dataset
-    if shutil.which("h5repack") is None:
-        warnings.warn(
-            "Truncated file made, but since h5repack not found in path, file won't be any smaller",
-            stacklevel=2,
-        )
-        return target
-
     print("Repacking hdf5...")
     res = subprocess.run(
-        ["h5repack", "-f", "GZIP=9", str(target), str(target_tmp)], capture_output=True
+        [
+            "h5repack",
+            "--verbose=2",
+            "--enable-error-stack",
+            "-f",
+            "GZIP=9",
+            str(target),
+            str(target_tmp),
+        ],
+        capture_output=True,
     )
     if res.returncode != 0:
         warnings.warn(f"h5repack did not return 0: {res.stderr} {res.stdout}", stacklevel=2)
         # remove the attempt at the repack
         target_tmp.unlink()
         return target
+
+    h5f_target = h5py.File(str(target_tmp), "r+")
+
+    # recreate references after repacking, because repacking ruins them if they
+    # are in a compound dtype
+    for obj_name, obj_refs in attr_refs.items():
+        obj = h5f_target.get(obj_name)
+        for attr_name, ref_target in obj_refs.items():
+            ref_target = h5f_target.get(ref_target)
+            obj.attrs[attr_name] = ref_target.ref
+
+    for obj_name, obj_refs in dataset_refs.items():
+        obj = h5f_target.get(obj_name)
+        if isinstance(obj_refs, list):
+            if len(obj_refs) == 1:
+                ref_target = h5f_target.get(obj_refs[0])
+                obj[()] = ref_target.ref
+            else:
+                targets = [h5f_target.get(ref).ref for ref in obj_refs[:n]]
+                obj[:] = targets
+        else:
+            # dict for a compound dataset
+            for col_name, column_refs in obj_refs.items():
+                targets = [h5f_target.get(ref).ref for ref in column_refs[:n]]
+                data = obj[:]
+                data[col_name] = targets
+                obj[:] = data
+
+    h5f_target.flush()
+    h5f_target.close()
 
     target.unlink()
     target_tmp.rename(target)

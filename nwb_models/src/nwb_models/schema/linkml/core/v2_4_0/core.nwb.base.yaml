@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -34,6 +35,7 @@ classes:
       name:
         name: name
         ifabsent: string(timeseries)
+        identifier: true
         range: string
         required: true
       idx_start:
@@ -63,6 +65,7 @@ classes:
         range: TimeSeries
         required: true
         multivalued: false
+        inlined: true
     tree_root: true
   Image:
     name: Image
@@ -73,6 +76,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       resolution:
@@ -114,6 +118,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -125,6 +130,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -135,6 +141,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -160,6 +167,7 @@ classes:
         range: TimeSeries__data
         required: true
         multivalued: false
+        inlined: true
       starting_time:
         name: starting_time
         description: Timestamp of the first sample in seconds. When timestamps are
@@ -168,6 +176,7 @@ classes:
         range: TimeSeries__starting_time
         required: false
         multivalued: false
+        inlined: true
       timestamps:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
@@ -211,6 +220,8 @@ classes:
         range: TimeSeries__sync
         required: false
         multivalued: false
+        inlined: true
+        inlined_as_list: true
     tree_root: true
   TimeSeries__data:
     name: TimeSeries__data
@@ -221,6 +232,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -298,6 +310,7 @@ classes:
       name:
         name: name
         ifabsent: string(starting_time)
+        identifier: true
         range: string
         required: true
         equals_string: starting_time
@@ -329,6 +342,7 @@ classes:
       name:
         name: name
         ifabsent: string(sync)
+        identifier: true
         range: string
         required: true
         equals_string: sync
@@ -353,6 +367,7 @@ classes:
       name:
         name: name
         ifabsent: string(Images)
+        identifier: true
         range: string
         required: true
       description:

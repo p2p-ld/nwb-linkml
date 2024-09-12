@@ -5,6 +5,8 @@ Note that since this is largely a subclass, we don't test all of the functionali
 because it's tested in the base linkml package.
 """
 
+# ruff: noqa: F821 - until the tests here settle down
+
 import re
 import sys
 import typing
@@ -16,7 +18,7 @@ import pytest
 from numpydantic.ndarray import NDArrayMeta
 from pydantic import BaseModel
 
-from nwb_linkml.generators.pydantic import NWBPydanticGenerator, compile_python
+from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
 from ..fixtures import (
     TestSchemas,

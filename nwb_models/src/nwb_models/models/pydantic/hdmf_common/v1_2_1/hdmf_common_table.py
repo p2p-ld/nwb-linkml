@@ -46,7 +46,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -64,6 +64,37 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler(v.value)
+            except AttributeError:
+                try:
+                    return handler(v["value"])
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -98,7 +129,7 @@ class VectorDataMixin(BaseModel, Generic[T]):
     # redefined in `VectorData`, but included here for testing and type checking
     value: Optional[T] = None
 
-    def __init__(self, value: Optional[NDArray] = None, **kwargs):
+    def __init__(self, value: Optional[T] = None, **kwargs):
         if value is not None and "value" not in kwargs:
             kwargs["value"] = value
         super().__init__(**kwargs)
@@ -300,8 +331,11 @@ class DynamicTableMixin(BaseModel):
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "id",
         "name",
+        "categories",
         "colnames",
         "description",
+        "hdf5_path",
+        "object_id",
     )
 
     # overridden by subclass but implemented here for testing and typechecking purposes :)
@@ -385,7 +419,7 @@ class DynamicTableMixin(BaseModel):
         # cast to DF
         if not isinstance(index, Iterable):
             index = [index]
-        index = pd.Index(data=index)
+        index = pd.Index(data=index, name="id")
         return pd.DataFrame(data, index=index)
 
     def _slice_range(
@@ -493,11 +527,14 @@ class DynamicTableMixin(BaseModel):
                 if k not in cls.NON_COLUMN_FIELDS
                 and not k.endswith("_index")
                 and not isinstance(model[k], VectorIndexMixin)
+                and model[k] is not None
             ]
             model["colnames"] = colnames
         else:
             # add any columns not explicitly given an order at the end
             colnames = model["colnames"].copy()
+            if isinstance(colnames, np.ndarray):
+                colnames = colnames.tolist()
             colnames.extend(
                 [
                     k
@@ -506,6 +543,7 @@ class DynamicTableMixin(BaseModel):
                     and not k.endswith("_index")
                     and k not in model["colnames"]
                     and not isinstance(model[k], VectorIndexMixin)
+                    and model[k] is not None
                 ]
             )
             model["colnames"] = colnames
@@ -524,17 +562,25 @@ class DynamicTableMixin(BaseModel):
 
         if isinstance(model, dict):
             for key, val in model.items():
-                if key in cls.model_fields:
+                if key in cls.model_fields or key in cls.NON_COLUMN_FIELDS:
                     continue
                 if not isinstance(val, (VectorData, VectorIndex)):
                     try:
-                        if key.endswith("_index"):
-                            model[key] = VectorIndex(name=key, description="", value=val)
+                        to_cast = VectorIndex if key.endswith("_index") else VectorData
+                        if isinstance(val, dict):
+                            model[key] = to_cast(**val)
                         else:
-                            model[key] = VectorData(name=key, description="", value=val)
+                            model[key] = to_cast(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
-                        raise ValidationError(
-                            f"field {key} cannot be cast to VectorData from {val}"
+                        raise ValidationError.from_exception_data(
+                            title=f"field {key} cannot be cast to VectorData from {val}",
+                            line_errors=[
+                                {
+                                    "type": "ValueError",
+                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "input": val,
+                                }
+                            ],
                         ) from e
         return model
 
@@ -567,9 +613,9 @@ class DynamicTableMixin(BaseModel):
         """
         Ensure that all columns are equal length
         """
-        lengths = [len(v) for v in self._columns.values()] + [len(self.id)]
+        lengths = [len(v) for v in self._columns.values() if v is not None] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "Columns are not of equal length! "
+            "DynamicTable columns are not of equal length! "
             f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
         )
         return self
@@ -619,10 +665,13 @@ class AlignedDynamicTableMixin(BaseModel):
     __pydantic_extra__: Dict[str, Union["DynamicTableMixin", "VectorDataMixin", "VectorIndexMixin"]]
 
     NON_CATEGORY_FIELDS: ClassVar[tuple[str]] = (
+        "id",
         "name",
         "categories",
         "colnames",
         "description",
+        "hdf5_path",
+        "object_id",
     )
 
     name: str = "aligned_table"
@@ -652,28 +701,29 @@ class AlignedDynamicTableMixin(BaseModel):
         elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[1], str):
             # get a slice of a single table
             return self._categories[item[1]][item[0]]
-        elif isinstance(item, (int, slice, Iterable)):
+        elif isinstance(item, (int, slice, Iterable, np.int_)):
             # get a slice of all the tables
             ids = self.id[item]
             if not isinstance(ids, Iterable):
                 ids = pd.Series([ids])
-            ids = pd.DataFrame({"id": ids})
-            tables = [ids]
+            ids = pd.Index(data=ids, name="id")
+            tables = []
             for category_name, category in self._categories.items():
                 table = category[item]
                 if isinstance(table, pd.DataFrame):
                     table = table.reset_index()
+                    table.index = ids
                 elif isinstance(table, np.ndarray):
-                    table = pd.DataFrame({category_name: [table]})
+                    table = pd.DataFrame({category_name: [table]}, index=ids)
                 elif isinstance(table, Iterable):
-                    table = pd.DataFrame({category_name: table})
+                    table = pd.DataFrame({category_name: table}, index=ids)
                 else:
                     raise ValueError(
                         f"Don't know how to construct category table for {category_name}"
                     )
                 tables.append(table)
 
-            names = [self.name] + self.categories
+            # names = [self.name] + self.categories
             # construct below in case we need to support array indexing in the future
         else:
             raise ValueError(
@@ -681,8 +731,7 @@ class AlignedDynamicTableMixin(BaseModel):
                 "need an int, string, slice, ndarray, or tuple[int | slice, str]"
             )
 
-        df = pd.concat(tables, axis=1, keys=names)
-        df.set_index((self.name, "id"), drop=True, inplace=True)
+        df = pd.concat(tables, axis=1, keys=self.categories)
         return df
 
     def __getattr__(self, item: str) -> Any:
@@ -740,14 +789,19 @@ class AlignedDynamicTableMixin(BaseModel):
             model["categories"] = categories
         else:
             # add any columns not explicitly given an order at the end
-            categories = [
-                k
-                for k in model
-                if k not in cls.NON_COLUMN_FIELDS
-                and not k.endswith("_index")
-                and k not in model["categories"]
-            ]
-            model["categories"].extend(categories)
+            categories = model["categories"].copy()
+            if isinstance(categories, np.ndarray):
+                categories = categories.tolist()
+            categories.extend(
+                [
+                    k
+                    for k in model
+                    if k not in cls.NON_CATEGORY_FIELDS
+                    and not k.endswith("_index")
+                    and k not in model["categories"]
+                ]
+            )
+            model["categories"] = categories
         return model
 
     @model_validator(mode="after")
@@ -781,10 +835,17 @@ class AlignedDynamicTableMixin(BaseModel):
         """
         lengths = [len(v) for v in self._categories.values()] + [len(self.id)]
         assert all([length == lengths[0] for length in lengths]), (
-            "Columns are not of equal length! "
+            "AlignedDynamicTableColumns are not of equal length! "
             f"Got colnames:\n{self.categories}\nand lengths: {lengths}"
         )
         return self
+
+
+class ElementIdentifiersMixin(VectorDataMixin):
+    """
+    Mixin class for ElementIdentifiers - allow treating
+    as generic, and give general indexing methods from VectorData
+    """
 
 
 linkml_meta = LinkMLMeta(
@@ -801,7 +862,7 @@ linkml_meta = LinkMLMeta(
 )
 
 
-class VectorData(VectorDataMixin):
+class VectorData(VectorDataMixin, ConfiguredBaseModel):
     """
     An n-dimensional dataset representing a column of a DynamicTable. If used without an accompanying VectorIndex, first dimension is along the rows of the DynamicTable and each step along the first dimension is a cell of the larger table. VectorData can also be used to represent a ragged array if paired with a VectorIndex. This allows for storing arrays of varying length in a single cell of the DynamicTable by indexing into this VectorData. The first vector is at VectorData[0:VectorIndex[0]]. The second vector is at VectorData[VectorIndex[0]:VectorIndex[1]], and so on.
     """
@@ -812,17 +873,10 @@ class VectorData(VectorDataMixin):
 
     name: str = Field(...)
     description: str = Field(..., description="""Description of what these vectors represent.""")
-    value: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
+    value: Optional[T] = Field(None)
 
 
-class VectorIndex(VectorIndexMixin):
+class VectorIndex(VectorIndexMixin, ConfiguredBaseModel):
     """
     Used with VectorData to encode a ragged array. An array of indices into the first dimension of the target VectorData, and forming a map between the rows of a DynamicTable and the indices of the VectorData. The name of the VectorIndex is expected to be the name of the target VectorData object followed by \"_index\".
     """
@@ -846,7 +900,7 @@ class VectorIndex(VectorIndexMixin):
     ] = Field(None)
 
 
-class ElementIdentifiers(Data):
+class ElementIdentifiers(ElementIdentifiersMixin, Data, ConfiguredBaseModel):
     """
     A list of unique identifiers for values within a dataset, e.g. rows of a DynamicTable.
     """
@@ -858,9 +912,13 @@ class ElementIdentifiers(Data):
     name: str = Field(
         "element_id", json_schema_extra={"linkml_meta": {"ifabsent": "string(element_id)"}}
     )
+    value: Optional[T] = Field(
+        None,
+        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_elements"}]}}},
+    )
 
 
-class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
+class DynamicTableRegion(DynamicTableRegionMixin, VectorData, ConfiguredBaseModel):
     """
     DynamicTableRegion provides a link from one table to an index or region of another. The `table` attribute is a link to another `DynamicTable`, indicating which table is referenced, and the data is int(s) indicating the row(s) (0-indexed) of the target array. `DynamicTableRegion`s can be used to associate rows with repeated meta-data without data duplication. They can also be used to create hierarchical relationships between multiple `DynamicTable`s. `DynamicTableRegion` objects may be paired with a `VectorIndex` object to create ragged references, so a single cell of a `DynamicTable` can reference many rows of another `DynamicTable`.
     """
@@ -912,7 +970,7 @@ class VocabData(VectorData):
     ] = Field(None)
 
 
-class DynamicTable(DynamicTableMixin):
+class DynamicTable(DynamicTableMixin, ConfiguredBaseModel):
     """
     A group containing multiple datasets that are aligned on the first dimension (Currently, this requirement if left up to APIs to check and enforce). These datasets represent different columns in the table. Apart from a column that contains unique identifiers for each row, there are no other required datasets. Users are free to add any number of custom VectorData objects (columns) here. DynamicTable also supports ragged array columns, where each element can be of a different size. To add a ragged array column, use a VectorIndex type to index the corresponding VectorData type. See documentation for VectorData and VectorIndex for more details. Unlike a compound data type, which is analogous to storing an array-of-structs, a DynamicTable can be thought of as a struct-of-arrays. This provides an alternative structure to choose from when optimizing storage for anticipated access patterns. Additionally, this type provides a way of creating a table without having to define a compound type up front. Although this convenience may be attractive, users should think carefully about how data will be accessed. DynamicTable is more appropriate for column-centric access, whereas a dataset with a compound type would be more appropriate for row-centric access. Finally, data size should also be taken into account. For small tables, performance loss may be an acceptable trade-off for the flexibility of a DynamicTable.
     """
@@ -927,13 +985,10 @@ class DynamicTable(DynamicTableMixin):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
+    id: ElementIdentifiers = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
     )
 
 

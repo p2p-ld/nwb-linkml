@@ -10,9 +10,15 @@ from .fixtures import *  # noqa: F403
 
 def pytest_addoption(parser):
     parser.addoption(
+        "--clean",
+        action="store_true",
+        default=False,
+        help="Don't reuse cached resources like cloned git repos or generated files",
+    )
+    parser.addoption(
         "--with-output",
         action="store_true",
-        help="dump output in compliance test for richer debugging information",
+        help="keep test outputs for richer debugging information",
     )
     parser.addoption(
         "--without-cache", action="store_true", help="Don't use a sqlite cache for network requests"

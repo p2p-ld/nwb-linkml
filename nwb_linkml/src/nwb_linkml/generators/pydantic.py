@@ -6,11 +6,10 @@ See class and module docstrings for details :)
 """
 
 import re
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import ClassVar, Dict, List, Optional, Tuple
+from typing import Callable, ClassVar, Dict, List, Literal, Optional, Tuple
 
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
@@ -23,11 +22,14 @@ from linkml_runtime.linkml_model.meta import (
     SlotDefinition,
     SlotDefinitionName,
 )
-from linkml_runtime.utils.compile_python import file_text
 from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
-from nwb_linkml.includes.base import BASEMODEL_GETITEM
+from nwb_linkml.includes.base import (
+    BASEMODEL_COERCE_CHILD,
+    BASEMODEL_COERCE_VALUE,
+    BASEMODEL_GETITEM,
+)
 from nwb_linkml.includes.hdmf import (
     DYNAMIC_TABLE_IMPORTS,
     DYNAMIC_TABLE_INJECTS,
@@ -36,7 +38,7 @@ from nwb_linkml.includes.hdmf import (
 )
 from nwb_linkml.includes.types import ModelTypeString, NamedImports, NamedString, _get_name
 
-OPTIONAL_PATTERN = re.compile(r"Optional\[([\w\.]*)\]")
+OPTIONAL_PATTERN = re.compile(r"Optional\[(.*)\]")
 
 
 @dataclass
@@ -52,6 +54,8 @@ class NWBPydanticGenerator(PydanticGenerator):
         ),
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
         BASEMODEL_GETITEM,
+        BASEMODEL_COERCE_VALUE,
+        BASEMODEL_COERCE_CHILD,
     )
     split: bool = True
     imports: list[Import] = field(default_factory=lambda: [Import(module="numpy", alias="np")])
@@ -66,6 +70,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     emit_metadata: bool = True
     gen_classvars: bool = True
     gen_slots: bool = True
+    extra_fields: Literal["allow", "forbid", "ignore"] = "allow"
 
     skip_meta: ClassVar[Tuple[str]] = ("domain_of", "alias")
 
@@ -131,6 +136,8 @@ class NWBPydanticGenerator(PydanticGenerator):
         """Customize dynamictable behavior"""
         cls = AfterGenerateClass.inject_dynamictable(cls)
         cls = AfterGenerateClass.wrap_dynamictable_columns(cls, sv)
+        cls = AfterGenerateClass.inject_elementidentifiers(cls, sv, self._get_element_import)
+        cls = AfterGenerateClass.strip_vector_data_slots(cls, sv)
         return cls
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
@@ -204,15 +211,17 @@ class AfterGenerateSlot:
                 # merge injects/imports from the numpydantic array without using the merge method
                 if slot.injected_classes is None:
                     slot.injected_classes = NumpydanticArray.INJECTS.copy()
-                else:
+                else:  # pragma: no cover - for completeness, shouldn't happen
                     slot.injected_classes.extend(NumpydanticArray.INJECTS.copy())
-                if isinstance(slot.imports, list):
+                if isinstance(
+                    slot.imports, list
+                ):  # pragma: no cover - for completeness, shouldn't happen
                     slot.imports = (
                         Imports(imports=slot.imports) + NumpydanticArray.IMPORTS.model_copy()
                     )
                 elif isinstance(slot.imports, Imports):
                     slot.imports += NumpydanticArray.IMPORTS.model_copy()
-                else:
+                else:  # pragma: no cover - for completeness, shouldn't happen
                     slot.imports = NumpydanticArray.IMPORTS.model_copy()
 
         return slot
@@ -224,17 +233,20 @@ class AfterGenerateSlot:
         """
 
         if "named" in slot.source.annotations and slot.source.annotations["named"].value:
-            slot.attribute.range = f"Named[{slot.attribute.range}]"
+
+            slot.attribute.range = wrap_preserving_optional(slot.attribute.range, "Named")
             named_injects = [ModelTypeString, _get_name, NamedString]
             if slot.injected_classes is None:
                 slot.injected_classes = named_injects
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 slot.injected_classes.extend([ModelTypeString, _get_name, NamedString])
-            if isinstance(slot.imports, list):
+            if isinstance(
+                slot.imports, list
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 slot.imports = Imports(imports=slot.imports) + NamedImports
             elif isinstance(slot.imports, Imports):
                 slot.imports += NamedImports
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 slot.imports = NamedImports
         return slot
 
@@ -254,41 +266,57 @@ class AfterGenerateClass:
         Returns:
 
         """
-        if cls.cls.name in "DynamicTable":
-            cls.cls.bases = ["DynamicTableMixin"]
+        if cls.cls.name == "DynamicTable":
+            cls.cls.bases = ["DynamicTableMixin", "ConfiguredBaseModel"]
 
-            if cls.injected_classes is None:
+            if (
+                cls.injected_classes is None
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.injected_classes = DYNAMIC_TABLE_INJECTS.copy()
             else:
                 cls.injected_classes.extend(DYNAMIC_TABLE_INJECTS.copy())
 
             if isinstance(cls.imports, Imports):
                 cls.imports += DYNAMIC_TABLE_IMPORTS
-            elif isinstance(cls.imports, list):
+            elif isinstance(
+                cls.imports, list
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = Imports(imports=cls.imports) + DYNAMIC_TABLE_IMPORTS
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = DYNAMIC_TABLE_IMPORTS.model_copy()
         elif cls.cls.name == "VectorData":
-            cls.cls.bases = ["VectorDataMixin"]
+            cls.cls.bases = ["VectorDataMixin", "ConfiguredBaseModel"]
+            # make ``value`` generic on T
+            if "value" in cls.cls.attributes:
+                cls.cls.attributes["value"].range = "Optional[T]"
         elif cls.cls.name == "VectorIndex":
-            cls.cls.bases = ["VectorIndexMixin"]
+            cls.cls.bases = ["VectorIndexMixin", "ConfiguredBaseModel"]
         elif cls.cls.name == "DynamicTableRegion":
-            cls.cls.bases = ["DynamicTableRegionMixin", "VectorData"]
+            cls.cls.bases = ["DynamicTableRegionMixin", "VectorData", "ConfiguredBaseModel"]
         elif cls.cls.name == "AlignedDynamicTable":
             cls.cls.bases = ["AlignedDynamicTableMixin", "DynamicTable"]
+        elif cls.cls.name == "ElementIdentifiers":
+            cls.cls.bases = ["ElementIdentifiersMixin", "Data", "ConfiguredBaseModel"]
+            # make ``value`` generic on T
+            if "value" in cls.cls.attributes:
+                cls.cls.attributes["value"].range = "Optional[T]"
         elif cls.cls.name == "TimeSeriesReferenceVectorData":
             # in core.nwb.base, so need to inject and import again
             cls.cls.bases = ["TimeSeriesReferenceVectorDataMixin", "VectorData"]
-            if cls.injected_classes is None:
+            if (
+                cls.injected_classes is None
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.injected_classes = TSRVD_INJECTS.copy()
             else:
                 cls.injected_classes.extend(TSRVD_INJECTS.copy())
 
             if isinstance(cls.imports, Imports):
                 cls.imports += TSRVD_IMPORTS
-            elif isinstance(cls.imports, list):
+            elif isinstance(
+                cls.imports, list
+            ):  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = Imports(imports=cls.imports) + TSRVD_IMPORTS
-            else:
+            else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = TSRVD_IMPORTS.model_copy()
 
         return cls
@@ -305,34 +333,60 @@ class AfterGenerateClass:
         ):
             for an_attr in cls.cls.attributes:
                 if "NDArray" in (slot_range := cls.cls.attributes[an_attr].range):
-                    if an_attr.endswith("_index"):
-                        cls.cls.attributes[an_attr].range = "".join(
-                            ["VectorIndex[", slot_range, "]"]
-                        )
-                    else:
-                        cls.cls.attributes[an_attr].range = "".join(
-                            ["VectorData[", slot_range, "]"]
-                        )
+                    if an_attr == "id":
+                        cls.cls.attributes[an_attr].range = "ElementIdentifiers"
+                        return cls
+
+                    wrap_cls = "VectorIndex" if an_attr.endswith("_index") else "VectorData"
+
+                    cls.cls.attributes[an_attr].range = wrap_preserving_optional(
+                        slot_range, wrap_cls
+                    )
+
+        return cls
+
+    @staticmethod
+    def inject_elementidentifiers(
+        cls: ClassResult, sv: SchemaView, import_method: Callable[[str], Import]
+    ) -> ClassResult:
+        """
+        Inject ElementIdentifiers into module that define dynamictables -
+        needed to handle ID columns
+        """
+        if (
+            cls.source.is_a == "DynamicTable"
+            or "DynamicTable" in sv.class_ancestors(cls.source.name)
+        ) and sv.schema.name != "hdmf-common.table":
+            imp = import_method("ElementIdentifiers")
+            cls.imports += [imp]
+        return cls
+
+    @staticmethod
+    def strip_vector_data_slots(cls: ClassResult, sv: SchemaView) -> ClassResult:
+        """
+        Remove spurious ``vector_data`` slots from DynamicTables
+        """
+        if "vector_data" in cls.cls.attributes:
+            del cls.cls.attributes["vector_data"]
         return cls
 
 
-def compile_python(
-    text_or_fn: str, package_path: Path = None, module_name: str = "test"
-) -> ModuleType:
+def wrap_preserving_optional(annotation: str, wrap: str) -> str:
     """
-    Compile the text or file and return the resulting module
-    @param text_or_fn: Python text or file name that references python file
-    @param package_path: Root package path.  If omitted and we've got a python file,
-    the package is the containing
-    directory
-    @return: Compiled module
-    """
-    python_txt = file_text(text_or_fn)
-    if package_path is None and python_txt != text_or_fn:
-        package_path = Path(text_or_fn)
-    spec = compile(python_txt, "<string>", "exec")
-    module = ModuleType(module_name)
+    Add a wrapping type to a type annotation string,
+    preserving any `Optional[]` annotation, bumping it to the outside
 
-    exec(spec, module.__dict__)
-    sys.modules[module_name] = module
-    return module
+    Examples:
+
+        >>> wrap_preserving_optional('Optional[list[str]]', 'NewType')
+        'Optional[NewType[list[str]]]'
+
+    """
+
+    is_optional = OPTIONAL_PATTERN.match(annotation)
+    if is_optional:
+        annotation = is_optional.groups()[0]
+        annotation = f"Optional[{wrap}[{annotation}]]"
+    else:
+        annotation = f"{wrap}[{annotation}]"
+    return annotation

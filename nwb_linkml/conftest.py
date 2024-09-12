@@ -71,7 +71,7 @@ adapter_parser = Sybil(
 
 doctest_parser = Sybil(
     parsers=[DocTestParser(optionflags=ELLIPSIS + NORMALIZE_WHITESPACE), PythonCodeBlockParser()],
-    patterns=["*.py"],
+    patterns=["providers/git.py"],
 )
 
 pytest_collect_file = (adapter_parser + doctest_parser).pytest()

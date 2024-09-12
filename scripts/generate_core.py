@@ -171,16 +171,10 @@ def generate_versions(
             shutil.rmtree(tmp_dir / "linkml")
             shutil.rmtree(tmp_dir / "pydantic")
 
-            # import the most recent version of the schemaz we built
-            latest_version = sorted((pydantic_path / "core").glob("v*"), key=os.path.getmtime)[-1]
-
             # make inits to use the schema! we don't usually do this in the
             # provider class because we directly import the files there.
             with open(pydantic_path / "__init__.py", "w") as initfile:
                 initfile.write(" ")
-
-            with open(pydantic_path / "__init__.py", "w") as initfile:
-                initfile.write(f"from .pydantic.core.{latest_version.name}.namespace import *")
 
             subprocess.run(["black", "."])
 
@@ -228,12 +222,23 @@ def parser() -> ArgumentParser:
         ),
         action="store_true",
     )
+    parser.add_argument(
+        "--debug",
+        help="Add annotations to generated schema that indicate how they were generated",
+        action="store_true",
+    )
     parser.add_argument("--pdb", help="Launch debugger on an error", action="store_true")
     return parser
 
 
 def main():
     args = parser().parse_args()
+
+    if args.debug:
+        os.environ["NWB_LINKML_DEBUG"] = "true"
+    else:
+        if "NWB_LINKML_DEBUG" in os.environ:
+            del os.environ["NWB_LINKML_DEBUG"]
 
     tmp_dir = make_tmp_dir(clear=True)
     git_dir = tmp_dir / "git"

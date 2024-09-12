@@ -31,6 +31,7 @@ from ...core.v2_3_0.core_nwb_image import ImageSeries, ImageSeriesExternalFile
 from ...hdmf_common.v1_5_0.hdmf_common_table import (
     DynamicTable,
     DynamicTableRegion,
+    ElementIdentifiers,
     VectorData,
     VectorIndex,
 )
@@ -44,7 +45,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -62,6 +63,37 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler(v.value)
+            except AttributeError:
+                try:
+                    return handler(v["value"])
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -283,7 +315,7 @@ class DfOverF(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[Dict[str, RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -298,7 +330,7 @@ class Fluorescence(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[RoiResponseSeries]] = Field(
+    value: Optional[Dict[str, RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
     name: str = Field(...)
@@ -313,7 +345,7 @@ class ImageSegmentation(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[PlaneSegmentation]] = Field(
+    value: Optional[Dict[str, PlaneSegmentation]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "PlaneSegmentation"}]}}
     )
     name: str = Field(...)
@@ -329,11 +361,18 @@ class PlaneSegmentation(DynamicTable):
     )
 
     name: str = Field(...)
-    image_mask: Optional[PlaneSegmentationImageMask] = Field(
+    image_mask: Optional[
+        VectorData[
+            Union[
+                NDArray[Shape["* num_roi, * num_x, * num_y"], Any],
+                NDArray[Shape["* num_roi, * num_x, * num_y, * num_z"], Any],
+            ]
+        ]
+    ] = Field(
         None,
         description="""ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.""",
     )
-    pixel_mask_index: Named[Optional[VectorIndex]] = Field(
+    pixel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into pixel_mask.""",
         json_schema_extra={
@@ -349,7 +388,7 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
-    voxel_mask_index: Named[Optional[VectorIndex]] = Field(
+    voxel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into voxel_mask.""",
         json_schema_extra={
@@ -365,7 +404,7 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
-    reference_images: Optional[List[ImageSeries]] = Field(
+    reference_images: Optional[Dict[str, ImageSeries]] = Field(
         None,
         description="""Image stacks that the segmentation masks apply to.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ImageSeries"}]}},
@@ -384,38 +423,11 @@ class PlaneSegmentation(DynamicTable):
         description="""The names of the columns in this table. This should be used to specify an order to the columns.""",
     )
     description: str = Field(..., description="""Description of what is in this dynamic table.""")
-    id: VectorData[NDArray[Shape["* num_rows"], int]] = Field(
+    id: ElementIdentifiers = Field(
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_data: Optional[List[VectorData]] = Field(
-        None, description="""Vector columns, including index columns, of this dynamic table."""
-    )
-
-
-class PlaneSegmentationImageMask(VectorData):
-    """
-    ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.
-    """
-
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
-
-    name: Literal["image_mask"] = Field(
-        "image_mask",
-        json_schema_extra={
-            "linkml_meta": {"equals_string": "image_mask", "ifabsent": "string(image_mask)"}
-        },
-    )
-    description: str = Field(..., description="""Description of what these vectors represent.""")
-    value: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
 
 
 class PlaneSegmentationPixelMask(VectorData):
@@ -538,7 +550,7 @@ class ImagingPlane(NWBContainer):
         None,
         description="""Describes reference frame of origin_coords and grid_spacing. For example, this can be a text description of the anatomical location and orientation of the grid defined by origin_coords and grid_spacing or the vectors needed to transform or rotate the grid to a common anatomical axis (e.g., AP/DV/ML). This field is necessary to interpret origin_coords and grid_spacing. If origin_coords and grid_spacing are not present, then this field is not required. For example, if the microscope takes 10 x 10 x 2 images, where the first value of the data matrix (index (0, 0, 0)) corresponds to (-1.2, -0.6, -2) mm relative to bregma, the spacing between pixels is 0.2 mm in x, 0.2 mm in y and 0.5 mm in z, and larger numbers in x means more anterior, larger numbers in y means more rightward, and larger numbers in z means more ventral, then enter the following -- origin_coords = (-1.2, -0.6, -2) grid_spacing = (0.2, 0.2, 0.5) reference_frame = \"Origin coordinates are relative to bregma. First dimension corresponds to anterior-posterior axis (larger index = more anterior). Second dimension corresponds to medial-lateral axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral axis (larger index = more ventral).\"""",
     )
-    optical_channel: List[OpticalChannel] = Field(
+    optical_channel: Dict[str, OpticalChannel] = Field(
         ..., description="""An optical channel used to record from an imaging plane."""
     )
     device: Union[Device, str] = Field(
@@ -652,7 +664,7 @@ class MotionCorrection(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[CorrectedImageStack]] = Field(
+    value: Optional[Dict[str, CorrectedImageStack]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "CorrectedImageStack"}]}}
     )
     name: str = Field(...)
@@ -694,7 +706,6 @@ DfOverF.model_rebuild()
 Fluorescence.model_rebuild()
 ImageSegmentation.model_rebuild()
 PlaneSegmentation.model_rebuild()
-PlaneSegmentationImageMask.model_rebuild()
 PlaneSegmentationPixelMask.model_rebuild()
 PlaneSegmentationVoxelMask.model_rebuild()
 ImagingPlane.model_rebuild()

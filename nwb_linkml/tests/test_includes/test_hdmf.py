@@ -284,14 +284,14 @@ def test_dynamictable_assert_equal_length():
         "existing_col": np.arange(10),
         "new_col_1": hdmf.VectorData(value=np.arange(11)),
     }
-    with pytest.raises(ValidationError, match="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
     cols = {
         "existing_col": np.arange(11),
         "new_col_1": hdmf.VectorData(value=np.arange(10)),
     }
-    with pytest.raises(ValidationError, match="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
     # wrong lengths are fine as long as the index is good
@@ -308,7 +308,7 @@ def test_dynamictable_assert_equal_length():
         "new_col_1": hdmf.VectorData(value=np.arange(100)),
         "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 5) + 5),
     }
-    with pytest.raises(ValidationError, match="Columns are not of equal length"):
+    with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
 
@@ -344,7 +344,7 @@ def test_vectordata_indexing():
     """
     n_rows = 50
     value_array, index_array = _ragged_array(n_rows)
-    value_array = np.concat(value_array)
+    value_array = np.concatenate(value_array)
 
     data = hdmf.VectorData(value=value_array)
 
@@ -551,13 +551,13 @@ def test_aligned_dynamictable_indexing(aligned_table):
         row.columns
         == pd.MultiIndex.from_tuples(
             [
-                ("table1", "index"),
+                ("table1", "id"),
                 ("table1", "col1"),
                 ("table1", "col2"),
-                ("table2", "index"),
+                ("table2", "id"),
                 ("table2", "col3"),
                 ("table2", "col4"),
-                ("table3", "index"),
+                ("table3", "id"),
                 ("table3", "col5"),
                 ("table3", "col6"),
             ]
@@ -592,7 +592,7 @@ def test_mixed_aligned_dynamictable(aligned_table):
 
     AlignedTable, cols = aligned_table
     value_array, index_array = _ragged_array(10)
-    value_array = np.concat(value_array)
+    value_array = np.concatenate(value_array)
 
     data = hdmf.VectorData(value=value_array)
     index = hdmf.VectorIndex(value=index_array)
@@ -754,11 +754,11 @@ def test_aligned_dynamictable_ictable(intracellular_recordings_table):
         rows.columns
         == pd.MultiIndex.from_tuples(
             [
-                ("electrodes", "index"),
+                ("electrodes", "id"),
                 ("electrodes", "electrode"),
-                ("stimuli", "index"),
+                ("stimuli", "id"),
                 ("stimuli", "stimulus"),
-                ("responses", "index"),
+                ("responses", "id"),
                 ("responses", "response"),
             ]
         )

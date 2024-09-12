@@ -133,7 +133,6 @@ from ...core.v2_7_0.core_nwb_ophys import (
     OnePhotonSeries,
     OpticalChannel,
     PlaneSegmentation,
-    PlaneSegmentationImageMask,
     PlaneSegmentationPixelMask,
     PlaneSegmentationVoxelMask,
     RoiResponseSeries,
@@ -150,7 +149,7 @@ from ...core.v2_7_0.core_nwb_retinotopy import (
     ImagingRetinotopyVasculatureImage,
 )
 from ...hdmf_common.v1_8_0.hdmf_common_base import Container, Data, SimpleMultiContainer
-from ...hdmf_common.v1_8_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_common.v1_8_0.hdmf_common_sparse import CSRMatrix
 from ...hdmf_common.v1_8_0.hdmf_common_table import (
     AlignedDynamicTable,
     DynamicTable,
@@ -179,7 +178,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -197,6 +196,37 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler(v.value)
+            except AttributeError:
+                try:
+                    return handler(v["value"])
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):

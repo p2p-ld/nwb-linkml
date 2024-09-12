@@ -1,4 +1,3 @@
-import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
@@ -14,69 +13,11 @@ from linkml_runtime.linkml_model import (
     TypeDefinition,
 )
 
-from nwb_linkml.adapters.namespaces import NamespacesAdapter
+from nwb_linkml.adapters import NamespacesAdapter
 from nwb_linkml.io import schema as io
 from nwb_linkml.providers import LinkMLProvider, PydanticProvider
 from nwb_linkml.providers.linkml import LinkMLSchemaBuild
 from nwb_schema_language import Attribute, Dataset, Group
-
-__all__ = [
-    "NWBSchemaTest",
-    "TestSchemas",
-    "data_dir",
-    "linkml_schema",
-    "linkml_schema_bare",
-    "nwb_core_fixture",
-    "nwb_schema",
-    "tmp_output_dir",
-    "tmp_output_dir_func",
-    "tmp_output_dir_mod",
-]
-
-
-@pytest.fixture(scope="session")
-def tmp_output_dir() -> Path:
-    path = Path(__file__).parent.resolve() / "__tmp__"
-    if path.exists():
-        for subdir in path.iterdir():
-            if subdir.name == "git":
-                # don't wipe out git repos every time, they don't rly change
-                continue
-            elif subdir.is_file() and subdir.parent != path:
-                continue
-            elif subdir.is_file():
-                subdir.unlink(missing_ok=True)
-            else:
-                shutil.rmtree(str(subdir))
-    path.mkdir(exist_ok=True)
-
-    return path
-
-
-@pytest.fixture(scope="function")
-def tmp_output_dir_func(tmp_output_dir) -> Path:
-    """
-    tmp output dir that gets cleared between every function
-    cleans at the start rather than at cleanup in case the output is to be inspected
-    """
-    subpath = tmp_output_dir / "__tmpfunc__"
-    if subpath.exists():
-        shutil.rmtree(str(subpath))
-    subpath.mkdir()
-    return subpath
-
-
-@pytest.fixture(scope="module")
-def tmp_output_dir_mod(tmp_output_dir) -> Path:
-    """
-    tmp output dir that gets cleared between every function
-    cleans at the start rather than at cleanup in case the output is to be inspected
-    """
-    subpath = tmp_output_dir / "__tmpmod__"
-    if subpath.exists():
-        shutil.rmtree(str(subpath))
-    subpath.mkdir()
-    return subpath
 
 
 @pytest.fixture(scope="session", params=[{"core_version": "2.7.0", "hdmf_version": "1.8.0"}])
@@ -106,12 +47,6 @@ def nwb_core_module(nwb_core_linkml: LinkMLSchemaBuild, tmp_output_dir) -> Modul
     result = provider.build(nwb_core_linkml.namespace, force=True)
     mod = provider.get("core", version=nwb_core_linkml.version, allow_repo=False)
     return mod
-
-
-@pytest.fixture(scope="session")
-def data_dir() -> Path:
-    path = Path(__file__).parent.resolve() / "data"
-    return path
 
 
 @dataclass

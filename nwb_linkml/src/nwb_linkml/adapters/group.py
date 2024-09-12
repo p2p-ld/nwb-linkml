@@ -68,11 +68,17 @@ class GroupAdapter(ClassAdapter):
         if not self.cls.links:
             return []
 
+        annotations = [{"tag": "source_type", "value": "link"}]
+
+        if self.debug:  # pragma: no cover - only used in development
+            annotations.append({"tag": "group_adapter", "value": "link"})
+
         slots = [
             SlotDefinition(
                 name=link.name,
                 any_of=[{"range": link.target_type}, {"range": "string"}],
-                annotations=[{"tag": "source_type", "value": "link"}],
+                annotations=annotations,
+                inlined=True,
                 **QUANTITY_MAP[link.quantity],
             )
             for link in self.cls.links
@@ -111,6 +117,9 @@ class GroupAdapter(ClassAdapter):
             inlined_as_list=False,
         )
 
+        if self.debug:  # pragma: no cover - only used in development
+            slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "container_group"}
+
         if self.parent is not None:
             # if we  have a parent,
             # just return the slot itself without the class
@@ -144,16 +153,19 @@ class GroupAdapter(ClassAdapter):
         """
         name = camel_to_snake(self.cls.neurodata_type_inc) if not self.cls.name else cls.name
 
-        return BuildResult(
-            slots=[
-                SlotDefinition(
-                    name=name,
-                    range=self.cls.neurodata_type_inc,
-                    description=self.cls.doc,
-                    **QUANTITY_MAP[cls.quantity],
-                )
-            ]
+        slot = SlotDefinition(
+            name=name,
+            range=self.cls.neurodata_type_inc,
+            description=self.cls.doc,
+            inlined=True,
+            inlined_as_list=False,
+            **QUANTITY_MAP[cls.quantity],
         )
+
+        if self.debug:  # pragma: no cover - only used in development
+            slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "container_slot"}
+
+        return BuildResult(slots=[slot])
 
     def build_subclasses(self) -> BuildResult:
         """
@@ -166,19 +178,8 @@ class GroupAdapter(ClassAdapter):
         # for creating slots vs. classes is handled by the adapter class
         dataset_res = BuildResult()
         for dset in self.cls.datasets:
-            # if dset.name == 'timestamps':
-            #     pdb.set_trace()
             dset_adapter = DatasetAdapter(cls=dset, parent=self)
             dataset_res += dset_adapter.build()
-
-        # Actually i'm not sure we have to special case this, we could handle it in
-        # i/o instead
-
-        # Groups are a bit more complicated because they can also behave like
-        # range declarations:
-        # eg. a group can have multiple groups with `neurodata_type_inc`, no name,
-        # and quantity of *,
-        # the group can then contain any number of groups of those included types as direct children
 
         group_res = BuildResult()
 
@@ -189,6 +190,33 @@ class GroupAdapter(ClassAdapter):
         res = dataset_res + group_res
 
         return res
+
+    def build_self_slot(self) -> SlotDefinition:
+        """
+        If we are a child class, we make a slot so our parent can refer to us
+
+        Groups are a bit more complicated because they can also behave like
+        range declarations:
+        eg. a group can have multiple groups with `neurodata_type_inc`, no name,
+        and quantity of *,
+        the group can then contain any number of groups of those included types as direct children
+
+        We make sure that we're inlined as a dict so our parent class can refer to us like::
+
+            parent.{slot_name}[{name}] = self
+
+        """
+        slot = SlotDefinition(
+            name=self._get_slot_name(),
+            description=self.cls.doc,
+            range=self._get_full_name(),
+            inlined=True,
+            inlined_as_list=True,
+            **QUANTITY_MAP[self.cls.quantity],
+        )
+        if self.debug:  # pragma: no cover - only used in development
+            slot.annotations["group_adapter"] = {"tag": "group_adapter", "value": "container_slot"}
+        return slot
 
     def _check_if_container(self, group: Group) -> bool:
         """

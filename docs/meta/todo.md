@@ -49,6 +49,10 @@ Remove monkeypatches/overrides once PRs are closed
 Tests
 - [ ] Ensure schemas and pydantic modules in repos are up to date
 
+Loading
+- [ ] Top-level containers are still a little janky, eg. how `ProcessingModule` just accepts 
+  extra args rather than properly abstracting `value` as a `__getitem__(self, key) -> T:` 
+
 ## Docs TODOs
 
 ```{todolist}

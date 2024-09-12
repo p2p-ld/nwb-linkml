@@ -1,6 +1,6 @@
 [project]
 name = "nwb-models"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pydantic/LinkML models for Neurodata Without Borders"
 authors = [
     {name = "sneakers-the-rat", email = "sneakers-the-rat@protonmail.com"},

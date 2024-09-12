@@ -131,7 +131,7 @@ class SchemaProvider(Provider):
         results = {}
         for ns, ns_result in linkml_res.items():
             results[ns] = pydantic_provider.build(
-                ns_result["namespace"], versions=self.versions, **pydantic_kwargs
+                ns_result.namespace, versions=self.versions, **pydantic_kwargs
             )
         return results
 

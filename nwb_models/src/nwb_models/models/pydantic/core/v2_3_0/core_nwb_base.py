@@ -23,7 +23,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="forbid",
+        extra="allow",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -41,6 +41,37 @@ class ConfiguredBaseModel(BaseModel):
             return self.data[val]
         else:
             raise KeyError("No value or data field to index from")
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def coerce_value(cls, v: Any, handler) -> Any:
+        """Try to rescue instantiation by using the value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler(v.value)
+            except AttributeError:
+                try:
+                    return handler(v["value"])
+                except (IndexError, KeyError, TypeError):
+                    raise e1
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def coerce_subclass(cls, v: Any, info) -> Any:
+        """Recast parent classes into child classes"""
+        if isinstance(v, BaseModel):
+            annotation = cls.model_fields[info.field_name].annotation
+            while hasattr(annotation, "__args__"):
+                annotation = annotation.__args__[0]
+            try:
+                if issubclass(annotation, type(v)) and annotation is not type(v):
+                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+            except TypeError:
+                # fine, annotation is a non-class type like a TypeVar
+                pass
+        return v
 
 
 class LinkMLMeta(RootModel):
@@ -274,7 +305,7 @@ class ProcessingModule(NWBContainer):
         {"from_schema": "core.nwb.base", "tree_root": True}
     )
 
-    value: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
+    value: Optional[Dict[str, Union[DynamicTable, NWBDataInterface]]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}
@@ -294,7 +325,7 @@ class Images(NWBDataInterface):
 
     name: str = Field("Images", json_schema_extra={"linkml_meta": {"ifabsent": "string(Images)"}})
     description: str = Field(..., description="""Description of this collection of images.""")
-    image: List[Image] = Field(..., description="""Images stored in this collection.""")
+    image: List[str] = Field(..., description="""Images stored in this collection.""")
 
 
 # Model rebuild

@@ -22,6 +22,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       start_time:
@@ -64,6 +65,7 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
       timeseries:
         name: timeseries
         annotations:
@@ -77,6 +79,7 @@ classes:
         range: TimeSeriesReferenceVectorData
         required: false
         multivalued: false
+        inlined: true
       timeseries_index:
         name: timeseries_index
         annotations:
@@ -90,4 +93,5 @@ classes:
         range: VectorIndex
         required: false
         multivalued: false
+        inlined: true
     tree_root: true
