@@ -417,7 +417,7 @@ class DynamicTableMixin(BaseModel):
         # cast to DF
         if not isinstance(index, Iterable):
             index = [index]
-        index = pd.Index(data=index)
+        index = pd.Index(data=index, name="id")
         return pd.DataFrame(data, index=index)
 
     def _slice_range(
@@ -704,7 +704,7 @@ class AlignedDynamicTableMixin(BaseModel):
             ids = self.id[item]
             if not isinstance(ids, Iterable):
                 ids = pd.Series([ids])
-            ids = pd.DataFrame({"id": ids})
+            ids = pd.DataFrame({"id": ids}, index=pd.Index(data=ids, name="id"))
             tables = [ids]
             for category_name, category in self._categories.items():
                 table = category[item]
