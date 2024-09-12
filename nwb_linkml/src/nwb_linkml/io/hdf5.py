@@ -22,7 +22,6 @@ Other TODO:
 
 import json
 import os
-import pdb
 import re
 import shutil
 import subprocess
@@ -39,7 +38,12 @@ from numpydantic.interface.hdf5 import H5ArrayPath
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from nwb_linkml.maps.hdf5 import get_references, resolve_hardlink
+from nwb_linkml.maps.hdf5 import (
+    get_attr_references,
+    get_dataset_references,
+    get_references,
+    resolve_hardlink,
+)
 
 if TYPE_CHECKING:
     from nwb_linkml.providers.schema import SchemaProvider
@@ -342,8 +346,6 @@ class HDF5IO:
             path = "/"
         return context[path]
 
-        pdb.set_trace()
-
     def write(self, path: Path) -> Never:
         """
         Write to NWB file
@@ -396,7 +398,7 @@ class HDF5IO:
         provider = SchemaProvider(versions=versions)
 
         # build schema so we have them cached
-        # provider.build_from_dicts(schema)
+        provider.build_from_dicts(schema)
         h5f.close()
         return provider
 
@@ -484,7 +486,7 @@ def find_references(h5f: h5py.File, path: str) -> List[str]:
     return references
 
 
-def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> Path:
+def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> Path | None:
     """
     Create a truncated HDF5 file where only the first few samples are kept.
 
@@ -500,6 +502,14 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     Returns:
         :class:`pathlib.Path` path of the truncated file
     """
+    if shutil.which("h5repack") is None:
+        warnings.warn(
+            "Truncation requires h5repack to be available, "
+            "or else the truncated files will be no smaller than the originals",
+            stacklevel=2,
+        )
+        return
+
     target = source.parent / (source.stem + "_truncated.hdf5") if target is None else Path(target)
 
     source = Path(source)
@@ -515,17 +525,34 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     os.chmod(target, 0o774)
 
     to_resize = []
+    attr_refs = {}
+    dataset_refs = {}
 
     def _need_resizing(name: str, obj: h5py.Dataset | h5py.Group) -> None:
         if isinstance(obj, h5py.Dataset) and obj.size > n:
             to_resize.append(name)
 
-    print("Resizing datasets...")
+    def _find_attr_refs(name: str, obj: h5py.Dataset | h5py.Group) -> None:
+        """Find all references in object attrs"""
+        refs = get_attr_references(obj)
+        if refs:
+            attr_refs[name] = refs
+
+    def _find_dataset_refs(name: str, obj: h5py.Dataset | h5py.Group) -> None:
+        """Find all references in datasets themselves"""
+        refs = get_dataset_references(obj)
+        if refs:
+            dataset_refs[name] = refs
+
     # first we get the items that need to be resized and then resize them below
     # problems with writing to the file from within the visititems call
+    print("Planning resize...")
     h5f_target = h5py.File(str(target), "r+")
     h5f_target.visititems(_need_resizing)
+    h5f_target.visititems(_find_attr_refs)
+    h5f_target.visititems(_find_dataset_refs)
 
+    print("Resizing datasets...")
     for resize in to_resize:
         obj = h5f_target.get(resize)
         try:
@@ -535,10 +562,14 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
             # so we have to copy and create a new dataset
             tmp_name = obj.name + "__tmp"
             original_name = obj.name
+
             obj.parent.move(obj.name, tmp_name)
             old_obj = obj.parent.get(tmp_name)
-            new_obj = obj.parent.create_dataset(original_name, data=old_obj[0:n])
+            new_obj = obj.parent.create_dataset(
+                original_name, data=old_obj[0:n], dtype=old_obj.dtype
+            )
             for k, v in old_obj.attrs.items():
+
                 new_obj.attrs[k] = v
             del new_obj.parent[tmp_name]
 
@@ -546,22 +577,54 @@ def truncate_file(source: Path, target: Optional[Path] = None, n: int = 10) -> P
     h5f_target.close()
 
     # use h5repack to actually remove the items from the dataset
-    if shutil.which("h5repack") is None:
-        warnings.warn(
-            "Truncated file made, but since h5repack not found in path, file won't be any smaller",
-            stacklevel=2,
-        )
-        return target
-
     print("Repacking hdf5...")
     res = subprocess.run(
-        ["h5repack", "-f", "GZIP=9", str(target), str(target_tmp)], capture_output=True
+        [
+            "h5repack",
+            "--verbose=2",
+            "--enable-error-stack",
+            "-f",
+            "GZIP=9",
+            str(target),
+            str(target_tmp),
+        ],
+        capture_output=True,
     )
     if res.returncode != 0:
         warnings.warn(f"h5repack did not return 0: {res.stderr} {res.stdout}", stacklevel=2)
         # remove the attempt at the repack
         target_tmp.unlink()
         return target
+
+    h5f_target = h5py.File(str(target_tmp), "r+")
+
+    # recreate references after repacking, because repacking ruins them if they
+    # are in a compound dtype
+    for obj_name, obj_refs in attr_refs.items():
+        obj = h5f_target.get(obj_name)
+        for attr_name, ref_target in obj_refs.items():
+            ref_target = h5f_target.get(ref_target)
+            obj.attrs[attr_name] = ref_target.ref
+
+    for obj_name, obj_refs in dataset_refs.items():
+        obj = h5f_target.get(obj_name)
+        if isinstance(obj_refs, list):
+            if len(obj_refs) == 1:
+                ref_target = h5f_target.get(obj_refs[0])
+                obj[()] = ref_target.ref
+            else:
+                targets = [h5f_target.get(ref).ref for ref in obj_refs[:n]]
+                obj[:] = targets
+        else:
+            # dict for a compound dataset
+            for col_name, column_refs in obj_refs.items():
+                targets = [h5f_target.get(ref).ref for ref in column_refs[:n]]
+                data = obj[:]
+                data[col_name] = targets
+                obj[:] = data
+
+    h5f_target.flush()
+    h5f_target.close()
 
     target.unlink()
     target_tmp.rename(target)

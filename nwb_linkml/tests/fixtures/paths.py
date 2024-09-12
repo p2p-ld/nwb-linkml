@@ -15,7 +15,12 @@ def tmp_output_dir(request: pytest.FixtureRequest) -> Path:
                 if subdir.name == "git":
                     # don't wipe out git repos every time, they don't rly change
                     continue
-                elif subdir.is_file() and subdir.parent != path:
+                elif (
+                    subdir.is_file()
+                    and subdir.parent != path
+                    or subdir.is_file()
+                    and subdir.suffix == ".nwb"
+                ):
                     continue
                 elif subdir.is_file():
                     subdir.unlink(missing_ok=True)
@@ -54,5 +59,5 @@ def tmp_output_dir_mod(tmp_output_dir) -> Path:
 
 @pytest.fixture(scope="session")
 def data_dir() -> Path:
-    path = Path(__file__).parent.resolve() / "data"
+    path = Path(__file__).parents[1].resolve() / "data"
     return path
