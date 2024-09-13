@@ -14,13 +14,13 @@ from typing import Dict, Generator, List, Optional
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import Annotation, SchemaDefinition
 from pydantic import Field, model_validator
-import networkx as nx
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
 from nwb_linkml.ui import AdapterProgress
-from nwb_schema_language import Namespaces
+from nwb_linkml.util import merge_dicts
+from nwb_schema_language import Dataset, Group, Namespaces
 
 
 class NamespacesAdapter(Adapter):
@@ -156,7 +156,7 @@ class NamespacesAdapter(Adapter):
                     break
         return self
 
-    def complete_namespaces(self):
+    def complete_namespaces(self) -> None:
         """
         After loading the namespace, and after any imports have been added afterwards,
         this must be called to complete the definitions of the contained schema objects.
@@ -167,7 +167,7 @@ class NamespacesAdapter(Adapter):
 
         It **is** automatically called if it hasn't been already by the :meth:`.build` method.
         """
-        self.populate_imports()
+        self._populate_imports()
         self._roll_down_inheritance()
 
         for i in self.imported:
@@ -175,7 +175,7 @@ class NamespacesAdapter(Adapter):
 
         self._completed = True
 
-    def _roll_down_inheritance(self):
+    def _roll_down_inheritance(self) -> None:
         """
         nwb-schema-language inheritance doesn't work like normal python inheritance -
         instead of inheriting everything at the 'top level' of a class, it also
@@ -184,21 +184,59 @@ class NamespacesAdapter(Adapter):
         References:
             https://github.com/NeurodataWithoutBorders/pynwb/issues/1954
         """
-        pass
+        for cls in self.walk_types(self, (Group, Dataset)):
+            if not cls.neurodata_type_inc:
+                continue
 
-    def inheritance_graph(self) -> nx.DiGraph:
-        """
-        Make a graph of all ``neurodata_types`` in the namespace and imports such that
-        each node contains the group or dataset it describes,
-        and has directed edges pointing at all the classes that inherit from it.
+            # get parents
+            parent = self.get(cls.neurodata_type_inc)
+            parents = [parent]
+            while parent.neurodata_type_inc:
+                parent = self.get(parent.neurodata_type_inc)
+                parents.insert(0, parent)
+            parents.append(cls)
 
-        In the case that the inheriting class does not itself have a ``neurodata_type_def``,
-        it is
-        """
-        g = nx.DiGraph()
-        for sch in self.all_schemas():
-            for cls in sch.created_classes:
-                pass
+            # merge and cast
+            # note that we don't want to exclude_none in the model dump here,
+            # if the child class has a field completely unset, we want to inherit it
+            # from the parent without rolling it down - we are only rolling down
+            # the things that need to be modified/merged in the child
+            new_cls: dict = {}
+            for parent in parents:
+                new_cls = merge_dicts(
+                    new_cls,
+                    parent.model_dump(exclude_unset=True),
+                    list_key="name",
+                    exclude=["neurodata_type_def"],
+                )
+            new_cls: Group | Dataset = type(cls)(**new_cls)
+            new_cls.parent = cls.parent
+
+            # reinsert
+            if new_cls.parent:
+                if isinstance(cls, Dataset):
+                    new_cls.parent.datasets[new_cls.parent.datasets.index(cls)] = new_cls
+                else:
+                    new_cls.parent.groups[new_cls.parent.groups.index(cls)] = new_cls
+            else:
+                # top level class, need to go and find it
+                found = False
+                for schema in self.all_schemas():
+                    if isinstance(cls, Dataset):
+                        if cls in schema.datasets:
+                            schema.datasets[schema.datasets.index(cls)] = new_cls
+                            found = True
+                            break
+                    else:
+                        if cls in schema.groups:
+                            schema.groups[schema.groups.index(cls)] = new_cls
+                            found = True
+                            break
+                if not found:
+                    raise KeyError(
+                        f"Unable to find source schema for {cls} when reinserting after rolling"
+                        " down!"
+                    )
 
     def find_type_source(self, name: str) -> SchemaAdapter:
         """
@@ -238,7 +276,7 @@ class NamespacesAdapter(Adapter):
         else:
             raise KeyError(f"No schema found that define {name}")
 
-    def populate_imports(self) -> "NamespacesAdapter":
+    def _populate_imports(self) -> "NamespacesAdapter":
         """
         Populate the imports that are needed for each schema file
 
@@ -338,5 +376,5 @@ class NamespacesAdapter(Adapter):
         for sch in self.schemas:
             yield sch
         for imported in self.imported:
-            for sch in imported:
+            for sch in imported.schemas:
                 yield sch

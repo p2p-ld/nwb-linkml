@@ -616,7 +616,8 @@ class MapNVectors(DatasetMap):
 
     DynamicTable (and the slot VectorData where this is called for)
     is handled specially and just dropped, because we handle the possibility for
-    arbitrary extra VectorData in the :mod:`nwb_linkml.includes.hdmf` module mixin classes.
+    arbitrary extra VectorData in the :mod:`nwb_linkml.includes.hdmf` module mixin classes
+    (see :class:`.MapNVectorData` ).
 
     So really this is just a handler for the `Images` case
     """
@@ -650,6 +651,40 @@ class MapNVectors(DatasetMap):
         # No need to make a class for us, so we replace the existing build results
         res = BuildResult(slots=[this_slot])
         return res
+
+
+class MapNVectorData(DatasetMap):
+    """
+    An extremely special case just for DynamicTable:
+    DynamicTable indicates that all of its extra columns are ``VectorData`` with an
+    unnamed, * quantity dataset similar to the case of :class:`.MapNVectors` .
+
+    We handle this with the :mod:`.includes.hdmf` module mixin classes instead,
+    and so to avoid generating a pointless slot and class,
+    we just catch that case and return nothing.
+    """
+
+    @classmethod
+    def check(c, cls: Dataset) -> bool:
+        """
+        Check for being an unnamed multivalued vector class that IS VectorData
+        """
+        return (
+            cls.name is None
+            and cls.neurodata_type_def is None
+            and cls.neurodata_type_inc
+            and cls.neurodata_type_inc == "VectorData"
+            and cls.quantity in ("*", "+")
+        )
+
+    @classmethod
+    def apply(
+        c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
+    ) -> BuildResult:
+        """
+        Return ... nothing
+        """
+        return BuildResult()
 
 
 class MapCompoundDtype(DatasetMap):

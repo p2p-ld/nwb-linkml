@@ -17,7 +17,7 @@ from linkml_runtime.linkml_model import (
     SlotDefinition,
     TypeDefinition,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from nwb_linkml.logging import init_logger
 from nwb_schema_language import Attribute, CompoundDtype, Dataset, Group, Schema
@@ -103,6 +103,7 @@ class Adapter(BaseModel):
 
     _logger: Optional[Logger] = None
     _debug: Optional[bool] = None
+    _nwb_classes: dict[str, Dataset | Group] = PrivateAttr(default_factory=dict)
 
     @property
     def debug(self) -> bool:
@@ -135,7 +136,10 @@ class Adapter(BaseModel):
 
         Convenience wrapper around :meth:`.walk_field_values`
         """
-        return next(self.walk_field_values(self, "neurodata_type_def", name))
+        if name not in self._nwb_classes:
+            cls = next(self.walk_field_values(self, "neurodata_type_def", name))
+            self._nwb_classes[name] = cls
+        return self._nwb_classes[name]
 
     def get_model_with_field(self, field: str) -> Generator[Union[Group, Dataset], None, None]:
         """

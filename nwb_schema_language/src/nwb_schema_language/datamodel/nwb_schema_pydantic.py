@@ -81,7 +81,10 @@ linkml_meta = LinkMLMeta(
         "see_also": ["https://p2p_ld.github.io/nwb-schema-language"],
         "settings": {
             "email": {"setting_key": "email", "setting_value": "\\S+@\\S+{\\.\\w}+"},
-            "protected_string": {"setting_key": "protected_string", "setting_value": "^[A-Za-z_][A-Za-z0-9_]*$"},
+            "protected_string": {
+                "setting_key": "protected_string",
+                "setting_value": "^[A-Za-z_][A-Za-z0-9_]*$",
+            },
         },
         "source_file": "/Users/jonny/git/p2p-ld/nwb-linkml/nwb_schema_language/src/nwb_schema_language/schema/nwb_schema_language.yaml",
         "title": "nwb-schema-language",
@@ -180,7 +183,15 @@ class Namespace(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
@@ -189,7 +200,14 @@ class Namespace(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "name",
-                "domain_of": ["Namespace", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
                 "structured_pattern": {"interpolated": True, "syntax": "{protected_string}"},
             }
         },
@@ -199,7 +217,9 @@ class Namespace(ConfiguredBaseModel):
         description="""Optional string with extended full name for the namespace.""",
         json_schema_extra={"linkml_meta": {"alias": "full_name", "domain_of": ["Namespace"]}},
     )
-    version: str = Field(..., json_schema_extra={"linkml_meta": {"alias": "version", "domain_of": ["Namespace"]}})
+    version: str = Field(
+        ..., json_schema_extra={"linkml_meta": {"alias": "version", "domain_of": ["Namespace"]}}
+    )
     date: Optional[datetime] = Field(
         None,
         description="""Date that a namespace was last modified or released""",
@@ -215,7 +235,13 @@ class Namespace(ConfiguredBaseModel):
     author: List[str] | str = Field(
         ...,
         description="""List of strings with the names of the authors of the namespace.""",
-        json_schema_extra={"linkml_meta": {"alias": "author", "domain_of": ["Namespace"], "slot_uri": "schema:author"}},
+        json_schema_extra={
+            "linkml_meta": {
+                "alias": "author",
+                "domain_of": ["Namespace"],
+                "slot_uri": "schema:author",
+            }
+        },
     )
     contact: List[str] | str = Field(
         ...,
@@ -238,10 +264,13 @@ class Namespace(ConfiguredBaseModel):
 
 
 class Namespaces(ConfiguredBaseModel):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"}
+    )
 
     namespaces: Optional[List[Namespace]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "namespaces", "domain_of": ["Namespaces"]}}
+        None,
+        json_schema_extra={"linkml_meta": {"alias": "namespaces", "domain_of": ["Namespaces"]}},
     )
 
 
@@ -252,29 +281,51 @@ class Schema(ConfiguredBaseModel):
             "rules": [
                 {
                     "description": "If namespace is absent, source is required",
-                    "postconditions": {"slot_conditions": {"source": {"name": "source", "required": True}}},
+                    "postconditions": {
+                        "slot_conditions": {"source": {"name": "source", "required": True}}
+                    },
                     "preconditions": {
-                        "slot_conditions": {"namespace": {"name": "namespace", "value_presence": "ABSENT"}}
+                        "slot_conditions": {
+                            "namespace": {"name": "namespace", "value_presence": "ABSENT"}
+                        }
                     },
                 },
                 {
                     "description": "If source is absent, namespace is required.",
-                    "postconditions": {"slot_conditions": {"namespace": {"name": "namespace", "required": True}}},
-                    "preconditions": {"slot_conditions": {"source": {"name": "source", "value_presence": "ABSENT"}}},
+                    "postconditions": {
+                        "slot_conditions": {"namespace": {"name": "namespace", "required": True}}
+                    },
+                    "preconditions": {
+                        "slot_conditions": {
+                            "source": {"name": "source", "value_presence": "ABSENT"}
+                        }
+                    },
                 },
                 {
                     "description": "If namespace is present, source is cannot be",
-                    "postconditions": {"slot_conditions": {"source": {"name": "source", "value_presence": "ABSENT"}}},
+                    "postconditions": {
+                        "slot_conditions": {
+                            "source": {"name": "source", "value_presence": "ABSENT"}
+                        }
+                    },
                     "preconditions": {
-                        "slot_conditions": {"namespace": {"name": "namespace", "value_presence": "PRESENT"}}
+                        "slot_conditions": {
+                            "namespace": {"name": "namespace", "value_presence": "PRESENT"}
+                        }
                     },
                 },
                 {
                     "description": "If source is present, namespace cannot be.",
                     "postconditions": {
-                        "slot_conditions": {"namespace": {"name": "namespace", "value_presence": "ABSENT"}}
+                        "slot_conditions": {
+                            "namespace": {"name": "namespace", "value_presence": "ABSENT"}
+                        }
                     },
-                    "preconditions": {"slot_conditions": {"source": {"name": "source", "value_presence": "PRESENT"}}},
+                    "preconditions": {
+                        "slot_conditions": {
+                            "source": {"name": "source", "value_presence": "PRESENT"}
+                        }
+                    },
                 },
             ],
         }
@@ -311,14 +362,24 @@ class Schema(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
 
 
 class Group(ConfiguredBaseModel, ParentizeMixin):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"}
+    )
 
     neurodata_type_def: Optional[str] = Field(
         None,
@@ -347,7 +408,14 @@ class Group(ConfiguredBaseModel, ParentizeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "name",
-                "domain_of": ["Namespace", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
                 "structured_pattern": {"interpolated": True, "syntax": "{protected_string}"},
             }
         },
@@ -368,7 +436,15 @@ class Group(ConfiguredBaseModel, ParentizeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
@@ -380,21 +456,32 @@ class Group(ConfiguredBaseModel, ParentizeMixin):
                 "any_of": [{"minimum_value": 1, "range": "integer"}, {"range": "QuantityEnum"}],
                 "domain_of": ["Group", "Link", "Dataset"],
                 "ifabsent": "int(1)",
-                "todos": ["logic to check that the corresponding class can only be " "implemented quantity times."],
+                "todos": [
+                    "logic to check that the corresponding class can only be "
+                    "implemented quantity times."
+                ],
             }
         },
     )
     linkable: Optional[bool] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "linkable", "domain_of": ["Group", "Dataset"]}}
+        None,
+        json_schema_extra={"linkml_meta": {"alias": "linkable", "domain_of": ["Group", "Dataset"]}},
     )
     attributes: Optional[List[Attribute]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "attributes", "domain_of": ["Group", "Dataset"]}}
+        None,
+        json_schema_extra={
+            "linkml_meta": {"alias": "attributes", "domain_of": ["Group", "Dataset"]}
+        },
     )
     datasets: Optional[List[Dataset]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "datasets", "domain_of": ["Group", "Datasets"]}}
+        None,
+        json_schema_extra={
+            "linkml_meta": {"alias": "datasets", "domain_of": ["Group", "Datasets"]}
+        },
     )
     groups: Optional[List[Group]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "groups", "domain_of": ["Group", "Groups"]}}
+        None,
+        json_schema_extra={"linkml_meta": {"alias": "groups", "domain_of": ["Group", "Groups"]}},
     )
     links: Optional[List[Link]] = Field(
         None, json_schema_extra={"linkml_meta": {"alias": "links", "domain_of": ["Group"]}}
@@ -403,27 +490,41 @@ class Group(ConfiguredBaseModel, ParentizeMixin):
         None,
         exclude=True,
         description="""The parent group that contains this dataset or group""",
-        json_schema_extra={"linkml_meta": {"alias": "parent", "domain_of": ["Group", "Attribute", "Dataset"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "parent", "domain_of": ["Group", "Attribute", "Dataset"]}
+        },
     )
 
 
 class Groups(ConfiguredBaseModel):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"}
+    )
 
     groups: Optional[List[Group]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "groups", "domain_of": ["Group", "Groups"]}}
+        None,
+        json_schema_extra={"linkml_meta": {"alias": "groups", "domain_of": ["Group", "Groups"]}},
     )
 
 
 class Link(ConfiguredBaseModel):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"}
+    )
 
     name: Optional[str] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
                 "alias": "name",
-                "domain_of": ["Namespace", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
                 "structured_pattern": {"interpolated": True, "syntax": "{protected_string}"},
             }
         },
@@ -434,14 +535,24 @@ class Link(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
     target_type: str = Field(
         ...,
         description="""Describes the neurodata_type of the target that the reference points to""",
-        json_schema_extra={"linkml_meta": {"alias": "target_type", "domain_of": ["Link", "ReferenceDtype"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "target_type", "domain_of": ["Link", "ReferenceDtype"]}
+        },
     )
     quantity: Optional[Union[QuantityEnum, int]] = Field(
         "1",
@@ -451,27 +562,39 @@ class Link(ConfiguredBaseModel):
                 "any_of": [{"minimum_value": 1, "range": "integer"}, {"range": "QuantityEnum"}],
                 "domain_of": ["Group", "Link", "Dataset"],
                 "ifabsent": "int(1)",
-                "todos": ["logic to check that the corresponding class can only be " "implemented quantity times."],
+                "todos": [
+                    "logic to check that the corresponding class can only be "
+                    "implemented quantity times."
+                ],
             }
         },
     )
 
 
 class Datasets(ConfiguredBaseModel):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"}
+    )
 
     datasets: Optional[List[Dataset]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "datasets", "domain_of": ["Group", "Datasets"]}}
+        None,
+        json_schema_extra={
+            "linkml_meta": {"alias": "datasets", "domain_of": ["Group", "Datasets"]}
+        },
     )
 
 
 class ReferenceDtype(ConfiguredBaseModel):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta(
+        {"from_schema": "https://w3id.org/p2p_ld/nwb-schema-language"}
+    )
 
     target_type: str = Field(
         ...,
         description="""Describes the neurodata_type of the target that the reference points to""",
-        json_schema_extra={"linkml_meta": {"alias": "target_type", "domain_of": ["Link", "ReferenceDtype"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "target_type", "domain_of": ["Link", "ReferenceDtype"]}
+        },
     )
     reftype: Optional[ReftypeOptions] = Field(
         None,
@@ -501,7 +624,14 @@ class CompoundDtype(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "name",
-                "domain_of": ["Namespace", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
                 "structured_pattern": {"interpolated": True, "syntax": "{protected_string}"},
             }
         },
@@ -512,7 +642,15 @@ class CompoundDtype(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
@@ -535,8 +673,12 @@ class DtypeMixin(ConfiguredBaseModel):
             "mixin": True,
             "rules": [
                 {
-                    "postconditions": {"slot_conditions": {"dtype": {"multivalued": False, "name": "dtype"}}},
-                    "preconditions": {"slot_conditions": {"dtype": {"name": "dtype", "range": "FlatDtype"}}},
+                    "postconditions": {
+                        "slot_conditions": {"dtype": {"multivalued": False, "name": "dtype"}}
+                    },
+                    "preconditions": {
+                        "slot_conditions": {"dtype": {"name": "dtype", "range": "FlatDtype"}}
+                    },
                 }
             ],
         }
@@ -547,7 +689,11 @@ class DtypeMixin(ConfiguredBaseModel):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "dtype",
-                "any_of": [{"range": "FlatDtype"}, {"range": "CompoundDtype"}, {"range": "ReferenceDtype"}],
+                "any_of": [
+                    {"range": "FlatDtype"},
+                    {"range": "CompoundDtype"},
+                    {"range": "ReferenceDtype"},
+                ],
                 "domain_of": ["CompoundDtype", "DtypeMixin"],
             }
         },
@@ -571,7 +717,14 @@ class Attribute(DtypeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "name",
-                "domain_of": ["Namespace", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
                 "structured_pattern": {"interpolated": True, "syntax": "{protected_string}"},
             }
         },
@@ -611,12 +764,16 @@ class Attribute(DtypeMixin):
     value: Optional[Any] = Field(
         None,
         description="""Optional constant, fixed value for the attribute.""",
-        json_schema_extra={"linkml_meta": {"alias": "value", "domain_of": ["Attribute", "Dataset"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "value", "domain_of": ["Attribute", "Dataset"]}
+        },
     )
     default_value: Optional[Any] = Field(
         None,
         description="""Optional default value for variable-valued attributes.""",
-        json_schema_extra={"linkml_meta": {"alias": "default_value", "domain_of": ["Attribute", "Dataset"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "default_value", "domain_of": ["Attribute", "Dataset"]}
+        },
     )
     doc: str = Field(
         ...,
@@ -624,14 +781,24 @@ class Attribute(DtypeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
     required: Optional[bool] = Field(
         True,
         description="""Optional boolean key describing whether the attribute is required. Default value is True.""",
-        json_schema_extra={"linkml_meta": {"alias": "required", "domain_of": ["Attribute"], "ifabsent": "true"}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "required", "domain_of": ["Attribute"], "ifabsent": "true"}
+        },
     )
     parent: Optional[Union[Dataset, Group]] = Field(
         None,
@@ -650,7 +817,11 @@ class Attribute(DtypeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "dtype",
-                "any_of": [{"range": "FlatDtype"}, {"range": "CompoundDtype"}, {"range": "ReferenceDtype"}],
+                "any_of": [
+                    {"range": "FlatDtype"},
+                    {"range": "CompoundDtype"},
+                    {"range": "ReferenceDtype"},
+                ],
                 "domain_of": ["CompoundDtype", "DtypeMixin"],
             }
         },
@@ -689,7 +860,14 @@ class Dataset(ConfiguredBaseModel, ParentizeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "name",
-                "domain_of": ["Namespace", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
                 "structured_pattern": {"interpolated": True, "syntax": "{protected_string}"},
             }
         },
@@ -739,12 +917,16 @@ class Dataset(ConfiguredBaseModel, ParentizeMixin):
     value: Optional[Any] = Field(
         None,
         description="""Optional constant, fixed value for the attribute.""",
-        json_schema_extra={"linkml_meta": {"alias": "value", "domain_of": ["Attribute", "Dataset"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "value", "domain_of": ["Attribute", "Dataset"]}
+        },
     )
     default_value: Optional[Any] = Field(
         None,
         description="""Optional default value for variable-valued attributes.""",
-        json_schema_extra={"linkml_meta": {"alias": "default_value", "domain_of": ["Attribute", "Dataset"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "default_value", "domain_of": ["Attribute", "Dataset"]}
+        },
     )
     doc: str = Field(
         ...,
@@ -752,7 +934,15 @@ class Dataset(ConfiguredBaseModel, ParentizeMixin):
         json_schema_extra={
             "linkml_meta": {
                 "alias": "doc",
-                "domain_of": ["Namespace", "Schema", "Group", "Attribute", "Link", "Dataset", "CompoundDtype"],
+                "domain_of": [
+                    "Namespace",
+                    "Schema",
+                    "Group",
+                    "Attribute",
+                    "Link",
+                    "Dataset",
+                    "CompoundDtype",
+                ],
             }
         },
     )
@@ -764,28 +954,41 @@ class Dataset(ConfiguredBaseModel, ParentizeMixin):
                 "any_of": [{"minimum_value": 1, "range": "integer"}, {"range": "QuantityEnum"}],
                 "domain_of": ["Group", "Link", "Dataset"],
                 "ifabsent": "int(1)",
-                "todos": ["logic to check that the corresponding class can only be " "implemented quantity times."],
+                "todos": [
+                    "logic to check that the corresponding class can only be "
+                    "implemented quantity times."
+                ],
             }
         },
     )
     linkable: Optional[bool] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "linkable", "domain_of": ["Group", "Dataset"]}}
+        None,
+        json_schema_extra={"linkml_meta": {"alias": "linkable", "domain_of": ["Group", "Dataset"]}},
     )
     attributes: Optional[List[Attribute]] = Field(
-        None, json_schema_extra={"linkml_meta": {"alias": "attributes", "domain_of": ["Group", "Dataset"]}}
+        None,
+        json_schema_extra={
+            "linkml_meta": {"alias": "attributes", "domain_of": ["Group", "Dataset"]}
+        },
     )
     parent: Optional[Group] = Field(
         None,
         exclude=True,
         description="""The parent group that contains this dataset or group""",
-        json_schema_extra={"linkml_meta": {"alias": "parent", "domain_of": ["Group", "Attribute", "Dataset"]}},
+        json_schema_extra={
+            "linkml_meta": {"alias": "parent", "domain_of": ["Group", "Attribute", "Dataset"]}
+        },
     )
     dtype: Optional[Union[List[CompoundDtype], FlatDtype, ReferenceDtype]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
                 "alias": "dtype",
-                "any_of": [{"range": "FlatDtype"}, {"range": "CompoundDtype"}, {"range": "ReferenceDtype"}],
+                "any_of": [
+                    {"range": "FlatDtype"},
+                    {"range": "CompoundDtype"},
+                    {"range": "ReferenceDtype"},
+                ],
                 "domain_of": ["CompoundDtype", "DtypeMixin"],
             }
         },
