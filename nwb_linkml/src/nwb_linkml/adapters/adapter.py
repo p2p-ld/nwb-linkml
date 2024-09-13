@@ -170,6 +170,10 @@ class Adapter(BaseModel):
                 # so skip to avoid combinatoric walking
                 if key == "imports" and type(input).__name__ == "SchemaAdapter":
                     continue
+                # nwb_schema_language objects have a reference to their parent,
+                # which causes cycles
+                if key == "parent":
+                    continue
                 val = getattr(input, key)
                 yield (key, val)
                 if isinstance(val, (BaseModel, dict, list)):

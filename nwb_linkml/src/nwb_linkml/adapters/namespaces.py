@@ -9,11 +9,12 @@ import contextlib
 from copy import copy
 from pathlib import Path
 from pprint import pformat
-from typing import Dict, List, Optional
+from typing import Dict, Generator, List, Optional
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import Annotation, SchemaDefinition
 from pydantic import Field, model_validator
+import networkx as nx
 
 from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
@@ -30,6 +31,9 @@ class NamespacesAdapter(Adapter):
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
     imported: List["NamespacesAdapter"] = Field(default_factory=list)
+
+    _completed: bool = False
+    """whether we have run the :meth:`.complete_namespace` method"""
 
     @classmethod
     def from_yaml(cls, path: Path) -> "NamespacesAdapter":
@@ -65,7 +69,7 @@ class NamespacesAdapter(Adapter):
                 needed_adapter = NamespacesAdapter.from_yaml(needed_source_ns)
                 ns_adapter.imported.append(needed_adapter)
 
-        ns_adapter.populate_imports()
+        ns_adapter.complete_namespaces()
 
         return ns_adapter
 
@@ -75,6 +79,9 @@ class NamespacesAdapter(Adapter):
         """
         Build the NWB namespace to the LinkML Schema
         """
+
+        if not self._completed:
+            self.complete_namespaces()
 
         sch_result = BuildResult()
         for sch in self.schemas:
@@ -148,6 +155,50 @@ class NamespacesAdapter(Adapter):
                     sch.version = ns.version
                     break
         return self
+
+    def complete_namespaces(self):
+        """
+        After loading the namespace, and after any imports have been added afterwards,
+        this must be called to complete the definitions of the contained schema objects.
+
+        This is not automatic because NWB doesn't have a formal dependency resolution system,
+        so it is often impossible to know which imports are needed until after the namespace
+        adapter has been instantiated.
+
+        It **is** automatically called if it hasn't been already by the :meth:`.build` method.
+        """
+        self.populate_imports()
+        self._roll_down_inheritance()
+
+        for i in self.imported:
+            i.complete_namespaces()
+
+        self._completed = True
+
+    def _roll_down_inheritance(self):
+        """
+        nwb-schema-language inheritance doesn't work like normal python inheritance -
+        instead of inheriting everything at the 'top level' of a class, it also
+        recursively merges all properties from the parent objects.
+
+        References:
+            https://github.com/NeurodataWithoutBorders/pynwb/issues/1954
+        """
+        pass
+
+    def inheritance_graph(self) -> nx.DiGraph:
+        """
+        Make a graph of all ``neurodata_types`` in the namespace and imports such that
+        each node contains the group or dataset it describes,
+        and has directed edges pointing at all the classes that inherit from it.
+
+        In the case that the inheriting class does not itself have a ``neurodata_type_def``,
+        it is
+        """
+        g = nx.DiGraph()
+        for sch in self.all_schemas():
+            for cls in sch.created_classes:
+                pass
 
     def find_type_source(self, name: str) -> SchemaAdapter:
         """
@@ -279,3 +330,13 @@ class NamespacesAdapter(Adapter):
             if name in sources:
                 return ns.name
         return None
+
+    def all_schemas(self) -> Generator[SchemaAdapter, None, None]:
+        """
+        Iterator over all schemas including imports
+        """
+        for sch in self.schemas:
+            yield sch
+        for imported in self.imported:
+            for sch in imported:
+                yield sch

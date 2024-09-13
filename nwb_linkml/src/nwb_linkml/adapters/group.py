@@ -29,7 +29,7 @@ class GroupAdapter(ClassAdapter):
         """
         # Handle container groups with only * quantity unnamed groups
         if (
-            len(self.cls.groups) > 0
+            self.cls.groups
             and not self.cls.links
             and all([self._check_if_container(g) for g in self.cls.groups])
         ):  # and \
@@ -38,8 +38,8 @@ class GroupAdapter(ClassAdapter):
 
         # handle if we are a terminal container group without making a new class
         if (
-            len(self.cls.groups) == 0
-            and len(self.cls.datasets) == 0
+            not self.cls.groups
+            and not self.cls.datasets
             and self.cls.neurodata_type_inc is not None
             and self.parent is not None
         ):
@@ -177,15 +177,17 @@ class GroupAdapter(ClassAdapter):
         # Datasets are simple, they are terminal classes, and all logic
         # for creating slots vs. classes is handled by the adapter class
         dataset_res = BuildResult()
-        for dset in self.cls.datasets:
-            dset_adapter = DatasetAdapter(cls=dset, parent=self)
-            dataset_res += dset_adapter.build()
+        if self.cls.datasets:
+            for dset in self.cls.datasets:
+                dset_adapter = DatasetAdapter(cls=dset, parent=self)
+                dataset_res += dset_adapter.build()
 
         group_res = BuildResult()
 
-        for group in self.cls.groups:
-            group_adapter = GroupAdapter(cls=group, parent=self)
-            group_res += group_adapter.build()
+        if self.cls.groups:
+            for group in self.cls.groups:
+                group_adapter = GroupAdapter(cls=group, parent=self)
+                group_res += group_adapter.build()
 
         res = dataset_res + group_res
 

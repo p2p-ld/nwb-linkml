@@ -22,10 +22,10 @@ try:
     DTypeType = Union[List[CompoundDtype], FlatDtype, ReferenceDtype]
 
 
-except (NameError, RecursionError):
+except (NameError, RecursionError) as e:
     warnings.warn(
         "Error importing pydantic classes, passing because we might be in the process of patching"
-        " them, but it is likely they are broken and you will be unable to use them!",
+        f" them, but it is likely they are broken and you will be unable to use them!\n{e}",
         stacklevel=1,
     )
 

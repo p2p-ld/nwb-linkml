@@ -78,6 +78,7 @@ classes:
       - datasets
       - groups
       - links
+      - parent
 
   Groups:
     slots:
@@ -94,9 +95,14 @@ classes:
       - default_value
       - doc
       - required
+      - parent
     slot_usage:
       name:
         required: true
+      parent:
+        any_of:
+          - range: Group
+          - range: Dataset
 
   Link:
     slots:
@@ -121,6 +127,7 @@ classes:
       - quantity
       - linkable
       - attributes
+      - parent
 
   Datasets:
     slots:
@@ -177,7 +184,7 @@ slots:
     description: Optional string with extended full name for the namespace.
   version:
     required: true
-    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+#    pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
   date:
     range: datetime
     slot_uri: schema:dateModified
@@ -207,7 +214,6 @@ slots:
   # schema
   source:
     description: describes the name of the YAML (or JSON) file with the schema specification. The schema files should be located in the same folder as the namespace file.
-    pattern: ".*\\.(yml|yaml|json)"
   namespace:
     description: describes a named reference to another namespace. In contrast to source, this is a reference by name to a known namespace (i.e., the namespace is resolved during the build and must point to an already existing namespace). This mechanism is used to allow, e.g., extension of a core namespace (here the NWB core namespace) without requiring hard paths to the files describing the core namespace. Either source or namespace must be specified, but not both.
   namespaces:
@@ -312,6 +318,11 @@ slots:
     description: describes the kind of reference
     range: reftype_options
 
+  # extra - not defined in nwb-schema-language but useful when working with class objects
+  parent:
+    description: The parent group that contains this dataset or group
+    range: Group
+    required: false
 
 
 enums:
