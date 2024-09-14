@@ -7,6 +7,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
+from nwb_schema_language.util import pformat
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
 
@@ -23,7 +24,12 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values=True,
         strict=False,
     )
-    pass
+
+    def __repr__(self):
+        return pformat(self.model_dump(exclude={"parent": True}), self.__class__.__name__)
+
+    def __str__(self):
+        return repr(self)
 
 
 class LinkMLMeta(RootModel):
@@ -44,9 +50,10 @@ class LinkMLMeta(RootModel):
 
 
 class ParentizeMixin(BaseModel):
+    """Mixin to populate the parent field for nested datasets and groups"""
 
     @model_validator(mode="after")
-    def parentize(self):
+    def parentize(self) -> BaseModel:
         """Set the parent attribute for all our fields they have one"""
         for field_name in self.model_fields:
             if field_name == "parent":

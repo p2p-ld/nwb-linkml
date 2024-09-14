@@ -136,7 +136,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         """Customize dynamictable behavior"""
         cls = AfterGenerateClass.inject_dynamictable(cls)
         cls = AfterGenerateClass.wrap_dynamictable_columns(cls, sv)
-        cls = AfterGenerateClass.inject_elementidentifiers(cls, sv, self._get_element_import)
+        cls = AfterGenerateClass.inject_dynamictable_imports(cls, sv, self._get_element_import)
         cls = AfterGenerateClass.strip_vector_data_slots(cls, sv)
         return cls
 
@@ -346,19 +346,22 @@ class AfterGenerateClass:
         return cls
 
     @staticmethod
-    def inject_elementidentifiers(
+    def inject_dynamictable_imports(
         cls: ClassResult, sv: SchemaView, import_method: Callable[[str], Import]
     ) -> ClassResult:
         """
-        Inject ElementIdentifiers into module that define dynamictables -
-        needed to handle ID columns
+        Ensure that schema that contain dynamictables have all the imports needed to use them
         """
         if (
             cls.source.is_a == "DynamicTable"
             or "DynamicTable" in sv.class_ancestors(cls.source.name)
         ) and sv.schema.name != "hdmf-common.table":
-            imp = import_method("ElementIdentifiers")
-            cls.imports += [imp]
+            imp = [
+                import_method("ElementIdentifiers"),
+                import_method("VectorData"),
+                import_method("VectorIndex"),
+            ]
+            cls.imports += imp
         return cls
 
     @staticmethod

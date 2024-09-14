@@ -67,7 +67,6 @@ def generate_versions(
     pydantic_path: Path,
     dry_run: bool = False,
     repo: GitRepo = NWB_CORE_REPO,
-    hdmf_only=False,
     pdb=False,
 ):
     """
@@ -253,10 +252,10 @@ def main():
         args.yaml.mkdir(exist_ok=True)
         args.pydantic.mkdir(exist_ok=True)
     if args.latest:
-        generate_core_yaml(args.yaml, args.dry_run, args.hdmf)
+        generate_core_yaml(args.yaml, args.dry_run)
         generate_core_pydantic(args.yaml, args.pydantic, args.dry_run)
     else:
-        generate_versions(args.yaml, args.pydantic, args.dry_run, repo, args.hdmf, pdb=args.pdb)
+        generate_versions(args.yaml, args.pydantic, args.dry_run, repo, pdb=args.pdb)
 
 
 if __name__ == "__main__":

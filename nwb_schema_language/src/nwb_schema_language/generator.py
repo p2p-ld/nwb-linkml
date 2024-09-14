@@ -31,6 +31,22 @@ class ParentizeMixin(BaseModel):
         return self
 
 
+STR_METHOD = """
+    def __repr__(self):
+        return pformat(
+            self.model_dump(
+                exclude={"parent": True}, 
+                exclude_unset=True, 
+                exclude_None=True
+            ), 
+            self.__class__.__name__
+        )
+
+    def __str__(self):
+        return repr(self)
+"""
+
+
 @dataclass
 class NWBSchemaLangGenerator(PydanticGenerator):
     """
@@ -40,8 +56,10 @@ class NWBSchemaLangGenerator(PydanticGenerator):
     def __init__(self, *args, **kwargs):
         kwargs["injected_classes"] = [ParentizeMixin]
         kwargs["imports"] = [
-            Import(module="pydantic", objects=[ObjectImport(name="model_validator")])
+            Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
+            Import(module="nwb_schema_language.util", objects=[ObjectImport(name="pformat")]),
         ]
+        kwargs["injected_fields"] = [STR_METHOD]
         kwargs["black"] = True
         super().__init__(*args, **kwargs)
 
