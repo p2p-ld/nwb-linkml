@@ -178,6 +178,11 @@ class NamespacesAdapter(Adapter):
         nwb-schema-language inheritance doesn't work like normal python inheritance -
         instead of inheriting everything at the 'top level' of a class, it also
         recursively merges all properties from the parent objects.
+        
+        While this operation does not take care to modify classes in a way that respect their order
+        (i.e. roll down ancestor classes first, in order, before the leaf classes),
+        it doesn't matter - this method should be both idempotent and order insensitive
+        for a given source schema.
 
         References:
             https://github.com/NeurodataWithoutBorders/pynwb/issues/1954
@@ -191,11 +196,9 @@ class NamespacesAdapter(Adapter):
             # merge and cast
             new_cls: dict = {}
             for i, parent in enumerate(parents):
-                # if parent.neurodata_type_def == "PatchClampSeries":
-                #     pdb.set_trace()
-                complete = True
-                if i == len(parents) - 1:
-                    complete = False
+                # we want a full roll-down of all the ancestor classes, 
+                # but we make an abbreviated leaf class 
+                complete = False if i == len(parents) - 1 else True
                 new_cls = roll_down_nwb_class(new_cls, parent, complete=complete)
             new_cls: Group | Dataset = type(cls)(**new_cls)
             new_cls.parent = cls.parent
