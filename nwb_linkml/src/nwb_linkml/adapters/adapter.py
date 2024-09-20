@@ -20,6 +20,7 @@ from linkml_runtime.linkml_model import (
 from pydantic import BaseModel, PrivateAttr
 
 from nwb_linkml.logging import init_logger
+from nwb_linkml.maps.dtype import float_types, integer_types, string_types
 from nwb_schema_language import Attribute, CompoundDtype, Dataset, Group, Schema
 
 if sys.version_info.minor >= 11:
@@ -308,5 +309,48 @@ def has_attrs(cls: Dataset) -> bool:
     return (
         cls.attributes is not None
         and len(cls.attributes) > 0
-        and all([not a.value for a in cls.attributes])
+        and any([not a.value for a in cls.attributes])
     )
+
+
+def defaults(cls: Dataset | Attribute) -> dict:
+    """
+    Handle default values -
+
+    * If ``value`` is present, yield `equals_string` or `equals_number` depending on dtype
+      **as well as** an ``ifabsent`` value - we both constrain the possible values to 1
+      and also supply it as the default
+    * else, if ``default_value`` is present, yield an appropriate ``ifabsent`` value
+    * If neither, yield an empty dict
+
+    Unlike nwb_schema_language, when ``value`` is set, we yield both a ``equals_*`` constraint
+    and an ``ifabsent`` constraint, because an ``equals_*`` can be declared without a default
+    in order to validate that a value is correctly set as the constrained value, and fail
+    if a value isn't provided.
+    """
+    ret = {}
+    if cls.value:
+        if cls.dtype in integer_types:
+            ret["equals_number"] = cls.value
+            ret["ifabsent"] = f"integer({cls.value})"
+        elif cls.dtype in float_types:
+            ret["equals_number"] = cls.value
+            ret["ifabsent"] = f"float({cls.value})"
+        elif cls.dtype in string_types:
+            ret["equals_string"] = cls.value
+            ret["ifabsent"] = f"string({cls.value})"
+        else:
+            ret["equals_string"] = cls.value
+            ret["ifabsent"] = cls.value
+
+    elif cls.default_value:
+        if cls.dtype in string_types:
+            ret["ifabsent"] = f"string({cls.default_value})"
+        elif cls.dtype in integer_types:
+            ret["ifabsent"] = f"int({cls.default_value})"
+        elif cls.dtype in float_types:
+            ret["ifabsent"] = f"float({cls.default_value})"
+        else:
+            ret["ifabsent"] = cls.default_value
+
+    return ret

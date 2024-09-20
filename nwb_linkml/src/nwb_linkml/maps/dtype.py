@@ -66,6 +66,26 @@ flat_to_np = {
     "isodatetime": np.datetime64,
 }
 
+integer_types = {
+    "long",
+    "int64",
+    "int",
+    "int32",
+    "int16",
+    "short",
+    "int8",
+    "uint",
+    "uint32",
+    "uint16",
+    "uint8",
+    "uint64",
+}
+
+float_types = {"float", "float32", "double", "float64", "numeric"}
+
+string_types = {"text", "utf", "utf8", "utf_8", "ascii"}
+
+
 np_to_python = {
     Any: Any,
     np.number: float,

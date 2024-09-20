@@ -266,11 +266,7 @@ class NamespacesAdapter(Adapter):
             in_schema = False
             if isinstance(cls, str) and cls in [
                 c.neurodata_type_def for c in schema.created_classes
-            ]:
-                in_schema = True
-            elif isinstance(cls, Dataset) and cls in schema.datasets:
-                in_schema = True
-            elif isinstance(cls, Group) and cls in schema.groups:
+            ] or isinstance(cls, Dataset) and cls in schema.datasets or isinstance(cls, Group) and cls in schema.groups:
                 in_schema = True
 
             if in_schema:
@@ -397,16 +393,16 @@ def roll_down_nwb_class(
     Merge an ancestor (via ``neurodata_type_inc`` ) source class with a
     child ``target`` class.
 
-    On the first recurive pass, only those values that are set on the target are copied from the
+    On the first recursive pass, only those values that are set on the target are copied from the
     source class - this isn't a true merging, what we are after is to recursively merge all the
     values that are modified in the child class with those of the parent class below the top level,
     the top-level attributes will be carried through via normal inheritance.
 
     Rather than re-instantiating the child class, we return the dictionary so that this
     function can be used in series to merge a whole ancestry chain within
-    :class:`.NamespacesAdapter` , but this isn't exposed in the function since
-    class definitions can be spread out over many schemas, and we need the orchestration
-    of the adapter to have them in all cases we'd be using this.
+    :class:`.NamespacesAdapter` , but merging isn't exposed in the function since
+    ancestor class definitions can be spread out over many schemas,
+    and we need the orchestration of the adapter to have them in all cases we'd be using this.
 
     Args:
         source (dict): source dictionary
@@ -420,9 +416,9 @@ def roll_down_nwb_class(
 
     """
     if isinstance(source, (Group, Dataset)):
-        source = source.model_dump(exclude_unset=True, exclude_none=True)
+        source = source.model_dump(exclude_none=True)
     if isinstance(target, (Group, Dataset)):
-        target = target.model_dump(exclude_unset=True, exclude_none=True)
+        target = target.model_dump(exclude_none=True)
 
     exclude = ("neurodata_type_def",)
 
