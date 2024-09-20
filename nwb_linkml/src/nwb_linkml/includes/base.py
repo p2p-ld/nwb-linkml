@@ -16,7 +16,7 @@ BASEMODEL_GETITEM = """
 BASEMODEL_COERCE_VALUE = """
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         \"\"\"Try to rescue instantiation by using the value field\"\"\"
         try:
             return handler(v)
@@ -27,7 +27,29 @@ BASEMODEL_COERCE_VALUE = """
                 try:
                     return handler(v["value"])
                 except (IndexError, KeyError, TypeError):
-                    raise e1
+                    raise ValueError(
+                        f"coerce_value: Could not use the value field of {type(v)} "
+                        f"to construct {cls.__name__}.{info.field_name}, "
+                        f"expected type: {cls.model_fields[info.field_name].annotation}"
+                    ) from e1
+"""
+
+BASEMODEL_CAST_WITH_VALUE = """
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        \"\"\"Try to rescue instantiation by casting into the model's value fiel\"\"\"
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise ValueError(
+                    f"cast_with_value: Could not cast {type(v)} as value field for "
+                    f"{cls.__name__}.{info.field_name},"
+                    f" expected_type: {cls.model_fields[info.field_name].annotation}"
+                ) from e1
 """
 
 BASEMODEL_COERCE_CHILD = """

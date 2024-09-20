@@ -135,8 +135,9 @@ def test_roll_down_inheritance():
     child = child_ns_adapter.get("Child")
     # overrides simple attrs
     assert child.doc == "child"
-    # gets unassigned parent attrs
-    assert "b" in [attr.name for attr in child.attributes]
+    # we don't receive attrs that aren't overridden in the child,
+    # instead we let python/linkml inheritance handle that for us
+    assert "b" not in [attr.name for attr in child.attributes]
     # overrides values while preserving remaining values when set
     attr_a = [attr for attr in child.attributes if attr.name == "a"][0]
     assert attr_a.value == "z"
@@ -146,7 +147,8 @@ def test_roll_down_inheritance():
     # preserve unset values in child datasets
     assert child.datasets[0].dtype == parent_cls.datasets[0].dtype
     assert child.datasets[0].dims == parent_cls.datasets[0].dims
-    # gets undeclared attrs in child datasets
+    # we *do* get undeclared attrs in child datasets,
+    # since those are not handled by python/linkml inheritance
     assert "d" in [attr.name for attr in child.datasets[0].attributes]
     # overrides set values in child datasets while preserving unset
     c_attr = [attr for attr in child.datasets[0].attributes if attr.name == "c"][0]

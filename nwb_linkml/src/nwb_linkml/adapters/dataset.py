@@ -59,9 +59,7 @@ class MapScalar(DatasetMap):
                 slots:
                 - name: MyScalar
                   description: A scalar
-                  multivalued: false
                   range: int32
-                  required: false
 
     """
 

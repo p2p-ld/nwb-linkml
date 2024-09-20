@@ -26,6 +26,7 @@ from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
 from nwb_linkml.includes.base import (
+    BASEMODEL_CAST_WITH_VALUE,
     BASEMODEL_COERCE_CHILD,
     BASEMODEL_COERCE_VALUE,
     BASEMODEL_GETITEM,
@@ -55,6 +56,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
         BASEMODEL_GETITEM,
         BASEMODEL_COERCE_VALUE,
+        BASEMODEL_CAST_WITH_VALUE,
         BASEMODEL_COERCE_CHILD,
     )
     split: bool = True
