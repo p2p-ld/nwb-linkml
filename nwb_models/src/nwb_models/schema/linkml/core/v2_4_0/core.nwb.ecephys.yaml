@@ -39,40 +39,6 @@ classes:
           about the filter properties as possible.
         range: text
         required: false
-      data:
-        name: data
-        description: Recorded voltage data.
-        range: numeric
-        required: true
-        multivalued: false
-        any_of:
-        - array:
-            dimensions:
-            - alias: num_times
-        - array:
-            dimensions:
-            - alias: num_times
-            - alias: num_channels
-        - array:
-            dimensions:
-            - alias: num_times
-            - alias: num_channels
-            - alias: num_samples
-      electrodes:
-        name: electrodes
-        annotations:
-          named:
-            tag: named
-            value: true
-          source_type:
-            tag: source_type
-            value: neurodata_type_inc
-        description: DynamicTableRegion pointer to the electrodes that this time series
-          was generated from.
-        range: DynamicTableRegion
-        required: true
-        multivalued: false
-        inlined: true
       channel_conversion:
         name: channel_conversion
         description: Channel-specific conversion factor. Multiply the data in the
@@ -90,7 +56,100 @@ classes:
         range: float32
         required: false
         multivalued: false
+      data:
+        name: data
+        description: Recorded voltage data.
+        range: ElectricalSeries__data
+        required: true
+        inlined: true
+      electrodes:
+        name: electrodes
+        annotations:
+          named:
+            tag: named
+            value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
+        description: DynamicTableRegion pointer to the electrodes that this time series
+          was generated from.
+        range: DynamicTableRegion
+        required: true
+        inlined: true
     tree_root: true
+  ElectricalSeries__data:
+    name: ElectricalSeries__data
+    description: Recorded voltage data.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. This value
+          is fixed to 'volts'. Actual stored values are not necessarily stored in
+          these units. To access the data in these units, multiply 'data' by 'conversion'
+          and 'channel_conversion' (if present).
+        ifabsent: string(volts)
+        range: text
+        required: true
+        equals_string: volts
+      value:
+        name: value
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_channels
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_channels
+            - alias: num_samples
   SpikeEventSeries:
     name: SpikeEventSeries
     description: 'Stores snapshots/snippets of recorded spike events (i.e., threshold
@@ -111,19 +170,9 @@ classes:
       data:
         name: data
         description: Spike waveforms.
-        range: numeric
+        range: SpikeEventSeries__data
         required: true
-        multivalued: false
-        any_of:
-        - array:
-            dimensions:
-            - alias: num_events
-            - alias: num_samples
-        - array:
-            dimensions:
-            - alias: num_events
-            - alias: num_channels
-            - alias: num_samples
+        inlined: true
       timestamps:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
@@ -137,6 +186,73 @@ classes:
         required: true
         multivalued: false
     tree_root: true
+  SpikeEventSeries__data:
+    name: SpikeEventSeries__data
+    description: Spike waveforms.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Unit of measurement for waveforms, which is fixed to 'volts'.
+        ifabsent: string(volts)
+        range: text
+        required: true
+        equals_string: volts
+      value:
+        name: value
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_events
+            - alias: num_samples
+        - array:
+            dimensions:
+            - alias: num_events
+            - alias: num_channels
+            - alias: num_samples
   FeatureExtraction:
     name: FeatureExtraction
     description: Features, such as PC1 and PC2, that are extracted from signals stored
@@ -192,7 +308,6 @@ classes:
           was generated from.
         range: DynamicTableRegion
         required: true
-        multivalued: false
         inlined: true
     tree_root: true
   EventDetection:
@@ -212,7 +327,6 @@ classes:
           or dV/dT threshold, as well as relevant values.
         range: text
         required: true
-        multivalued: false
       source_idx:
         name: source_idx
         description: Indices (zero-based) into source ElectricalSeries::data array
@@ -241,7 +355,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: ElectricalSeries
@@ -323,8 +436,6 @@ classes:
         name: position
         description: stereotaxic or common framework coordinates
         range: ElectrodeGroup__position
-        required: false
-        multivalued: false
         inlined: true
       device:
         name: device
@@ -333,7 +444,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: Device
@@ -356,24 +466,18 @@ classes:
         array:
           exact_number_dimensions: 1
         range: float32
-        required: false
-        multivalued: false
       y:
         name: y
         description: y coordinate
         array:
           exact_number_dimensions: 1
         range: float32
-        required: false
-        multivalued: false
       z:
         name: z
         description: z coordinate
         array:
           exact_number_dimensions: 1
         range: float32
-        required: false
-        multivalued: false
   ClusterWaveforms:
     name: ClusterWaveforms
     description: DEPRECATED The mean waveform shape, including standard deviation,
@@ -395,7 +499,6 @@ classes:
         description: Filtering applied to data before generating mean/sd
         range: text
         required: true
-        multivalued: false
       waveform_mean:
         name: waveform_mean
         description: The mean waveform for each cluster, using the same indices for
@@ -427,7 +530,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: Clustering
@@ -451,7 +553,6 @@ classes:
           clusters curated using Klusters, etc)
         range: text
         required: true
-        multivalued: false
       num:
         name: num
         description: Cluster number of each event

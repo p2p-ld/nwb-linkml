@@ -63,8 +63,6 @@ classes:
             value: neurodata_type_inc
         description: Index for tags.
         range: VectorIndex
-        required: false
-        multivalued: false
         inlined: true
       timeseries:
         name: timeseries
@@ -77,8 +75,6 @@ classes:
             value: neurodata_type_inc
         description: An index into a TimeSeries object.
         range: TimeSeriesReferenceVectorData
-        required: false
-        multivalued: false
         inlined: true
       timeseries_index:
         name: timeseries_index
@@ -91,7 +87,5 @@ classes:
             value: neurodata_type_inc
         description: Index for timeseries.
         range: VectorIndex
-        required: false
-        multivalued: false
         inlined: true
     tree_root: true

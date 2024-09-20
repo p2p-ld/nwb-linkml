@@ -60,7 +60,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: ImagingPlane
@@ -80,17 +79,9 @@ classes:
       data:
         name: data
         description: Signals from ROIs.
-        range: numeric
+        range: RoiResponseSeries__data
         required: true
-        multivalued: false
-        any_of:
-        - array:
-            dimensions:
-            - alias: num_times
-        - array:
-            dimensions:
-            - alias: num_times
-            - alias: num_rois
+        inlined: true
       rois:
         name: rois
         annotations:
@@ -104,9 +95,73 @@ classes:
           on the ROIs stored in this timeseries.
         range: DynamicTableRegion
         required: true
-        multivalued: false
         inlined: true
     tree_root: true
+  RoiResponseSeries__data:
+    name: RoiResponseSeries__data
+    description: Signals from ROIs.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+        required: true
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      value:
+        name: value
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: num_times
+        - array:
+            dimensions:
+            - alias: num_times
+            - alias: num_rois
   DfOverF:
     name: DfOverF
     description: dF/F information about a region of interest (ROI). Storage hierarchy
@@ -182,6 +237,13 @@ classes:
             - alias: num_x
             - alias: num_y
             - alias: num_z
+      pixel_mask:
+        name: pixel_mask
+        description: 'Pixel masks for each ROI: a list of indices and weights for
+          the ROI. Pixel masks are concatenated and parsing of this dataset is maintained
+          by the PlaneSegmentation'
+        range: PlaneSegmentation__pixel_mask
+        inlined: true
       pixel_mask_index:
         name: pixel_mask_index
         annotations:
@@ -193,17 +255,13 @@ classes:
             value: neurodata_type_inc
         description: Index into pixel_mask.
         range: VectorIndex
-        required: false
-        multivalued: false
         inlined: true
-      pixel_mask:
-        name: pixel_mask
-        description: 'Pixel masks for each ROI: a list of indices and weights for
-          the ROI. Pixel masks are concatenated and parsing of this dataset is maintained
+      voxel_mask:
+        name: voxel_mask
+        description: 'Voxel masks for each ROI: a list of indices and weights for
+          the ROI. Voxel masks are concatenated and parsing of this dataset is maintained
           by the PlaneSegmentation'
-        range: PlaneSegmentation__pixel_mask
-        required: false
-        multivalued: false
+        range: PlaneSegmentation__voxel_mask
         inlined: true
       voxel_mask_index:
         name: voxel_mask_index
@@ -216,17 +274,6 @@ classes:
             value: neurodata_type_inc
         description: Index into voxel_mask.
         range: VectorIndex
-        required: false
-        multivalued: false
-        inlined: true
-      voxel_mask:
-        name: voxel_mask
-        description: 'Voxel masks for each ROI: a list of indices and weights for
-          the ROI. Voxel masks are concatenated and parsing of this dataset is maintained
-          by the PlaneSegmentation'
-        range: PlaneSegmentation__voxel_mask
-        required: false
-        multivalued: false
         inlined: true
       reference_images:
         name: reference_images
@@ -243,7 +290,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: ImagingPlane
@@ -269,24 +315,18 @@ classes:
         array:
           exact_number_dimensions: 1
         range: uint32
-        required: false
-        multivalued: false
       y:
         name: y
         description: Pixel y-coordinate.
         array:
           exact_number_dimensions: 1
         range: uint32
-        required: false
-        multivalued: false
       weight:
         name: weight
         description: Weight of the pixel.
         array:
           exact_number_dimensions: 1
         range: float32
-        required: false
-        multivalued: false
   PlaneSegmentation__voxel_mask:
     name: PlaneSegmentation__voxel_mask
     description: 'Voxel masks for each ROI: a list of indices and weights for the
@@ -307,32 +347,24 @@ classes:
         array:
           exact_number_dimensions: 1
         range: uint32
-        required: false
-        multivalued: false
       y:
         name: y
         description: Voxel y-coordinate.
         array:
           exact_number_dimensions: 1
         range: uint32
-        required: false
-        multivalued: false
       z:
         name: z
         description: Voxel z-coordinate.
         array:
           exact_number_dimensions: 1
         range: uint32
-        required: false
-        multivalued: false
       weight:
         name: weight
         description: Weight of the voxel.
         array:
           exact_number_dimensions: 1
         range: float32
-        required: false
-        multivalued: false
   ImagingPlane:
     name: ImagingPlane
     description: An imaging plane and its metadata.
@@ -347,27 +379,21 @@ classes:
         name: description
         description: Description of the imaging plane.
         range: text
-        required: false
-        multivalued: false
       excitation_lambda:
         name: excitation_lambda
         description: Excitation wavelength, in nm.
         range: float32
         required: true
-        multivalued: false
       imaging_rate:
         name: imaging_rate
         description: Rate that images are acquired, in Hz. If the corresponding TimeSeries
           is present, the rate should be stored there instead.
         range: float32
-        required: false
-        multivalued: false
       indicator:
         name: indicator
         description: Calcium indicator.
         range: text
         required: true
-        multivalued: false
       location:
         name: location
         description: Location of the imaging plane. Specify the area, layer, comments
@@ -375,15 +401,12 @@ classes:
           standard atlas names for anatomical regions when possible.
         range: text
         required: true
-        multivalued: false
       manifold:
         name: manifold
         description: DEPRECATED Physical position of each pixel. 'xyz' represents
           the position of the pixel relative to the defined coordinate space. Deprecated
           in favor of origin_coords and grid_spacing.
         range: ImagingPlane__manifold
-        required: false
-        multivalued: false
         inlined: true
       origin_coords:
         name: origin_coords
@@ -391,8 +414,6 @@ classes:
           0) for 2-D data or (0, 0, 0) for 3-D data. See also reference_frame for
           what the physical location is relative to (e.g., bregma).
         range: ImagingPlane__origin_coords
-        required: false
-        multivalued: false
         inlined: true
       grid_spacing:
         name: grid_spacing
@@ -400,8 +421,6 @@ classes:
           in the specified unit. Assumes imaging plane is a regular grid. See also
           reference_frame to interpret the grid.
         range: ImagingPlane__grid_spacing
-        required: false
-        multivalued: false
         inlined: true
       reference_frame:
         name: reference_frame
@@ -423,8 +442,6 @@ classes:
           axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral
           axis (larger index = more ventral)."
         range: text
-        required: false
-        multivalued: false
       optical_channel:
         name: optical_channel
         description: An optical channel used to record from an imaging plane.
@@ -440,7 +457,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: Device
@@ -573,13 +589,11 @@ classes:
         description: Description or other notes about the channel.
         range: text
         required: true
-        multivalued: false
       emission_lambda:
         name: emission_lambda
         description: Emission wavelength for channel, in nm.
         range: float32
         required: true
-        multivalued: false
     tree_root: true
   MotionCorrection:
     name: MotionCorrection
@@ -610,7 +624,6 @@ classes:
         description: Image stack with frames shifted to the common coordinates.
         range: ImageSeries
         required: true
-        multivalued: false
         inlined: true
         inlined_as_list: false
       xy_translation:
@@ -619,7 +632,6 @@ classes:
           coordinates, for example, to align each frame to a reference image.
         range: TimeSeries
         required: true
-        multivalued: false
         inlined: true
         inlined_as_list: false
       original:
@@ -629,7 +641,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: ImageSeries

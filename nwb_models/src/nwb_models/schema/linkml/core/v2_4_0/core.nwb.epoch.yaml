@@ -63,15 +63,11 @@ classes:
             value: neurodata_type_inc
         description: Index for tags.
         range: VectorIndex
-        required: false
-        multivalued: false
         inlined: true
       timeseries:
         name: timeseries
         description: An index into a TimeSeries object.
         range: TimeIntervals__timeseries
-        required: false
-        multivalued: false
         inlined: true
       timeseries_index:
         name: timeseries_index
@@ -84,8 +80,6 @@ classes:
             value: neurodata_type_inc
         description: Index for timeseries.
         range: VectorIndex
-        required: false
-        multivalued: false
         inlined: true
     tree_root: true
   TimeIntervals__timeseries:
@@ -108,8 +102,6 @@ classes:
         array:
           exact_number_dimensions: 1
         range: int32
-        required: false
-        multivalued: false
       count:
         name: count
         description: Number of data samples available in this time series, during
@@ -117,14 +109,10 @@ classes:
         array:
           exact_number_dimensions: 1
         range: int32
-        required: false
-        multivalued: false
       timeseries:
         name: timeseries
         description: the TimeSeries that this index applies to.
         array:
           exact_number_dimensions: 1
         range: TimeSeries
-        required: false
-        multivalued: false
         inlined: true

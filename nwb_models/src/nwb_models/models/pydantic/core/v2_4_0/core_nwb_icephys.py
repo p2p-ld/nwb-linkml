@@ -45,7 +45,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -227,6 +227,20 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: str = Field(
         ...,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
@@ -246,12 +260,12 @@ class CurrentClampSeries(PatchClampSeries):
     )
 
     name: str = Field(...)
-    data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
     bias_current: Optional[float] = Field(None, description="""Bias current, in amps.""")
     bridge_balance: Optional[float] = Field(None, description="""Bridge balance, in ohms.""")
     capacitance_compensation: Optional[float] = Field(
         None, description="""Capacitance compensation, in farads."""
     )
+    data: CurrentClampSeriesData = Field(..., description="""Recorded voltage.""")
     stimulus_description: str = Field(
         ..., description="""Protocol/stimulus name for this patch-clamp dataset."""
     )
@@ -319,12 +333,28 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: Literal["volts"] = Field(
         "volts",
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
         json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
-    value: Any = Field(...)
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
+    )
 
 
 class IZeroClampSeries(CurrentClampSeries):
@@ -479,6 +509,20 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: Literal["amperes"] = Field(
         "amperes",
         description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
@@ -486,7 +530,9 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
         },
     )
-    value: Any = Field(...)
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
+    )
 
 
 class VoltageClampSeries(PatchClampSeries):
@@ -499,13 +545,13 @@ class VoltageClampSeries(PatchClampSeries):
     )
 
     name: str = Field(...)
-    data: VoltageClampSeriesData = Field(..., description="""Recorded current.""")
     capacitance_fast: Optional[VoltageClampSeriesCapacitanceFast] = Field(
         None, description="""Fast capacitance, in farads."""
     )
     capacitance_slow: Optional[VoltageClampSeriesCapacitanceSlow] = Field(
         None, description="""Slow capacitance, in farads."""
     )
+    data: VoltageClampSeriesData = Field(..., description="""Recorded current.""")
     resistance_comp_bandwidth: Optional[VoltageClampSeriesResistanceCompBandwidth] = Field(
         None, description="""Resistance compensation bandwidth, in hertz."""
     )
@@ -577,27 +623,6 @@ class VoltageClampSeries(PatchClampSeries):
     )
 
 
-class VoltageClampSeriesData(ConfiguredBaseModel):
-    """
-    Recorded current.
-    """
-
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
-
-    name: Literal["data"] = Field(
-        "data",
-        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
-    )
-    unit: Literal["amperes"] = Field(
-        "amperes",
-        description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
-        json_schema_extra={
-            "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
-        },
-    )
-    value: Any = Field(...)
-
-
 class VoltageClampSeriesCapacitanceFast(ConfiguredBaseModel):
     """
     Fast capacitance, in farads.
@@ -648,6 +673,43 @@ class VoltageClampSeriesCapacitanceSlow(ConfiguredBaseModel):
         },
     )
     value: float = Field(...)
+
+
+class VoltageClampSeriesData(ConfiguredBaseModel):
+    """
+    Recorded current.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.icephys"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: Literal["amperes"] = Field(
+        "amperes",
+        description="""Base unit of measurement for working with the data. which is fixed to 'amperes'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
+        },
+    )
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
+    )
 
 
 class VoltageClampSeriesResistanceCompBandwidth(ConfiguredBaseModel):
@@ -854,12 +916,28 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: Literal["volts"] = Field(
         "volts",
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
         json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
-    value: Any = Field(...)
+    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
+    )
 
 
 class IntracellularElectrode(NWBContainer):
@@ -909,15 +987,6 @@ class SweepTable(DynamicTable):
     )
 
     name: str = Field(...)
-    sweep_number: VectorData[NDArray[Any, int]] = Field(
-        ...,
-        description="""Sweep number of the PatchClampSeries in that row.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
-            }
-        },
-    )
     series: VectorData[NDArray[Any, PatchClampSeries]] = Field(
         ...,
         description="""The PatchClampSeries with the sweep number in that row.""",
@@ -936,6 +1005,15 @@ class SweepTable(DynamicTable):
                     "named": {"tag": "named", "value": True},
                     "source_type": {"tag": "source_type", "value": "neurodata_type_inc"},
                 }
+            }
+        },
+    )
+    sweep_number: VectorData[NDArray[Any, int]] = Field(
+        ...,
+        description="""Sweep number of the PatchClampSeries in that row.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
             }
         },
     )
@@ -1120,11 +1198,11 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     electrodes: IntracellularElectrodesTable = Field(
         ..., description="""Table for storing intracellular electrode related metadata."""
     )
-    stimuli: IntracellularStimuliTable = Field(
-        ..., description="""Table for storing intracellular stimulus related metadata."""
-    )
     responses: IntracellularResponsesTable = Field(
         ..., description="""Table for storing intracellular response related metadata."""
+    )
+    stimuli: IntracellularStimuliTable = Field(
+        ..., description="""Table for storing intracellular stimulus related metadata."""
     )
     value: Optional[Dict[str, DynamicTable]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "DynamicTable"}]}}
@@ -1465,9 +1543,9 @@ IZeroClampSeries.model_rebuild()
 CurrentClampStimulusSeries.model_rebuild()
 CurrentClampStimulusSeriesData.model_rebuild()
 VoltageClampSeries.model_rebuild()
-VoltageClampSeriesData.model_rebuild()
 VoltageClampSeriesCapacitanceFast.model_rebuild()
 VoltageClampSeriesCapacitanceSlow.model_rebuild()
+VoltageClampSeriesData.model_rebuild()
 VoltageClampSeriesResistanceCompBandwidth.model_rebuild()
 VoltageClampSeriesResistanceCompCorrection.model_rebuild()
 VoltageClampSeriesResistanceCompPrediction.model_rebuild()

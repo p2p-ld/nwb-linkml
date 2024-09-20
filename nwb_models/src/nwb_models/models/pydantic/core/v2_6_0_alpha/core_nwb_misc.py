@@ -38,7 +38,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -213,6 +213,24 @@ class AbstractFeatureSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: Optional[str] = Field(
         "see ",
         description="""Since there can be different units for different features, store the units in 'feature_units'. The default value for this attribute is \"see 'feature_units'\".""",
@@ -236,10 +254,8 @@ class AnnotationSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], str] = Field(
-        ...,
-        description="""Annotations made during an experiment.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
+    data: AnnotationSeriesData = Field(
+        ..., description="""Annotations made during an experiment."""
     )
     description: Optional[str] = Field(
         "no description",
@@ -275,6 +291,47 @@ class AnnotationSeries(TimeSeries):
     sync: Optional[TimeSeriesSync] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
+    )
+
+
+class AnnotationSeriesData(ConfiguredBaseModel):
+    """
+    Annotations made during an experiment.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: float = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data. Annotations have no units, so the value is fixed to -1.0.""",
+        le=-1,
+        ge=-1,
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: Literal["n/a"] = Field(
+        "n/a",
+        description="""Base unit of measurement for working with the data. Annotations have no units, so the value is fixed to 'n/a'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "n/a", "ifabsent": "string(n/a)"}},
+    )
+    value: Optional[NDArray[Shape["* num_times"], str]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
 
@@ -288,10 +345,8 @@ class IntervalSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], int] = Field(
-        ...,
-        description="""Use values >0 if interval started, <0 if interval ended.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
+    data: IntervalSeriesData = Field(
+        ..., description="""Use values >0 if interval started, <0 if interval ended."""
     )
     description: Optional[str] = Field(
         "no description",
@@ -327,6 +382,47 @@ class IntervalSeries(TimeSeries):
     sync: Optional[TimeSeriesSync] = Field(
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
+    )
+
+
+class IntervalSeriesData(ConfiguredBaseModel):
+    """
+    Use values >0 if interval started, <0 if interval ended.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: float = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data. Annotations have no units, so the value is fixed to -1.0.""",
+        le=-1,
+        ge=-1,
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: Literal["n/a"] = Field(
+        "n/a",
+        description="""Base unit of measurement for working with the data. Annotations have no units, so the value is fixed to 'n/a'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "n/a", "ifabsent": "string(n/a)"}},
+    )
+    value: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
 
@@ -417,6 +513,24 @@ class DecompositionSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: str = Field(
         "no unit",
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
@@ -504,9 +618,18 @@ class Units(DynamicTable):
     )
 
     name: str = Field("Units", json_schema_extra={"linkml_meta": {"ifabsent": "string(Units)"}})
-    spike_times_index: Optional[Named[VectorIndex]] = Field(
+    electrode_group: Optional[VectorData[NDArray[Any, ElectrodeGroup]]] = Field(
         None,
-        description="""Index into the spike_times dataset.""",
+        description="""Electrode group that each spike unit came from.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
+        },
+    )
+    electrodes: Optional[Named[DynamicTableRegion]] = Field(
+        None,
+        description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
         json_schema_extra={
             "linkml_meta": {
                 "annotations": {
@@ -516,12 +639,9 @@ class Units(DynamicTable):
             }
         },
     )
-    spike_times: Optional[UnitsSpikeTimes] = Field(
-        None, description="""Spike times for each unit in seconds."""
-    )
-    obs_intervals_index: Optional[Named[VectorIndex]] = Field(
+    electrodes_index: Optional[Named[VectorIndex]] = Field(
         None,
-        description="""Index into the obs_intervals dataset.""",
+        description="""Index into electrodes.""",
         json_schema_extra={
             "linkml_meta": {
                 "annotations": {
@@ -547,9 +667,9 @@ class Units(DynamicTable):
             },
         )
     )
-    electrodes_index: Optional[Named[VectorIndex]] = Field(
+    obs_intervals_index: Optional[Named[VectorIndex]] = Field(
         None,
-        description="""Index into electrodes.""",
+        description="""Index into the obs_intervals dataset.""",
         json_schema_extra={
             "linkml_meta": {
                 "annotations": {
@@ -559,9 +679,12 @@ class Units(DynamicTable):
             }
         },
     )
-    electrodes: Optional[Named[DynamicTableRegion]] = Field(
+    spike_times: Optional[UnitsSpikeTimes] = Field(
+        None, description="""Spike times for each unit in seconds."""
+    )
+    spike_times_index: Optional[Named[VectorIndex]] = Field(
         None,
-        description="""Electrode that each spike unit came from, specified using a DynamicTableRegion.""",
+        description="""Index into the spike_times dataset.""",
         json_schema_extra={
             "linkml_meta": {
                 "annotations": {
@@ -571,41 +694,15 @@ class Units(DynamicTable):
             }
         },
     )
-    electrode_group: Optional[VectorData[NDArray[Any, ElectrodeGroup]]] = Field(
-        None,
-        description="""Electrode group that each spike unit came from.""",
-        json_schema_extra={
-            "linkml_meta": {
-                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
-            }
-        },
+    waveform_mean: Optional[UnitsWaveformMean] = Field(
+        None, description="""Spike waveform mean for each spike unit."""
     )
-    waveform_mean: Optional[
-        VectorData[
-            Union[
-                NDArray[Shape["* num_units, * num_samples"], float],
-                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
-            ]
-        ]
-    ] = Field(None, description="""Spike waveform mean for each spike unit.""")
-    waveform_sd: Optional[
-        VectorData[
-            Union[
-                NDArray[Shape["* num_units, * num_samples"], float],
-                NDArray[Shape["* num_units, * num_samples, * num_electrodes"], float],
-            ]
-        ]
-    ] = Field(None, description="""Spike waveform standard deviation for each spike unit.""")
-    waveforms: Optional[VectorData[NDArray[Shape["* num_waveforms, * num_samples"], float]]] = (
-        Field(
-            None,
-            description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
-            json_schema_extra={
-                "linkml_meta": {
-                    "array": {"dimensions": [{"alias": "num_waveforms"}, {"alias": "num_samples"}]}
-                }
-            },
-        )
+    waveform_sd: Optional[UnitsWaveformSd] = Field(
+        None, description="""Spike waveform standard deviation for each spike unit."""
+    )
+    waveforms: Optional[UnitsWaveforms] = Field(
+        None,
+        description="""Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.""",
     )
     waveforms_index: Optional[Named[VectorIndex]] = Field(
         None,
@@ -671,14 +768,109 @@ class UnitsSpikeTimes(VectorData):
     ] = Field(None)
 
 
+class UnitsWaveformMean(VectorData):
+    """
+    Spike waveform mean for each spike unit.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
+
+    name: Literal["waveform_mean"] = Field(
+        "waveform_mean",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "waveform_mean", "ifabsent": "string(waveform_mean)"}
+        },
+    )
+    sampling_rate: Optional[float] = Field(None, description="""Sampling rate, in hertz.""")
+    unit: Optional[Literal["volts"]] = Field(
+        "volts",
+        description="""Unit of measurement. This value is fixed to 'volts'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
+    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
+    value: Optional[
+        Union[
+            NDArray[Shape["* dim0"], Any],
+            NDArray[Shape["* dim0, * dim1"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
+        ]
+    ] = Field(None)
+
+
+class UnitsWaveformSd(VectorData):
+    """
+    Spike waveform standard deviation for each spike unit.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
+
+    name: Literal["waveform_sd"] = Field(
+        "waveform_sd",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "waveform_sd", "ifabsent": "string(waveform_sd)"}
+        },
+    )
+    sampling_rate: Optional[float] = Field(None, description="""Sampling rate, in hertz.""")
+    unit: Optional[Literal["volts"]] = Field(
+        "volts",
+        description="""Unit of measurement. This value is fixed to 'volts'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
+    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
+    value: Optional[
+        Union[
+            NDArray[Shape["* dim0"], Any],
+            NDArray[Shape["* dim0, * dim1"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
+        ]
+    ] = Field(None)
+
+
+class UnitsWaveforms(VectorData):
+    """
+    Individual waveforms for each spike on each electrode. This is a doubly indexed column. The 'waveforms_index' column indexes which waveforms in this column belong to the same spike event for a given unit, where each waveform was recorded from a different electrode. The 'waveforms_index_index' column indexes the 'waveforms_index' column to indicate which spike events belong to a given unit. For example, if the 'waveforms_index_index' column has values [2, 5, 6], then the first 2 elements of the 'waveforms_index' column correspond to the 2 spike events of the first unit, the next 3 elements of the 'waveforms_index' column correspond to the 3 spike events of the second unit, and the next 1 element of the 'waveforms_index' column corresponds to the 1 spike event of the third unit. If the 'waveforms_index' column has values [3, 6, 8, 10, 12, 13], then the first 3 elements of the 'waveforms' column contain the 3 spike waveforms that were recorded from 3 different electrodes for the first spike time of the first unit. See https://nwb-schema.readthedocs.io/en/stable/format_description.html#doubly-ragged-arrays for a graphical representation of this example. When there is only one electrode for each unit (i.e., each spike time is associated with a single waveform), then the 'waveforms_index' column will have values 1, 2, ..., N, where N is the number of spike events. The number of electrodes for each spike event should be the same within a given unit. The 'electrodes' column should be used to indicate which electrodes are associated with each unit, and the order of the waveforms within a given unit x spike event should be in the same order as the electrodes referenced in the 'electrodes' column of this table. The number of samples for each waveform must be the same.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.misc"})
+
+    name: Literal["waveforms"] = Field(
+        "waveforms",
+        json_schema_extra={
+            "linkml_meta": {"equals_string": "waveforms", "ifabsent": "string(waveforms)"}
+        },
+    )
+    sampling_rate: Optional[float] = Field(None, description="""Sampling rate, in hertz.""")
+    unit: Optional[Literal["volts"]] = Field(
+        "volts",
+        description="""Unit of measurement. This value is fixed to 'volts'.""",
+        json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
+    )
+    description: str = Field(..., description="""Description of what these vectors represent.""")
+    value: Optional[
+        Union[
+            NDArray[Shape["* dim0"], Any],
+            NDArray[Shape["* dim0, * dim1"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
+            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
+        ]
+    ] = Field(None)
+
+
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 AbstractFeatureSeries.model_rebuild()
 AbstractFeatureSeriesData.model_rebuild()
 AnnotationSeries.model_rebuild()
+AnnotationSeriesData.model_rebuild()
 IntervalSeries.model_rebuild()
+IntervalSeriesData.model_rebuild()
 DecompositionSeries.model_rebuild()
 DecompositionSeriesData.model_rebuild()
 DecompositionSeriesBands.model_rebuild()
 Units.model_rebuild()
 UnitsSpikeTimes.model_rebuild()
+UnitsWaveformMean.model_rebuild()
+UnitsWaveformSd.model_rebuild()
+UnitsWaveforms.model_rebuild()

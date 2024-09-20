@@ -928,11 +928,11 @@ class DynamicTableRegion(DynamicTableRegionMixin, VectorData, ConfiguredBaseMode
     )
 
     name: str = Field(...)
-    table: DynamicTable = Field(
-        ..., description="""Reference to the DynamicTable object that this region applies to."""
-    )
     description: str = Field(
         ..., description="""Description of what this table region points to."""
+    )
+    table: DynamicTable = Field(
+        ..., description="""Reference to the DynamicTable object that this region applies to."""
     )
     value: Optional[
         Union[

@@ -34,7 +34,12 @@ from ...core.v2_7_0.core_nwb_icephys import (
 from ...core.v2_7_0.core_nwb_misc import Units
 from ...core.v2_7_0.core_nwb_ogen import OptogeneticStimulusSite
 from ...core.v2_7_0.core_nwb_ophys import ImagingPlane
-from ...hdmf_common.v1_8_0.hdmf_common_table import DynamicTable, ElementIdentifiers, VectorData
+from ...hdmf_common.v1_8_0.hdmf_common_table import (
+    DynamicTable,
+    ElementIdentifiers,
+    VectorData,
+    VectorIndex,
+)
 
 
 metamodel_version = "None"
@@ -45,7 +50,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,

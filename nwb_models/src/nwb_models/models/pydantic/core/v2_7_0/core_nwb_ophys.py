@@ -27,7 +27,7 @@ from ...core.v2_7_0.core_nwb_base import (
     TimeSeriesSync,
 )
 from ...core.v2_7_0.core_nwb_device import Device
-from ...core.v2_7_0.core_nwb_image import ImageSeries, ImageSeriesExternalFile
+from ...core.v2_7_0.core_nwb_image import ImageSeries, ImageSeriesData, ImageSeriesExternalFile
 from ...hdmf_common.v1_8_0.hdmf_common_table import (
     DynamicTable,
     DynamicTableRegion,
@@ -45,7 +45,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -160,20 +160,20 @@ class OnePhotonSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
-    scan_line_rate: Optional[float] = Field(
-        None,
-        description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
+    binning: Optional[int] = Field(
+        None, description="""Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc."""
     )
     exposure_time: Optional[float] = Field(
         None, description="""Exposure time of the sample; often the inverse of the frequency."""
     )
-    binning: Optional[int] = Field(
-        None, description="""Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc."""
-    )
-    power: Optional[float] = Field(None, description="""Power of the excitation in mW, if known.""")
     intensity: Optional[float] = Field(
         None, description="""Intensity of the excitation in mW/mm^2, if known."""
+    )
+    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
+    power: Optional[float] = Field(None, description="""Power of the excitation in mW, if known.""")
+    scan_line_rate: Optional[float] = Field(
+        None,
+        description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     imaging_plane: Union[ImagingPlane, str] = Field(
         ...,
@@ -184,9 +184,7 @@ class OnePhotonSeries(ImageSeries):
             }
         },
     )
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
-    ] = Field(
+    data: ImageSeriesData = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
@@ -200,8 +198,9 @@ class OnePhotonSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -278,9 +277,7 @@ class TwoPhotonSeries(ImageSeries):
             }
         },
     )
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
-    ] = Field(
+    data: ImageSeriesData = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
@@ -294,8 +291,9 @@ class TwoPhotonSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -353,9 +351,7 @@ class RoiResponseSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: Union[
-        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
-    ] = Field(..., description="""Signals from ROIs.""")
+    data: RoiResponseSeriesData = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
@@ -403,6 +399,46 @@ class RoiResponseSeries(TimeSeries):
         None,
         description="""Lab-specific time and sync information as provided directly from hardware devices and that is necessary for aligning all acquired time information to a common timebase. The timestamp array stores time in the common timebase. This group will usually only be populated in TimeSeries that are stored external to the NWB file, in files storing raw data. Once timestamp data is calculated, the contents of 'sync' are mostly for archival purposes.""",
     )
+
+
+class RoiResponseSeriesData(ConfiguredBaseModel):
+    """
+    Signals from ROIs.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: str = Field(
+        ...,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
+        ]
+    ] = Field(None)
 
 
 class DfOverF(NWBDataInterface):
@@ -471,6 +507,10 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.""",
     )
+    pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
+        None,
+        description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
+    )
     pixel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into pixel_mask.""",
@@ -483,9 +523,9 @@ class PlaneSegmentation(DynamicTable):
             }
         },
     )
-    pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
+    voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
         None,
-        description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
+        description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
     voxel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
@@ -498,10 +538,6 @@ class PlaneSegmentation(DynamicTable):
                 }
             }
         },
-    )
-    voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
-        None,
-        description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
     reference_images: Optional[Dict[str, ImageSeries]] = Field(
         None,
@@ -802,6 +838,7 @@ class CorrectedImageStack(NWBDataInterface):
 OnePhotonSeries.model_rebuild()
 TwoPhotonSeries.model_rebuild()
 RoiResponseSeries.model_rebuild()
+RoiResponseSeriesData.model_rebuild()
 DfOverF.model_rebuild()
 Fluorescence.model_rebuild()
 ImageSegmentation.model_rebuild()

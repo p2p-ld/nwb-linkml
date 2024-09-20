@@ -116,6 +116,11 @@ classes:
         identifier: true
         range: string
         required: true
+      description:
+        name: description
+        description: Description of what this table region points to.
+        range: text
+        required: true
       table:
         name: table
         description: Reference to the DynamicTable object that this region applies
@@ -123,11 +128,6 @@ classes:
         range: DynamicTable
         required: true
         inlined: true
-      description:
-        name: description
-        description: Description of what this table region points to.
-        range: text
-        required: true
     tree_root: true
   DynamicTable:
     name: DynamicTable
@@ -177,13 +177,6 @@ classes:
         range: int
         required: true
         multivalued: false
-      vector_data:
-        name: vector_data
-        description: Vector columns, including index columns, of this dynamic table.
-        range: VectorData
-        required: false
-        multivalued: true
-        inlined: true
     tree_root: true
   AlignedDynamicTable:
     name: AlignedDynamicTable

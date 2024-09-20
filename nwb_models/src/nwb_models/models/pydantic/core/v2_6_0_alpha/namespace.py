@@ -40,6 +40,7 @@ from ...core.v2_6_0_alpha.core_nwb_ecephys import (
     ClusterWaveforms,
     Clustering,
     ElectricalSeries,
+    ElectricalSeriesData,
     ElectrodeGroup,
     ElectrodeGroupPosition,
     EventDetection,
@@ -48,6 +49,7 @@ from ...core.v2_6_0_alpha.core_nwb_ecephys import (
     FilteredEphys,
     LFP,
     SpikeEventSeries,
+    SpikeEventSeriesData,
 )
 from ...core.v2_6_0_alpha.core_nwb_epoch import TimeIntervals
 from ...core.v2_6_0_alpha.core_nwb_file import (
@@ -102,9 +104,12 @@ from ...core.v2_6_0_alpha.core_nwb_image import (
     GrayscaleImage,
     ImageMaskSeries,
     ImageSeries,
+    ImageSeriesData,
     ImageSeriesExternalFile,
     IndexSeries,
+    IndexSeriesData,
     OpticalSeries,
+    OpticalSeriesData,
     RGBAImage,
     RGBImage,
 )
@@ -112,14 +117,23 @@ from ...core.v2_6_0_alpha.core_nwb_misc import (
     AbstractFeatureSeries,
     AbstractFeatureSeriesData,
     AnnotationSeries,
+    AnnotationSeriesData,
     DecompositionSeries,
     DecompositionSeriesBands,
     DecompositionSeriesData,
     IntervalSeries,
+    IntervalSeriesData,
     Units,
     UnitsSpikeTimes,
+    UnitsWaveformMean,
+    UnitsWaveformSd,
+    UnitsWaveforms,
 )
-from ...core.v2_6_0_alpha.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
+from ...core.v2_6_0_alpha.core_nwb_ogen import (
+    OptogeneticSeries,
+    OptogeneticSeriesData,
+    OptogeneticStimulusSite,
+)
 from ...core.v2_6_0_alpha.core_nwb_ophys import (
     CorrectedImageStack,
     DfOverF,
@@ -136,6 +150,7 @@ from ...core.v2_6_0_alpha.core_nwb_ophys import (
     PlaneSegmentationPixelMask,
     PlaneSegmentationVoxelMask,
     RoiResponseSeries,
+    RoiResponseSeriesData,
     TwoPhotonSeries,
 )
 from ...core.v2_6_0_alpha.core_nwb_retinotopy import (
@@ -177,7 +192,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,

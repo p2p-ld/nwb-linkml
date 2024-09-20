@@ -37,30 +37,24 @@ classes:
         description: Phase response to stimulus on the first measured axis.
         range: ImagingRetinotopy__axis_1_phase_map
         required: true
-        multivalued: false
         inlined: true
       axis_1_power_map:
         name: axis_1_power_map
         description: Power response on the first measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         range: ImagingRetinotopy__axis_1_power_map
-        required: false
-        multivalued: false
         inlined: true
       axis_2_phase_map:
         name: axis_2_phase_map
         description: Phase response to stimulus on the second measured axis.
         range: ImagingRetinotopy__axis_2_phase_map
         required: true
-        multivalued: false
         inlined: true
       axis_2_power_map:
         name: axis_2_power_map
         description: Power response on the second measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         range: ImagingRetinotopy__axis_2_power_map
-        required: false
-        multivalued: false
         inlined: true
       axis_descriptions:
         name: axis_descriptions
@@ -79,16 +73,12 @@ classes:
         description: 'Gray-scale image taken with same settings/parameters (e.g.,
           focal depth, wavelength) as data collection. Array format: [rows][columns].'
         range: ImagingRetinotopy__focal_depth_image
-        required: false
-        multivalued: false
         inlined: true
       sign_map:
         name: sign_map
         description: Sine of the angle between the direction of the gradient in axis_1
           and axis_2.
         range: ImagingRetinotopy__sign_map
-        required: false
-        multivalued: false
         inlined: true
       vasculature_image:
         name: vasculature_image
@@ -96,7 +86,6 @@ classes:
           [rows][columns]'
         range: ImagingRetinotopy__vasculature_image
         required: true
-        multivalued: false
         inlined: true
     tree_root: true
   ImagingRetinotopy__axis_1_phase_map:
