@@ -224,7 +224,7 @@ class NamespacesAdapter(Adapter):
 
         return parents
 
-    def _overwrite_class(self, new_cls: Dataset | Group, old_cls: Dataset | Group):
+    def _overwrite_class(self, new_cls: Dataset | Group, old_cls: Dataset | Group) -> None:
         """
         Overwrite the version of a dataset or group that is stored in our schemas
         """
@@ -264,9 +264,14 @@ class NamespacesAdapter(Adapter):
         matches = []
         for schema in self.all_schemas():
             in_schema = False
-            if isinstance(cls, str) and cls in [
-                c.neurodata_type_def for c in schema.created_classes
-            ] or isinstance(cls, Dataset) and cls in schema.datasets or isinstance(cls, Group) and cls in schema.groups:
+            if (
+                isinstance(cls, str)
+                and cls in [c.neurodata_type_def for c in schema.created_classes]
+                or isinstance(cls, Dataset)
+                and cls in schema.datasets
+                or isinstance(cls, Group)
+                and cls in schema.groups
+            ):
                 in_schema = True
 
             if in_schema:
