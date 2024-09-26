@@ -34,7 +34,7 @@ BASEMODEL_CAST_WITH_VALUE = """
     @field_validator("*", mode="wrap")
     @classmethod
     def cast_with_value(cls, v: Any, handler, info) -> Any:
-        \"\"\"Try to rescue instantiation by casting into the model's value fiel\"\"\"
+        \"\"\"Try to rescue instantiation by casting into the model's value field\"\"\"
         try:
             return handler(v)
         except Exception as e1:
