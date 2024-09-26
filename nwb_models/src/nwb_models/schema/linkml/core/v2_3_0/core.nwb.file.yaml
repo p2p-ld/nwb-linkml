@@ -219,6 +219,10 @@ classes:
         range: Units
         inlined: true
         inlined_as_list: false
+      specifications:
+        name: specifications
+        description: Nested dictionary of schema specifications
+        range: dict
     tree_root: true
   NWBFile__stimulus:
     name: NWBFile__stimulus
@@ -372,14 +376,6 @@ classes:
         description: Information about virus(es) used in experiments, including virus
           ID, source, date made, injection location, volume, etc.
         range: text
-      lab_meta_data:
-        name: lab_meta_data
-        description: Place-holder than can be extended so that lab-specific meta-data
-          can be placed in /general.
-        range: LabMetaData
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
       devices:
         name: devices
         description: Description of hardware devices used during experiment, e.g.,
@@ -424,6 +420,14 @@ classes:
         inlined_as_list: false
         any_of:
         - range: ImagingPlane
+      value:
+        name: value
+        description: Place-holder than can be extended so that lab-specific meta-data
+          can be placed in /general.
+        range: LabMetaData
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
   general__source_script:
     name: general__source_script
     description: Script file or link to public source code used to create this NWB
@@ -456,19 +460,19 @@ classes:
         range: string
         required: true
         equals_string: extracellular_ephys
-      electrode_group:
-        name: electrode_group
-        description: Physical group of electrodes.
-        range: ElectrodeGroup
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
       electrodes:
         name: electrodes
         description: A table of all electrodes (i.e. channels) used for recording.
         range: extracellular_ephys__electrodes
         inlined: true
         inlined_as_list: true
+      value:
+        name: value
+        description: Physical group of electrodes.
+        range: ElectrodeGroup
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
   extracellular_ephys__electrodes:
     name: extracellular_ephys__electrodes
     description: A table of all electrodes (i.e. channels) used for recording.
@@ -610,17 +614,17 @@ classes:
           frequency fall-off, etc. If this changes between TimeSeries, filter description
           should be stored as a text attribute for each TimeSeries.
         range: text
-      intracellular_electrode:
-        name: intracellular_electrode
-        description: An intracellular electrode.
-        range: IntracellularElectrode
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
       sweep_table:
         name: sweep_table
         description: The table which groups different PatchClampSeries together.
         range: SweepTable
+        inlined: true
+        inlined_as_list: false
+      value:
+        name: value
+        description: An intracellular electrode.
+        range: IntracellularElectrode
+        multivalued: true
         inlined: true
         inlined_as_list: false
   NWBFile__intervals:
@@ -655,8 +659,8 @@ classes:
         range: TimeIntervals
         inlined: true
         inlined_as_list: false
-      time_intervals:
-        name: time_intervals
+      value:
+        name: value
         description: Optional additional table(s) for describing other experimental
           time intervals.
         range: TimeIntervals

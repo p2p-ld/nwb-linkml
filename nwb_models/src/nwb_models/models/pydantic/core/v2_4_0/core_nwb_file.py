@@ -9,7 +9,7 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 import numpy as np
 from numpydantic import NDArray, Shape
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
 from ...core.v2_4_0.core_nwb_base import (
     NWBContainer,
@@ -59,7 +59,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -112,6 +112,28 @@ class ConfiguredBaseModel(BaseModel):
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any, handler) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -250,6 +272,9 @@ class NWBFile(NWBContainer):
         description="""Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.""",
     )
     units: Optional[Units] = Field(None, description="""Data about sorted spike units.""")
+    specifications: Optional[dict] = Field(
+        None, description="""Nested dictionary of schema specifications"""
+    )
 
 
 class NWBFileStimulus(ConfiguredBaseModel):
@@ -348,10 +373,6 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Information about virus(es) used in experiments, including virus ID, source, date made, injection location, volume, etc.""",
     )
-    lab_meta_data: Optional[Dict[str, LabMetaData]] = Field(
-        None,
-        description="""Place-holder than can be extended so that lab-specific meta-data can be placed in /general.""",
-    )
     devices: Optional[Dict[str, Device]] = Field(
         None,
         description="""Description of hardware devices used during experiment, e.g., monitors, ADC boards, microscopes, etc.""",
@@ -376,6 +397,10 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Metadata related to optophysiology.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ImagingPlane"}]}},
+    )
+    value: Optional[Dict[str, LabMetaData]] = Field(
+        None,
+        description="""Place-holder than can be extended so that lab-specific meta-data can be placed in /general.""",
     )
 
 
@@ -412,11 +437,11 @@ class GeneralExtracellularEphys(ConfiguredBaseModel):
             }
         },
     )
-    electrode_group: Optional[Dict[str, ElectrodeGroup]] = Field(
-        None, description="""Physical group of electrodes."""
-    )
     electrodes: Optional[ExtracellularEphysElectrodes] = Field(
         None, description="""A table of all electrodes (i.e. channels) used for recording."""
+    )
+    value: Optional[Dict[str, ElectrodeGroup]] = Field(
+        None, description="""Physical group of electrodes."""
     )
 
 
@@ -573,9 +598,6 @@ class GeneralIntracellularEphys(ConfiguredBaseModel):
         None,
         description="""[DEPRECATED] Use IntracellularElectrode.filtering instead. Description of filtering used. Includes filtering type and parameters, frequency fall-off, etc. If this changes between TimeSeries, filter description should be stored as a text attribute for each TimeSeries.""",
     )
-    intracellular_electrode: Optional[Dict[str, IntracellularElectrode]] = Field(
-        None, description="""An intracellular electrode."""
-    )
     sweep_table: Optional[SweepTable] = Field(
         None,
         description="""[DEPRECATED] Table used to group different PatchClampSeries. SweepTable is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable tabels. Additional SequentialRecordingsTable, RepetitionsTable and ExperimentalConditions tables provide enhanced support for experiment metadata.""",
@@ -599,6 +621,9 @@ class GeneralIntracellularEphys(ConfiguredBaseModel):
     experimental_conditions: Optional[ExperimentalConditionsTable] = Field(
         None,
         description="""A table for grouping different intracellular recording repetitions together that belong to the same experimental experimental_conditions.""",
+    )
+    value: Optional[Dict[str, IntracellularElectrode]] = Field(
+        None, description="""An intracellular electrode."""
     )
 
 
@@ -625,7 +650,7 @@ class NWBFileIntervals(ConfiguredBaseModel):
     invalid_times: Optional[TimeIntervals] = Field(
         None, description="""Time intervals that should be removed from analysis."""
     )
-    time_intervals: Optional[Dict[str, TimeIntervals]] = Field(
+    value: Optional[Dict[str, TimeIntervals]] = Field(
         None,
         description="""Optional additional table(s) for describing other experimental time intervals.""",
     )

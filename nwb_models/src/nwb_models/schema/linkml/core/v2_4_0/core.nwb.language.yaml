@@ -88,6 +88,9 @@ types:
   isodatetime:
     name: isodatetime
     typeof: datetime
+  dict:
+    name: dict
+    repr: dict
 classes:
   AnyType:
     name: AnyType

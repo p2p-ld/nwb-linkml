@@ -19,6 +19,7 @@ from nwb_linkml.providers import LinkMLProvider, PydanticProvider
 from nwb_linkml.providers.git import NWB_CORE_REPO, HDMF_COMMON_REPO, GitRepo
 from nwb_linkml.io import schema as io
 
+
 def make_tmp_dir(clear: bool = False) -> Path:
     # use a directory underneath this one as the temporary directory rather than
     # the default hidden one

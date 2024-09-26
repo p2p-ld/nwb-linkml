@@ -56,7 +56,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -78,12 +78,7 @@ class ConfiguredBaseModel(BaseModel):
                 try:
                     return handler(v["value"])
                 except (IndexError, KeyError, TypeError):
-                    raise ValueError(
-                        f"coerce_value: Could not use the value field of {type(v)} "
-                        f"to construct {cls.__name__}.{info.field_name}, "
-                        f"expected type: {cls.model_fields[info.field_name].annotation}\n"
-                        f"inner error: {str(e1)}"
-                    ) from e1
+                    raise e1
 
     @field_validator("*", mode="wrap")
     @classmethod
@@ -94,13 +89,8 @@ class ConfiguredBaseModel(BaseModel):
         except Exception as e1:
             try:
                 return handler({"value": v})
-            except Exception as e2:
-                raise ValueError(
-                    f"cast_with_value: Could not cast {type(v)} as value field for "
-                    f"{cls.__name__}.{info.field_name},"
-                    f" expected_type: {cls.model_fields[info.field_name].annotation}\n"
-                    f"inner error: {str(e1)}"
-                ) from e1
+            except Exception:
+                raise e1
 
     @field_validator("*", mode="before")
     @classmethod
@@ -112,10 +102,35 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any, handler) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -595,12 +610,19 @@ class DynamicTableMixin(ConfiguredBaseModel):
                             model[key] = to_cast(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
                         raise ValidationError.from_exception_data(
-                            title=f"field {key} cannot be cast to VectorData from {val}",
+                            title="cast_extra_columns",
                             line_errors=[
                                 {
-                                    "type": "model_type",
+                                    "type": "value_error",
                                     "input": val,
-                                }
+                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "ctx": {
+                                        "error": ValueError(
+                                            f"field {key} cannot be cast to {to_cast} from {val}"
+                                        )
+                                    },
+                                },
+                                *e.errors(),
                             ],
                         ) from e
         return model
@@ -663,11 +685,14 @@ class DynamicTableMixin(ConfiguredBaseModel):
                 # should pass if we're supposed to be a VectorData column
                 # don't want to override intention here by insisting that it is
                 # *actually* a VectorData column in case an NDArray has been specified for now
+                description = cls.model_fields[info.field_name].description
+                description = description if description is not None else ""
+
                 return handler(
                     annotation(
                         val,
                         name=info.field_name,
-                        description=cls.model_fields[info.field_name].description,
+                        description=description,
                     )
                 )
             except Exception:

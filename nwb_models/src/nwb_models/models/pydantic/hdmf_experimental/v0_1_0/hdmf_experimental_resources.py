@@ -9,9 +9,9 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 import numpy as np
 from numpydantic import NDArray, Shape
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
-from ...hdmf_common.v1_5_0.hdmf_common_base import Container, Data
+from ...hdmf_common.v1_4_0.hdmf_common_base import Container, Data
 
 
 metamodel_version = "None"
@@ -32,7 +32,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -87,6 +87,28 @@ class ConfiguredBaseModel(BaseModel):
                 pass
         return v
 
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any, handler) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
+        return v
+
 
 class LinkMLMeta(RootModel):
     root: Dict[str, Any] = {}
@@ -114,7 +136,7 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "hdmf-experimental.resources/",
         "id": "hdmf-experimental.resources",
-        "imports": ["../../hdmf_common/v1_5_0/namespace", "hdmf-experimental.nwb.language"],
+        "imports": ["../../hdmf_common/v1_4_0/namespace", "hdmf-experimental.nwb.language"],
         "name": "hdmf-experimental.resources",
     }
 )
