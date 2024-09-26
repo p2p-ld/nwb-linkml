@@ -15,7 +15,7 @@ from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
 from linkml.generators.pydanticgen.build import ClassResult, SlotResult
 from linkml.generators.pydanticgen.pydanticgen import SplitMode
-from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule
+from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule, ObjectImport
 from linkml_runtime.linkml_model.meta import (
     ArrayExpression,
     SchemaDefinition,
@@ -30,6 +30,7 @@ from nwb_linkml.includes.base import (
     BASEMODEL_COERCE_CHILD,
     BASEMODEL_COERCE_VALUE,
     BASEMODEL_GETITEM,
+    BASEMODEL_EXTRA_TO_VALUE,
 )
 from nwb_linkml.includes.hdmf import (
     DYNAMIC_TABLE_IMPORTS,
@@ -58,9 +59,15 @@ class NWBPydanticGenerator(PydanticGenerator):
         BASEMODEL_COERCE_VALUE,
         BASEMODEL_CAST_WITH_VALUE,
         BASEMODEL_COERCE_CHILD,
+        BASEMODEL_EXTRA_TO_VALUE,
     )
     split: bool = True
-    imports: list[Import] = field(default_factory=lambda: [Import(module="numpy", alias="np")])
+    imports: list[Import] = field(
+        default_factory=lambda: [
+            Import(module="numpy", alias="np"),
+            Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
+        ]
+    )
 
     schema_map: Optional[Dict[str, SchemaDefinition]] = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""

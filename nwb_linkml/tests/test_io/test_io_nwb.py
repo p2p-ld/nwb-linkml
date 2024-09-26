@@ -80,7 +80,7 @@ def test_position(read_nwbfile, read_pynwb):
     py_trials = read_pynwb.trials.to_dataframe()
     pd.testing.assert_frame_equal(py_trials, trials)
 
-    spatial = read_nwbfile.processing["behavior"].Position.SpatialSeries
+    spatial = read_nwbfile.processing["behavior"]["Position"]["SpatialSeries"]
     py_spatial = read_pynwb.processing["behavior"]["Position"]["SpatialSeries"]
     _compare_attrs(spatial, py_spatial)
     assert np.array_equal(spatial[:], py_spatial.data[:])

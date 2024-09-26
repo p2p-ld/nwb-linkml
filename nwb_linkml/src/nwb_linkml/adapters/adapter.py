@@ -354,3 +354,40 @@ def defaults(cls: Dataset | Attribute) -> dict:
             ret["ifabsent"] = cls.default_value
 
     return ret
+
+
+def is_container(group: Group) -> bool:
+    """
+    Check if a group is a container group.
+
+    i.e. a group that...
+    * has no name
+    * multivalued quantity
+    * has a ``neurodata_type_inc``
+    * has no ``neurodata_type_def``
+    * has no sub-groups
+    * has no datasets
+    * has no attributes
+
+    Examples:
+
+        .. code-block:: yaml
+
+            - name: templates
+              groups:
+              - neurodata_type_inc: TimeSeries
+                doc: TimeSeries objects containing template data of presented stimuli.
+                quantity: '*'
+              - neurodata_type_inc: Images
+                doc: Images objects containing images of presented stimuli.
+                quantity: '*'
+    """
+    return (
+        not group.name
+        and group.quantity == "*"
+        and group.neurodata_type_inc
+        and not group.neurodata_type_def
+        and not group.datasets
+        and not group.groups
+        and not group.attributes
+    )

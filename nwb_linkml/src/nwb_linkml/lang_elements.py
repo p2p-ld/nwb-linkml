@@ -39,6 +39,10 @@ def _make_dtypes() -> List[TypeDefinition]:
             repr=linkml_reprs.get(nwbtype, None),
         )
         DTypeTypes.append(atype)
+
+    # a dict type!
+    DTypeTypes.append(TypeDefinition(name="dict", repr="dict"))
+
     return DTypeTypes
 
 

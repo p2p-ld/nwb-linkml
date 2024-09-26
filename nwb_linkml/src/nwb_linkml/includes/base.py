@@ -3,7 +3,7 @@ Modifications to the ConfiguredBaseModel used by all generated classes
 """
 
 BASEMODEL_GETITEM = """
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         \"\"\"Try and get a value from value or "data" if we have it\"\"\"
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -62,5 +62,25 @@ BASEMODEL_COERCE_CHILD = """
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+"""
+
+BASEMODEL_EXTRA_TO_VALUE = """
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any, handler) -> Any:
+        \"\"\"
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        \"\"\"
+        if cls.model_config["extra"] == "forbid" and "value" in cls.model_fields and isinstance(v, dict):
+            extras = {key:val for key,val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 """

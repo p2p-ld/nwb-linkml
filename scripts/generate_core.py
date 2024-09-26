@@ -19,37 +19,6 @@ from nwb_linkml.providers import LinkMLProvider, PydanticProvider
 from nwb_linkml.providers.git import NWB_CORE_REPO, HDMF_COMMON_REPO, GitRepo
 from nwb_linkml.io import schema as io
 
-
-def generate_core_yaml(output_path: Path, dry_run: bool = False, hdmf_only: bool = False):
-    """Just build the latest version of the core schema"""
-
-    core = io.load_nwb_core(hdmf_only=hdmf_only)
-    built_schemas = core.build().schemas
-    for schema in built_schemas:
-        output_file = output_path / (schema.name + ".yaml")
-        if not dry_run:
-            yaml_dumper.dump(schema, output_file)
-
-
-def generate_core_pydantic(yaml_path: Path, output_path: Path, dry_run: bool = False):
-    """Just generate the latest version of the core schema"""
-    for schema in yaml_path.glob("*.yaml"):
-        python_name = schema.stem.replace(".", "_").replace("-", "_")
-        pydantic_file = (output_path / python_name).with_suffix(".py")
-
-        generator = NWBPydanticGenerator(
-            str(schema),
-            pydantic_version="2",
-            emit_metadata=True,
-            gen_classvars=True,
-            gen_slots=True,
-        )
-        gen_pydantic = generator.serialize()
-        if not dry_run:
-            with open(pydantic_file, "w") as pfile:
-                pfile.write(gen_pydantic)
-
-
 def make_tmp_dir(clear: bool = False) -> Path:
     # use a directory underneath this one as the temporary directory rather than
     # the default hidden one
@@ -68,6 +37,7 @@ def generate_versions(
     dry_run: bool = False,
     repo: GitRepo = NWB_CORE_REPO,
     pdb=False,
+    latest: bool = False,
 ):
     """
     Generate linkml models for all versions
@@ -82,8 +52,13 @@ def generate_versions(
 
     failed_versions = {}
 
+    if latest:
+        versions = [repo.namespace.versions[-1]]
+    else:
+        versions = repo.namespace.versions
+
     overall_progress = Progress()
-    overall_task = overall_progress.add_task("All Versions", total=len(NWB_CORE_REPO.versions))
+    overall_task = overall_progress.add_task("All Versions", total=len(versions))
 
     build_progress = Progress(
         TextColumn(
@@ -100,7 +75,7 @@ def generate_versions(
             linkml_task = None
             pydantic_task = None
 
-            for version in repo.namespace.versions:
+            for version in versions:
                 # build linkml
                 try:
                     # check out the version (this should also refresh the hdmf-common schema)
@@ -251,11 +226,10 @@ def main():
     if not args.dry_run:
         args.yaml.mkdir(exist_ok=True)
         args.pydantic.mkdir(exist_ok=True)
-    if args.latest:
-        generate_core_yaml(args.yaml, args.dry_run)
-        generate_core_pydantic(args.yaml, args.pydantic, args.dry_run)
-    else:
-        generate_versions(args.yaml, args.pydantic, args.dry_run, repo, pdb=args.pdb)
+
+    generate_versions(
+        args.yaml, args.pydantic, args.dry_run, repo, pdb=args.pdb, latest=args.latest
+    )
 
 
 if __name__ == "__main__":
