@@ -39,8 +39,30 @@ if TYPE_CHECKING:  # pragma: no cover
 T = TypeVar("T", bound=NDArray)
 T_INJECT = 'T = TypeVar("T", bound=NDArray)'
 
+if "pytest" in sys.modules:
+    from nwb_models.models import ConfiguredBaseModel
+else:
 
-class DynamicTableMixin(BaseModel):
+    class ConfiguredBaseModel(BaseModel):
+        """
+        Dummy ConfiguredBaseModel (without its methods from :mod:`.includes.base` )
+        used so that the injected mixins inherit from the `ConfiguredBaseModel`
+        and we get a linear inheritance MRO (rather than needing to inherit
+        from the mixins *and* the configured base model) so that the
+        model_config is correctly resolved (ie. to allow extra args)
+        """
+
+        model_config = ConfigDict(
+            validate_assignment=True,
+            validate_default=True,
+            extra="forbid",
+            arbitrary_types_allowed=True,
+            use_enum_values=True,
+            strict=False,
+        )
+
+
+class DynamicTableMixin(ConfiguredBaseModel):
     """
     Mixin to make DynamicTable subclasses behave like tables/dataframes
 
@@ -295,13 +317,19 @@ class DynamicTableMixin(BaseModel):
                             model[key] = to_cast(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
                         raise ValidationError.from_exception_data(
-                            title=f"field {key} cannot be cast to VectorData from {val}",
+                            title="cast_extra_columns",
                             line_errors=[
                                 {
-                                    "type": "ValueError",
-                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "type": "value_error",
                                     "input": val,
-                                }
+                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "ctx": {
+                                        "error": ValueError(
+                                            f"field {key} cannot be cast to {to_cast} from {val}"
+                                        )
+                                    },
+                                },
+                                *e.errors(),
                             ],
                         ) from e
         return model
@@ -364,18 +392,21 @@ class DynamicTableMixin(BaseModel):
                 # should pass if we're supposed to be a VectorData column
                 # don't want to override intention here by insisting that it is
                 # *actually* a VectorData column in case an NDArray has been specified for now
+                description = cls.model_fields[info.field_name].description
+                description = description if description is not None else ""
+
                 return handler(
                     annotation(
                         val,
                         name=info.field_name,
-                        description=cls.model_fields[info.field_name].description,
+                        description=description,
                     )
                 )
             except Exception:
                 raise e from None
 
 
-class VectorDataMixin(BaseModel, Generic[T]):
+class VectorDataMixin(ConfiguredBaseModel, Generic[T]):
     """
     Mixin class to give VectorData indexing abilities
     """
@@ -426,7 +457,7 @@ class VectorDataMixin(BaseModel, Generic[T]):
             return len(self.value)
 
 
-class VectorIndexMixin(BaseModel, Generic[T]):
+class VectorIndexMixin(ConfiguredBaseModel, Generic[T]):
     """
     Mixin class to give VectorIndex indexing abilities
     """
@@ -518,7 +549,7 @@ class VectorIndexMixin(BaseModel, Generic[T]):
         return len(self.value)
 
 
-class DynamicTableRegionMixin(BaseModel):
+class DynamicTableRegionMixin(ConfiguredBaseModel):
     """
     Mixin to allow indexing references to regions of dynamictables
     """
@@ -574,7 +605,7 @@ class DynamicTableRegionMixin(BaseModel):
         )  # pragma: no cover
 
 
-class AlignedDynamicTableMixin(BaseModel):
+class AlignedDynamicTableMixin(ConfiguredBaseModel):
     """
     Mixin to allow indexing multiple tables that are aligned on a common ID
 
@@ -927,12 +958,18 @@ if "pytest" in sys.modules:
     class VectorData(VectorDataMixin):
         """VectorData subclass for testing"""
 
-        pass
+        name: str = Field(...)
+        description: str = Field(
+            ..., description="""Description of what these vectors represent."""
+        )
 
     class VectorIndex(VectorIndexMixin):
         """VectorIndex subclass for testing"""
 
-        pass
+        name: str = Field(...)
+        description: str = Field(
+            ..., description="""Description of what these vectors represent."""
+        )
 
     class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
         """DynamicTableRegion subclass for testing"""

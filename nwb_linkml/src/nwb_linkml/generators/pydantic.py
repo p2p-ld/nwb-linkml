@@ -9,7 +9,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, ClassVar, Dict, List, Literal, Optional, Tuple
+from typing import Callable, ClassVar, Dict, List, Optional, Tuple
 
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
@@ -72,7 +72,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     emit_metadata: bool = True
     gen_classvars: bool = True
     gen_slots: bool = True
-    extra_fields: Literal["allow", "forbid", "ignore"] = "allow"
+    # extra_fields: Literal["allow", "forbid", "ignore"] = "allow"
 
     skip_meta: ClassVar[Tuple[str]] = ("domain_of", "alias")
 
@@ -269,7 +269,7 @@ class AfterGenerateClass:
 
         """
         if cls.cls.name == "DynamicTable":
-            cls.cls.bases = ["DynamicTableMixin", "ConfiguredBaseModel"]
+            cls.cls.bases = ["DynamicTableMixin"]
 
             if (
                 cls.injected_classes is None
@@ -287,18 +287,18 @@ class AfterGenerateClass:
             else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = DYNAMIC_TABLE_IMPORTS.model_copy()
         elif cls.cls.name == "VectorData":
-            cls.cls.bases = ["VectorDataMixin", "ConfiguredBaseModel"]
+            cls.cls.bases = ["VectorDataMixin"]
             # make ``value`` generic on T
             if "value" in cls.cls.attributes:
                 cls.cls.attributes["value"].range = "Optional[T]"
         elif cls.cls.name == "VectorIndex":
-            cls.cls.bases = ["VectorIndexMixin", "ConfiguredBaseModel"]
+            cls.cls.bases = ["VectorIndexMixin"]
         elif cls.cls.name == "DynamicTableRegion":
-            cls.cls.bases = ["DynamicTableRegionMixin", "VectorData", "ConfiguredBaseModel"]
+            cls.cls.bases = ["DynamicTableRegionMixin", "VectorData"]
         elif cls.cls.name == "AlignedDynamicTable":
             cls.cls.bases = ["AlignedDynamicTableMixin", "DynamicTable"]
         elif cls.cls.name == "ElementIdentifiers":
-            cls.cls.bases = ["ElementIdentifiersMixin", "Data", "ConfiguredBaseModel"]
+            cls.cls.bases = ["ElementIdentifiersMixin", "Data"]
             # make ``value`` generic on T
             if "value" in cls.cls.attributes:
                 cls.cls.attributes["value"].range = "Optional[T]"

@@ -5,7 +5,7 @@
 groups = ["default", "dev", "plot", "tests"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:1c297e11f6dc9e4f6b8d29df872177d2ce65bbd334c0b65aa5175dfb125c4d9f"
+content_hash = "sha256:14dd3d0b396dc25e554b924825664346d2644f265e48346180f1cfdf833a8c92"
 
 [[metadata.targets]]
 requires_python = ">=3.10,<3.13"
@@ -1038,9 +1038,9 @@ files = [
 
 [[package]]
 name = "numpydantic"
-version = "1.3.3"
+version = "1.6.0"
 requires_python = "<4.0,>=3.9"
-summary = "Type and shape validation and serialization for numpy arrays in pydantic models"
+summary = "Type and shape validation and serialization for arbitrary array types in pydantic models"
 groups = ["default"]
 dependencies = [
     "numpy>=1.24.0",
@@ -1048,13 +1048,13 @@ dependencies = [
     "typing-extensions>=4.11.0; python_version < \"3.11\"",
 ]
 files = [
-    {file = "numpydantic-1.3.3-py3-none-any.whl", hash = "sha256:e002767252b1b77abb7715834ab7cbf58964baddae44863710f09e71b23287e4"},
-    {file = "numpydantic-1.3.3.tar.gz", hash = "sha256:1cc2744f7b5fbcecd51a64fafaf8c9a564bb296336a566a16be97ba7b1c28698"},
+    {file = "numpydantic-1.6.0-py3-none-any.whl", hash = "sha256:72f3ef0bc8a5801bac6fb79920467d763d51cddec8476875efeb5064c11c04cf"},
+    {file = "numpydantic-1.6.0.tar.gz", hash = "sha256:9785ba7eb5489b9e5438109e9b2dcd1cc0aa87d1b6b5df71fb906dc0708df83c"},
 ]
 
 [[package]]
 name = "nwb-models"
-version = "0.1.0"
+version = "0.2.0"
 requires_python = ">=3.10"
 summary = "Pydantic/LinkML models for Neurodata Without Borders"
 groups = ["default"]
@@ -1064,23 +1064,23 @@ dependencies = [
     "pydantic>=2.3.0",
 ]
 files = [
-    {file = "nwb_models-0.1.0-py3-none-any.whl", hash = "sha256:d485422865f6762586e8f8389d67bce17a3e66d07f6273385a751145afbbbfea"},
-    {file = "nwb_models-0.1.0.tar.gz", hash = "sha256:3c3ccfc6c2ac03dffe26ba7f180aecc650d6593c05d4f306f84b90fabc3ff2b8"},
+    {file = "nwb_models-0.2.0-py3-none-any.whl", hash = "sha256:72bb8a8879261488071d4e8eff35f2cbb20c44ac4bb7f67806c6329b4f8b2068"},
+    {file = "nwb_models-0.2.0.tar.gz", hash = "sha256:7e7f280378c668e1695dd9d53b32073d85615e90fee0ec417888dd83bdb9cbb3"},
 ]
 
 [[package]]
 name = "nwb-schema-language"
-version = "0.1.3"
-requires_python = ">=3.9,<4.0"
+version = "0.2.0"
+requires_python = "<3.13,>=3.10"
 summary = "Translation of the nwb-schema-language to LinkML"
 groups = ["default"]
 dependencies = [
-    "linkml-runtime<2.0.0,>=1.1.24",
-    "pydantic<3.0.0,>=2.3.0",
+    "linkml-runtime>=1.7.7",
+    "pydantic>=2.3.0",
 ]
 files = [
-    {file = "nwb_schema_language-0.1.3-py3-none-any.whl", hash = "sha256:2eb86aac6614d490f7ec3fa68634bb9dceb3834d9820f5afc5645a9f3b0c3401"},
-    {file = "nwb_schema_language-0.1.3.tar.gz", hash = "sha256:ad290e2896a9cde7e2f353bc3b8ddf42be865238d991167d397ff2e0d03c88ba"},
+    {file = "nwb_schema_language-0.2.0-py3-none-any.whl", hash = "sha256:354afb0abfbc61a6d6b227695b9a4312df5030f2746b517fc5849ac085c8e5f2"},
+    {file = "nwb_schema_language-0.2.0.tar.gz", hash = "sha256:59beda56ea52a55f4514d7e4b73e30ceaee1c60b7ddf4fc80afd48777acf9e50"},
 ]
 
 [[package]]
