@@ -96,7 +96,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def gather_extra_to_value(cls, v: Any, handler) -> Any:
+    def gather_extra_to_value(cls, v: Any) -> Any:
         """
         For classes that don't allow extra fields and have a value slot,
         pack those extra kwargs into ``value``

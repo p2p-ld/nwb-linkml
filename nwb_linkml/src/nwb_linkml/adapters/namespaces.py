@@ -198,7 +198,7 @@ class NamespacesAdapter(Adapter):
             for i, parent in enumerate(parents):
                 # we want a full roll-down of all the ancestor classes,
                 # but we make an abbreviated leaf class
-                complete = False if i == len(parents) - 1 else True
+                complete = i != len(parents) - 1
                 new_cls = roll_down_nwb_class(new_cls, parent, complete=complete)
             new_cls: Group | Dataset = type(cls)(**new_cls)
             new_cls.parent = cls.parent

@@ -15,7 +15,7 @@ from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
 from linkml.generators.pydanticgen.build import ClassResult, SlotResult
 from linkml.generators.pydanticgen.pydanticgen import SplitMode
-from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule, ObjectImport
+from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport, PydanticModule
 from linkml_runtime.linkml_model.meta import (
     ArrayExpression,
     SchemaDefinition,
@@ -29,8 +29,8 @@ from nwb_linkml.includes.base import (
     BASEMODEL_CAST_WITH_VALUE,
     BASEMODEL_COERCE_CHILD,
     BASEMODEL_COERCE_VALUE,
-    BASEMODEL_GETITEM,
     BASEMODEL_EXTRA_TO_VALUE,
+    BASEMODEL_GETITEM,
 )
 from nwb_linkml.includes.hdmf import (
     DYNAMIC_TABLE_IMPORTS,

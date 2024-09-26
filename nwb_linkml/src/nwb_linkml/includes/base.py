@@ -68,12 +68,16 @@ BASEMODEL_COERCE_CHILD = """
 BASEMODEL_EXTRA_TO_VALUE = """
     @model_validator(mode="before")
     @classmethod
-    def gather_extra_to_value(cls, v: Any, handler) -> Any:
+    def gather_extra_to_value(cls, v: Any) -> Any:
         \"\"\"
         For classes that don't allow extra fields and have a value slot,
         pack those extra kwargs into ``value``
         \"\"\"
-        if cls.model_config["extra"] == "forbid" and "value" in cls.model_fields and isinstance(v, dict):
+        if (
+            cls.model_config["extra"] == "forbid" 
+            and "value" in cls.model_fields 
+            and isinstance(v, dict)
+        ):
             extras = {key:val for key,val in v.items() if key not in cls.model_fields}
             if extras:
                 for k in extras:
