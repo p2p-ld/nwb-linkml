@@ -375,13 +375,24 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: NWBDataInterface
-      - range: DynamicTable
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of this collection of processed data.
+        range: text
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
     tree_root: true
   Images:
     name: Images

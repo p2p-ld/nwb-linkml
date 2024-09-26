@@ -63,7 +63,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -76,6 +76,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value fiel"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -86,7 +98,10 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
@@ -242,7 +257,7 @@ class PatchClampSeriesData(ConfiguredBaseModel):
         ...,
         description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
     )
-    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float | int]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -349,7 +364,7 @@ class CurrentClampSeriesData(ConfiguredBaseModel):
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
         json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
-    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float | int]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -527,7 +542,7 @@ class CurrentClampStimulusSeriesData(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
         },
     )
-    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float | int]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -704,7 +719,7 @@ class VoltageClampSeriesData(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "amperes", "ifabsent": "string(amperes)"}
         },
     )
-    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float | int]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 
@@ -932,7 +947,7 @@ class VoltageClampStimulusSeriesData(ConfiguredBaseModel):
         description="""Base unit of measurement for working with the data. which is fixed to 'volts'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
         json_schema_extra={"linkml_meta": {"equals_string": "volts", "ifabsent": "string(volts)"}},
     )
-    value: Optional[NDArray[Shape["* num_times"], float]] = Field(
+    value: Optional[NDArray[Shape["* num_times"], float | int]] = Field(
         None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
     )
 

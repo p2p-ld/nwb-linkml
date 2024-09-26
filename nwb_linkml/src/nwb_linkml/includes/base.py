@@ -27,12 +27,7 @@ BASEMODEL_COERCE_VALUE = """
                 try:
                     return handler(v["value"])
                 except (IndexError, KeyError, TypeError):
-                    raise ValueError(
-                        f"coerce_value: Could not use the value field of {type(v)} "
-                        f"to construct {cls.__name__}.{info.field_name}, "
-                        f"expected type: {cls.model_fields[info.field_name].annotation}\\n"
-                        f"inner error: {str(e1)}"
-                    ) from e1
+                    raise e1
 """
 
 BASEMODEL_CAST_WITH_VALUE = """
@@ -46,12 +41,7 @@ BASEMODEL_CAST_WITH_VALUE = """
             try:
                 return handler({"value": v})
             except Exception:
-                raise ValueError(
-                    f"cast_with_value: Could not cast {type(v)} as value field for "
-                    f"{cls.__name__}.{info.field_name},"
-                    f" expected_type: {cls.model_fields[info.field_name].annotation}\\n"
-                    f"inner error: {str(e1)}"
-                ) from e1
+                raise e1
 """
 
 BASEMODEL_COERCE_CHILD = """

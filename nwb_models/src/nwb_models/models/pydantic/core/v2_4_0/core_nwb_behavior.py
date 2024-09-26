@@ -49,7 +49,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -62,6 +62,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value fiel"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -72,7 +84,10 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
@@ -197,8 +212,8 @@ class SpatialSeriesData(ConfiguredBaseModel):
     )
     value: Optional[
         Union[
-            NDArray[Shape["* num_times"], float],
-            NDArray[Shape["* num_times, * num_features"], float],
+            NDArray[Shape["* num_times"], float | int],
+            NDArray[Shape["* num_times, * num_features"], float | int],
         ]
     ] = Field(None)
 
@@ -212,10 +227,13 @@ class BehavioralEpochs(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "BehavioralEpochs",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralEpochs)"}},
+    )
     value: Optional[Dict[str, IntervalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "IntervalSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class BehavioralEvents(NWBDataInterface):
@@ -227,10 +245,13 @@ class BehavioralEvents(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "BehavioralEvents",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralEvents)"}},
+    )
     value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class BehavioralTimeSeries(NWBDataInterface):
@@ -242,10 +263,13 @@ class BehavioralTimeSeries(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "BehavioralTimeSeries",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralTimeSeries)"}},
+    )
     value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class PupilTracking(NWBDataInterface):
@@ -257,10 +281,12 @@ class PupilTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "PupilTracking", json_schema_extra={"linkml_meta": {"ifabsent": "string(PupilTracking)"}}
+    )
     value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class EyeTracking(NWBDataInterface):
@@ -272,10 +298,12 @@ class EyeTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "EyeTracking", json_schema_extra={"linkml_meta": {"ifabsent": "string(EyeTracking)"}}
+    )
     value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class CompassDirection(NWBDataInterface):
@@ -287,10 +315,13 @@ class CompassDirection(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "CompassDirection",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(CompassDirection)"}},
+    )
     value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class Position(NWBDataInterface):
@@ -302,10 +333,12 @@ class Position(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "Position", json_schema_extra={"linkml_meta": {"ifabsent": "string(Position)"}}
+    )
     value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 # Model rebuild

@@ -46,7 +46,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -67,7 +67,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -78,7 +78,29 @@ class ConfiguredBaseModel(BaseModel):
                 try:
                     return handler(v["value"])
                 except (IndexError, KeyError, TypeError):
-                    raise e1
+                    raise ValueError(
+                        f"coerce_value: Could not use the value field of {type(v)} "
+                        f"to construct {cls.__name__}.{info.field_name}, "
+                        f"expected type: {cls.model_fields[info.field_name].annotation}\n"
+                        f"inner error: {str(e1)}"
+                    ) from e1
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value fiel"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception as e2:
+                raise ValueError(
+                    f"cast_with_value: Could not cast {type(v)} as value field for "
+                    f"{cls.__name__}.{info.field_name},"
+                    f" expected_type: {cls.model_fields[info.field_name].annotation}\n"
+                    f"inner error: {str(e1)}"
+                ) from e1
 
     @field_validator("*", mode="before")
     @classmethod
@@ -119,7 +141,7 @@ NUMPYDANTIC_VERSION = "1.2.1"
 T = TypeVar("T", bound=NDArray)
 
 
-class VectorDataMixin(BaseModel, Generic[T]):
+class VectorDataMixin(ConfiguredBaseModel, Generic[T]):
     """
     Mixin class to give VectorData indexing abilities
     """
@@ -170,7 +192,7 @@ class VectorDataMixin(BaseModel, Generic[T]):
             return len(self.value)
 
 
-class VectorIndexMixin(BaseModel, Generic[T]):
+class VectorIndexMixin(ConfiguredBaseModel, Generic[T]):
     """
     Mixin class to give VectorIndex indexing abilities
     """
@@ -262,7 +284,7 @@ class VectorIndexMixin(BaseModel, Generic[T]):
         return len(self.value)
 
 
-class DynamicTableRegionMixin(BaseModel):
+class DynamicTableRegionMixin(ConfiguredBaseModel):
     """
     Mixin to allow indexing references to regions of dynamictables
     """
@@ -318,7 +340,7 @@ class DynamicTableRegionMixin(BaseModel):
         )  # pragma: no cover
 
 
-class DynamicTableMixin(BaseModel):
+class DynamicTableMixin(ConfiguredBaseModel):
     """
     Mixin to make DynamicTable subclasses behave like tables/dataframes
 
@@ -576,8 +598,7 @@ class DynamicTableMixin(BaseModel):
                             title=f"field {key} cannot be cast to VectorData from {val}",
                             line_errors=[
                                 {
-                                    "type": "ValueError",
-                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "type": "model_type",
                                     "input": val,
                                 }
                             ],
@@ -653,7 +674,7 @@ class DynamicTableMixin(BaseModel):
                 raise e from None
 
 
-class AlignedDynamicTableMixin(BaseModel):
+class AlignedDynamicTableMixin(ConfiguredBaseModel):
     """
     Mixin to allow indexing multiple tables that are aligned on a common ID
 
@@ -862,7 +883,7 @@ linkml_meta = LinkMLMeta(
 )
 
 
-class VectorData(VectorDataMixin, ConfiguredBaseModel):
+class VectorData(VectorDataMixin):
     """
     An n-dimensional dataset representing a column of a DynamicTable. If used without an accompanying VectorIndex, first dimension is along the rows of the DynamicTable and each step along the first dimension is a cell of the larger table. VectorData can also be used to represent a ragged array if paired with a VectorIndex. This allows for storing arrays of varying length in a single cell of the DynamicTable by indexing into this VectorData. The first vector is at VectorData[0:VectorIndex[0]]. The second vector is at VectorData[VectorIndex[0]:VectorIndex[1]], and so on.
     """
@@ -876,7 +897,7 @@ class VectorData(VectorDataMixin, ConfiguredBaseModel):
     value: Optional[T] = Field(None)
 
 
-class VectorIndex(VectorIndexMixin, ConfiguredBaseModel):
+class VectorIndex(VectorIndexMixin):
     """
     Used with VectorData to encode a ragged array. An array of indices into the first dimension of the target VectorData, and forming a map between the rows of a DynamicTable and the indices of the VectorData. The name of the VectorIndex is expected to be the name of the target VectorData object followed by \"_index\".
     """
@@ -900,7 +921,7 @@ class VectorIndex(VectorIndexMixin, ConfiguredBaseModel):
     ] = Field(None)
 
 
-class ElementIdentifiers(ElementIdentifiersMixin, Data, ConfiguredBaseModel):
+class ElementIdentifiers(ElementIdentifiersMixin, Data):
     """
     A list of unique identifiers for values within a dataset, e.g. rows of a DynamicTable.
     """
@@ -918,7 +939,7 @@ class ElementIdentifiers(ElementIdentifiersMixin, Data, ConfiguredBaseModel):
     )
 
 
-class DynamicTableRegion(DynamicTableRegionMixin, VectorData, ConfiguredBaseModel):
+class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
     """
     DynamicTableRegion provides a link from one table to an index or region of another. The `table` attribute is a link to another `DynamicTable`, indicating which table is referenced, and the data is int(s) indicating the row(s) (0-indexed) of the target array. `DynamicTableRegion`s can be used to associate rows with repeated meta-data without data duplication. They can also be used to create hierarchical relationships between multiple `DynamicTable`s. `DynamicTableRegion` objects may be paired with a `VectorIndex` object to create ragged references, so a single cell of a `DynamicTable` can reference many rows of another `DynamicTable`.
     """
@@ -944,7 +965,7 @@ class DynamicTableRegion(DynamicTableRegionMixin, VectorData, ConfiguredBaseMode
     ] = Field(None)
 
 
-class DynamicTable(DynamicTableMixin, ConfiguredBaseModel):
+class DynamicTable(DynamicTableMixin):
     """
     A group containing multiple datasets that are aligned on the first dimension (Currently, this requirement if left up to APIs to check and enforce). These datasets represent different columns in the table. Apart from a column that contains unique identifiers for each row, there are no other required datasets. Users are free to add any number of custom VectorData objects (columns) here. DynamicTable also supports ragged array columns, where each element can be of a different size. To add a ragged array column, use a VectorIndex type to index the corresponding VectorData type. See documentation for VectorData and VectorIndex for more details. Unlike a compound data type, which is analogous to storing an array-of-structs, a DynamicTable can be thought of as a struct-of-arrays. This provides an alternative structure to choose from when optimizing storage for anticipated access patterns. Additionally, this type provides a way of creating a table without having to define a compound type up front. Although this convenience may be attractive, users should think carefully about how data will be accessed. DynamicTable is more appropriate for column-centric access, whereas a dataset with a compound type would be more appropriate for row-centric access. Finally, data size should also be taken into account. For small tables, performance loss may be an acceptable trade-off for the flexibility of a DynamicTable.
     """

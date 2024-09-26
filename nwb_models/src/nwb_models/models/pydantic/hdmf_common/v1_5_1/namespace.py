@@ -30,7 +30,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -51,7 +51,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -62,7 +62,29 @@ class ConfiguredBaseModel(BaseModel):
                 try:
                     return handler(v["value"])
                 except (IndexError, KeyError, TypeError):
-                    raise e1
+                    raise ValueError(
+                        f"coerce_value: Could not use the value field of {type(v)} "
+                        f"to construct {cls.__name__}.{info.field_name}, "
+                        f"expected type: {cls.model_fields[info.field_name].annotation}\n"
+                        f"inner error: {str(e1)}"
+                    ) from e1
+
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value fiel"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception as e2:
+                raise ValueError(
+                    f"cast_with_value: Could not cast {type(v)} as value field for "
+                    f"{cls.__name__}.{info.field_name},"
+                    f" expected_type: {cls.model_fields[info.field_name].annotation}\n"
+                    f"inner error: {str(e1)}"
+                ) from e1
 
     @field_validator("*", mode="before")
     @classmethod

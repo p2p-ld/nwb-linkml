@@ -148,12 +148,19 @@ classes:
       events. BehavioralTimeSeries is for continuous data.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: IntervalSeries
+      name:
+        name: name
+        ifabsent: string(BehavioralEpochs)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: IntervalSeries
     tree_root: true
   BehavioralEvents:
     name: BehavioralEvents
@@ -161,12 +168,19 @@ classes:
       for more details.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      name:
+        name: name
+        ifabsent: string(BehavioralEvents)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   BehavioralTimeSeries:
     name: BehavioralTimeSeries
@@ -174,36 +188,57 @@ classes:
       of <a href="#BehavioralEpochs">BehavioralEpochs</a> for more details.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      name:
+        name: name
+        ifabsent: string(BehavioralTimeSeries)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   PupilTracking:
     name: PupilTracking
     description: Eye-tracking data, representing pupil size.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      name:
+        name: name
+        ifabsent: string(PupilTracking)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   EyeTracking:
     name: EyeTracking
     description: Eye-tracking data, representing direction of gaze.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      name:
+        name: name
+        ifabsent: string(EyeTracking)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true
   CompassDirection:
     name: CompassDirection
@@ -214,22 +249,36 @@ classes:
       be radians or degrees.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      name:
+        name: name
+        ifabsent: string(CompassDirection)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true
   Position:
     name: Position
     description: Position data, whether along the x, x/y or x/y/z axis.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      name:
+        name: name
+        ifabsent: string(Position)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true

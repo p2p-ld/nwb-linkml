@@ -232,12 +232,19 @@ classes:
       for image planes).
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: RoiResponseSeries
+      name:
+        name: name
+        ifabsent: string(DfOverF)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
     tree_root: true
   Fluorescence:
     name: Fluorescence
@@ -246,12 +253,19 @@ classes:
       for ROIs and for image planes).
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: RoiResponseSeries
+      name:
+        name: name
+        ifabsent: string(Fluorescence)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: RoiResponseSeries
     tree_root: true
   ImageSegmentation:
     name: ImageSegmentation
@@ -264,12 +278,19 @@ classes:
       is required and ROI names should remain consistent between them.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: PlaneSegmentation
+      name:
+        name: name
+        ifabsent: string(ImageSegmentation)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: PlaneSegmentation
     tree_root: true
   PlaneSegmentation:
     name: PlaneSegmentation
@@ -665,12 +686,19 @@ classes:
       frame at each point in time is assumed to be 2-D (has only x & y dimensions).'
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: CorrectedImageStack
+      name:
+        name: name
+        ifabsent: string(MotionCorrection)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: CorrectedImageStack
     tree_root: true
   CorrectedImageStack:
     name: CorrectedImageStack
