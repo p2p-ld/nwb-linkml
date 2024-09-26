@@ -679,7 +679,7 @@ class DynamicTableMixin(ConfiguredBaseModel):
             return handler(val)
         except ValidationError as e:
             annotation = cls.model_fields[info.field_name].annotation
-            if type(annotation).__name__ == "_UnionGenericAlias":
+            while hasattr(annotation, "__args__"):
                 annotation = annotation.__args__[0]
             try:
                 # should pass if we're supposed to be a VectorData column
