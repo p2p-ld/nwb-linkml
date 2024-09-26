@@ -129,7 +129,7 @@ class GroupAdapter(ClassAdapter):
             # We are a top-level container class like ProcessingModule
             base = self.build_base()
             # remove all the attributes and replace with child slot
-            base.classes[0].attributes = [slot]
+            base.classes[0].attributes.append(slot)
             return base
 
     def handle_container_slot(self, cls: Group) -> BuildResult:

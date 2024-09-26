@@ -65,7 +65,10 @@ BASEMODEL_COERCE_CHILD = """
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)            
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass

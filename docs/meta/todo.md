@@ -53,6 +53,9 @@ Loading
 - [ ] Top-level containers are still a little janky, eg. how `ProcessingModule` just accepts 
   extra args rather than properly abstracting `value` as a `__getitem__(self, key) -> T:` 
 
+Changes to linkml
+- [ ] Allow parameterizing "extra" fields, so we don't have to stuff things into `value` dicts
+
 ## Docs TODOs
 
 ```{todolist}
