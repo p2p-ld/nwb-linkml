@@ -2,6 +2,7 @@
 Placeholder test module to test reading from pynwb-generated NWB file
 """
 
+import pdb
 from datetime import datetime
 
 import numpy as np
@@ -11,6 +12,7 @@ from numpydantic.interface.hdf5 import H5Proxy
 from pydantic import BaseModel
 from pynwb import NWBHDF5IO
 from pynwb import NWBFile as PyNWBFile
+from pydantic_core import to_json
 
 from nwb_linkml.io.hdf5 import HDF5IO
 from nwb_models.models import NWBFile
@@ -29,6 +31,13 @@ def test_read_from_nwbfile(nwb_file):
 @pytest.fixture(scope="module")
 def read_nwbfile(nwb_file) -> NWBFile:
     res = HDF5IO(nwb_file).read()
+
+    def fallback(*args, **kwargs):
+        pdb.set_trace()
+
+    to_json(res, fallback=fallback)
+
+    pdb.set_trace()
     return res
 
 
@@ -63,6 +72,7 @@ def test_nwbfile_base(read_nwbfile, read_pynwb):
     """
     Base attributes on top-level nwbfile are correct
     """
+
     _compare_attrs(read_nwbfile, read_pynwb)
 
 

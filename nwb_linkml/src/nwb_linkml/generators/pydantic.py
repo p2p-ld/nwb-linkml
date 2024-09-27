@@ -31,6 +31,7 @@ from nwb_linkml.includes.base import (
     BASEMODEL_COERCE_VALUE,
     BASEMODEL_EXTRA_TO_VALUE,
     BASEMODEL_GETITEM,
+    BASEMODEL_SERIALIZER,
 )
 from nwb_linkml.includes.hdmf import (
     DYNAMIC_TABLE_IMPORTS,
@@ -60,12 +61,20 @@ class NWBPydanticGenerator(PydanticGenerator):
         BASEMODEL_CAST_WITH_VALUE,
         BASEMODEL_COERCE_CHILD,
         BASEMODEL_EXTRA_TO_VALUE,
+        BASEMODEL_SERIALIZER,
     )
     split: bool = True
     imports: list[Import] = field(
         default_factory=lambda: [
             Import(module="numpy", alias="np"),
-            Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
+            Import(
+                module="pydantic",
+                objects=[
+                    ObjectImport(name="model_validator"),
+                    ObjectImport(name="model_serializer"),
+                ],
+            ),
+            Import(module="pdb"),
         ]
     )
 
@@ -294,12 +303,15 @@ class AfterGenerateClass:
             else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = DYNAMIC_TABLE_IMPORTS.model_copy()
         elif cls.cls.name == "VectorData":
-            cls.cls.bases = ["VectorDataMixin"]
+            cls.cls.bases = ["VectorDataMixin[T]", "Generic[T]"]
             # make ``value`` generic on T
             if "value" in cls.cls.attributes:
                 cls.cls.attributes["value"].range = "Optional[T]"
         elif cls.cls.name == "VectorIndex":
-            cls.cls.bases = ["VectorIndexMixin"]
+            cls.cls.bases = ["VectorIndexMixin[T]", "Generic[T]"]
+            # make ``value`` generic on T
+            if "value" in cls.cls.attributes:
+                cls.cls.attributes["value"].range = "Optional[T]"
         elif cls.cls.name == "DynamicTableRegion":
             cls.cls.bases = ["DynamicTableRegionMixin", "VectorData"]
         elif cls.cls.name == "AlignedDynamicTable":

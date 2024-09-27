@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pdb
 import re
 import sys
 from datetime import date, datetime, time
@@ -17,6 +18,7 @@ from pydantic import (
     RootModel,
     ValidationInfo,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -132,6 +134,32 @@ class ConfiguredBaseModel(BaseModel):
                 else:
                     v["value"] = extras
         return v
+
+    @model_serializer(mode="wrap", when_used="json")
+    def serialize_model(self, nxt, info) -> Dict[str, Any]:
+        try:
+            return nxt(self, info)
+        except Exception as e:
+            return {"ERROR": str(e), "TYPE": str(type(self))}
+            if "Circular reference" in str(e):
+                return {"REFERENCE": "REFERENCE"}
+            pdb.set_trace()
+            json_dump_fields = (
+                "indent",
+                "include",
+                "exclude",
+                "context",
+                "by_alias",
+                "exclude_unset",
+                "exclude_defaults",
+                "exclude_none",
+                "round_trip",
+                "warnings",
+                "serialize_as_any",
+            )
+            return self.model_dump_json(
+                **{k: v for k, v in info.__dict__.items() if k in json_dump_fields}
+            )
 
 
 class LinkMLMeta(RootModel):

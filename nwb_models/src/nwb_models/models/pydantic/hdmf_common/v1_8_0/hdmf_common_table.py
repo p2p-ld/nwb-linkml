@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pdb
 import re
 import sys
 from datetime import date, datetime, time
@@ -32,6 +33,7 @@ from pydantic import (
     ValidationInfo,
     ValidatorFunctionWrapHandler,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -132,6 +134,32 @@ class ConfiguredBaseModel(BaseModel):
                 else:
                     v["value"] = extras
         return v
+
+    @model_serializer(mode="wrap", when_used="json")
+    def serialize_model(self, nxt, info) -> Dict[str, Any]:
+        try:
+            return nxt(self, info)
+        except Exception as e:
+            return {"ERROR": str(e), "TYPE": str(type(self))}
+            if "Circular reference" in str(e):
+                return {"REFERENCE": "REFERENCE"}
+            pdb.set_trace()
+            json_dump_fields = (
+                "indent",
+                "include",
+                "exclude",
+                "context",
+                "by_alias",
+                "exclude_unset",
+                "exclude_defaults",
+                "exclude_none",
+                "round_trip",
+                "warnings",
+                "serialize_as_any",
+            )
+            return self.model_dump_json(
+                **{k: v for k, v in info.__dict__.items() if k in json_dump_fields}
+            )
 
 
 class LinkMLMeta(RootModel):
@@ -908,7 +936,7 @@ linkml_meta = LinkMLMeta(
 )
 
 
-class VectorData(VectorDataMixin):
+class VectorData(VectorDataMixin[T], Generic[T]):
     """
     An n-dimensional dataset representing a column of a DynamicTable. If used without an accompanying VectorIndex, first dimension is along the rows of the DynamicTable and each step along the first dimension is a cell of the larger table. VectorData can also be used to represent a ragged array if paired with a VectorIndex. This allows for storing arrays of varying length in a single cell of the DynamicTable by indexing into this VectorData. The first vector is at VectorData[0:VectorIndex[0]]. The second vector is at VectorData[VectorIndex[0]:VectorIndex[1]], and so on.
     """
@@ -922,7 +950,7 @@ class VectorData(VectorDataMixin):
     value: Optional[T] = Field(None)
 
 
-class VectorIndex(VectorIndexMixin):
+class VectorIndex(VectorIndexMixin[T], Generic[T]):
     """
     Used with VectorData to encode a ragged array. An array of indices into the first dimension of the target VectorData, and forming a map between the rows of a DynamicTable and the indices of the VectorData. The name of the VectorIndex is expected to be the name of the target VectorData object followed by \"_index\".
     """
@@ -936,14 +964,7 @@ class VectorIndex(VectorIndexMixin):
         None, description="""Reference to the target dataset that this index applies to."""
     )
     description: str = Field(..., description="""Description of what these vectors represent.""")
-    value: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
+    value: Optional[T] = Field(None)
 
 
 class ElementIdentifiers(ElementIdentifiersMixin, Data):
