@@ -114,14 +114,14 @@ def _icephys_stimulus_and_response(
     n_samples = generator.integers(20, 50)
     stimulus = VoltageClampStimulusSeries(
         name=f"vcss_{i}",
-        data=VoltageClampStimulusSeriesData(value=[i] * n_samples),
+        data=VoltageClampStimulusSeriesData(value=np.array([i] * n_samples, dtype=float)),
         stimulus_description=f"{i}",
         sweep_number=i,
         electrode=electrode,
     )
     response = VoltageClampSeries(
         name=f"vcs_{i}",
-        data=VoltageClampSeriesData(value=[i] * n_samples),
+        data=VoltageClampSeriesData(value=np.array([i] * n_samples, dtype=float)),
         stimulus_description=f"{i}",
         electrode=electrode,
     )

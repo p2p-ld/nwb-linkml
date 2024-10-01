@@ -7,7 +7,7 @@ from typing import ClassVar, Optional, Type
 
 from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
-from nwb_linkml.adapters.adapter import BuildResult, has_attrs, is_1d, is_compound
+from nwb_linkml.adapters.adapter import BuildResult, defaults, has_attrs, is_1d, is_compound
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.maps import QUANTITY_MAP, Map
@@ -59,9 +59,7 @@ class MapScalar(DatasetMap):
                 slots:
                 - name: MyScalar
                   description: A scalar
-                  multivalued: false
                   range: int32
-                  required: false
 
     """
 
@@ -108,6 +106,7 @@ class MapScalar(DatasetMap):
             description=cls.doc,
             range=handle_dtype(cls.dtype),
             **QUANTITY_MAP[cls.quantity],
+            **defaults(cls),
         )
         res = BuildResult(slots=[this_slot])
         return res
@@ -208,7 +207,19 @@ class MapScalarAttributes(DatasetMap):
         """
         Map to a scalar attribute with an adjoining "value" slot
         """
-        value_slot = SlotDefinition(name="value", range=handle_dtype(cls.dtype), required=True)
+        # the *value slot* within the generated class is always required,
+        # but the slot in the parent class referring to this one will indicate whether the whole
+        # thing is optional or not. You can't provide the attributes of the optional dataset
+        # without providing its value
+        quantity = QUANTITY_MAP[cls.quantity].copy()
+        quantity["required"] = True
+
+        value_slot = SlotDefinition(
+            name="value",
+            range=handle_dtype(cls.dtype),
+            **quantity,
+            **defaults(cls),
+        )
         res.classes[0].attributes["value"] = value_slot
         return res
 
@@ -616,7 +627,8 @@ class MapNVectors(DatasetMap):
 
     DynamicTable (and the slot VectorData where this is called for)
     is handled specially and just dropped, because we handle the possibility for
-    arbitrary extra VectorData in the :mod:`nwb_linkml.includes.hdmf` module mixin classes.
+    arbitrary extra VectorData in the :mod:`nwb_linkml.includes.hdmf` module mixin classes
+    (see :class:`.MapNVectorData` ).
 
     So really this is just a handler for the `Images` case
     """
@@ -650,6 +662,40 @@ class MapNVectors(DatasetMap):
         # No need to make a class for us, so we replace the existing build results
         res = BuildResult(slots=[this_slot])
         return res
+
+
+class MapNVectorData(DatasetMap):
+    """
+    An extremely special case just for DynamicTable:
+    DynamicTable indicates that all of its extra columns are ``VectorData`` with an
+    unnamed, * quantity dataset similar to the case of :class:`.MapNVectors` .
+
+    We handle this with the :mod:`.includes.hdmf` module mixin classes instead,
+    and so to avoid generating a pointless slot and class,
+    we just catch that case and return nothing.
+    """
+
+    @classmethod
+    def check(c, cls: Dataset) -> bool:
+        """
+        Check for being an unnamed multivalued vector class that IS VectorData
+        """
+        return (
+            cls.name is None
+            and cls.neurodata_type_def is None
+            and cls.neurodata_type_inc
+            and cls.neurodata_type_inc == "VectorData"
+            and cls.quantity in ("*", "+")
+        )
+
+    @classmethod
+    def apply(
+        c, cls: Dataset, res: Optional[BuildResult] = None, name: Optional[str] = None
+    ) -> BuildResult:
+        """
+        Return ... nothing
+        """
+        return BuildResult()
 
 
 class MapCompoundDtype(DatasetMap):

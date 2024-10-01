@@ -131,7 +131,7 @@ def load_namespace_adapter(
     else:
         adapter = NamespacesAdapter(namespaces=namespaces, schemas=sch)
 
-    adapter.populate_imports()
+    adapter.complete_namespaces()
 
     return adapter
 

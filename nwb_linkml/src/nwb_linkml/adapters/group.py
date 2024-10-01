@@ -2,11 +2,11 @@
 Adapter for NWB groups to linkml Classes
 """
 
-from typing import List, Type
+from typing import Type
 
 from linkml_runtime.linkml_model import SlotDefinition
 
-from nwb_linkml.adapters.adapter import BuildResult
+from nwb_linkml.adapters.adapter import BuildResult, is_container
 from nwb_linkml.adapters.classes import ClassAdapter
 from nwb_linkml.adapters.dataset import DatasetAdapter
 from nwb_linkml.maps import QUANTITY_MAP
@@ -29,7 +29,7 @@ class GroupAdapter(ClassAdapter):
         """
         # Handle container groups with only * quantity unnamed groups
         if (
-            len(self.cls.groups) > 0
+            self.cls.groups
             and not self.cls.links
             and all([self._check_if_container(g) for g in self.cls.groups])
         ):  # and \
@@ -38,26 +38,28 @@ class GroupAdapter(ClassAdapter):
 
         # handle if we are a terminal container group without making a new class
         if (
-            len(self.cls.groups) == 0
-            and len(self.cls.datasets) == 0
+            not self.cls.groups
+            and not self.cls.datasets
             and self.cls.neurodata_type_inc is not None
             and self.parent is not None
         ):
             return self.handle_container_slot(self.cls)
 
-        nested_res = self.build_subclasses()
-        # add links
-        links = self.build_links()
+        nested_res = self.build_datasets()
+        nested_res += self.build_groups()
+        nested_res += self.build_links()
+        nested_res += self.build_containers()
+        nested_res += self.build_special_cases()
 
         # we don't propagate slots up to the next level since they are meant for this
         # level (ie. a way to refer to our children)
-        res = self.build_base(extra_attrs=nested_res.slots + links)
+        res = self.build_base(extra_attrs=nested_res.slots)
         # we do propagate classes tho
         res.classes.extend(nested_res.classes)
 
         return res
 
-    def build_links(self) -> List[SlotDefinition]:
+    def build_links(self) -> BuildResult:
         """
         Build links specified in the ``links`` field as slots that refer to other
         classes, with an additional annotation specifying that they are in fact links.
@@ -66,7 +68,7 @@ class GroupAdapter(ClassAdapter):
         file hierarchy as a string.
         """
         if not self.cls.links:
-            return []
+            return BuildResult()
 
         annotations = [{"tag": "source_type", "value": "link"}]
 
@@ -83,7 +85,7 @@ class GroupAdapter(ClassAdapter):
             )
             for link in self.cls.links
         ]
-        return slots
+        return BuildResult(slots=slots)
 
     def handle_container_group(self, cls: Group) -> BuildResult:
         """
@@ -129,7 +131,7 @@ class GroupAdapter(ClassAdapter):
             # We are a top-level container class like ProcessingModule
             base = self.build_base()
             # remove all the attributes and replace with child slot
-            base.classes[0].attributes = [slot]
+            base.classes[0].attributes.update({slot.name: slot})
             return base
 
     def handle_container_slot(self, cls: Group) -> BuildResult:
@@ -167,28 +169,88 @@ class GroupAdapter(ClassAdapter):
 
         return BuildResult(slots=[slot])
 
-    def build_subclasses(self) -> BuildResult:
+    def build_datasets(self) -> BuildResult:
         """
         Build nested groups and datasets
 
         Create ClassDefinitions for each, but then also create SlotDefinitions that
         will be used as attributes linking the main class to the subclasses
+
+        Datasets are simple, they are terminal classes, and all logic
+        for creating slots vs. classes is handled by the adapter class
         """
-        # Datasets are simple, they are terminal classes, and all logic
-        # for creating slots vs. classes is handled by the adapter class
         dataset_res = BuildResult()
-        for dset in self.cls.datasets:
-            dset_adapter = DatasetAdapter(cls=dset, parent=self)
-            dataset_res += dset_adapter.build()
+        if self.cls.datasets:
+            for dset in self.cls.datasets:
+                dset_adapter = DatasetAdapter(cls=dset, parent=self)
+                dataset_res += dset_adapter.build()
+        return dataset_res
+
+    def build_groups(self) -> BuildResult:
+        """
+        Build subgroups, excluding pure container subgroups
+        """
 
         group_res = BuildResult()
 
-        for group in self.cls.groups:
-            group_adapter = GroupAdapter(cls=group, parent=self)
-            group_res += group_adapter.build()
+        if self.cls.groups:
+            for group in self.cls.groups:
+                if is_container(group):
+                    continue
+                group_adapter = GroupAdapter(cls=group, parent=self)
+                group_res += group_adapter.build()
 
-        res = dataset_res + group_res
+        return group_res
 
+    def build_containers(self) -> BuildResult:
+        """
+        Build all container types into a single ``value`` slot
+        """
+        res = BuildResult()
+        if not self.cls.groups:
+            return res
+        containers = [grp for grp in self.cls.groups if is_container(grp)]
+        if not containers:
+            return res
+
+        if len(containers) == 1:
+            range = {"range": containers[0].neurodata_type_inc}
+            description = containers[0].doc
+        else:
+            range = {"any_of": [{"range": subcls.neurodata_type_inc} for subcls in containers]}
+            description = "\n\n".join([grp.doc for grp in containers])
+
+        slot = SlotDefinition(
+            name="value",
+            multivalued=True,
+            inlined=True,
+            inlined_as_list=False,
+            description=description,
+            **range,
+        )
+
+        if self.debug:  # pragma: no cover - only used in development
+            slot.annotations["group_adapter"] = {
+                "tag": "slot_adapter",
+                "value": "container_value_slot",
+            }
+        res.slots = [slot]
+        return res
+
+    def build_special_cases(self) -> BuildResult:
+        """
+        Special cases, at this point just for NWBFile, which has
+        extra ``.specloc`` and ``specifications`` attrs
+        """
+        res = BuildResult()
+        if self.cls.neurodata_type_def == "NWBFile":
+            res.slots = [
+                SlotDefinition(
+                    name="specifications",
+                    range="dict",
+                    description="Nested dictionary of schema specifications",
+                ),
+            ]
         return res
 
     def build_self_slot(self) -> SlotDefinition:

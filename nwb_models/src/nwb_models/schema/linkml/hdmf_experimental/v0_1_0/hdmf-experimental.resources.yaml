@@ -31,21 +31,18 @@ classes:
           resources.
         range: ExternalResources__keys
         required: true
-        multivalued: false
         inlined: true
       entities:
         name: entities
         description: A table for mapping user terms (i.e., keys) to resource entities.
         range: ExternalResources__entities
         required: true
-        multivalued: false
         inlined: true
       resources:
         name: resources
         description: A table for mapping user terms (i.e., keys) to resource entities.
         range: ExternalResources__resources
         required: true
-        multivalued: false
         inlined: true
       objects:
         name: objects
@@ -53,14 +50,12 @@ classes:
           to external resources.
         range: ExternalResources__objects
         required: true
-        multivalued: false
         inlined: true
       object_keys:
         name: object_keys
         description: A table for identifying which objects use which keys.
         range: ExternalResources__object_keys
         required: true
-        multivalued: false
         inlined: true
     tree_root: true
   ExternalResources__keys:
@@ -84,7 +79,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__entities:
     name: ExternalResources__entities
     description: A table for mapping user terms (i.e., keys) to resource entities.
@@ -104,7 +98,6 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false
       resources_idx:
         name: resources_idx
         description: The index into the 'resources' table
@@ -112,7 +105,6 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false
       entity_id:
         name: entity_id
         description: The unique identifier entity.
@@ -120,7 +112,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
       entity_uri:
         name: entity_uri
         description: The URI for the entity this reference applies to. This can be
@@ -129,7 +120,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__resources:
     name: ExternalResources__resources
     description: A table for mapping user terms (i.e., keys) to resource entities.
@@ -149,7 +139,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
       resource_uri:
         name: resource_uri
         description: The URI for the resource. This can be an empty string.
@@ -157,7 +146,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__objects:
     name: ExternalResources__objects
     description: A table for identifying which objects in a file contain references
@@ -178,7 +166,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
       field:
         name: field
         description: The field of the object. This can be an empty string if the object
@@ -187,7 +174,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__object_keys:
     name: ExternalResources__object_keys
     description: A table for identifying which objects use which keys.
@@ -208,7 +194,6 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false
       keys_idx:
         name: keys_idx
         description: The index to the 'keys' table for the key.
@@ -216,4 +201,3 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false

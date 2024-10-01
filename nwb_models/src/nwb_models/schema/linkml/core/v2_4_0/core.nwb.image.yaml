@@ -91,21 +91,9 @@ classes:
         name: data
         description: Binary data representing images across frames. If data are stored
           in an external file, this should be an empty 3D array.
-        range: numeric
+        range: ImageSeries__data
         required: true
-        multivalued: false
-        any_of:
-        - array:
-            dimensions:
-            - alias: frame
-            - alias: x
-            - alias: y
-        - array:
-            dimensions:
-            - alias: frame
-            - alias: x
-            - alias: y
-            - alias: z
+        inlined: true
       dimension:
         name: dimension
         description: Number of pixels on x, y, (and z) axes.
@@ -123,8 +111,6 @@ classes:
           used if the image is stored in another NWB file and that file is linked
           to this file.
         range: ImageSeries__external_file
-        required: false
-        multivalued: false
         inlined: true
       format:
         name: format
@@ -132,22 +118,89 @@ classes:
           contains the path information to the image files. If this is 'raw', then
           the raw (single-channel) binary data is stored in the 'data' dataset. If
           this attribute is not present, then the default format='raw' case is assumed.
+        ifabsent: string(raw)
         range: text
-        required: false
-        multivalued: false
       device:
         name: device
         annotations:
           source_type:
             tag: source_type
             value: link
-        required: false
-        multivalued: false
         inlined: true
         any_of:
         - range: Device
         - range: string
     tree_root: true
+  ImageSeries__data:
+    name: ImageSeries__data
+    description: Binary data representing images across frames. If data are stored
+      in an external file, this should be an empty 3D array.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+        required: true
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      value:
+        name: value
+        range: numeric
+        any_of:
+        - array:
+            dimensions:
+            - alias: frame
+            - alias: x
+            - alias: y
+        - array:
+            dimensions:
+            - alias: frame
+            - alias: x
+            - alias: y
+            - alias: z
   ImageSeries__external_file:
     name: ImageSeries__external_file
     description: Paths to one or more external file(s). The field is only present
@@ -206,7 +259,6 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: ImageSeries
@@ -226,12 +278,16 @@ classes:
         identifier: true
         range: string
         required: true
+      data:
+        name: data
+        description: Images presented to subject, either grayscale or RGB
+        range: OpticalSeries__data
+        required: true
+        inlined: true
       distance:
         name: distance
         description: Distance from camera/monitor to target/eye.
         range: float32
-        required: false
-        multivalued: false
       field_of_view:
         name: field_of_view
         description: Width, height and depth of image, or imaged area, in meters.
@@ -247,12 +303,69 @@ classes:
             dimensions:
             - alias: width_height_depth
               exact_cardinality: 3
-      data:
-        name: data
-        description: Images presented to subject, either grayscale or RGB
-        range: numeric
+      orientation:
+        name: orientation
+        description: Description of image relative to some reference frame (e.g.,
+          which way is up). Must also specify frame of reference.
+        range: text
+    tree_root: true
+  OpticalSeries__data:
+    name: OpticalSeries__data
+    description: Images presented to subject, either grayscale or RGB
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
         required: true
-        multivalued: false
+        equals_string: data
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+        required: true
+      value:
+        name: value
+        range: numeric
         any_of:
         - array:
             dimensions:
@@ -266,14 +379,6 @@ classes:
             - alias: y
             - alias: r_g_b
               exact_cardinality: 3
-      orientation:
-        name: orientation
-        description: Description of image relative to some reference frame (e.g.,
-          which way is up). Must also specify frame of reference.
-        range: text
-        required: false
-        multivalued: false
-    tree_root: true
   IndexSeries:
     name: IndexSeries
     description: Stores indices to image frames stored in an ImageSeries. The purpose
@@ -292,12 +397,9 @@ classes:
       data:
         name: data
         description: Index of the frame in the referenced ImageSeries.
-        array:
-          dimensions:
-          - alias: num_times
-        range: int32
+        range: IndexSeries__data
         required: true
-        multivalued: false
+        inlined: true
       indexed_timeseries:
         name: indexed_timeseries
         annotations:
@@ -305,9 +407,68 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
         inlined: true
         any_of:
         - range: ImageSeries
         - range: string
     tree_root: true
+  IndexSeries__data:
+    name: IndexSeries__data
+    description: Index of the frame in the referenced ImageSeries.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Actual stored
+          values are not necessarily stored in these units. To access the data in
+          these units, multiply 'data' by 'conversion'.
+        range: text
+        required: true
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: num_times
+        range: int32

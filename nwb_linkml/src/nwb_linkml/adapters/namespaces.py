@@ -8,8 +8,7 @@ for extracting information and generating translated schema
 import contextlib
 from copy import copy
 from pathlib import Path
-from pprint import pformat
-from typing import Dict, List, Optional
+from typing import Dict, Generator, List, Optional
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import Annotation, SchemaDefinition
@@ -19,7 +18,7 @@ from nwb_linkml.adapters.adapter import Adapter, BuildResult
 from nwb_linkml.adapters.schema import SchemaAdapter
 from nwb_linkml.lang_elements import NwbLangSchema
 from nwb_linkml.ui import AdapterProgress
-from nwb_schema_language import Namespaces
+from nwb_schema_language import Dataset, Group, Namespaces
 
 
 class NamespacesAdapter(Adapter):
@@ -30,6 +29,9 @@ class NamespacesAdapter(Adapter):
     namespaces: Namespaces
     schemas: List[SchemaAdapter]
     imported: List["NamespacesAdapter"] = Field(default_factory=list)
+
+    _completed: bool = False
+    """whether we have run the :meth:`.complete_namespace` method"""
 
     @classmethod
     def from_yaml(cls, path: Path) -> "NamespacesAdapter":
@@ -65,7 +67,7 @@ class NamespacesAdapter(Adapter):
                 needed_adapter = NamespacesAdapter.from_yaml(needed_source_ns)
                 ns_adapter.imported.append(needed_adapter)
 
-        ns_adapter.populate_imports()
+        ns_adapter.complete_namespaces()
 
         return ns_adapter
 
@@ -75,6 +77,9 @@ class NamespacesAdapter(Adapter):
         """
         Build the NWB namespace to the LinkML Schema
         """
+
+        if not self._completed:
+            self.complete_namespaces()
 
         sch_result = BuildResult()
         for sch in self.schemas:
@@ -149,45 +154,143 @@ class NamespacesAdapter(Adapter):
                     break
         return self
 
-    def find_type_source(self, name: str) -> SchemaAdapter:
+    def complete_namespaces(self) -> None:
         """
-        Given some neurodata_type_inc, find the schema that it's defined in.
+        After loading the namespace, and after any imports have been added afterwards,
+        this must be called to complete the definitions of the contained schema objects.
 
-        Rather than returning as soon as a match is found, check all
+        This is not automatic because NWB doesn't have a formal dependency resolution system,
+        so it is often impossible to know which imports are needed until after the namespace
+        adapter has been instantiated.
+
+        It **is** automatically called if it hasn't been already by the :meth:`.build` method.
         """
-        # First check within the main schema
-        internal_matches = []
-        for schema in self.schemas:
-            class_names = [cls.neurodata_type_def for cls in schema.created_classes]
-            if name in class_names:
-                internal_matches.append(schema)
+        self._populate_imports()
+        self._roll_down_inheritance()
 
-        if len(internal_matches) > 1:
-            raise KeyError(
-                f"Found multiple schemas in namespace that define {name}:\ninternal:"
-                f" {pformat(internal_matches)}\nimported:{pformat(internal_matches)}"
-            )
-        elif len(internal_matches) == 1:
-            return internal_matches[0]
+        for i in self.imported:
+            i.complete_namespaces()
 
-        import_matches = []
-        for imported_ns in self.imported:
-            for schema in imported_ns.schemas:
-                class_names = [cls.neurodata_type_def for cls in schema.created_classes]
-                if name in class_names:
-                    import_matches.append(schema)
+        self._completed = True
 
-        if len(import_matches) > 1:
-            raise KeyError(
-                f"Found multiple schemas in namespace that define {name}:\ninternal:"
-                f" {pformat(internal_matches)}\nimported:{pformat(import_matches)}"
-            )
-        elif len(import_matches) == 1:
-            return import_matches[0]
+    def _roll_down_inheritance(self) -> None:
+        """
+        nwb-schema-language inheritance doesn't work like normal python inheritance -
+        instead of inheriting everything at the 'top level' of a class, it also
+        recursively merges all properties from the parent objects.
+
+        While this operation does not take care to modify classes in a way that respect their order
+        (i.e. roll down ancestor classes first, in order, before the leaf classes),
+        it doesn't matter - this method should be both idempotent and order insensitive
+        for a given source schema.
+
+        References:
+            https://github.com/NeurodataWithoutBorders/pynwb/issues/1954
+        """
+        for cls in self.walk_types(self, (Group, Dataset)):
+            if not cls.neurodata_type_inc:
+                continue
+
+            parents = self._get_class_ancestors(cls, include_child=True)
+
+            # merge and cast
+            new_cls: dict = {}
+            for i, parent in enumerate(parents):
+                # we want a full roll-down of all the ancestor classes,
+                # but we make an abbreviated leaf class
+                complete = i != len(parents) - 1
+                new_cls = roll_down_nwb_class(new_cls, parent, complete=complete)
+            new_cls: Group | Dataset = type(cls)(**new_cls)
+            new_cls.parent = cls.parent
+
+            # reinsert
+            self._overwrite_class(new_cls, cls)
+
+    def _get_class_ancestors(
+        self, cls: Dataset | Group, include_child: bool = True
+    ) -> list[Dataset | Group]:
+        """
+        Get the chain of ancestor classes inherited via ``neurodata_type_inc``
+
+        Args:
+            cls (:class:`.Dataset` | :class:`.Group`): The class to get ancestors of
+            include_child (bool): If ``True`` (default), include ``cls`` in the output list
+        """
+        parent = self.get(cls.neurodata_type_inc)
+        parents = [parent]
+        while parent.neurodata_type_inc:
+            parent = self.get(parent.neurodata_type_inc)
+            parents.insert(0, parent)
+
+        if include_child:
+            parents.append(cls)
+
+        return parents
+
+    def _overwrite_class(self, new_cls: Dataset | Group, old_cls: Dataset | Group) -> None:
+        """
+        Overwrite the version of a dataset or group that is stored in our schemas
+        """
+        if old_cls.parent:
+            if isinstance(old_cls, Dataset):
+                new_cls.parent.datasets[new_cls.parent.datasets.index(old_cls)] = new_cls
+            else:
+                new_cls.parent.groups[new_cls.parent.groups.index(old_cls)] = new_cls
         else:
-            raise KeyError(f"No schema found that define {name}")
+            # top level class, need to go and find it
+            schema = self.find_type_source(old_cls)
+            if isinstance(new_cls, Dataset):
+                schema.datasets[schema.datasets.index(old_cls)] = new_cls
+            else:
+                schema.groups[schema.groups.index(old_cls)] = new_cls
 
-    def populate_imports(self) -> "NamespacesAdapter":
+    def find_type_source(self, cls: str | Dataset | Group, fast: bool = False) -> SchemaAdapter:
+        """
+        Given some type (as `neurodata_type_def`), find the schema that it's defined in.
+
+        Rather than returning as soon as a match is found, ensure that duplicates are
+        not found within the primary schema, then so the same for all imported schemas.
+
+        Args:
+            cls (str | :class:`.Dataset` | :class:`.Group`): The ``neurodata_type_def``
+                to look for the source of. If a Dataset or Group, look for the object itself
+                (cls in schema.datasets), otherwise look for a class with a matching name.
+            fast (bool): If ``True``, return as soon as a match is found.
+                If ``False`, return after checking all schemas for duplicates.
+
+        Returns:
+            :class:`.SchemaAdapter`
+
+        Raises:
+            KeyError: if multiple schemas or no schemas are found
+        """
+        matches = []
+        for schema in self.all_schemas():
+            in_schema = False
+            if (
+                isinstance(cls, str)
+                and cls in [c.neurodata_type_def for c in schema.created_classes]
+                or isinstance(cls, Dataset)
+                and cls in schema.datasets
+                or isinstance(cls, Group)
+                and cls in schema.groups
+            ):
+                in_schema = True
+
+            if in_schema:
+                if fast:
+                    return schema
+                else:
+                    matches.append(schema)
+
+        if len(matches) > 1:
+            raise KeyError(f"Found multiple schemas in namespace that define {cls}:\n{matches}")
+        elif len(matches) == 1:
+            return matches[0]
+        else:
+            raise KeyError(f"No schema found that define {cls}")
+
+    def _populate_imports(self) -> "NamespacesAdapter":
         """
         Populate the imports that are needed for each schema file
 
@@ -279,3 +382,109 @@ class NamespacesAdapter(Adapter):
             if name in sources:
                 return ns.name
         return None
+
+    def all_schemas(self) -> Generator[SchemaAdapter, None, None]:
+        """
+        Iterator over all schemas including imports
+        """
+        for sch in self.schemas:
+            yield sch
+        for imported in self.imported:
+            for sch in imported.schemas:
+                yield sch
+
+
+def roll_down_nwb_class(
+    source: Group | Dataset | dict, target: Group | Dataset | dict, complete: bool = False
+) -> dict:
+    """
+    Merge an ancestor (via ``neurodata_type_inc`` ) source class with a
+    child ``target`` class.
+
+    On the first recursive pass, only those values that are set on the target are copied from the
+    source class - this isn't a true merging, what we are after is to recursively merge all the
+    values that are modified in the child class with those of the parent class below the top level,
+    the top-level attributes will be carried through via normal inheritance.
+
+    Rather than re-instantiating the child class, we return the dictionary so that this
+    function can be used in series to merge a whole ancestry chain within
+    :class:`.NamespacesAdapter` , but merging isn't exposed in the function since
+    ancestor class definitions can be spread out over many schemas,
+    and we need the orchestration of the adapter to have them in all cases we'd be using this.
+
+    Args:
+        source (dict): source dictionary
+        target (dict): target dictionary (values merged over source)
+        complete (bool): (default ``False``)do a complete merge, merging everything
+            from source to target without trying to minimize redundancy.
+            Used to collapse ancestor classes before the terminal class.
+
+    References:
+        https://github.com/NeurodataWithoutBorders/pynwb/issues/1954
+
+    """
+    if isinstance(source, (Group, Dataset)):
+        source = source.model_dump(exclude_none=True)
+    if isinstance(target, (Group, Dataset)):
+        target = target.model_dump(exclude_none=True)
+
+    exclude = ("neurodata_type_def",)
+
+    # if we are on the first recursion, we exclude top-level items that are not set in the target
+    if complete:
+        ret = {k: v for k, v in source.items() if k not in exclude}
+    else:
+        ret = {k: v for k, v in source.items() if k not in exclude and k in target}
+
+    for key, value in target.items():
+        if key not in ret:
+            ret[key] = value
+        elif isinstance(value, dict):
+            if key in ret:
+                ret[key] = roll_down_nwb_class(ret[key], value, complete=True)
+            else:
+                ret[key] = value
+        elif isinstance(value, list) and all([isinstance(v, dict) for v in value]):
+            src_keys = {v["name"]: ret[key].index(v) for v in ret.get(key, {}) if "name" in v}
+            target_keys = {v["name"]: value.index(v) for v in value if "name" in v}
+
+            new_val = []
+            # screwy double iteration to preserve dict order
+            # all dicts not in target, if in depth > 0
+            if complete:
+                new_val.extend(
+                    [
+                        ret[key][src_keys[k]]
+                        for k in src_keys
+                        if k in set(src_keys.keys()) - set(target_keys.keys())
+                    ]
+                )
+            # all dicts not in source
+            new_val.extend(
+                [
+                    value[target_keys[k]]
+                    for k in target_keys
+                    if k in set(target_keys.keys()) - set(src_keys.keys())
+                ]
+            )
+            # merge dicts in both
+            new_val.extend(
+                [
+                    roll_down_nwb_class(ret[key][src_keys[k]], value[target_keys[k]], complete=True)
+                    for k in target_keys
+                    if k in set(src_keys.keys()).intersection(set(target_keys.keys()))
+                ]
+            )
+            new_val = sorted(new_val, key=lambda i: i["name"])
+            # add any dicts that don't have the list_key
+            # they can't be merged since they can't be matched
+            if complete:
+                new_val.extend([v for v in ret.get(key, {}) if "name" not in v])
+            new_val.extend([v for v in value if "name" not in v])
+
+            ret[key] = new_val
+
+        else:
+            ret[key] = value
+
+    return ret

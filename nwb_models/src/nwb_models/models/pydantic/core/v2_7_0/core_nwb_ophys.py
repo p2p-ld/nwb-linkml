@@ -17,6 +17,7 @@ from pydantic import (
     RootModel,
     ValidationInfo,
     field_validator,
+    model_validator,
 )
 
 from ...core.v2_7_0.core_nwb_base import (
@@ -27,7 +28,7 @@ from ...core.v2_7_0.core_nwb_base import (
     TimeSeriesSync,
 )
 from ...core.v2_7_0.core_nwb_device import Device
-from ...core.v2_7_0.core_nwb_image import ImageSeries, ImageSeriesExternalFile
+from ...core.v2_7_0.core_nwb_image import ImageSeries, ImageSeriesData, ImageSeriesExternalFile
 from ...hdmf_common.v1_8_0.hdmf_common_table import (
     DynamicTable,
     DynamicTableRegion,
@@ -45,7 +46,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -55,7 +56,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -66,7 +67,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -79,6 +80,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -89,10 +102,35 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -160,20 +198,20 @@ class OnePhotonSeries(ImageSeries):
     )
 
     name: str = Field(...)
-    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
-    scan_line_rate: Optional[float] = Field(
-        None,
-        description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
+    binning: Optional[int] = Field(
+        None, description="""Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc."""
     )
     exposure_time: Optional[float] = Field(
         None, description="""Exposure time of the sample; often the inverse of the frequency."""
     )
-    binning: Optional[int] = Field(
-        None, description="""Amount of pixels combined into 'bins'; could be 1, 2, 4, 8, etc."""
-    )
-    power: Optional[float] = Field(None, description="""Power of the excitation in mW, if known.""")
     intensity: Optional[float] = Field(
         None, description="""Intensity of the excitation in mW/mm^2, if known."""
+    )
+    pmt_gain: Optional[float] = Field(None, description="""Photomultiplier gain.""")
+    power: Optional[float] = Field(None, description="""Power of the excitation in mW, if known.""")
+    scan_line_rate: Optional[float] = Field(
+        None,
+        description="""Lines imaged per second. This is also stored in /general/optophysiology but is kept here as it is useful information for analysis, and so good to be stored w/ the actual data.""",
     )
     imaging_plane: Union[ImagingPlane, str] = Field(
         ...,
@@ -184,9 +222,7 @@ class OnePhotonSeries(ImageSeries):
             }
         },
     )
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
-    ] = Field(
+    data: ImageSeriesData = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
@@ -200,8 +236,9 @@ class OnePhotonSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -278,9 +315,7 @@ class TwoPhotonSeries(ImageSeries):
             }
         },
     )
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
-    ] = Field(
+    data: ImageSeriesData = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
@@ -294,8 +329,9 @@ class TwoPhotonSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -353,9 +389,7 @@ class RoiResponseSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: Union[
-        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
-    ] = Field(..., description="""Signals from ROIs.""")
+    data: RoiResponseSeriesData = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
@@ -405,6 +439,47 @@ class RoiResponseSeries(TimeSeries):
     )
 
 
+class RoiResponseSeriesData(ConfiguredBaseModel):
+    """
+    Signals from ROIs.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: str = Field(
+        ...,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* num_times"], float | int],
+            NDArray[Shape["* num_times, * num_rois"], float | int],
+        ]
+    ] = Field(None)
+
+
 class DfOverF(NWBDataInterface):
     """
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
@@ -414,10 +489,10 @@ class DfOverF(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
+    name: str = Field("DfOverF", json_schema_extra={"linkml_meta": {"ifabsent": "string(DfOverF)"}})
     value: Optional[Dict[str, RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class Fluorescence(NWBDataInterface):
@@ -429,10 +504,12 @@ class Fluorescence(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
+    name: str = Field(
+        "Fluorescence", json_schema_extra={"linkml_meta": {"ifabsent": "string(Fluorescence)"}}
+    )
     value: Optional[Dict[str, RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class ImageSegmentation(NWBDataInterface):
@@ -444,10 +521,13 @@ class ImageSegmentation(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
+    name: str = Field(
+        "ImageSegmentation",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(ImageSegmentation)"}},
+    )
     value: Optional[Dict[str, PlaneSegmentation]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "PlaneSegmentation"}]}}
     )
-    name: str = Field(...)
 
 
 class PlaneSegmentation(DynamicTable):
@@ -471,6 +551,10 @@ class PlaneSegmentation(DynamicTable):
         None,
         description="""ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.""",
     )
+    pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
+        None,
+        description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
+    )
     pixel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
         description="""Index into pixel_mask.""",
@@ -483,9 +567,9 @@ class PlaneSegmentation(DynamicTable):
             }
         },
     )
-    pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
+    voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
         None,
-        description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
+        description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
     voxel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
@@ -498,10 +582,6 @@ class PlaneSegmentation(DynamicTable):
                 }
             }
         },
-    )
-    voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
-        None,
-        description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
     reference_images: Optional[Dict[str, ImageSeries]] = Field(
         None,
@@ -763,10 +843,13 @@ class MotionCorrection(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
+    name: str = Field(
+        "MotionCorrection",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(MotionCorrection)"}},
+    )
     value: Optional[Dict[str, CorrectedImageStack]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "CorrectedImageStack"}]}}
     )
-    name: str = Field(...)
 
 
 class CorrectedImageStack(NWBDataInterface):
@@ -802,6 +885,7 @@ class CorrectedImageStack(NWBDataInterface):
 OnePhotonSeries.model_rebuild()
 TwoPhotonSeries.model_rebuild()
 RoiResponseSeries.model_rebuild()
+RoiResponseSeriesData.model_rebuild()
 DfOverF.model_rebuild()
 Fluorescence.model_rebuild()
 ImageSegmentation.model_rebuild()

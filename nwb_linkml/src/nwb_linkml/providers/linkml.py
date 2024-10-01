@@ -127,7 +127,7 @@ class LinkMLProvider(Provider):
             for schema_needs in adapter.needed_imports.values():
                 for needed in schema_needs:
                     adapter.imported.append(ns_adapters[needed])
-            adapter.populate_imports()
+            adapter.complete_namespaces()
 
         # then do the build
         res = {}

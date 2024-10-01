@@ -39,6 +39,12 @@ flat_to_linkml = {
 Map between the flat data types and the simpler linkml base types
 """
 
+linkml_reprs = {"numeric": "float | int"}
+"""
+``repr`` fields used in the nwb language elements injected in every namespace
+that give the nwb type a specific representation in the generated pydantic models
+"""
+
 flat_to_np = {
     "float": float,
     "float32": np.float32,
@@ -65,6 +71,26 @@ flat_to_np = {
     "bool": bool,
     "isodatetime": np.datetime64,
 }
+
+integer_types = {
+    "long",
+    "int64",
+    "int",
+    "int32",
+    "int16",
+    "short",
+    "int8",
+    "uint",
+    "uint32",
+    "uint16",
+    "uint8",
+    "uint64",
+}
+
+float_types = {"float", "float32", "double", "float64", "numeric"}
+
+string_types = {"text", "utf", "utf8", "utf_8", "ascii"}
+
 
 np_to_python = {
     Any: Any,

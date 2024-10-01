@@ -7,24 +7,11 @@ from typing import ClassVar, Optional, Type, TypedDict
 
 from linkml_runtime.linkml_model.meta import SlotDefinition
 
-from nwb_linkml.adapters.adapter import Adapter, BuildResult, is_1d
+from nwb_linkml.adapters.adapter import Adapter, BuildResult, defaults, is_1d
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.maps import Map
 from nwb_linkml.maps.dtype import handle_dtype, inlined
 from nwb_schema_language import Attribute
-
-
-def _make_ifabsent(val: str | int | float | None) -> str | None:
-    if val is None:
-        return None
-    elif isinstance(val, str):
-        return f"string({val})"
-    elif isinstance(val, int):
-        return f"integer({val})"
-    elif isinstance(val, float):
-        return f"float({val})"
-    else:
-        return str(val)
 
 
 class AttrDefaults(TypedDict):
@@ -37,31 +24,6 @@ class AttrDefaults(TypedDict):
 
 class AttributeMap(Map):
     """Base class for attribute mapping transformations :)"""
-
-    @classmethod
-    def handle_defaults(cls, attr: Attribute) -> AttrDefaults:
-        """
-        Construct arguments for linkml slot default metaslots from nwb schema lang attribute props
-        """
-        equals_string = None
-        equals_number = None
-        default_value = None
-        if attr.value:
-            if isinstance(attr.value, (int, float)):
-                equals_number = attr.value
-            elif attr.value:
-                equals_string = str(attr.value)
-
-        if equals_number:
-            default_value = _make_ifabsent(equals_number)
-        elif equals_string:
-            default_value = _make_ifabsent(equals_string)
-        elif attr.default_value:
-            default_value = _make_ifabsent(attr.default_value)
-
-        return AttrDefaults(
-            equals_string=equals_string, equals_number=equals_number, ifabsent=default_value
-        )
 
     @classmethod
     @abstractmethod
@@ -105,7 +67,7 @@ class MapScalar(AttributeMap):
             description=attr.doc,
             required=attr.required,
             inlined=inlined(attr.dtype),
-            **cls.handle_defaults(attr),
+            **defaults(attr),
         )
         return BuildResult(slots=[slot])
 
@@ -154,7 +116,7 @@ class MapArray(AttributeMap):
             required=attr.required,
             inlined=inlined(attr.dtype),
             **expressions,
-            **cls.handle_defaults(attr),
+            **defaults(attr),
         )
         return BuildResult(slots=[slot])
 

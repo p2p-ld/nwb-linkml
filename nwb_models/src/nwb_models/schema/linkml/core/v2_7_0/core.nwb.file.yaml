@@ -81,13 +81,11 @@ classes:
           other files.
         range: text
         required: true
-        multivalued: false
       session_description:
         name: session_description
         description: A description of the experimental session and data in the file.
         range: text
         required: true
-        multivalued: false
       session_start_time:
         name: session_start_time
         description: 'Date and time of the experiment/session start. The date is stored
@@ -96,7 +94,6 @@ classes:
           offset. Date accuracy is up to milliseconds.'
         range: isodatetime
         required: true
-        multivalued: false
       timestamps_reference_time:
         name: timestamps_reference_time
         description: 'Date and time corresponding to time zero of all timestamps.
@@ -106,7 +103,6 @@ classes:
           times stored in the file use this time as reference (i.e., time zero).'
         range: isodatetime
         required: true
-        multivalued: false
       acquisition:
         name: acquisition
         description: Data streams recorded from the system, including ephys, ophys,
@@ -185,7 +181,6 @@ classes:
           can exist in the present file or can be linked to a remote library file.
         range: NWBFile__stimulus
         required: true
-        multivalued: false
         inlined: true
         inlined_as_list: true
       general:
@@ -207,7 +202,6 @@ classes:
           should not be created unless there is data to store within them.
         range: NWBFile__general
         required: true
-        multivalued: false
         inlined: true
         inlined_as_list: true
       intervals:
@@ -217,18 +211,18 @@ classes:
           an experiment, or epochs (see epochs subgroup) deriving from analysis of
           data.
         range: NWBFile__intervals
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: true
       units:
         name: units
         description: Data about sorted spike units.
         range: Units
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
+      specifications:
+        name: specifications
+        description: Nested dictionary of schema specifications
+        range: dict
     tree_root: true
   NWBFile__stimulus:
     name: NWBFile__stimulus
@@ -302,14 +296,10 @@ classes:
         name: data_collection
         description: Notes about data collection and analysis.
         range: text
-        required: false
-        multivalued: false
       experiment_description:
         name: experiment_description
         description: General description of the experiment.
         range: text
-        required: false
-        multivalued: false
       experimenter:
         name: experimenter
         description: Name of person(s) who performed the experiment. Can also specify
@@ -324,8 +314,6 @@ classes:
         name: institution
         description: Institution(s) where experiment was performed.
         range: text
-        required: false
-        multivalued: false
       keywords:
         name: keywords
         description: Terms to search over.
@@ -339,28 +327,20 @@ classes:
         name: lab
         description: Laboratory where experiment was performed.
         range: text
-        required: false
-        multivalued: false
       notes:
         name: notes
         description: Notes about the experiment.
         range: text
-        required: false
-        multivalued: false
       pharmacology:
         name: pharmacology
         description: Description of drugs used, including how and when they were administered.
           Anesthesia(s), painkiller(s), etc., plus dosage, concentration, etc.
         range: text
-        required: false
-        multivalued: false
       protocol:
         name: protocol
         description: Experimental protocol, if applicable. e.g., include IACUC protocol
           number.
         range: text
-        required: false
-        multivalued: false
       related_publications:
         name: related_publications
         description: Publication information. PMID, DOI, URL, etc.
@@ -374,52 +354,31 @@ classes:
         name: session_id
         description: Lab-specific ID for the session.
         range: text
-        required: false
-        multivalued: false
       slices:
         name: slices
         description: Description of slices, including information about preparation
           thickness, orientation, temperature, and bath solution.
         range: text
-        required: false
-        multivalued: false
       source_script:
         name: source_script
         description: Script file or link to public source code used to create this
           NWB file.
         range: general__source_script
-        required: false
-        multivalued: false
         inlined: true
       stimulus:
         name: stimulus
         description: Notes about stimuli, such as how and where they were presented.
         range: text
-        required: false
-        multivalued: false
       surgery:
         name: surgery
         description: Narrative description about surgery/surgeries, including date(s)
           and who performed surgery.
         range: text
-        required: false
-        multivalued: false
       virus:
         name: virus
         description: Information about virus(es) used in experiments, including virus
           ID, source, date made, injection location, volume, etc.
         range: text
-        required: false
-        multivalued: false
-      lab_meta_data:
-        name: lab_meta_data
-        description: Place-holder than can be extended so that lab-specific meta-data
-          can be placed in /general.
-        range: LabMetaData
-        required: false
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
       devices:
         name: devices
         description: Description of hardware devices used during experiment, e.g.,
@@ -434,24 +393,18 @@ classes:
         description: Information about the animal or person from which the data was
           measured.
         range: Subject
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       extracellular_ephys:
         name: extracellular_ephys
         description: Metadata related to extracellular electrophysiology.
         range: general__extracellular_ephys
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: true
       intracellular_ephys:
         name: intracellular_ephys
         description: Metadata related to intracellular electrophysiology.
         range: general__intracellular_ephys
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: true
       optogenetics:
@@ -470,6 +423,14 @@ classes:
         inlined_as_list: false
         any_of:
         - range: ImagingPlane
+      value:
+        name: value
+        description: Place-holder than can be extended so that lab-specific meta-data
+          can be placed in /general.
+        range: LabMetaData
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
   general__source_script:
     name: general__source_script
     description: Script file or link to public source code used to create this NWB
@@ -502,22 +463,19 @@ classes:
         range: string
         required: true
         equals_string: extracellular_ephys
-      electrode_group:
-        name: electrode_group
-        description: Physical group of electrodes.
-        range: ElectrodeGroup
-        required: false
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
       electrodes:
         name: electrodes
         description: A table of all electrodes (i.e. channels) used for recording.
         range: extracellular_ephys__electrodes
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: true
+      value:
+        name: value
+        description: Physical group of electrodes.
+        range: ElectrodeGroup
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
   extracellular_ephys__electrodes:
     name: extracellular_ephys__electrodes
     description: A table of all electrodes (i.e. channels) used for recording.
@@ -662,16 +620,6 @@ classes:
           etc. If this changes between TimeSeries, filter description should be stored
           as a text attribute for each TimeSeries.'
         range: text
-        required: false
-        multivalued: false
-      intracellular_electrode:
-        name: intracellular_electrode
-        description: An intracellular electrode.
-        range: IntracellularElectrode
-        required: false
-        multivalued: true
-        inlined: true
-        inlined_as_list: false
       sweep_table:
         name: sweep_table
         description: '[DEPRECATED] Table used to group different PatchClampSeries.
@@ -679,8 +627,6 @@ classes:
           tables. Additional SequentialRecordingsTable, RepetitionsTable and ExperimentalConditions
           tables provide enhanced support for experiment metadata.'
         range: SweepTable
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       intracellular_recordings:
@@ -698,8 +644,6 @@ classes:
           to an electrode is also common in intracellular electrophysiology, in which
           case other TimeSeries may be used.
         range: IntracellularRecordingsTable
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       simultaneous_recordings:
@@ -708,8 +652,6 @@ classes:
           the IntracellularRecordingsTable table together that were recorded simultaneously
           from different electrodes
         range: SimultaneousRecordingsTable
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       sequential_recordings:
@@ -719,8 +661,6 @@ classes:
           together sequential recordings where the a sequence of stimuli of the same
           type with varying parameters have been presented in a sequence.
         range: SequentialRecordingsTable
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       repetitions:
@@ -730,8 +670,6 @@ classes:
           type of stimulus, the RepetitionsTable table is typically used to group
           sets of stimuli applied in sequence.
         range: RepetitionsTable
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       experimental_conditions:
@@ -739,8 +677,13 @@ classes:
         description: A table for grouping different intracellular recording repetitions
           together that belong to the same experimental experimental_conditions.
         range: ExperimentalConditionsTable
-        required: false
-        multivalued: false
+        inlined: true
+        inlined_as_list: false
+      value:
+        name: value
+        description: An intracellular electrode.
+        range: IntracellularElectrode
+        multivalued: true
         inlined: true
         inlined_as_list: false
   NWBFile__intervals:
@@ -761,32 +704,25 @@ classes:
         description: Divisions in time marking experimental stages or sub-divisions
           of a single recording session.
         range: TimeIntervals
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       trials:
         name: trials
         description: Repeated experimental events that have a logical grouping.
         range: TimeIntervals
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
       invalid_times:
         name: invalid_times
         description: Time intervals that should be removed from analysis.
         range: TimeIntervals
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: false
-      time_intervals:
-        name: time_intervals
+      value:
+        name: value
         description: Optional additional table(s) for describing other experimental
           time intervals.
         range: TimeIntervals
-        required: false
         multivalued: true
         inlined: true
         inlined_as_list: false
@@ -815,59 +751,41 @@ classes:
         name: age
         description: Age of subject. Can be supplied instead of 'date_of_birth'.
         range: Subject__age
-        required: false
-        multivalued: false
         inlined: true
       date_of_birth:
         name: date_of_birth
         description: Date of birth of subject. Can be supplied instead of 'age'.
         range: isodatetime
-        required: false
-        multivalued: false
       description:
         name: description
         description: Description of subject and where subject came from (e.g., breeder,
           if animal).
         range: text
-        required: false
-        multivalued: false
       genotype:
         name: genotype
         description: Genetic strain. If absent, assume Wild Type (WT).
         range: text
-        required: false
-        multivalued: false
       sex:
         name: sex
         description: Gender of subject.
         range: text
-        required: false
-        multivalued: false
       species:
         name: species
         description: Species of subject.
         range: text
-        required: false
-        multivalued: false
       strain:
         name: strain
         description: Strain of subject.
         range: text
-        required: false
-        multivalued: false
       subject_id:
         name: subject_id
         description: ID of animal/person used/participating in experiment (lab convention).
         range: text
-        required: false
-        multivalued: false
       weight:
         name: weight
         description: Weight at time of experiment, at time of surgery and at other
           important times.
         range: text
-        required: false
-        multivalued: false
     tree_root: true
   Subject__age:
     name: Subject__age

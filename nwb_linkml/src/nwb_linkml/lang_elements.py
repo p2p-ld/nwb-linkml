@@ -12,7 +12,7 @@ from linkml_runtime.linkml_model import (
     TypeDefinition,
 )
 
-from nwb_linkml.maps import flat_to_linkml
+from nwb_linkml.maps import flat_to_linkml, linkml_reprs
 
 
 def _make_dtypes() -> List[TypeDefinition]:
@@ -36,8 +36,13 @@ def _make_dtypes() -> List[TypeDefinition]:
             name=nwbtype,
             minimum_value=amin,
             typeof=linkmltype,  # repr=repr_string
+            repr=linkml_reprs.get(nwbtype, None),
         )
         DTypeTypes.append(atype)
+
+    # a dict type!
+    DTypeTypes.append(TypeDefinition(name="dict", repr="dict"))
+
     return DTypeTypes
 
 

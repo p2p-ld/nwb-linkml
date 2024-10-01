@@ -46,6 +46,10 @@ jobs:
         run: pytest
         working-directory: nwb_linkml
 
+      - name: Run nwb_schema_language Tests
+        run: pytest
+        working-directory: nwb_schema_language
+
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@v2.3.0
         if: runner.os != 'macOS'

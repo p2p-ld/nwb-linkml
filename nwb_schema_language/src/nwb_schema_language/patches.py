@@ -49,8 +49,15 @@ class Patch:
 patch_schema_slot = Patch(
     phase=Phases.post_generation_pydantic,
     path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
-    match=r"\n\s*(schema:)(.*Field\()(.*)",
-    replacement=r'\n    schema_:\2alias="schema", \3',
+    match=r"\n\s*(schema:)(.*Field\(\n\s*None,\n)(.*)",
+    replacement=r'\n    schema_:\2        alias="schema",\n\3',
+)
+
+patch_schema_slot_no_newline = Patch(
+    phase=Phases.post_generation_pydantic,
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
+    match=r"\n\s*(schema:)(.*Field\(None,)(.*)",
+    replacement=r'\n    schema_:\2 alias="schema", \3',
 )
 
 patch_dtype_single_multiple = Patch(
@@ -72,6 +79,20 @@ patch_contact_single_multiple = Patch(
     path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
     match=r"contact: List\[str\]",
     replacement="contact: List[str] | str",
+)
+
+patch_validate_assignment = Patch(
+    phase=Phases.post_generation_pydantic,
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
+    match=r"validate_assignment=True",
+    replacement="validate_assignment=False",
+)
+
+patch_exclude_parent = Patch(
+    phase=Phases.post_generation_pydantic,
+    path=Path("src/nwb_schema_language/datamodel/nwb_schema_pydantic.py"),
+    match=r"(parent:.*Field\(\n\s*None,\n)(.*)",
+    replacement=r"\1        exclude=True,\n\2",
 )
 
 

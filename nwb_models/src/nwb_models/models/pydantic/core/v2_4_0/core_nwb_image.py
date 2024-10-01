@@ -9,7 +9,7 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 import numpy as np
 from numpydantic import NDArray, Shape
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
 from ...core.v2_4_0.core_nwb_base import Image, TimeSeries, TimeSeriesStartingTime, TimeSeriesSync
 from ...core.v2_4_0.core_nwb_device import Device
@@ -23,7 +23,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -33,7 +33,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -44,7 +44,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -57,6 +57,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -67,10 +79,35 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -116,7 +153,7 @@ class GrayscaleImage(Image):
     )
 
     name: str = Field(...)
-    value: Optional[NDArray[Shape["* x, * y"], float]] = Field(
+    value: Optional[NDArray[Shape["* x, * y"], float | int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "x"}, {"alias": "y"}]}}
@@ -138,7 +175,7 @@ class RGBImage(Image):
     )
 
     name: str = Field(...)
-    value: Optional[NDArray[Shape["* x, * y, 3 r_g_b"], float]] = Field(
+    value: Optional[NDArray[Shape["* x, * y, 3 r_g_b"], float | int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -168,7 +205,7 @@ class RGBAImage(Image):
     )
 
     name: str = Field(...)
-    value: Optional[NDArray[Shape["* x, * y, 4 r_g_b_a"], float]] = Field(
+    value: Optional[NDArray[Shape["* x, * y, 4 r_g_b_a"], float | int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {
@@ -198,9 +235,7 @@ class ImageSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
-    ] = Field(
+    data: ImageSeriesData = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
@@ -214,8 +249,9 @@ class ImageSeries(TimeSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -263,6 +299,43 @@ class ImageSeries(TimeSeries):
     )
 
 
+class ImageSeriesData(ConfiguredBaseModel):
+    """
+    Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: str = Field(
+        ...,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* frame, * x, * y"], float | int],
+            NDArray[Shape["* frame, * x, * y, * z"], float | int],
+        ]
+    ] = Field(None)
+
+
 class ImageSeriesExternalFile(ConfiguredBaseModel):
     """
     Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.
@@ -304,9 +377,7 @@ class ImageMaskSeries(ImageSeries):
             }
         },
     )
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float], NDArray[Shape["* frame, * x, * y, * z"], float]
-    ] = Field(
+    data: ImageSeriesData = Field(
         ...,
         description="""Binary data representing images across frames. If data are stored in an external file, this should be an empty 3D array.""",
     )
@@ -320,8 +391,9 @@ class ImageMaskSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -379,6 +451,9 @@ class OpticalSeries(ImageSeries):
     )
 
     name: str = Field(...)
+    data: OpticalSeriesData = Field(
+        ..., description="""Images presented to subject, either grayscale or RGB"""
+    )
     distance: Optional[float] = Field(
         None, description="""Distance from camera/monitor to target/eye."""
     )
@@ -387,10 +462,6 @@ class OpticalSeries(ImageSeries):
             NDArray[Shape["2 width_height"], float], NDArray[Shape["3 width_height_depth"], float]
         ]
     ] = Field(None, description="""Width, height and depth of image, or imaged area, in meters.""")
-    data: Union[
-        NDArray[Shape["* frame, * x, * y"], float],
-        NDArray[Shape["* frame, * x, * y, 3 r_g_b"], float],
-    ] = Field(..., description="""Images presented to subject, either grayscale or RGB""")
     orientation: Optional[str] = Field(
         None,
         description="""Description of image relative to some reference frame (e.g., which way is up). Must also specify frame of reference.""",
@@ -405,8 +476,9 @@ class OpticalSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     device: Optional[Union[Device, str]] = Field(
         None,
@@ -454,6 +526,43 @@ class OpticalSeries(ImageSeries):
     )
 
 
+class OpticalSeriesData(ConfiguredBaseModel):
+    """
+    Images presented to subject, either grayscale or RGB
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: str = Field(
+        ...,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* frame, * x, * y"], float | int],
+            NDArray[Shape["* frame, * x, * y, 3 r_g_b"], float | int],
+        ]
+    ] = Field(None)
+
+
 class IndexSeries(TimeSeries):
     """
     Stores indices to image frames stored in an ImageSeries. The purpose of the ImageIndexSeries is to allow a static image stack to be stored somewhere, and the images in the stack to be referenced out-of-order. This can be for the display of individual images, or of movie segments (as a movie is simply a series of images). The data field stores the index of the frame in the referenced ImageSeries, and the timestamps array indicates when that image was displayed.
@@ -464,10 +573,8 @@ class IndexSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: NDArray[Shape["* num_times"], int] = Field(
-        ...,
-        description="""Index of the frame in the referenced ImageSeries.""",
-        json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}},
+    data: IndexSeriesData = Field(
+        ..., description="""Index of the frame in the referenced ImageSeries."""
     )
     indexed_timeseries: Union[ImageSeries, str] = Field(
         ...,
@@ -515,13 +622,50 @@ class IndexSeries(TimeSeries):
     )
 
 
+class IndexSeriesData(ConfiguredBaseModel):
+    """
+    Index of the frame in the referenced ImageSeries.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.image"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: str = Field(
+        ...,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+    )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    value: Optional[NDArray[Shape["* num_times"], int]] = Field(
+        None, json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_times"}]}}}
+    )
+
+
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 GrayscaleImage.model_rebuild()
 RGBImage.model_rebuild()
 RGBAImage.model_rebuild()
 ImageSeries.model_rebuild()
+ImageSeriesData.model_rebuild()
 ImageSeriesExternalFile.model_rebuild()
 ImageMaskSeries.model_rebuild()
 OpticalSeries.model_rebuild()
+OpticalSeriesData.model_rebuild()
 IndexSeries.model_rebuild()
+IndexSeriesData.model_rebuild()

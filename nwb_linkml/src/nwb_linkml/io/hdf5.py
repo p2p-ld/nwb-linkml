@@ -166,8 +166,13 @@ def _load_node(
         raise TypeError(f"Nodes can only be h5py Datasets and Groups, got {obj}")
 
     if "neurodata_type" in obj.attrs:
+        # SPECIAL CASE: ignore `.specloc`
+        if ".specloc" in args:
+            del args[".specloc"]
+
         model = provider.get_class(obj.attrs["namespace"], obj.attrs["neurodata_type"])
         return model(**args)
+
     else:
         if "name" in args:
             del args["name"]

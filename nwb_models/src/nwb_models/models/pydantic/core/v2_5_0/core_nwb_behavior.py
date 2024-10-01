@@ -9,7 +9,7 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 import numpy as np
 from numpydantic import NDArray, Shape
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
 from ...core.v2_5_0.core_nwb_base import (
     NWBDataInterface,
@@ -28,7 +28,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -38,7 +38,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -49,7 +49,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -62,6 +62,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -72,10 +84,35 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -176,6 +213,24 @@ class SpatialSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    continuity: Optional[str] = Field(
+        None,
+        description="""Optionally describe the continuity of the data. Can be \"continuous\", \"instantaneous\", or \"step\". For example, a voltage trace would be \"continuous\", because samples are recorded from a continuous process. An array of lick times would be \"instantaneous\", because the data represents distinct moments in time. Times of image presentations would be \"step\" because the picture remains the same until the next timepoint. This field is optional, but is useful in providing information about the underlying data. It may inform the way this data is interpreted, the way it is visualized, and what analysis methods are applicable.""",
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    offset: Optional[float] = Field(
+        None,
+        description="""Scalar to add to the data after scaling by 'conversion' to finalize its coercion to the specified 'unit'. Two common examples of this include (a) data stored in an unsigned type that requires a shift after scaling to re-center the data, and (b) specialized recording devices that naturally cause a scalar offset with respect to the true units.""",
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: Optional[str] = Field(
         "meters",
         description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion' and add 'offset'.""",
@@ -183,10 +238,10 @@ class SpatialSeriesData(ConfiguredBaseModel):
     )
     value: Optional[
         Union[
-            NDArray[Shape["* num_times"], float],
-            NDArray[Shape["* num_times, 1 x"], float],
-            NDArray[Shape["* num_times, 2 x_y"], float],
-            NDArray[Shape["* num_times, 3 x_y_z"], float],
+            NDArray[Shape["* num_times"], float | int],
+            NDArray[Shape["* num_times, 1 x"], float | int],
+            NDArray[Shape["* num_times, 2 x_y"], float | int],
+            NDArray[Shape["* num_times, 3 x_y_z"], float | int],
         ]
     ] = Field(None)
 
@@ -200,10 +255,13 @@ class BehavioralEpochs(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "BehavioralEpochs",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralEpochs)"}},
+    )
     value: Optional[Dict[str, IntervalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "IntervalSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class BehavioralEvents(NWBDataInterface):
@@ -215,10 +273,13 @@ class BehavioralEvents(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "BehavioralEvents",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralEvents)"}},
+    )
     value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class BehavioralTimeSeries(NWBDataInterface):
@@ -230,10 +291,13 @@ class BehavioralTimeSeries(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "BehavioralTimeSeries",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralTimeSeries)"}},
+    )
     value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class PupilTracking(NWBDataInterface):
@@ -245,10 +309,12 @@ class PupilTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "PupilTracking", json_schema_extra={"linkml_meta": {"ifabsent": "string(PupilTracking)"}}
+    )
     value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class EyeTracking(NWBDataInterface):
@@ -260,10 +326,12 @@ class EyeTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "EyeTracking", json_schema_extra={"linkml_meta": {"ifabsent": "string(EyeTracking)"}}
+    )
     value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class CompassDirection(NWBDataInterface):
@@ -275,10 +343,13 @@ class CompassDirection(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "CompassDirection",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(CompassDirection)"}},
+    )
     value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class Position(NWBDataInterface):
@@ -290,10 +361,12 @@ class Position(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
+    name: str = Field(
+        "Position", json_schema_extra={"linkml_meta": {"ifabsent": "string(Position)"}}
+    )
     value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 # Model rebuild

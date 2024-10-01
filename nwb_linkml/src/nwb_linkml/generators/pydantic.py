@@ -9,13 +9,13 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, ClassVar, Dict, List, Literal, Optional, Tuple
+from typing import Callable, ClassVar, Dict, List, Optional, Tuple
 
 from linkml.generators import PydanticGenerator
 from linkml.generators.pydanticgen.array import ArrayRepresentation, NumpydanticArray
 from linkml.generators.pydanticgen.build import ClassResult, SlotResult
 from linkml.generators.pydanticgen.pydanticgen import SplitMode
-from linkml.generators.pydanticgen.template import Import, Imports, PydanticModule
+from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport, PydanticModule
 from linkml_runtime.linkml_model.meta import (
     ArrayExpression,
     SchemaDefinition,
@@ -26,8 +26,10 @@ from linkml_runtime.utils.formatutils import remove_empty_items
 from linkml_runtime.utils.schemaview import SchemaView
 
 from nwb_linkml.includes.base import (
+    BASEMODEL_CAST_WITH_VALUE,
     BASEMODEL_COERCE_CHILD,
     BASEMODEL_COERCE_VALUE,
+    BASEMODEL_EXTRA_TO_VALUE,
     BASEMODEL_GETITEM,
 )
 from nwb_linkml.includes.hdmf import (
@@ -55,10 +57,17 @@ class NWBPydanticGenerator(PydanticGenerator):
         'object_id: Optional[str] = Field(None, description="Unique UUID for each object")',
         BASEMODEL_GETITEM,
         BASEMODEL_COERCE_VALUE,
+        BASEMODEL_CAST_WITH_VALUE,
         BASEMODEL_COERCE_CHILD,
+        BASEMODEL_EXTRA_TO_VALUE,
     )
     split: bool = True
-    imports: list[Import] = field(default_factory=lambda: [Import(module="numpy", alias="np")])
+    imports: list[Import] = field(
+        default_factory=lambda: [
+            Import(module="numpy", alias="np"),
+            Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
+        ]
+    )
 
     schema_map: Optional[Dict[str, SchemaDefinition]] = None
     """See :meth:`.LinkMLProvider.build` for usage - a list of specific versions to import from"""
@@ -70,7 +79,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     emit_metadata: bool = True
     gen_classvars: bool = True
     gen_slots: bool = True
-    extra_fields: Literal["allow", "forbid", "ignore"] = "allow"
+    # extra_fields: Literal["allow", "forbid", "ignore"] = "allow"
 
     skip_meta: ClassVar[Tuple[str]] = ("domain_of", "alias")
 
@@ -136,7 +145,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         """Customize dynamictable behavior"""
         cls = AfterGenerateClass.inject_dynamictable(cls)
         cls = AfterGenerateClass.wrap_dynamictable_columns(cls, sv)
-        cls = AfterGenerateClass.inject_elementidentifiers(cls, sv, self._get_element_import)
+        cls = AfterGenerateClass.inject_dynamictable_imports(cls, sv, self._get_element_import)
         cls = AfterGenerateClass.strip_vector_data_slots(cls, sv)
         return cls
 
@@ -267,7 +276,7 @@ class AfterGenerateClass:
 
         """
         if cls.cls.name == "DynamicTable":
-            cls.cls.bases = ["DynamicTableMixin", "ConfiguredBaseModel"]
+            cls.cls.bases = ["DynamicTableMixin"]
 
             if (
                 cls.injected_classes is None
@@ -285,18 +294,18 @@ class AfterGenerateClass:
             else:  # pragma: no cover - for completeness, shouldn't happen
                 cls.imports = DYNAMIC_TABLE_IMPORTS.model_copy()
         elif cls.cls.name == "VectorData":
-            cls.cls.bases = ["VectorDataMixin", "ConfiguredBaseModel"]
+            cls.cls.bases = ["VectorDataMixin"]
             # make ``value`` generic on T
             if "value" in cls.cls.attributes:
                 cls.cls.attributes["value"].range = "Optional[T]"
         elif cls.cls.name == "VectorIndex":
-            cls.cls.bases = ["VectorIndexMixin", "ConfiguredBaseModel"]
+            cls.cls.bases = ["VectorIndexMixin"]
         elif cls.cls.name == "DynamicTableRegion":
-            cls.cls.bases = ["DynamicTableRegionMixin", "VectorData", "ConfiguredBaseModel"]
+            cls.cls.bases = ["DynamicTableRegionMixin", "VectorData"]
         elif cls.cls.name == "AlignedDynamicTable":
             cls.cls.bases = ["AlignedDynamicTableMixin", "DynamicTable"]
         elif cls.cls.name == "ElementIdentifiers":
-            cls.cls.bases = ["ElementIdentifiersMixin", "Data", "ConfiguredBaseModel"]
+            cls.cls.bases = ["ElementIdentifiersMixin", "Data"]
             # make ``value`` generic on T
             if "value" in cls.cls.attributes:
                 cls.cls.attributes["value"].range = "Optional[T]"
@@ -346,19 +355,22 @@ class AfterGenerateClass:
         return cls
 
     @staticmethod
-    def inject_elementidentifiers(
+    def inject_dynamictable_imports(
         cls: ClassResult, sv: SchemaView, import_method: Callable[[str], Import]
     ) -> ClassResult:
         """
-        Inject ElementIdentifiers into module that define dynamictables -
-        needed to handle ID columns
+        Ensure that schema that contain dynamictables have all the imports needed to use them
         """
         if (
             cls.source.is_a == "DynamicTable"
             or "DynamicTable" in sv.class_ancestors(cls.source.name)
         ) and sv.schema.name != "hdmf-common.table":
-            imp = import_method("ElementIdentifiers")
-            cls.imports += [imp]
+            imp = [
+                import_method("ElementIdentifiers"),
+                import_method("VectorData"),
+                import_method("VectorIndex"),
+            ]
+            cls.imports += imp
         return cls
 
     @staticmethod

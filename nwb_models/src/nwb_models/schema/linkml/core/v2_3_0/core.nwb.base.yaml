@@ -124,7 +124,6 @@ classes:
           external file.
         range: TimeSeries__data
         required: true
-        multivalued: false
         inlined: true
       starting_time:
         name: starting_time
@@ -132,8 +131,6 @@ classes:
           uniformly spaced, the timestamp of the first sample can be specified and
           all subsequent ones calculated from the sampling rate attribute.
         range: TimeSeries__starting_time
-        required: false
-        multivalued: false
         inlined: true
       timestamps:
         name: timestamps
@@ -176,8 +173,6 @@ classes:
           external to the NWB file, in files storing raw data. Once timestamp data
           is calculated, the contents of 'sync' are mostly for archival purposes.
         range: TimeSeries__sync
-        required: false
-        multivalued: false
         inlined: true
         inlined_as_list: true
     tree_root: true
@@ -309,13 +304,24 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: NWBDataInterface
-      - range: DynamicTable
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of this collection of processed data.
+        range: text
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
     tree_root: true
   Images:
     name: Images

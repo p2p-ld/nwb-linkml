@@ -6,7 +6,7 @@ SHELL := bash
 .SUFFIXES:
 .SECONDARY:
 
-RUN = poetry run
+RUN = pdm run
 # get values from about.yaml file
 SCHEMA_NAME = $(shell ${SHELL} ./utils/get-value.sh name)
 SOURCE_SCHEMA_PATH = $(shell ${SHELL} ./utils/get-value.sh source_schema_path)
@@ -107,7 +107,7 @@ gen-project: $(PYMODEL)
 	$(RUN) gen-project ${GEN_PARGS} -d $(DEST) $(SOURCE_SCHEMA_PATH) && mv $(DEST)/*.py $(PYMODEL)
 
 gen-pydantic: $(PYMODEL)
-	$(RUN) gen-pydantic $(SOURCE_SCHEMA_PATH) --pydantic_version 2 > $(PYMODEL)/nwb_schema_pydantic.py
+	$(RUN) generate_pydantic
 	$(RUN) run_patches --phase post_generation_pydantic
 
 test: test-schema test-python test-examples

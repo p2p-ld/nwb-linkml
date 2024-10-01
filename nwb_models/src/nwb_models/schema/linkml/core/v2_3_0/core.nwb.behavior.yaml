@@ -38,14 +38,11 @@ classes:
           reference frame.
         range: SpatialSeries__data
         required: true
-        multivalued: false
         inlined: true
       reference_frame:
         name: reference_frame
         description: Description defining what exactly 'straight-ahead' means.
         range: text
-        required: false
-        multivalued: false
     tree_root: true
   SpatialSeries__data:
     name: SpatialSeries__data
@@ -59,6 +56,42 @@ classes:
         range: string
         required: true
         equals_string: data
+      continuity:
+        name: continuity
+        description: Optionally describe the continuity of the data. Can be "continuous",
+          "instantaneous", or "step". For example, a voltage trace would be "continuous",
+          because samples are recorded from a continuous process. An array of lick
+          times would be "instantaneous", because the data represents distinct moments
+          in time. Times of image presentations would be "step" because the picture
+          remains the same until the next timepoint. This field is optional, but is
+          useful in providing information about the underlying data. It may inform
+          the way this data is interpreted, the way it is visualized, and what analysis
+          methods are applicable.
+        range: text
+        required: false
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. The default
@@ -94,12 +127,19 @@ classes:
       events. BehavioralTimeSeries is for continuous data.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: IntervalSeries
+      name:
+        name: name
+        ifabsent: string(BehavioralEpochs)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: IntervalSeries
     tree_root: true
   BehavioralEvents:
     name: BehavioralEvents
@@ -107,12 +147,19 @@ classes:
       for more details.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      name:
+        name: name
+        ifabsent: string(BehavioralEvents)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   BehavioralTimeSeries:
     name: BehavioralTimeSeries
@@ -120,36 +167,57 @@ classes:
       of <a href="#BehavioralEpochs">BehavioralEpochs</a> for more details.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      name:
+        name: name
+        ifabsent: string(BehavioralTimeSeries)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   PupilTracking:
     name: PupilTracking
     description: Eye-tracking data, representing pupil size.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: TimeSeries
+      name:
+        name: name
+        ifabsent: string(PupilTracking)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: TimeSeries
     tree_root: true
   EyeTracking:
     name: EyeTracking
     description: Eye-tracking data, representing direction of gaze.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      name:
+        name: name
+        ifabsent: string(EyeTracking)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true
   CompassDirection:
     name: CompassDirection
@@ -160,22 +228,36 @@ classes:
       be radians or degrees.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      name:
+        name: name
+        ifabsent: string(CompassDirection)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true
   Position:
     name: Position
     description: Position data, whether along the x, x/y or x/y/z axis.
     is_a: NWBDataInterface
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: SpatialSeries
+      name:
+        name: name
+        ifabsent: string(Position)
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: SpatialSeries
     tree_root: true

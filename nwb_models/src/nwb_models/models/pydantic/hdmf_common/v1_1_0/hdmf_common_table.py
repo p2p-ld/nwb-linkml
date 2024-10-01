@@ -44,7 +44,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -54,7 +54,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -65,7 +65,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -78,6 +78,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -88,10 +100,35 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -117,7 +154,7 @@ NUMPYDANTIC_VERSION = "1.2.1"
 T = TypeVar("T", bound=NDArray)
 
 
-class VectorDataMixin(BaseModel, Generic[T]):
+class VectorDataMixin(ConfiguredBaseModel, Generic[T]):
     """
     Mixin class to give VectorData indexing abilities
     """
@@ -168,7 +205,7 @@ class VectorDataMixin(BaseModel, Generic[T]):
             return len(self.value)
 
 
-class VectorIndexMixin(BaseModel, Generic[T]):
+class VectorIndexMixin(ConfiguredBaseModel, Generic[T]):
     """
     Mixin class to give VectorIndex indexing abilities
     """
@@ -260,7 +297,7 @@ class VectorIndexMixin(BaseModel, Generic[T]):
         return len(self.value)
 
 
-class DynamicTableRegionMixin(BaseModel):
+class DynamicTableRegionMixin(ConfiguredBaseModel):
     """
     Mixin to allow indexing references to regions of dynamictables
     """
@@ -316,7 +353,7 @@ class DynamicTableRegionMixin(BaseModel):
         )  # pragma: no cover
 
 
-class DynamicTableMixin(BaseModel):
+class DynamicTableMixin(ConfiguredBaseModel):
     """
     Mixin to make DynamicTable subclasses behave like tables/dataframes
 
@@ -571,13 +608,19 @@ class DynamicTableMixin(BaseModel):
                             model[key] = to_cast(name=key, description="", value=val)
                     except ValidationError as e:  # pragma: no cover
                         raise ValidationError.from_exception_data(
-                            title=f"field {key} cannot be cast to VectorData from {val}",
+                            title="cast_extra_columns",
                             line_errors=[
                                 {
-                                    "type": "ValueError",
-                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "type": "value_error",
                                     "input": val,
-                                }
+                                    "loc": ("DynamicTableMixin", "cast_extra_columns"),
+                                    "ctx": {
+                                        "error": ValueError(
+                                            f"field {key} cannot be cast to {to_cast} from {val}"
+                                        )
+                                    },
+                                },
+                                *e.errors(),
                             ],
                         ) from e
         return model
@@ -634,24 +677,27 @@ class DynamicTableMixin(BaseModel):
             return handler(val)
         except ValidationError as e:
             annotation = cls.model_fields[info.field_name].annotation
-            if type(annotation).__name__ == "_UnionGenericAlias":
+            while hasattr(annotation, "__args__"):
                 annotation = annotation.__args__[0]
             try:
                 # should pass if we're supposed to be a VectorData column
                 # don't want to override intention here by insisting that it is
                 # *actually* a VectorData column in case an NDArray has been specified for now
+                description = cls.model_fields[info.field_name].description
+                description = description if description is not None else ""
+
                 return handler(
                     annotation(
                         val,
                         name=info.field_name,
-                        description=cls.model_fields[info.field_name].description,
+                        description=description,
                     )
                 )
             except Exception:
                 raise e from None
 
 
-class AlignedDynamicTableMixin(BaseModel):
+class AlignedDynamicTableMixin(ConfiguredBaseModel):
     """
     Mixin to allow indexing multiple tables that are aligned on a common ID
 
@@ -887,7 +933,7 @@ class Index(Data):
     )
 
 
-class VectorData(VectorDataMixin, ConfiguredBaseModel):
+class VectorData(VectorDataMixin):
     """
     An n-dimensional dataset representing a column of a DynamicTable. If used without an accompanying VectorIndex, first dimension is along the rows of the DynamicTable and each step along the first dimension is a cell of the larger table. VectorData can also be used to represent a ragged array if paired with a VectorIndex. This allows for storing arrays of varying length in a single cell of the DynamicTable by indexing into this VectorData. The first vector is at VectorData[0:VectorIndex(0)+1]. The second vector is at VectorData[VectorIndex(0)+1:VectorIndex(1)+1], and so on.
     """
@@ -900,7 +946,7 @@ class VectorData(VectorDataMixin, ConfiguredBaseModel):
     description: str = Field(..., description="""Description of what these vectors represent.""")
 
 
-class VectorIndex(VectorIndexMixin, ConfiguredBaseModel):
+class VectorIndex(VectorIndexMixin):
     """
     Used with VectorData to encode a ragged array. An array of indices into the first dimension of the target VectorData, and forming a map between the rows of a DynamicTable and the indices of the VectorData.
     """
@@ -915,7 +961,7 @@ class VectorIndex(VectorIndexMixin, ConfiguredBaseModel):
     )
 
 
-class ElementIdentifiers(ElementIdentifiersMixin, Data, ConfiguredBaseModel):
+class ElementIdentifiers(ElementIdentifiersMixin, Data):
     """
     A list of unique identifiers for values within a dataset, e.g. rows of a DynamicTable.
     """
@@ -933,7 +979,7 @@ class ElementIdentifiers(ElementIdentifiersMixin, Data, ConfiguredBaseModel):
     )
 
 
-class DynamicTableRegion(DynamicTableRegionMixin, VectorData, ConfiguredBaseModel):
+class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
     """
     DynamicTableRegion provides a link from one table to an index or region of another. The `table` attribute is a link to another `DynamicTable`, indicating which table is referenced, and the data is int(s) indicating the row(s) (0-indexed) of the target array. `DynamicTableRegion`s can be used to associate rows with repeated meta-data without data duplication. They can also be used to create hierarchical relationships between multiple `DynamicTable`s. `DynamicTableRegion` objects may be paired with a `VectorIndex` object to create ragged references, so a single cell of a `DynamicTable` can reference many rows of another `DynamicTable`.
     """
@@ -963,7 +1009,7 @@ class Container(ConfiguredBaseModel):
     name: str = Field(...)
 
 
-class DynamicTable(DynamicTableMixin, ConfiguredBaseModel):
+class DynamicTable(DynamicTableMixin):
     """
     A group containing multiple datasets that are aligned on the first dimension (Currently, this requirement if left up to APIs to check and enforce). Apart from a column that contains unique identifiers for each row there are no other required datasets. Users are free to add any number of VectorData objects here. Table functionality is already supported through compound types, which is analogous to storing an array-of-structs. DynamicTable can be thought of as a struct-of-arrays. This provides an alternative structure to choose from when optimizing storage for anticipated access patterns. Additionally, this type provides a way of creating a table without having to define a compound type up front. Although this convenience may be attractive, users should think carefully about how data will be accessed. DynamicTable is more appropriate for column-centric access, whereas a dataset with a compound type would be more appropriate for row-centric access. Finally, data size should also be taken into account. For small tables, performance loss may be an acceptable trade-off for the flexibility of a DynamicTable. For example, DynamicTable was originally developed for storing trial data and spike unit metadata. Both of these use cases are expected to produce relatively small tables, so the spatial locality of multiple datasets present in a DynamicTable is not expected to have a significant performance impact. Additionally, requirements of trial and unit metadata tables are sufficiently diverse that performance implications can be overlooked in favor of usability.
     """

@@ -9,7 +9,7 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 
 import numpy as np
 from numpydantic import NDArray, Shape
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
 from ...core.v2_3_0.core_nwb_base import (
     NWBContainer,
@@ -25,7 +25,12 @@ from ...core.v2_3_0.core_nwb_icephys import IntracellularElectrode, SweepTable
 from ...core.v2_3_0.core_nwb_misc import Units
 from ...core.v2_3_0.core_nwb_ogen import OptogeneticStimulusSite
 from ...core.v2_3_0.core_nwb_ophys import ImagingPlane
-from ...hdmf_common.v1_5_0.hdmf_common_table import DynamicTable, ElementIdentifiers, VectorData
+from ...hdmf_common.v1_5_0.hdmf_common_table import (
+    DynamicTable,
+    ElementIdentifiers,
+    VectorData,
+    VectorIndex,
+)
 
 
 metamodel_version = "None"
@@ -36,7 +41,7 @@ class ConfiguredBaseModel(BaseModel):
     model_config = ConfigDict(
         validate_assignment=True,
         validate_default=True,
-        extra="allow",
+        extra="forbid",
         arbitrary_types_allowed=True,
         use_enum_values=True,
         strict=False,
@@ -46,7 +51,7 @@ class ConfiguredBaseModel(BaseModel):
     )
     object_id: Optional[str] = Field(None, description="Unique UUID for each object")
 
-    def __getitem__(self, val: Union[int, slice]) -> Any:
+    def __getitem__(self, val: Union[int, slice, str]) -> Any:
         """Try and get a value from value or "data" if we have it"""
         if hasattr(self, "value") and self.value is not None:
             return self.value[val]
@@ -57,7 +62,7 @@ class ConfiguredBaseModel(BaseModel):
 
     @field_validator("*", mode="wrap")
     @classmethod
-    def coerce_value(cls, v: Any, handler) -> Any:
+    def coerce_value(cls, v: Any, handler, info) -> Any:
         """Try to rescue instantiation by using the value field"""
         try:
             return handler(v)
@@ -70,6 +75,18 @@ class ConfiguredBaseModel(BaseModel):
                 except (IndexError, KeyError, TypeError):
                     raise e1
 
+    @field_validator("*", mode="wrap")
+    @classmethod
+    def cast_with_value(cls, v: Any, handler, info) -> Any:
+        """Try to rescue instantiation by casting into the model's value field"""
+        try:
+            return handler(v)
+        except Exception as e1:
+            try:
+                return handler({"value": v})
+            except Exception:
+                raise e1
+
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:
@@ -80,10 +97,35 @@ class ConfiguredBaseModel(BaseModel):
                 annotation = annotation.__args__[0]
             try:
                 if issubclass(annotation, type(v)) and annotation is not type(v):
-                    v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    if v.__pydantic_extra__:
+                        v = annotation(**{**v.__dict__, **v.__pydantic_extra__})
+                    else:
+                        v = annotation(**v.__dict__)
             except TypeError:
                 # fine, annotation is a non-class type like a TypeVar
                 pass
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def gather_extra_to_value(cls, v: Any) -> Any:
+        """
+        For classes that don't allow extra fields and have a value slot,
+        pack those extra kwargs into ``value``
+        """
+        if (
+            cls.model_config["extra"] == "forbid"
+            and "value" in cls.model_fields
+            and isinstance(v, dict)
+        ):
+            extras = {key: val for key, val in v.items() if key not in cls.model_fields}
+            if extras:
+                for k in extras:
+                    del v[k]
+                if "value" in v:
+                    v["value"].update(extras)
+                else:
+                    v["value"] = extras
         return v
 
 
@@ -222,6 +264,9 @@ class NWBFile(NWBContainer):
         description="""Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.""",
     )
     units: Optional[Units] = Field(None, description="""Data about sorted spike units.""")
+    specifications: Optional[dict] = Field(
+        None, description="""Nested dictionary of schema specifications"""
+    )
 
 
 class NWBFileStimulus(ConfiguredBaseModel):
@@ -320,10 +365,6 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Information about virus(es) used in experiments, including virus ID, source, date made, injection location, volume, etc.""",
     )
-    lab_meta_data: Optional[Dict[str, LabMetaData]] = Field(
-        None,
-        description="""Place-holder than can be extended so that lab-specific meta-data can be placed in /general.""",
-    )
     devices: Optional[Dict[str, Device]] = Field(
         None,
         description="""Description of hardware devices used during experiment, e.g., monitors, ADC boards, microscopes, etc.""",
@@ -348,6 +389,10 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Metadata related to optophysiology.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ImagingPlane"}]}},
+    )
+    value: Optional[Dict[str, LabMetaData]] = Field(
+        None,
+        description="""Place-holder than can be extended so that lab-specific meta-data can be placed in /general.""",
     )
 
 
@@ -384,11 +429,11 @@ class GeneralExtracellularEphys(ConfiguredBaseModel):
             }
         },
     )
-    electrode_group: Optional[Dict[str, ElectrodeGroup]] = Field(
-        None, description="""Physical group of electrodes."""
-    )
     electrodes: Optional[ExtracellularEphysElectrodes] = Field(
         None, description="""A table of all electrodes (i.e. channels) used for recording."""
+    )
+    value: Optional[Dict[str, ElectrodeGroup]] = Field(
+        None, description="""Physical group of electrodes."""
     )
 
 
@@ -545,11 +590,11 @@ class GeneralIntracellularEphys(ConfiguredBaseModel):
         None,
         description="""Description of filtering used. Includes filtering type and parameters, frequency fall-off, etc. If this changes between TimeSeries, filter description should be stored as a text attribute for each TimeSeries.""",
     )
-    intracellular_electrode: Optional[Dict[str, IntracellularElectrode]] = Field(
-        None, description="""An intracellular electrode."""
-    )
     sweep_table: Optional[SweepTable] = Field(
         None, description="""The table which groups different PatchClampSeries together."""
+    )
+    value: Optional[Dict[str, IntracellularElectrode]] = Field(
+        None, description="""An intracellular electrode."""
     )
 
 
@@ -576,7 +621,7 @@ class NWBFileIntervals(ConfiguredBaseModel):
     invalid_times: Optional[TimeIntervals] = Field(
         None, description="""Time intervals that should be removed from analysis."""
     )
-    time_intervals: Optional[Dict[str, TimeIntervals]] = Field(
+    value: Optional[Dict[str, TimeIntervals]] = Field(
         None,
         description="""Optional additional table(s) for describing other experimental time intervals.""",
     )

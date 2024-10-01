@@ -54,7 +54,7 @@ def test_walk_field_values(nwb_core_fixture):
     text_models = list(nwb_core_fixture.walk_field_values(nwb_core_fixture, "dtype", value="text"))
     assert all([d.dtype == "text" for d in text_models])
     # 135 known value from regex search
-    assert len(text_models) == len([d for d in dtype_models if d.dtype == "text"]) == 135
+    assert len(text_models) == len([d for d in dtype_models if d.dtype == "text"]) == 155
 
 
 def test_build_result(linkml_schema_bare):

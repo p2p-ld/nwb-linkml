@@ -66,6 +66,7 @@ types:
   numeric:
     name: numeric
     typeof: float
+    repr: float | int
   text:
     name: text
     typeof: string
@@ -87,6 +88,9 @@ types:
   isodatetime:
     name: isodatetime
     typeof: datetime
+  dict:
+    name: dict
+    repr: dict
 classes:
   AnyType:
     name: AnyType

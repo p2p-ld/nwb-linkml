@@ -149,8 +149,8 @@ def test_dynamictable_mixin_colnames_index():
 
     cols = {
         "existing_col": np.arange(10),
-        "new_col_1": hdmf.VectorData(value=np.arange(10)),
-        "new_col_2": hdmf.VectorData(value=np.arange(10)),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(10)),
+        "new_col_2": hdmf.VectorData(name="new_col_2", description="", value=np.arange(10)),
     }
     # explicit index with mismatching name
     cols["weirdname_index"] = VectorIndexMixin(value=np.arange(10), target=cols["new_col_1"])
@@ -171,9 +171,9 @@ def test_dynamictable_mixin_colnames_ordered():
 
     cols = {
         "existing_col": np.arange(10),
-        "new_col_1": hdmf.VectorData(value=np.arange(10)),
-        "new_col_2": hdmf.VectorData(value=np.arange(10)),
-        "new_col_3": hdmf.VectorData(value=np.arange(10)),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(10)),
+        "new_col_2": hdmf.VectorData(name="new_col_2", description="", value=np.arange(10)),
+        "new_col_3": hdmf.VectorData(name="new_col_2", description="", value=np.arange(10)),
     }
     order = ["new_col_2", "existing_col", "new_col_1", "new_col_3"]
 
@@ -198,7 +198,7 @@ def test_dynamictable_mixin_getattr():
     class MyDT(DynamicTableMixin):
         existing_col: hdmf.VectorData[NDArray[Shape["* col"], int]]
 
-    col = hdmf.VectorData(value=np.arange(10))
+    col = hdmf.VectorData(name="existing_col", description="", value=np.arange(10))
     inst = MyDT(existing_col=col)
 
     # regular lookup for attrs that exist
@@ -257,13 +257,17 @@ def test_dynamictable_resolve_index():
 
     cols = {
         "existing_col": np.arange(10),
-        "new_col_1": hdmf.VectorData(value=np.arange(10)),
-        "new_col_2": hdmf.VectorData(value=np.arange(10)),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(10)),
+        "new_col_2": hdmf.VectorData(name="new_col_2", description="", value=np.arange(10)),
     }
     # explicit index with mismatching name
-    cols["weirdname_index"] = hdmf.VectorIndex(value=np.arange(10), target=cols["new_col_1"])
+    cols["weirdname_index"] = hdmf.VectorIndex(
+        name="weirdname_index", description="", value=np.arange(10), target=cols["new_col_1"]
+    )
     # implicit index with matching name
-    cols["new_col_2_index"] = hdmf.VectorIndex(value=np.arange(10))
+    cols["new_col_2_index"] = hdmf.VectorIndex(
+        name="new_col_2_index", description="", value=np.arange(10)
+    )
 
     inst = MyDT(**cols)
     assert inst.weirdname_index.target is inst.new_col_1
@@ -282,14 +286,14 @@ def test_dynamictable_assert_equal_length():
 
     cols = {
         "existing_col": np.arange(10),
-        "new_col_1": hdmf.VectorData(value=np.arange(11)),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(11)),
     }
     with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
 
     cols = {
         "existing_col": np.arange(11),
-        "new_col_1": hdmf.VectorData(value=np.arange(10)),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(10)),
     }
     with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
@@ -297,16 +301,20 @@ def test_dynamictable_assert_equal_length():
     # wrong lengths are fine as long as the index is good
     cols = {
         "existing_col": np.arange(10),
-        "new_col_1": hdmf.VectorData(value=np.arange(100)),
-        "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 10) + 10),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(100)),
+        "new_col_1_index": hdmf.VectorIndex(
+            name="new_col_1_index", description="", value=np.arange(0, 100, 10) + 10
+        ),
     }
     _ = MyDT(**cols)
 
     # but not fine if the index is not good
     cols = {
         "existing_col": np.arange(10),
-        "new_col_1": hdmf.VectorData(value=np.arange(100)),
-        "new_col_1_index": hdmf.VectorIndex(value=np.arange(0, 100, 5) + 5),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(100)),
+        "new_col_1_index": hdmf.VectorIndex(
+            name="new_col_1_index", description="", value=np.arange(0, 100, 5) + 5
+        ),
     }
     with pytest.raises(ValidationError, match="columns are not of equal length"):
         _ = MyDT(**cols)
@@ -321,8 +329,8 @@ def test_dynamictable_setattr():
         existing_col: hdmf.VectorData[NDArray[Shape["* col"], int]]
 
     cols = {
-        "existing_col": hdmf.VectorData(value=np.arange(10)),
-        "new_col_1": hdmf.VectorData(value=np.arange(10)),
+        "existing_col": hdmf.VectorData(name="existing_col", description="", value=np.arange(10)),
+        "new_col_1": hdmf.VectorData(name="new_col_1", description="", value=np.arange(10)),
     }
     inst = MyDT(existing_col=cols["existing_col"])
     assert inst.colnames == ["existing_col"]
@@ -335,7 +343,7 @@ def test_dynamictable_setattr():
 
     # model validators should be called to ensure equal length
     with pytest.raises(ValidationError):
-        inst.new_col_2 = hdmf.VectorData(value=np.arange(11))
+        inst.new_col_2 = hdmf.VectorData(name="new_col_2", description="", value=np.arange(11))
 
 
 def test_vectordata_indexing():
@@ -346,7 +354,7 @@ def test_vectordata_indexing():
     value_array, index_array = _ragged_array(n_rows)
     value_array = np.concatenate(value_array)
 
-    data = hdmf.VectorData(value=value_array)
+    data = hdmf.VectorData(name="data", description="", value=value_array)
 
     # before we have an index, things should work as normal, indexing a 1D array
     assert data[0] == 0
@@ -356,7 +364,7 @@ def test_vectordata_indexing():
     data[0] = 0
 
     # indexes by themselves are the same
-    index_notarget = hdmf.VectorIndex(value=index_array)
+    index_notarget = hdmf.VectorIndex(name="no_target_index", description="", value=index_array)
     assert index_notarget[0] == index_array[0]
     assert all(index_notarget[0:3] == index_array[0:3])
     oldval = index_array[0]
@@ -364,7 +372,7 @@ def test_vectordata_indexing():
     assert index_notarget[0] == 5
     index_notarget[0] = oldval
 
-    index = hdmf.VectorIndex(value=index_array, target=data)
+    index = hdmf.VectorIndex(name="data_index", description="", value=index_array, target=data)
     data._index = index
 
     # after an index, both objects should index raggedly
@@ -396,8 +404,10 @@ def test_vectordata_getattr():
     """
     VectorData and VectorIndex both forward getattr to ``value``
     """
-    data = hdmf.VectorData(value=np.arange(100))
-    index = hdmf.VectorIndex(value=np.arange(10, 101, 10), target=data)
+    data = hdmf.VectorData(name="data", description="", value=np.arange(100))
+    index = hdmf.VectorIndex(
+        name="data_index", description="", value=np.arange(10, 101, 10), target=data
+    )
 
     # get attrs that we defined on the models
     # i.e. no attribute errors here
@@ -447,7 +457,9 @@ def test_dynamictable_region_indexing(basic_table):
 
     index = np.array([9, 4, 8, 3, 7, 2, 6, 1, 5, 0])
 
-    table_region = hdmf.DynamicTableRegion(value=index, table=inst)
+    table_region = hdmf.DynamicTableRegion(
+        name="table_region", description="", value=index, table=inst
+    )
 
     row = table_region[1]
     assert all(row.iloc[0] == index[1])
@@ -499,10 +511,14 @@ def test_dynamictable_region_ragged():
         timeseries_index=spike_idx,
     )
     region = hdmf.DynamicTableRegion(
+        name="region",
+        description="a table region what else would it be",
         table=table,
         value=value,
     )
-    index = hdmf.VectorIndex(name="index", description="hgggggggjjjj", target=region, value=idx)
+    index = hdmf.VectorIndex(
+        name="region_index", description="hgggggggjjjj", target=region, value=idx
+    )
     region._index = index
 
     rows = region[1]
@@ -594,8 +610,8 @@ def test_mixed_aligned_dynamictable(aligned_table):
     value_array, index_array = _ragged_array(10)
     value_array = np.concatenate(value_array)
 
-    data = hdmf.VectorData(value=value_array)
-    index = hdmf.VectorIndex(value=index_array)
+    data = hdmf.VectorData(name="data", description="", value=value_array)
+    index = hdmf.VectorIndex(name="data_index", description="", value=index_array)
 
     atable = AlignedTable(**cols, extra_col=data, extra_col_index=index)
     atable[0]

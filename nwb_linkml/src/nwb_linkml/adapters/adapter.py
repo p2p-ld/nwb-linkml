@@ -17,9 +17,10 @@ from linkml_runtime.linkml_model import (
     SlotDefinition,
     TypeDefinition,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from nwb_linkml.logging import init_logger
+from nwb_linkml.maps.dtype import float_types, integer_types, string_types
 from nwb_schema_language import Attribute, CompoundDtype, Dataset, Group, Schema
 
 if sys.version_info.minor >= 11:
@@ -103,6 +104,7 @@ class Adapter(BaseModel):
 
     _logger: Optional[Logger] = None
     _debug: Optional[bool] = None
+    _nwb_classes: dict[str, Dataset | Group] = PrivateAttr(default_factory=dict)
 
     @property
     def debug(self) -> bool:
@@ -135,7 +137,10 @@ class Adapter(BaseModel):
 
         Convenience wrapper around :meth:`.walk_field_values`
         """
-        return next(self.walk_field_values(self, "neurodata_type_def", name))
+        if name not in self._nwb_classes:
+            cls = next(self.walk_field_values(self, "neurodata_type_def", name))
+            self._nwb_classes[name] = cls
+        return self._nwb_classes[name]
 
     def get_model_with_field(self, field: str) -> Generator[Union[Group, Dataset], None, None]:
         """
@@ -169,6 +174,10 @@ class Adapter(BaseModel):
                 # NamespacesAdapter when it's important to query across SchemaAdapters,
                 # so skip to avoid combinatoric walking
                 if key == "imports" and type(input).__name__ == "SchemaAdapter":
+                    continue
+                # nwb_schema_language objects have a reference to their parent,
+                # which causes cycles
+                if key == "parent":
                     continue
                 val = getattr(input, key)
                 yield (key, val)
@@ -300,5 +309,85 @@ def has_attrs(cls: Dataset) -> bool:
     return (
         cls.attributes is not None
         and len(cls.attributes) > 0
-        and all([not a.value for a in cls.attributes])
+        and any([not a.value for a in cls.attributes])
+    )
+
+
+def defaults(cls: Dataset | Attribute) -> dict:
+    """
+    Handle default values -
+
+    * If ``value`` is present, yield `equals_string` or `equals_number` depending on dtype
+      **as well as** an ``ifabsent`` value - we both constrain the possible values to 1
+      and also supply it as the default
+    * else, if ``default_value`` is present, yield an appropriate ``ifabsent`` value
+    * If neither, yield an empty dict
+
+    Unlike nwb_schema_language, when ``value`` is set, we yield both a ``equals_*`` constraint
+    and an ``ifabsent`` constraint, because an ``equals_*`` can be declared without a default
+    in order to validate that a value is correctly set as the constrained value, and fail
+    if a value isn't provided.
+    """
+    ret = {}
+    if cls.value:
+        if cls.dtype in integer_types:
+            ret["equals_number"] = cls.value
+            ret["ifabsent"] = f"integer({cls.value})"
+        elif cls.dtype in float_types:
+            ret["equals_number"] = cls.value
+            ret["ifabsent"] = f"float({cls.value})"
+        elif cls.dtype in string_types:
+            ret["equals_string"] = cls.value
+            ret["ifabsent"] = f"string({cls.value})"
+        else:
+            ret["equals_string"] = cls.value
+            ret["ifabsent"] = cls.value
+
+    elif cls.default_value:
+        if cls.dtype in string_types:
+            ret["ifabsent"] = f"string({cls.default_value})"
+        elif cls.dtype in integer_types:
+            ret["ifabsent"] = f"int({cls.default_value})"
+        elif cls.dtype in float_types:
+            ret["ifabsent"] = f"float({cls.default_value})"
+        else:
+            ret["ifabsent"] = cls.default_value
+
+    return ret
+
+
+def is_container(group: Group) -> bool:
+    """
+    Check if a group is a container group.
+
+    i.e. a group that...
+    * has no name
+    * multivalued quantity
+    * has a ``neurodata_type_inc``
+    * has no ``neurodata_type_def``
+    * has no sub-groups
+    * has no datasets
+    * has no attributes
+
+    Examples:
+
+        .. code-block:: yaml
+
+            - name: templates
+              groups:
+              - neurodata_type_inc: TimeSeries
+                doc: TimeSeries objects containing template data of presented stimuli.
+                quantity: '*'
+              - neurodata_type_inc: Images
+                doc: Images objects containing images of presented stimuli.
+                quantity: '*'
+    """
+    return (
+        not group.name
+        and group.quantity == "*"
+        and group.neurodata_type_inc
+        and not group.neurodata_type_def
+        and not group.datasets
+        and not group.groups
+        and not group.attributes
     )

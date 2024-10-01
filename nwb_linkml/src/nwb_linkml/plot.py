@@ -85,7 +85,7 @@ def make_node(
 
 
 def make_graph(namespaces: "NamespacesAdapter", recurse: bool = True) -> List[CytoElement]:
-    namespaces.populate_imports()
+    namespaces.complete_namespaces()
     nodes = []
     element: Namespace | Group | Dataset
     print("walking graph")
