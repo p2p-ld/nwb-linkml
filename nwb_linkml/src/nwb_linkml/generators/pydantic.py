@@ -25,7 +25,7 @@ from linkml_runtime.utils.schemaview import SchemaView
 
 from nwb_linkml.includes.base import (
     BASEMODEL_CAST_WITH_VALUE,
-    BASEMODEL_COERCE_CHILD,
+    BASEMODEL_COERCE_SUBCLASS,
     BASEMODEL_COERCE_VALUE,
     BASEMODEL_EXTRA_TO_VALUE,
     BASEMODEL_GETITEM,
@@ -56,7 +56,7 @@ class NWBPydanticGenerator(PydanticGenerator):
         BASEMODEL_GETITEM,
         BASEMODEL_COERCE_VALUE,
         BASEMODEL_CAST_WITH_VALUE,
-        BASEMODEL_COERCE_CHILD,
+        BASEMODEL_COERCE_SUBCLASS,
         BASEMODEL_EXTRA_TO_VALUE,
     )
     split: bool = True

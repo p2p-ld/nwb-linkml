@@ -102,6 +102,15 @@ def linkml_schema_bare() -> TestSchemas:
                             any_of=[{"range": "OtherClass"}, {"range": "StillAnotherClass"}],
                         ),
                         SlotDefinition(
+                            name="named_slot",
+                            description=(
+                                "A slot that should use the Named[] generic to set the name param"
+                            ),
+                            annotations=[{"named": True}],
+                            range="OtherClass",
+                            inlined=True,
+                        ),
+                        SlotDefinition(
                             name="value",
                             description="Main class's array",
                             range="numeric",

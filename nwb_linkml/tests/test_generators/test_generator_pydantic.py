@@ -17,6 +17,7 @@ import pytest
 from linkml_runtime.utils.compile_python import compile_python
 from numpydantic.dtype import Float
 from numpydantic.ndarray import NDArrayMeta
+from pydantic import ValidationError
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
@@ -86,7 +87,9 @@ def imported_schema(linkml_schema, request) -> TestModules:
 
 def test_array(imported_schema):
     """
-    Arraylike classes are converted to slots that specify nptyping arrays
+    Arraylike classes are converted to slots that specify nptyping arrays.
+
+    Test that we can use any_of with the array slot (unlike the upstream generator, currently)
 
     array: Optional[Union[
         NDArray[Shape["* x, * y"], Number],
@@ -155,3 +158,26 @@ def test_get_item(imported_schema):
     """We can get without explicitly addressing array"""
     cls = imported_schema["core"].MainTopLevel(value=np.array([[1, 2, 3], [4, 5, 6]], dtype=float))
     assert np.array_equal(cls[0], np.array([1, 2, 3], dtype=float))
+
+
+def test_named_slot(imported_schema):
+    """
+    Slots that have a ``named`` annotation should get their ``name`` attribute set automatically
+    """
+    OtherClass = imported_schema["core"].OtherClass
+    MainClass = imported_schema["core"].MainTopLevel
+
+    # We did in fact get the outer annotation
+    # this is a wild ass way to get the function name but hey
+    annotation = MainClass.model_fields["named_slot"].annotation.__args__[0]
+    validation_fn_name = annotation.__metadata__[0].func.__name__
+    assert validation_fn_name == "_get_name"
+
+    # we can't instantiate OtherClass without the ``name``
+    with pytest.raises(ValidationError, match=".*name.*"):
+        _ = OtherClass()
+
+    # but when we instantiate MainClass the name gets set automatically
+    instance = MainClass(named_slot={})
+    assert isinstance(instance.named_slot, OtherClass)
+    assert instance.named_slot.name == "named_slot"
