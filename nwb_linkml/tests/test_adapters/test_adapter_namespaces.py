@@ -55,11 +55,6 @@ def test_roll_down_inheritance():
     """
     Classes should receive and override the properties of their parents
     when they have neurodata_type_inc
-    Args:
-        nwb_core_fixture:
-
-    Returns:
-
     """
     parent_cls = Group(
         neurodata_type_def="Parent",

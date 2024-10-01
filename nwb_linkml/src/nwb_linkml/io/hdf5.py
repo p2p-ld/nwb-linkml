@@ -171,23 +171,7 @@ def _load_node(
             del args[".specloc"]
 
         model = provider.get_class(obj.attrs["namespace"], obj.attrs["neurodata_type"])
-        # try:
         return model(**args)
-        # except ValidationError as e1:
-        #     # try to restack extra fields into ``value``
-        #     if "value" in model.model_fields:
-        #         value_dict = {
-        #             key: val for key, val in args.items() if key not in model.model_fields
-        #         }
-        #         for k in value_dict:
-        #             del args[k]
-        #         args["value"] = value_dict
-        #         try:
-        #             return model(**args)
-        #         except Exception as e2:
-        #             raise e2 from e1
-        #     else:
-        #         raise e1
 
     else:
         if "name" in args:
