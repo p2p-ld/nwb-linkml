@@ -7,8 +7,6 @@ See class and module docstrings for details :)
 
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
-from types import ModuleType
 from typing import Callable, ClassVar, Dict, List, Optional, Tuple
 
 from linkml.generators import PydanticGenerator
@@ -146,7 +144,6 @@ class NWBPydanticGenerator(PydanticGenerator):
         cls = AfterGenerateClass.inject_dynamictable(cls)
         cls = AfterGenerateClass.wrap_dynamictable_columns(cls, sv)
         cls = AfterGenerateClass.inject_dynamictable_imports(cls, sv, self._get_element_import)
-        cls = AfterGenerateClass.strip_vector_data_slots(cls, sv)
         return cls
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
@@ -156,25 +153,6 @@ class NWBPydanticGenerator(PydanticGenerator):
         if "source_file" in template.meta:
             del template.meta["source_file"]
         return template
-
-    def compile_module(
-        self, module_path: Path = None, module_name: str = "test", **kwargs
-    ) -> ModuleType:  # pragma: no cover - replaced with provider
-        """
-        Compiles generated python code to a module
-        :return:
-        """
-        pycode = self.serialize(**kwargs)
-        if module_path is not None:
-            module_path = Path(module_path)
-            init_file = module_path / "__init__.py"
-            with open(init_file, "w") as ifile:
-                ifile.write(" ")
-
-        try:
-            return compile_python(pycode, module_path, module_name)
-        except NameError as e:
-            raise e
 
 
 class AfterGenerateSlot:
@@ -371,15 +349,6 @@ class AfterGenerateClass:
                 import_method("VectorIndex"),
             ]
             cls.imports += imp
-        return cls
-
-    @staticmethod
-    def strip_vector_data_slots(cls: ClassResult, sv: SchemaView) -> ClassResult:
-        """
-        Remove spurious ``vector_data`` slots from DynamicTables
-        """
-        if "vector_data" in cls.cls.attributes:
-            del cls.cls.attributes["vector_data"]
         return cls
 
 
