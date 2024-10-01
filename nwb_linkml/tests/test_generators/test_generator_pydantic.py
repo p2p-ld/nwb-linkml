@@ -14,10 +14,10 @@ from typing import Optional, TypedDict
 
 import numpy as np
 import pytest
-from numpydantic.ndarray import NDArrayMeta
-from numpydantic.dtype import Float
-
 from linkml_runtime.utils.compile_python import compile_python
+from numpydantic.dtype import Float
+from numpydantic.ndarray import NDArrayMeta
+
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
 from ..fixtures import (
@@ -155,5 +155,3 @@ def test_get_item(imported_schema):
     """We can get without explicitly addressing array"""
     cls = imported_schema["core"].MainTopLevel(value=np.array([[1, 2, 3], [4, 5, 6]], dtype=float))
     assert np.array_equal(cls[0], np.array([1, 2, 3], dtype=float))
-    
-
