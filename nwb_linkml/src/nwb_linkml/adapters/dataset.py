@@ -681,7 +681,7 @@ class MapNVectorData(DatasetMap):
         Check for being an unnamed multivalued vector class that IS VectorData
         """
         return (
-            cls.name is None
+            (cls.name is None or cls.name == "vector_data")
             and cls.neurodata_type_def is None
             and cls.neurodata_type_inc
             and cls.neurodata_type_inc == "VectorData"
