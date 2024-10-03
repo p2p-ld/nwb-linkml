@@ -7,10 +7,10 @@ from typing import ClassVar, Optional, Type
 
 from linkml_runtime.linkml_model.meta import ArrayExpression, SlotDefinition
 
-from nwb_linkml.adapters.adapter import BuildResult, defaults, has_attrs, is_1d, is_compound
+from nwb_linkml.adapters.adapter import BuildResult, defaults, has_attrs, is_1d, is_compound, Map
 from nwb_linkml.adapters.array import ArrayAdapter
 from nwb_linkml.adapters.classes import ClassAdapter
-from nwb_linkml.maps import QUANTITY_MAP, Map
+from nwb_linkml.maps import QUANTITY_MAP
 from nwb_linkml.maps.dtype import flat_to_linkml, handle_dtype, inlined
 from nwb_linkml.maps.naming import camel_to_snake
 from nwb_schema_language import Dataset
