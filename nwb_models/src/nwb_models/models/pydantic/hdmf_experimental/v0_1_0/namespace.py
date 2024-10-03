@@ -10,9 +10,10 @@ from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
-from ...hdmf_common.v1_4_0.hdmf_common_base import Container, Data, SimpleMultiContainer
-from ...hdmf_common.v1_4_0.hdmf_common_sparse import CSRMatrix
-from ...hdmf_common.v1_4_0.hdmf_common_table import (
+from ...hdmf_common.v1_5_0.hdmf_common_base import Container, Data, SimpleMultiContainer
+from ...hdmf_common.v1_5_0.hdmf_common_sparse import CSRMatrix
+from ...hdmf_common.v1_5_0.hdmf_common_table import (
+    AlignedDynamicTable,
     DynamicTable,
     DynamicTableRegion,
     ElementIdentifiers,

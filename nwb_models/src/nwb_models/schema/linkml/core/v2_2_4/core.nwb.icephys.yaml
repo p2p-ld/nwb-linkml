@@ -23,6 +23,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       stimulus_description:
@@ -40,14 +41,12 @@ classes:
         description: Recorded voltage or current.
         range: PatchClampSeries__data
         required: true
-        multivalued: false
+        inlined: true
       gain:
         name: gain
         description: Gain of the recording, in units Volt/Amp (v-clamp) or Volt/Volt
           (c-clamp).
         range: float32
-        required: false
-        multivalued: false
       electrode:
         name: electrode
         annotations:
@@ -55,7 +54,7 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
+        inlined: true
         any_of:
         - range: IntracellularElectrode
         - range: string
@@ -67,9 +66,33 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. Actual stored
@@ -92,32 +115,27 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
+      bias_current:
+        name: bias_current
+        description: Bias current, in amps.
+        range: float32
+      bridge_balance:
+        name: bridge_balance
+        description: Bridge balance, in ohms.
+        range: float32
+      capacitance_compensation:
+        name: capacitance_compensation
+        description: Capacitance compensation, in farads.
+        range: float32
       data:
         name: data
         description: Recorded voltage.
         range: CurrentClampSeries__data
         required: true
-        multivalued: false
-      bias_current:
-        name: bias_current
-        description: Bias current, in amps.
-        range: float32
-        required: false
-        multivalued: false
-      bridge_balance:
-        name: bridge_balance
-        description: Bridge balance, in ohms.
-        range: float32
-        required: false
-        multivalued: false
-      capacitance_compensation:
-        name: capacitance_compensation
-        description: Capacitance compensation, in farads.
-        range: float32
-        required: false
-        multivalued: false
+        inlined: true
     tree_root: true
   CurrentClampSeries__data:
     name: CurrentClampSeries__data
@@ -126,9 +144,33 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. which is
@@ -140,8 +182,10 @@ classes:
         equals_string: volts
       value:
         name: value
-        range: AnyType
-        required: true
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   IZeroClampSeries:
     name: IZeroClampSeries
     description: Voltage data from an intracellular recording when all current and
@@ -152,6 +196,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       bias_current:
@@ -159,19 +204,16 @@ classes:
         description: Bias current, in amps, fixed to 0.0.
         range: float32
         required: true
-        multivalued: false
       bridge_balance:
         name: bridge_balance
         description: Bridge balance, in ohms, fixed to 0.0.
         range: float32
         required: true
-        multivalued: false
       capacitance_compensation:
         name: capacitance_compensation
         description: Capacitance compensation, in farads, fixed to 0.0.
         range: float32
         required: true
-        multivalued: false
     tree_root: true
   CurrentClampStimulusSeries:
     name: CurrentClampStimulusSeries
@@ -180,6 +222,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -187,7 +230,7 @@ classes:
         description: Stimulus current applied.
         range: CurrentClampStimulusSeries__data
         required: true
-        multivalued: false
+        inlined: true
     tree_root: true
   CurrentClampStimulusSeries__data:
     name: CurrentClampStimulusSeries__data
@@ -196,9 +239,33 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. which is
@@ -210,8 +277,10 @@ classes:
         equals_string: amperes
       value:
         name: value
-        range: AnyType
-        required: true
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   VoltageClampSeries:
     name: VoltageClampSeries
     description: Current data from an intracellular voltage-clamp recording. A corresponding
@@ -221,80 +290,51 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
+      capacitance_fast:
+        name: capacitance_fast
+        description: Fast capacitance, in farads.
+        range: VoltageClampSeries__capacitance_fast
+        inlined: true
+      capacitance_slow:
+        name: capacitance_slow
+        description: Slow capacitance, in farads.
+        range: VoltageClampSeries__capacitance_slow
+        inlined: true
       data:
         name: data
         description: Recorded current.
         range: VoltageClampSeries__data
         required: true
-        multivalued: false
-      capacitance_fast:
-        name: capacitance_fast
-        description: Fast capacitance, in farads.
-        range: VoltageClampSeries__capacitance_fast
-        required: false
-        multivalued: false
-      capacitance_slow:
-        name: capacitance_slow
-        description: Slow capacitance, in farads.
-        range: VoltageClampSeries__capacitance_slow
-        required: false
-        multivalued: false
+        inlined: true
       resistance_comp_bandwidth:
         name: resistance_comp_bandwidth
         description: Resistance compensation bandwidth, in hertz.
         range: VoltageClampSeries__resistance_comp_bandwidth
-        required: false
-        multivalued: false
+        inlined: true
       resistance_comp_correction:
         name: resistance_comp_correction
         description: Resistance compensation correction, in percent.
         range: VoltageClampSeries__resistance_comp_correction
-        required: false
-        multivalued: false
+        inlined: true
       resistance_comp_prediction:
         name: resistance_comp_prediction
         description: Resistance compensation prediction, in percent.
         range: VoltageClampSeries__resistance_comp_prediction
-        required: false
-        multivalued: false
+        inlined: true
       whole_cell_capacitance_comp:
         name: whole_cell_capacitance_comp
         description: Whole cell capacitance compensation, in farads.
         range: VoltageClampSeries__whole_cell_capacitance_comp
-        required: false
-        multivalued: false
+        inlined: true
       whole_cell_series_resistance_comp:
         name: whole_cell_series_resistance_comp
         description: Whole cell series resistance compensation, in ohms.
         range: VoltageClampSeries__whole_cell_series_resistance_comp
-        required: false
-        multivalued: false
+        inlined: true
     tree_root: true
-  VoltageClampSeries__data:
-    name: VoltageClampSeries__data
-    description: Recorded current.
-    attributes:
-      name:
-        name: name
-        ifabsent: string(data)
-        range: string
-        required: true
-        equals_string: data
-      unit:
-        name: unit
-        description: Base unit of measurement for working with the data. which is
-          fixed to 'amperes'. Actual stored values are not necessarily stored in these
-          units. To access the data in these units, multiply 'data' by 'conversion'.
-        ifabsent: string(amperes)
-        range: text
-        required: true
-        equals_string: amperes
-      value:
-        name: value
-        range: AnyType
-        required: true
   VoltageClampSeries__capacitance_fast:
     name: VoltageClampSeries__capacitance_fast
     description: Fast capacitance, in farads.
@@ -302,6 +342,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_fast)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_fast
@@ -323,6 +364,7 @@ classes:
       name:
         name: name
         ifabsent: string(capacitance_slow)
+        identifier: true
         range: string
         required: true
         equals_string: capacitance_slow
@@ -337,6 +379,55 @@ classes:
         name: value
         range: float32
         required: true
+  VoltageClampSeries__data:
+    name: VoltageClampSeries__data
+    description: Recorded current.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. which is
+          fixed to 'amperes'. Actual stored values are not necessarily stored in these
+          units. To access the data in these units, multiply 'data' by 'conversion'.
+        ifabsent: string(amperes)
+        range: text
+        required: true
+        equals_string: amperes
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   VoltageClampSeries__resistance_comp_bandwidth:
     name: VoltageClampSeries__resistance_comp_bandwidth
     description: Resistance compensation bandwidth, in hertz.
@@ -344,6 +435,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_bandwidth)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_bandwidth
@@ -366,6 +458,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_correction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_correction
@@ -388,6 +481,7 @@ classes:
       name:
         name: name
         ifabsent: string(resistance_comp_prediction)
+        identifier: true
         range: string
         required: true
         equals_string: resistance_comp_prediction
@@ -410,6 +504,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_capacitance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_capacitance_comp
@@ -432,6 +527,7 @@ classes:
       name:
         name: name
         ifabsent: string(whole_cell_series_resistance_comp)
+        identifier: true
         range: string
         required: true
         equals_string: whole_cell_series_resistance_comp
@@ -454,6 +550,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -461,7 +558,7 @@ classes:
         description: Stimulus voltage applied.
         range: VoltageClampStimulusSeries__data
         required: true
-        multivalued: false
+        inlined: true
     tree_root: true
   VoltageClampStimulusSeries__data:
     name: VoltageClampStimulusSeries__data
@@ -470,9 +567,33 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. which is
@@ -484,8 +605,10 @@ classes:
         equals_string: volts
       value:
         name: value
-        range: AnyType
-        required: true
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   IntracellularElectrode:
     name: IntracellularElectrode
     description: An intracellular electrode and its metadata.
@@ -493,6 +616,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -500,45 +624,32 @@ classes:
         description: Description of electrode (e.g.,  whole-cell, sharp, etc.).
         range: text
         required: true
-        multivalued: false
       filtering:
         name: filtering
         description: Electrode specific filtering.
         range: text
-        required: false
-        multivalued: false
       initial_access_resistance:
         name: initial_access_resistance
         description: Initial access resistance.
         range: text
-        required: false
-        multivalued: false
       location:
         name: location
         description: Location of the electrode. Specify the area, layer, comments
           on estimation of area/layer, stereotaxic coordinates if in vivo, etc. Use
           standard atlas names for anatomical regions when possible.
         range: text
-        required: false
-        multivalued: false
       resistance:
         name: resistance
         description: Electrode resistance, in ohms.
         range: text
-        required: false
-        multivalued: false
       seal:
         name: seal
         description: Information about seal used for recording.
         range: text
-        required: false
-        multivalued: false
       slice:
         name: slice
         description: Information about slice used for recording.
         range: text
-        required: false
-        multivalued: false
       device:
         name: device
         annotations:
@@ -546,7 +657,7 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string
@@ -558,23 +669,19 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
-      sweep_number:
-        name: sweep_number
-        description: Sweep number of the PatchClampSeries in that row.
-        array:
-          minimum_number_dimensions: 1
-          maximum_number_dimensions: false
-        range: uint32
-        required: true
-        multivalued: false
       series:
         name: series
         description: The PatchClampSeries with the sweep number in that row.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
         range: PatchClampSeries
         required: true
-        multivalued: true
+        multivalued: false
+        inlined: true
       series_index:
         name: series_index
         annotations:
@@ -586,6 +693,15 @@ classes:
             value: neurodata_type_inc
         description: Index for series.
         range: VectorIndex
+        required: true
+        inlined: true
+      sweep_number:
+        name: sweep_number
+        description: Sweep number of the PatchClampSeries in that row.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
+        range: uint32
         required: true
         multivalued: false
     tree_root: true

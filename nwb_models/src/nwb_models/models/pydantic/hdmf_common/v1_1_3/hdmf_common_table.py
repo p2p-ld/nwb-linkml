@@ -993,11 +993,11 @@ class DynamicTableRegion(DynamicTableRegionMixin, VectorData):
     )
 
     name: str = Field(...)
-    table: DynamicTable = Field(
-        ..., description="""Reference to the DynamicTable object that this region applies to."""
-    )
     description: str = Field(
         ..., description="""Description of what this table region points to."""
+    )
+    table: DynamicTable = Field(
+        ..., description="""Reference to the DynamicTable object that this region applies to."""
     )
     value: Optional[
         Union[
@@ -1040,9 +1040,6 @@ class DynamicTable(DynamicTableMixin):
         ...,
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
-    )
-    vector_index: Optional[List[VectorIndex]] = Field(
-        None, description="""Indices for the vector columns of this dynamic table."""
     )
 
 

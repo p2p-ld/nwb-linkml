@@ -18,6 +18,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -28,6 +29,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -36,10 +38,16 @@ classes:
     description: A simple Container for holding onto multiple containers.
     is_a: Container
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: Container
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: Container
     tree_root: true

@@ -18,7 +18,7 @@ from ...hdmf_common.v1_3_0.hdmf_common_resources import (
     ExternalResourcesObjects,
     ExternalResourcesResources,
 )
-from ...hdmf_common.v1_3_0.hdmf_common_sparse import CSRMatrix, CSRMatrixData
+from ...hdmf_common.v1_3_0.hdmf_common_sparse import CSRMatrix
 from ...hdmf_common.v1_3_0.hdmf_common_table import (
     DynamicTable,
     DynamicTableRegion,

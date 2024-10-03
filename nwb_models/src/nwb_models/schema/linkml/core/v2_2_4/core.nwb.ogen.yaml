@@ -21,17 +21,15 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Applied power for optogenetic stimulus, in watts.
-        array:
-          dimensions:
-          - alias: num_times
-        range: numeric
+        range: OptogeneticSeries__data
         required: true
-        multivalued: false
+        inlined: true
       site:
         name: site
         annotations:
@@ -39,11 +37,58 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
+        inlined: true
         any_of:
         - range: OptogeneticStimulusSite
         - range: string
     tree_root: true
+  OptogeneticSeries__data:
+    name: OptogeneticSeries__data
+    description: Applied power for optogenetic stimulus, in watts.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Unit of measurement for data, which is fixed to 'watts'.
+        ifabsent: string(watts)
+        range: text
+        required: true
+        equals_string: watts
+      value:
+        name: value
+        array:
+          dimensions:
+          - alias: num_times
+        range: numeric
   OptogeneticStimulusSite:
     name: OptogeneticStimulusSite
     description: A site of optogenetic stimulation.
@@ -51,6 +96,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -58,13 +104,11 @@ classes:
         description: Description of stimulation site.
         range: text
         required: true
-        multivalued: false
       excitation_lambda:
         name: excitation_lambda
         description: Excitation wavelength, in nm.
         range: float32
         required: true
-        multivalued: false
       location:
         name: location
         description: Location of the stimulation site. Specify the area, layer, comments
@@ -72,7 +116,6 @@ classes:
           standard atlas names for anatomical regions when possible.
         range: text
         required: true
-        multivalued: false
       device:
         name: device
         annotations:
@@ -80,7 +123,7 @@ classes:
             tag: source_type
             value: link
         required: true
-        multivalued: false
+        inlined: true
         any_of:
         - range: Device
         - range: string

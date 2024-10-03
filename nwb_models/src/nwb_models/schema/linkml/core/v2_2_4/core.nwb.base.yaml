@@ -20,6 +20,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -32,6 +33,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       resolution:
@@ -73,6 +75,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -84,6 +87,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -94,6 +98,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -118,15 +123,14 @@ classes:
           external file.
         range: TimeSeries__data
         required: true
-        multivalued: false
+        inlined: true
       starting_time:
         name: starting_time
         description: Timestamp of the first sample in seconds. When timestamps are
           uniformly spaced, the timestamp of the first sample can be specified and
           all subsequent ones calculated from the sampling rate attribute.
         range: TimeSeries__starting_time
-        required: false
-        multivalued: false
+        inlined: true
       timestamps:
         name: timestamps
         description: Timestamps for samples stored in data, in seconds, relative to
@@ -168,8 +172,8 @@ classes:
           external to the NWB file, in files storing raw data. Once timestamp data
           is calculated, the contents of 'sync' are mostly for archival purposes.
         range: TimeSeries__sync
-        required: false
-        multivalued: false
+        inlined: true
+        inlined_as_list: true
     tree_root: true
   TimeSeries__data:
     name: TimeSeries__data
@@ -180,6 +184,7 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
@@ -244,6 +249,7 @@ classes:
       name:
         name: name
         ifabsent: string(starting_time)
+        identifier: true
         range: string
         required: true
         equals_string: starting_time
@@ -275,6 +281,7 @@ classes:
       name:
         name: name
         ifabsent: string(sync)
+        identifier: true
         range: string
         required: true
         equals_string: sync
@@ -283,13 +290,24 @@ classes:
     description: A collection of processed data.
     is_a: NWBContainer
     attributes:
-    - name: value
-      multivalued: true
-      inlined: true
-      inlined_as_list: false
-      any_of:
-      - range: NWBDataInterface
-      - range: DynamicTable
+      name:
+        name: name
+        identifier: true
+        range: string
+        required: true
+      description:
+        name: description
+        description: Description of this collection of processed data.
+        range: text
+        required: true
+      value:
+        name: value
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        any_of:
+        - range: NWBDataInterface
+        - range: DynamicTable
     tree_root: true
   Images:
     name: Images
@@ -299,6 +317,7 @@ classes:
       name:
         name: name
         ifabsent: string(Images)
+        identifier: true
         range: string
         required: true
       description:

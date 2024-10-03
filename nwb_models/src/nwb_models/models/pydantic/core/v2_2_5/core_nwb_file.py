@@ -225,28 +225,28 @@ class NWBFile(NWBContainer):
         ...,
         description="""Date and time corresponding to time zero of all timestamps. The date is stored in UTC with local timezone offset as ISO 8601 extended formatted string: 2018-09-28T14:43:54.123+02:00. Dates stored in UTC end in \"Z\" with no timezone offset. Date accuracy is up to milliseconds. All times stored in the file use this time as reference (i.e., time zero).""",
     )
-    acquisition: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
+    acquisition: Optional[Dict[str, Union[DynamicTable, NWBDataInterface]]] = Field(
         None,
         description="""Data streams recorded from the system, including ephys, ophys, tracking, etc. This group should be read-only after the experiment is completed and timestamps are corrected to a common timebase. The data stored here may be links to raw data stored in external NWB files. This will allow keeping bulky raw data out of the file while preserving the option of keeping some/all in the file. Acquired data includes tracking and experimental data streams (i.e., everything measured from the system). If bulky data is stored in the /acquisition group, the data can exist in a separate NWB file that is linked to by the file being used for processing and analysis.""",
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}
         },
     )
-    analysis: Optional[List[Union[DynamicTable, NWBContainer]]] = Field(
+    analysis: Optional[Dict[str, Union[DynamicTable, NWBContainer]]] = Field(
         None,
         description="""Lab-specific and custom scientific analysis of data. There is no defined format for the content of this group - the format is up to the individual user/lab. To facilitate sharing analysis data between labs, the contents here should be stored in standard types (e.g., neurodata_types) and appropriately documented. The file can store lab-specific and custom data analysis without restriction on its form or schema, reducing data formatting restrictions on end users. Such data should be placed in the analysis group. The analysis data should be documented so that it could be shared with other labs.""",
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBContainer"}, {"range": "DynamicTable"}]}
         },
     )
-    scratch: Optional[List[Union[DynamicTable, NWBContainer]]] = Field(
+    scratch: Optional[Dict[str, Union[DynamicTable, NWBContainer]]] = Field(
         None,
         description="""A place to store one-off analysis results. Data placed here is not intended for sharing. By placing data here, users acknowledge that there is no guarantee that their data meets any standard.""",
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBContainer"}, {"range": "DynamicTable"}]}
         },
     )
-    processing: Optional[List[ProcessingModule]] = Field(
+    processing: Optional[Dict[str, ProcessingModule]] = Field(
         None,
         description="""The home for ProcessingModules. These modules perform intermediate analysis of data that is necessary to perform before scientific analysis. Examples include spike clustering, extracting position from tracking data, stitching together image slices. ProcessingModules can be large and express many data sets from relatively complex analysis (e.g., spike detection and clustering) or small, representing extraction of position information from tracking video, or even binary lick/no-lick decisions. Common software tools (e.g., klustakwik, MClust) are expected to read/write data here.  'Processing' refers to intermediate analysis of the acquired data to make it more amenable to scientific analysis.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ProcessingModule"}]}},
@@ -264,6 +264,9 @@ class NWBFile(NWBContainer):
         description="""Experimental intervals, whether that be logically distinct sub-experiments having a particular scientific goal, trials (see trials subgroup) during an experiment, or epochs (see epochs subgroup) deriving from analysis of data.""",
     )
     units: Optional[Units] = Field(None, description="""Data about sorted spike units.""")
+    specifications: Optional[dict] = Field(
+        None, description="""Nested dictionary of schema specifications"""
+    )
 
 
 class NWBFileStimulus(ConfiguredBaseModel):
@@ -279,12 +282,12 @@ class NWBFileStimulus(ConfiguredBaseModel):
             "linkml_meta": {"equals_string": "stimulus", "ifabsent": "string(stimulus)"}
         },
     )
-    presentation: Optional[List[TimeSeries]] = Field(
+    presentation: Optional[Dict[str, TimeSeries]] = Field(
         None,
         description="""Stimuli presented during the experiment.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}},
     )
-    templates: Optional[List[TimeSeries]] = Field(
+    templates: Optional[Dict[str, TimeSeries]] = Field(
         None,
         description="""Template stimuli. Timestamps in templates are based on stimulus design and are relative to the beginning of the stimulus. When templates are used, the stimulus instances must convert presentation times to the experiment`s time reference frame.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}},
@@ -362,11 +365,7 @@ class NWBFileGeneral(ConfiguredBaseModel):
         None,
         description="""Information about virus(es) used in experiments, including virus ID, source, date made, injection location, volume, etc.""",
     )
-    lab_meta_data: Optional[List[LabMetaData]] = Field(
-        None,
-        description="""Place-holder than can be extended so that lab-specific meta-data can be placed in /general.""",
-    )
-    devices: Optional[List[Device]] = Field(
+    devices: Optional[Dict[str, Device]] = Field(
         None,
         description="""Description of hardware devices used during experiment, e.g., monitors, ADC boards, microscopes, etc.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "Device"}]}},
@@ -381,15 +380,19 @@ class NWBFileGeneral(ConfiguredBaseModel):
     intracellular_ephys: Optional[GeneralIntracellularEphys] = Field(
         None, description="""Metadata related to intracellular electrophysiology."""
     )
-    optogenetics: Optional[List[OptogeneticStimulusSite]] = Field(
+    optogenetics: Optional[Dict[str, OptogeneticStimulusSite]] = Field(
         None,
         description="""Metadata describing optogenetic stimuluation.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "OptogeneticStimulusSite"}]}},
     )
-    optophysiology: Optional[List[ImagingPlane]] = Field(
+    optophysiology: Optional[Dict[str, ImagingPlane]] = Field(
         None,
         description="""Metadata related to optophysiology.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ImagingPlane"}]}},
+    )
+    value: Optional[Dict[str, LabMetaData]] = Field(
+        None,
+        description="""Place-holder than can be extended so that lab-specific meta-data can be placed in /general.""",
     )
 
 
@@ -426,11 +429,11 @@ class GeneralExtracellularEphys(ConfiguredBaseModel):
             }
         },
     )
-    electrode_group: Optional[List[ElectrodeGroup]] = Field(
-        None, description="""Physical group of electrodes."""
-    )
     electrodes: Optional[ExtracellularEphysElectrodes] = Field(
         None, description="""A table of all electrodes (i.e. channels) used for recording."""
+    )
+    value: Optional[Dict[str, ElectrodeGroup]] = Field(
+        None, description="""Physical group of electrodes."""
     )
 
 
@@ -501,8 +504,14 @@ class ExtracellularEphysElectrodes(DynamicTable):
             }
         },
     )
-    group: List[ElectrodeGroup] = Field(
-        ..., description="""Reference to the ElectrodeGroup this electrode is a part of."""
+    group: VectorData[NDArray[Any, ElectrodeGroup]] = Field(
+        ...,
+        description="""Reference to the ElectrodeGroup this electrode is a part of.""",
+        json_schema_extra={
+            "linkml_meta": {
+                "array": {"maximum_number_dimensions": False, "minimum_number_dimensions": 1}
+            }
+        },
     )
     group_name: VectorData[NDArray[Any, str]] = Field(
         ...,
@@ -559,9 +568,6 @@ class ExtracellularEphysElectrodes(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_index: Optional[List[VectorIndex]] = Field(
-        None, description="""Indices for the vector columns of this dynamic table."""
-    )
 
 
 class GeneralIntracellularEphys(ConfiguredBaseModel):
@@ -584,11 +590,11 @@ class GeneralIntracellularEphys(ConfiguredBaseModel):
         None,
         description="""Description of filtering used. Includes filtering type and parameters, frequency fall-off, etc. If this changes between TimeSeries, filter description should be stored as a text attribute for each TimeSeries.""",
     )
-    intracellular_electrode: Optional[List[IntracellularElectrode]] = Field(
-        None, description="""An intracellular electrode."""
-    )
     sweep_table: Optional[SweepTable] = Field(
         None, description="""The table which groups different PatchClampSeries together."""
+    )
+    value: Optional[Dict[str, IntracellularElectrode]] = Field(
+        None, description="""An intracellular electrode."""
     )
 
 
@@ -615,7 +621,7 @@ class NWBFileIntervals(ConfiguredBaseModel):
     invalid_times: Optional[TimeIntervals] = Field(
         None, description="""Time intervals that should be removed from analysis."""
     )
-    time_intervals: Optional[List[TimeIntervals]] = Field(
+    value: Optional[Dict[str, TimeIntervals]] = Field(
         None,
         description="""Optional additional table(s) for describing other experimental time intervals.""",
     )

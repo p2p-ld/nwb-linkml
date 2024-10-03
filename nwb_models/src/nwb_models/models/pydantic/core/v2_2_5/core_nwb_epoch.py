@@ -247,9 +247,6 @@ class TimeIntervals(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_index: Optional[List[VectorIndex]] = Field(
-        None, description="""Indices for the vector columns of this dynamic table."""
-    )
 
 
 class TimeIntervalsTimeseries(VectorData):

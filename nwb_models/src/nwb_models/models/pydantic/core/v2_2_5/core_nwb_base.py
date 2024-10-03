@@ -170,9 +170,9 @@ class Image(NWBData):
     description: Optional[str] = Field(None, description="""Description of the image.""")
     value: Optional[
         Union[
-            NDArray[Shape["* x, * y"], float],
-            NDArray[Shape["* x, * y, 3 r_g_b"], float],
-            NDArray[Shape["* x, * y, 4 r_g_b_a"], float],
+            NDArray[Shape["* x, * y"], float | int],
+            NDArray[Shape["* x, * y, 3 r_g_b"], float | int],
+            NDArray[Shape["* x, * y, 4 r_g_b_a"], float | int],
         ]
     ] = Field(None)
 
@@ -333,13 +333,16 @@ class ProcessingModule(NWBContainer):
         {"from_schema": "core.nwb.base", "tree_root": True}
     )
 
-    value: Optional[List[Union[DynamicTable, NWBDataInterface]]] = Field(
+    name: str = Field(...)
+    description: str = Field(
+        ..., description="""Description of this collection of processed data."""
+    )
+    value: Optional[Dict[str, Union[DynamicTable, NWBDataInterface]]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"any_of": [{"range": "NWBDataInterface"}, {"range": "DynamicTable"}]}
         },
     )
-    name: str = Field(...)
 
 
 class Images(NWBDataInterface):
@@ -353,7 +356,7 @@ class Images(NWBDataInterface):
 
     name: str = Field("Images", json_schema_extra={"linkml_meta": {"ifabsent": "string(Images)"}})
     description: str = Field(..., description="""Description of this collection of images.""")
-    image: List[Image] = Field(..., description="""Images stored in this collection.""")
+    image: List[str] = Field(..., description="""Images stored in this collection.""")
 
 
 # Model rebuild

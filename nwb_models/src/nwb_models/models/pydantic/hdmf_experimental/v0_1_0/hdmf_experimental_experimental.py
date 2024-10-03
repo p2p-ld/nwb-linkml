@@ -11,7 +11,7 @@ import numpy as np
 from numpydantic import NDArray, Shape
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
 
-from ...hdmf_common.v1_4_0.hdmf_common_table import VectorData
+from ...hdmf_common.v1_5_0.hdmf_common_table import VectorData
 
 
 metamodel_version = "None"
@@ -136,7 +136,7 @@ linkml_meta = LinkMLMeta(
         },
         "default_prefix": "hdmf-experimental.experimental/",
         "id": "hdmf-experimental.experimental",
-        "imports": ["../../hdmf_common/v1_4_0/namespace", "hdmf-experimental.nwb.language"],
+        "imports": ["../../hdmf_common/v1_5_0/namespace", "hdmf-experimental.nwb.language"],
         "name": "hdmf-experimental.experimental",
     }
 )
