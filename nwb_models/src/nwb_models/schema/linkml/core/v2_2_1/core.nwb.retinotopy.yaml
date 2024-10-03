@@ -21,6 +21,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       dimension:
@@ -52,6 +53,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       unit:
@@ -75,6 +77,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       bits_per_pixel:
@@ -115,6 +118,7 @@ classes:
       name:
         name: name
         ifabsent: string(ImagingRetinotopy)
+        identifier: true
         range: string
         required: true
       axis_1_phase_map:
@@ -129,7 +133,7 @@ classes:
         description: Phase response to stimulus on the first measured axis.
         range: AxisMap
         required: true
-        multivalued: false
+        inlined: true
       axis_1_power_map:
         name: axis_1_power_map
         annotations:
@@ -142,8 +146,7 @@ classes:
         description: Power response on the first measured axis. Response is scaled
           so 0.0 is no power in the response and 1.0 is maximum relative power.
         range: AxisMap
-        required: false
-        multivalued: false
+        inlined: true
       axis_2_phase_map:
         name: axis_2_phase_map
         annotations:
@@ -156,7 +159,7 @@ classes:
         description: Phase response to stimulus on the second measured axis.
         range: AxisMap
         required: true
-        multivalued: false
+        inlined: true
       axis_2_power_map:
         name: axis_2_power_map
         annotations:
@@ -168,8 +171,7 @@ classes:
             value: neurodata_type_inc
         description: Power response to stimulus on the second measured axis.
         range: AxisMap
-        required: false
-        multivalued: false
+        inlined: true
       sign_map:
         name: sign_map
         annotations:
@@ -183,7 +185,7 @@ classes:
           and axis_2.
         range: RetinotopyMap
         required: true
-        multivalued: false
+        inlined: true
       axis_descriptions:
         name: axis_descriptions
         description: Two-element array describing the contents of the two response
@@ -202,7 +204,7 @@ classes:
           focal depth, wavelength) as data collection. Array format: [rows][columns].'
         range: ImagingRetinotopy__focal_depth_image
         required: true
-        multivalued: false
+        inlined: true
       vasculature_image:
         name: vasculature_image
         annotations:
@@ -216,7 +218,7 @@ classes:
           [rows][columns]'
         range: RetinotopyImage
         required: true
-        multivalued: false
+        inlined: true
     tree_root: true
   ImagingRetinotopy__focal_depth_image:
     name: ImagingRetinotopy__focal_depth_image
@@ -227,6 +229,7 @@ classes:
       name:
         name: name
         ifabsent: string(focal_depth_image)
+        identifier: true
         range: string
         required: true
         equals_string: focal_depth_image

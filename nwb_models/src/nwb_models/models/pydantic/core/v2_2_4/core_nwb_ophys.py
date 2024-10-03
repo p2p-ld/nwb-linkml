@@ -28,7 +28,7 @@ from ...core.v2_2_4.core_nwb_base import (
     TimeSeriesSync,
 )
 from ...core.v2_2_4.core_nwb_device import Device
-from ...core.v2_2_4.core_nwb_image import ImageSeries, ImageSeriesExternalFile
+from ...core.v2_2_4.core_nwb_image import ImageSeries, ImageSeriesData, ImageSeriesExternalFile
 from ...hdmf_common.v1_1_3.hdmf_common_table import (
     DynamicTable,
     DynamicTableRegion,
@@ -215,12 +215,9 @@ class TwoPhotonSeries(ImageSeries):
             }
         },
     )
-    data: Optional[
-        Union[
-            NDArray[Shape["* frame, * x, * y"], float],
-            NDArray[Shape["* frame, * x, * y, * z"], float],
-        ]
-    ] = Field(None, description="""Binary data representing images across frames.""")
+    data: Optional[ImageSeriesData] = Field(
+        None, description="""Binary data representing images across frames."""
+    )
     dimension: Optional[NDArray[Shape["* rank"], int]] = Field(
         None,
         description="""Number of pixels on x, y, (and z) axes.""",
@@ -231,8 +228,9 @@ class TwoPhotonSeries(ImageSeries):
         description="""Paths to one or more external file(s). The field is only present if format='external'. This is only relevant if the image series is stored in the file system as one or more image file(s). This field should NOT be used if the image is stored in another NWB file and that file is linked to this file.""",
     )
     format: Optional[str] = Field(
-        None,
+        "raw",
         description="""Format of image. If this is 'external', then the attribute 'external_file' contains the path information to the image files. If this is 'raw', then the raw (single-channel) binary data is stored in the 'data' dataset. If this attribute is not present, then the default format='raw' case is assumed.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(raw)"}},
     )
     description: Optional[str] = Field(
         "no description",
@@ -281,9 +279,7 @@ class RoiResponseSeries(TimeSeries):
     )
 
     name: str = Field(...)
-    data: Union[
-        NDArray[Shape["* num_times"], float], NDArray[Shape["* num_times, * num_rois"], float]
-    ] = Field(..., description="""Signals from ROIs.""")
+    data: RoiResponseSeriesData = Field(..., description="""Signals from ROIs.""")
     rois: Named[DynamicTableRegion] = Field(
         ...,
         description="""DynamicTableRegion referencing into an ROITable containing information on the ROIs stored in this timeseries.""",
@@ -333,6 +329,39 @@ class RoiResponseSeries(TimeSeries):
     )
 
 
+class RoiResponseSeriesData(ConfiguredBaseModel):
+    """
+    Signals from ROIs.
+    """
+
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
+
+    name: Literal["data"] = Field(
+        "data",
+        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
+    unit: str = Field(
+        ...,
+        description="""Base unit of measurement for working with the data. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
+    )
+    value: Optional[
+        Union[
+            NDArray[Shape["* num_times"], float | int],
+            NDArray[Shape["* num_times, * num_rois"], float | int],
+        ]
+    ] = Field(None)
+
+
 class DfOverF(NWBDataInterface):
     """
     dF/F information about a region of interest (ROI). Storage hierarchy of dF/F should be the same as for segmentation (i.e., same names for ROIs and for image planes).
@@ -342,10 +371,10 @@ class DfOverF(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[RoiResponseSeries]] = Field(
+    name: str = Field("DfOverF", json_schema_extra={"linkml_meta": {"ifabsent": "string(DfOverF)"}})
+    value: Optional[Dict[str, RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class Fluorescence(NWBDataInterface):
@@ -357,10 +386,12 @@ class Fluorescence(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[RoiResponseSeries]] = Field(
+    name: str = Field(
+        "Fluorescence", json_schema_extra={"linkml_meta": {"ifabsent": "string(Fluorescence)"}}
+    )
+    value: Optional[Dict[str, RoiResponseSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "RoiResponseSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class ImageSegmentation(NWBDataInterface):
@@ -372,10 +403,13 @@ class ImageSegmentation(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[PlaneSegmentation]] = Field(
+    name: str = Field(
+        "ImageSegmentation",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(ImageSegmentation)"}},
+    )
+    value: Optional[Dict[str, PlaneSegmentation]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "PlaneSegmentation"}]}}
     )
-    name: str = Field(...)
 
 
 class PlaneSegmentation(DynamicTable):
@@ -388,9 +422,20 @@ class PlaneSegmentation(DynamicTable):
     )
 
     name: str = Field(...)
-    image_mask: Optional[PlaneSegmentationImageMask] = Field(
+    image_mask: Optional[
+        VectorData[
+            Union[
+                NDArray[Shape["* num_roi, * num_x, * num_y"], Any],
+                NDArray[Shape["* num_roi, * num_x, * num_y, * num_z"], Any],
+            ]
+        ]
+    ] = Field(
         None,
         description="""ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.""",
+    )
+    pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
+        None,
+        description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
     pixel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
@@ -404,9 +449,9 @@ class PlaneSegmentation(DynamicTable):
             }
         },
     )
-    pixel_mask: Optional[PlaneSegmentationPixelMask] = Field(
+    voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
         None,
-        description="""Pixel masks for each ROI: a list of indices and weights for the ROI. Pixel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
+        description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
     )
     voxel_mask_index: Optional[Named[VectorIndex]] = Field(
         None,
@@ -420,11 +465,7 @@ class PlaneSegmentation(DynamicTable):
             }
         },
     )
-    voxel_mask: Optional[PlaneSegmentationVoxelMask] = Field(
-        None,
-        description="""Voxel masks for each ROI: a list of indices and weights for the ROI. Voxel masks are concatenated and parsing of this dataset is maintained by the PlaneSegmentation""",
-    )
-    reference_images: Optional[List[ImageSeries]] = Field(
+    reference_images: Optional[Dict[str, ImageSeries]] = Field(
         None,
         description="""Image stacks that the segmentation masks apply to.""",
         json_schema_extra={"linkml_meta": {"any_of": [{"range": "ImageSeries"}]}},
@@ -448,33 +489,6 @@ class PlaneSegmentation(DynamicTable):
         description="""Array of unique identifiers for the rows of this dynamic table.""",
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_rows"}]}}},
     )
-    vector_index: Optional[List[VectorIndex]] = Field(
-        None, description="""Indices for the vector columns of this dynamic table."""
-    )
-
-
-class PlaneSegmentationImageMask(VectorData):
-    """
-    ROI masks for each ROI. Each image mask is the size of the original imaging plane (or volume) and members of the ROI are finite non-zero.
-    """
-
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "core.nwb.ophys"})
-
-    name: Literal["image_mask"] = Field(
-        "image_mask",
-        json_schema_extra={
-            "linkml_meta": {"equals_string": "image_mask", "ifabsent": "string(image_mask)"}
-        },
-    )
-    description: str = Field(..., description="""Description of what these vectors represent.""")
-    value: Optional[
-        Union[
-            NDArray[Shape["* dim0"], Any],
-            NDArray[Shape["* dim0, * dim1"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2"], Any],
-            NDArray[Shape["* dim0, * dim1, * dim2, * dim3"], Any],
-        ]
-    ] = Field(None)
 
 
 class PlaneSegmentationPixelMask(VectorData):
@@ -597,7 +611,7 @@ class ImagingPlane(NWBContainer):
         None,
         description="""Describes reference frame of origin_coords and grid_spacing. For example, this can be a text description of the anatomical location and orientation of the grid defined by origin_coords and grid_spacing or the vectors needed to transform or rotate the grid to a common anatomical axis (e.g., AP/DV/ML). This field is necessary to interpret origin_coords and grid_spacing. If origin_coords and grid_spacing are not present, then this field is not required. For example, if the microscope takes 10 x 10 x 2 images, where the first value of the data matrix (index (0, 0, 0)) corresponds to (-1.2, -0.6, -2) mm relative to bregma, the spacing between pixels is 0.2 mm in x, 0.2 mm in y and 0.5 mm in z, and larger numbers in x means more anterior, larger numbers in y means more rightward, and larger numbers in z means more ventral, then enter the following -- origin_coords = (-1.2, -0.6, -2) grid_spacing = (0.2, 0.2, 0.5) reference_frame = \"Origin coordinates are relative to bregma. First dimension corresponds to anterior-posterior axis (larger index = more anterior). Second dimension corresponds to medial-lateral axis (larger index = more rightward). Third dimension corresponds to dorsal-ventral axis (larger index = more ventral).\"""",
     )
-    optical_channel: List[OpticalChannel] = Field(
+    optical_channel: Dict[str, OpticalChannel] = Field(
         ..., description="""An optical channel used to record from an imaging plane."""
     )
     device: Union[Device, str] = Field(
@@ -731,10 +745,13 @@ class MotionCorrection(NWBDataInterface):
         {"from_schema": "core.nwb.ophys", "tree_root": True}
     )
 
-    value: Optional[List[CorrectedImageStack]] = Field(
+    name: str = Field(
+        "MotionCorrection",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(MotionCorrection)"}},
+    )
+    value: Optional[Dict[str, CorrectedImageStack]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "CorrectedImageStack"}]}}
     )
-    name: str = Field(...)
 
 
 class CorrectedImageStack(NWBDataInterface):
@@ -769,11 +786,11 @@ class CorrectedImageStack(NWBDataInterface):
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 TwoPhotonSeries.model_rebuild()
 RoiResponseSeries.model_rebuild()
+RoiResponseSeriesData.model_rebuild()
 DfOverF.model_rebuild()
 Fluorescence.model_rebuild()
 ImageSegmentation.model_rebuild()
 PlaneSegmentation.model_rebuild()
-PlaneSegmentationImageMask.model_rebuild()
 PlaneSegmentationPixelMask.model_rebuild()
 PlaneSegmentationVoxelMask.model_rebuild()
 ImagingPlane.model_rebuild()

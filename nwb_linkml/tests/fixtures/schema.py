@@ -5,8 +5,10 @@ from typing import Dict, Optional
 
 import pytest
 from linkml_runtime.dumpers import yaml_dumper
-from linkml_runtime.linkml_model import (
+from linkml_runtime.linkml_model.meta import (
+    ArrayExpression,
     ClassDefinition,
+    DimensionExpression,
     Prefix,
     SchemaDefinition,
     SlotDefinition,
@@ -88,10 +90,6 @@ def linkml_schema_bare() -> TestSchemas:
                             equals_string="toplevel",
                             identifier=True,
                         ),
-                        SlotDefinition(name="array", range="MainTopLevel__Array"),
-                        SlotDefinition(
-                            name="SkippableSlot", description="A slot that was meant to be skipped!"
-                        ),
                         SlotDefinition(
                             name="inline_dict",
                             description=(
@@ -103,34 +101,50 @@ def linkml_schema_bare() -> TestSchemas:
                             inlined_as_list=False,
                             any_of=[{"range": "OtherClass"}, {"range": "StillAnotherClass"}],
                         ),
-                    ],
-                ),
-                ClassDefinition(
-                    name="MainTopLevel__Array",
-                    description="Main class's array",
-                    is_a="Arraylike",
-                    attributes=[
-                        SlotDefinition(name="x", range="numeric", required=True),
-                        SlotDefinition(name="y", range="numeric", required=True),
                         SlotDefinition(
-                            name="z",
-                            range="numeric",
-                            required=False,
-                            maximum_cardinality=3,
-                            minimum_cardinality=3,
+                            name="named_slot",
+                            description=(
+                                "A slot that should use the Named[] generic to set the name param"
+                            ),
+                            annotations=[{"named": True}],
+                            range="OtherClass",
+                            inlined=True,
                         ),
                         SlotDefinition(
-                            name="a",
+                            name="value",
+                            description="Main class's array",
                             range="numeric",
-                            required=False,
-                            minimum_cardinality=4,
-                            maximum_cardinality=4,
+                            any_of=[
+                                {
+                                    "array": ArrayExpression(
+                                        dimensions=[
+                                            DimensionExpression(alias="x"),
+                                            DimensionExpression(alias="y"),
+                                        ]
+                                    )
+                                },
+                                {
+                                    "array": ArrayExpression(
+                                        dimensions=[
+                                            DimensionExpression(alias="x"),
+                                            DimensionExpression(alias="y"),
+                                            DimensionExpression(alias="z", exact_cardinality=3),
+                                        ]
+                                    )
+                                },
+                                {
+                                    "array": ArrayExpression(
+                                        dimensions=[
+                                            DimensionExpression(alias="x"),
+                                            DimensionExpression(alias="y"),
+                                            DimensionExpression(alias="z", exact_cardinality=3),
+                                            DimensionExpression(alias="a", exact_cardinality=4),
+                                        ]
+                                    )
+                                },
+                            ],
                         ),
                     ],
-                ),
-                ClassDefinition(
-                    name="skippable",
-                    description="A class that lives to be skipped!",
                 ),
                 ClassDefinition(
                     name="OtherClass",

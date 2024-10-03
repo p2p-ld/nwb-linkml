@@ -230,7 +230,7 @@ class GroupAdapter(ClassAdapter):
         )
 
         if self.debug:  # pragma: no cover - only used in development
-            slot.annotations["group_adapter"] = {
+            slot.annotations["slot_adapter"] = {
                 "tag": "slot_adapter",
                 "value": "container_value_slot",
             }

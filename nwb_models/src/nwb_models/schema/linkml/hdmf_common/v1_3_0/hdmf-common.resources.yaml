@@ -22,6 +22,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       keys:
@@ -30,26 +31,26 @@ classes:
           resources.
         range: ExternalResources__keys
         required: true
-        multivalued: false
+        inlined: true
       resources:
         name: resources
         description: A table for mapping user terms (i.e., keys) to resource entities.
         range: ExternalResources__resources
         required: true
-        multivalued: false
+        inlined: true
       objects:
         name: objects
         description: A table for identifying which objects in a file contain references
           to external resources.
         range: ExternalResources__objects
         required: true
-        multivalued: false
+        inlined: true
       object_keys:
         name: object_keys
         description: A table for identifying which objects use which keys.
         range: ExternalResources__object_keys
         required: true
-        multivalued: false
+        inlined: true
     tree_root: true
   ExternalResources__keys:
     name: ExternalResources__keys
@@ -60,6 +61,7 @@ classes:
       name:
         name: name
         ifabsent: string(keys)
+        identifier: true
         range: string
         required: true
         equals_string: keys
@@ -71,7 +73,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__resources:
     name: ExternalResources__resources
     description: A table for mapping user terms (i.e., keys) to resource entities.
@@ -80,6 +81,7 @@ classes:
       name:
         name: name
         ifabsent: string(resources)
+        identifier: true
         range: string
         required: true
         equals_string: resources
@@ -90,7 +92,6 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false
       resource_name:
         name: resource_name
         description: The name of the online resource (e.g., website, database) that
@@ -99,7 +100,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
       resource_id:
         name: resource_id
         description: The unique identifier for the resource entity at the resource.
@@ -107,7 +107,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
       uri:
         name: uri
         description: The URI for the resource entity this reference applies to. This
@@ -116,7 +115,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__objects:
     name: ExternalResources__objects
     description: A table for identifying which objects in a file contain references
@@ -126,6 +124,7 @@ classes:
       name:
         name: name
         ifabsent: string(objects)
+        identifier: true
         range: string
         required: true
         equals_string: objects
@@ -136,7 +135,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
       field:
         name: field
         description: The field of the object. This can be an empty string if the object
@@ -145,7 +143,6 @@ classes:
           exact_number_dimensions: 1
         range: text
         required: true
-        multivalued: false
   ExternalResources__object_keys:
     name: ExternalResources__object_keys
     description: A table for identifying which objects use which keys.
@@ -154,6 +151,7 @@ classes:
       name:
         name: name
         ifabsent: string(object_keys)
+        identifier: true
         range: string
         required: true
         equals_string: object_keys
@@ -165,7 +163,6 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false
       keytable_idx:
         name: keytable_idx
         description: The index to the 'keys' table for the key.
@@ -173,4 +170,3 @@ classes:
           exact_number_dimensions: 1
         range: uint
         required: true
-        multivalued: false

@@ -213,6 +213,16 @@ class SpatialSeriesData(ConfiguredBaseModel):
         "data",
         json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
     )
+    conversion: Optional[float] = Field(
+        1.0,
+        description="""Scalar to multiply each element in data to convert it to the specified 'unit'. If the data are stored in acquisition system units or other units that require a conversion to be interpretable, multiply the data by 'conversion' to convert the data to the specified 'unit'. e.g. if the data acquisition system stores values in this object as signed 16-bit integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion' multiplier to get from raw data acquisition values to recorded volts is 2.5/32768/8000 = 9.5367e-9.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(1.0)"}},
+    )
+    resolution: Optional[float] = Field(
+        -1.0,
+        description="""Smallest meaningful difference between values in data, stored in the specified by unit, e.g., the change in value of the least significant bit, or a larger number if signal noise is known to be present. If unknown, use -1.0.""",
+        json_schema_extra={"linkml_meta": {"ifabsent": "float(-1.0)"}},
+    )
     unit: Optional[str] = Field(
         "meters",
         description="""Base unit of measurement for working with the data. The default value is 'meters'. Actual stored values are not necessarily stored in these units. To access the data in these units, multiply 'data' by 'conversion'.""",
@@ -220,8 +230,8 @@ class SpatialSeriesData(ConfiguredBaseModel):
     )
     value: Optional[
         Union[
-            NDArray[Shape["* num_times"], float],
-            NDArray[Shape["* num_times, * num_features"], float],
+            NDArray[Shape["* num_times"], float | int],
+            NDArray[Shape["* num_times, * num_features"], float | int],
         ]
     ] = Field(None)
 
@@ -235,10 +245,13 @@ class BehavioralEpochs(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[IntervalSeries]] = Field(
+    name: str = Field(
+        "BehavioralEpochs",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralEpochs)"}},
+    )
+    value: Optional[Dict[str, IntervalSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "IntervalSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class BehavioralEvents(NWBDataInterface):
@@ -250,10 +263,13 @@ class BehavioralEvents(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[TimeSeries]] = Field(
+    name: str = Field(
+        "BehavioralEvents",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralEvents)"}},
+    )
+    value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class BehavioralTimeSeries(NWBDataInterface):
@@ -265,10 +281,13 @@ class BehavioralTimeSeries(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[TimeSeries]] = Field(
+    name: str = Field(
+        "BehavioralTimeSeries",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(BehavioralTimeSeries)"}},
+    )
+    value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class PupilTracking(NWBDataInterface):
@@ -280,10 +299,12 @@ class PupilTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[TimeSeries]] = Field(
+    name: str = Field(
+        "PupilTracking", json_schema_extra={"linkml_meta": {"ifabsent": "string(PupilTracking)"}}
+    )
+    value: Optional[Dict[str, TimeSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "TimeSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class EyeTracking(NWBDataInterface):
@@ -295,10 +316,12 @@ class EyeTracking(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[SpatialSeries]] = Field(
+    name: str = Field(
+        "EyeTracking", json_schema_extra={"linkml_meta": {"ifabsent": "string(EyeTracking)"}}
+    )
+    value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class CompassDirection(NWBDataInterface):
@@ -310,10 +333,13 @@ class CompassDirection(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[SpatialSeries]] = Field(
+    name: str = Field(
+        "CompassDirection",
+        json_schema_extra={"linkml_meta": {"ifabsent": "string(CompassDirection)"}},
+    )
+    value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 class Position(NWBDataInterface):
@@ -325,10 +351,12 @@ class Position(NWBDataInterface):
         {"from_schema": "core.nwb.behavior", "tree_root": True}
     )
 
-    value: Optional[List[SpatialSeries]] = Field(
+    name: str = Field(
+        "Position", json_schema_extra={"linkml_meta": {"ifabsent": "string(Position)"}}
+    )
+    value: Optional[Dict[str, SpatialSeries]] = Field(
         None, json_schema_extra={"linkml_meta": {"any_of": [{"range": "SpatialSeries"}]}}
     )
-    name: str = Field(...)
 
 
 # Model rebuild

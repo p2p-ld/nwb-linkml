@@ -18,6 +18,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -28,6 +29,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       target:
@@ -35,6 +37,7 @@ classes:
         description: Target dataset that this index applies to.
         range: Data
         required: true
+        inlined: true
     tree_root: true
   VectorData:
     name: VectorData
@@ -50,6 +53,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       description:
@@ -67,6 +71,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       target:
@@ -74,6 +79,7 @@ classes:
         description: Reference to the target dataset that this index applies to.
         range: VectorData
         required: true
+        inlined: true
     tree_root: true
   ElementIdentifiers:
     name: ElementIdentifiers
@@ -84,6 +90,7 @@ classes:
       name:
         name: name
         ifabsent: string(element_id)
+        identifier: true
         range: string
         required: true
       value:
@@ -108,7 +115,13 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
+        required: true
+      description:
+        name: description
+        description: Description of what this table region points to.
+        range: text
         required: true
       table:
         name: table
@@ -116,11 +129,7 @@ classes:
           to.
         range: DynamicTable
         required: true
-      description:
-        name: description
-        description: Description of what this table region points to.
-        range: text
-        required: true
+        inlined: true
     tree_root: true
   Container:
     name: Container
@@ -129,6 +138,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
     tree_root: true
@@ -159,6 +169,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       colnames:
@@ -182,16 +193,4 @@ classes:
         range: int
         required: true
         multivalued: false
-      vector_data:
-        name: vector_data
-        description: Vector columns of this dynamic table.
-        range: VectorData
-        required: false
-        multivalued: true
-      vector_index:
-        name: vector_index
-        description: Indices for the vector columns of this dynamic table.
-        range: VectorIndex
-        required: false
-        multivalued: true
     tree_root: true

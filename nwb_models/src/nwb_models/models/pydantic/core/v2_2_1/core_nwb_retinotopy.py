@@ -235,7 +235,7 @@ class RetinotopyImage(GrayscaleImage):
     )
     field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
     format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
-    value: Optional[NDArray[Shape["* x, * y"], float]] = Field(
+    value: Optional[NDArray[Shape["* x, * y"], float | int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "x"}, {"alias": "y"}]}}
@@ -374,7 +374,7 @@ class ImagingRetinotopyFocalDepthImage(RetinotopyImage):
     )
     field_of_view: List[float] = Field(..., description="""Size of viewing area, in meters.""")
     format: str = Field(..., description="""Format of image. Right now only 'raw' is supported.""")
-    value: Optional[NDArray[Shape["* x, * y"], float]] = Field(
+    value: Optional[NDArray[Shape["* x, * y"], float | int]] = Field(
         None,
         json_schema_extra={
             "linkml_meta": {"array": {"dimensions": [{"alias": "x"}, {"alias": "y"}]}}

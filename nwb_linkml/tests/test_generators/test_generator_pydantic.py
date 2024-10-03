@@ -7,7 +7,6 @@ because it's tested in the base linkml package.
 
 # ruff: noqa: F821 - until the tests here settle down
 
-import re
 import sys
 import typing
 from types import ModuleType
@@ -15,8 +14,10 @@ from typing import Optional, TypedDict
 
 import numpy as np
 import pytest
+from linkml_runtime.utils.compile_python import compile_python
+from numpydantic.dtype import Float
 from numpydantic.ndarray import NDArrayMeta
-from pydantic import BaseModel
+from pydantic import ValidationError
 
 from nwb_linkml.generators.pydantic import NWBPydanticGenerator
 
@@ -35,7 +36,6 @@ class TestModules(TypedDict):
 TestModules.__test__ = False
 
 
-@pytest.mark.xfail()
 def generate_and_import(
     linkml_schema: TestSchemas, split: bool, generator_kwargs: Optional[dict] = None
 ) -> TestModules:
@@ -45,7 +45,6 @@ def generate_and_import(
         "split": split,
         "emit_metadata": True,
         "gen_slots": True,
-        "pydantic_version": "2",
         **generator_kwargs,
     }
 
@@ -68,20 +67,13 @@ def generate_and_import(
 
     sys.path.append(str(linkml_schema.core_path.parents[1]))
 
-    core = compile_python(
-        str(linkml_schema.core_path.with_suffix(".py")), module_name="test_schema.core"
-    )
-    imported = compile_python(
-        str(linkml_schema.imported_path.with_suffix(".py")), module_name="test_schema.imported"
-    )
-    namespace = compile_python(
-        str(linkml_schema.namespace_path.with_suffix(".py")), module_name="test_schema.namespace"
-    )
+    core = compile_python(str(linkml_schema.core_path.with_suffix(".py")))
+    imported = compile_python(str(linkml_schema.imported_path.with_suffix(".py")))
+    namespace = compile_python(str(linkml_schema.namespace_path.with_suffix(".py")))
 
     return TestModules(core=core, imported=imported, namespace=namespace, split=split)
 
 
-@pytest.mark.xfail()
 @pytest.fixture(scope="module", params=["split", "unsplit"])
 def imported_schema(linkml_schema, request) -> TestModules:
     """
@@ -90,99 +82,14 @@ def imported_schema(linkml_schema, request) -> TestModules:
     """
     split = request.param == "split"
 
-    yield generate_and_import(linkml_schema, split)
-
-    del sys.modules["test_schema.core"]
-    del sys.modules["test_schema.imported"]
-    del sys.modules["test_schema.namespace"]
+    return generate_and_import(linkml_schema, split)
 
 
-def _model_correctness(modules: TestModules):
+def test_array(imported_schema):
     """
-    Shared assertions for model correctness.
-    Only tests very basic things like type and existence,
-    more specific tests are in their own test functions!
-    """
-    assert issubclass(modules["core"].MainTopLevel, BaseModel)
-    assert issubclass(modules["core"].Skippable, BaseModel)
-    assert issubclass(modules["core"].OtherClass, BaseModel)
-    assert issubclass(modules["core"].StillAnotherClass, BaseModel)
-    assert issubclass(modules["imported"].MainThing, BaseModel)
+    Arraylike classes are converted to slots that specify nptyping arrays.
 
-
-@pytest.mark.xfail()
-def test_generate(linkml_schema):
-    """
-    Base case, we can generate pydantic models from linkml schema
-
-    Tests basic functionality of serializer including
-
-    - serialization
-    - compilation (loading as a python model)
-    - existence and correctness of attributes
-    """
-    modules = generate_and_import(linkml_schema, split=False)
-
-    assert isinstance(modules["core"], ModuleType)
-    assert isinstance(modules["imported"], ModuleType)
-    assert isinstance(modules["namespace"], ModuleType)
-    _model_correctness(modules)
-
-    # unsplit modules should have all the classes present, even if they aren't defined in it
-    assert modules["core"].MainThing.__module__ == "test_schema.core"
-    assert issubclass(modules["core"].MainTopLevel, modules["core"].MainThing)
-    del sys.modules["test_schema.core"]
-    del sys.modules["test_schema.imported"]
-    del sys.modules["test_schema.namespace"]
-
-
-@pytest.mark.xfail()
-def test_generate_split(linkml_schema):
-    """
-    We can generate schema split into separate files
-    """
-    modules = generate_and_import(linkml_schema, split=True)
-
-    assert isinstance(modules["core"], ModuleType)
-    assert isinstance(modules["imported"], ModuleType)
-    assert isinstance(modules["namespace"], ModuleType)
-    _model_correctness(modules)
-
-    # split modules have classes defined once and imported
-    assert modules["core"].MainThing.__module__ == "test_schema.imported"
-    # can't assert subclass here because of the weird way relative imports work
-    # when we don't actually import using normal python import machinery
-    assert modules["core"].MainTopLevel.__mro__[1].__module__ == "test_schema.imported"
-    del sys.modules["test_schema.core"]
-    del sys.modules["test_schema.imported"]
-    del sys.modules["test_schema.namespace"]
-
-
-@pytest.mark.xfail()
-def test_versions(linkml_schema):
-    """
-    We can use explicit versions that import from relative paths generated by
-    SchemaProvider
-    """
-    # here all we do is check that we have the correct relative import, since we test
-    # the actual generation of these path structures elsewhere in the provider tests
-
-    core_str = NWBPydanticGenerator(
-        str(linkml_schema.core_path), versions={"imported": "v4.2.0"}, split=True
-    ).serialize()
-
-    # the import should be like
-    # from ...imported.v4_2_0.imported import (
-    #     MainThing
-    # )
-    match = re.findall(r"from \.\.\.imported\.v4_2_0.*?MainThing.*?\)", core_str, flags=re.DOTALL)
-    assert len(match) == 1
-
-
-@pytest.mark.xfail()
-def test_arraylike(imported_schema):
-    """
-    Arraylike classes are converted to slots that specify nptyping arrays
+    Test that we can use any_of with the array slot (unlike the upstream generator, currently)
 
     array: Optional[Union[
         NDArray[Shape["* x, * y"], Number],
@@ -191,19 +98,18 @@ def test_arraylike(imported_schema):
     ]] = Field(None)
     """
     # check that we have gotten an NDArray annotation and its shape is correct
-    array = imported_schema["core"].MainTopLevel.model_fields["array"].annotation
+    array = imported_schema["core"].MainTopLevel.model_fields["value"].annotation
     args = typing.get_args(array)
-    for i, _ in enumerate(("* x, * y", "* x, * y, 3 z", "* x, * y, 3 z, 4 a")):
+    for i, shape in enumerate(("* x, * y", "* x, * y, 3 z", "* x, * y, 3 z, 4 a")):
         assert isinstance(args[i], NDArrayMeta)
-        assert args[i].__args__[0].__args__
-        assert args[i].__args__[1] == np.number
+        assert args[i].__args__[0].__args__[0] == shape
+        assert args[i].__args__[1] == Float
 
     # we shouldn't have an actual class for the array
     assert not hasattr(imported_schema["core"], "MainTopLevel__Array")
     assert not hasattr(imported_schema["core"], "MainTopLevelArray")
 
 
-@pytest.mark.xfail()
 def test_inject_fields(imported_schema):
     """
     Our root model should have the special fields we injected
@@ -213,35 +119,6 @@ def test_inject_fields(imported_schema):
     assert "object_id" in base.model_fields
 
 
-@pytest.mark.xfail()
-def test_linkml_meta(imported_schema):
-    """
-    We should be able to store some linkml metadata with our classes
-    """
-    meta = imported_schema["core"].LinkML_Meta
-    assert "tree_root" in meta.model_fields
-    assert imported_schema["core"].MainTopLevel.linkml_meta.default.tree_root
-    assert not imported_schema["core"].OtherClass.linkml_meta.default.tree_root
-
-
-@pytest.mark.xfail()
-def test_skip(linkml_schema):
-    """
-    We can skip slots and classes
-    """
-    modules = generate_and_import(
-        linkml_schema,
-        split=False,
-        generator_kwargs={
-            "SKIP_SLOTS": ("SkippableSlot",),
-            "SKIP_CLASSES": ("Skippable", "skippable"),
-        },
-    )
-    assert not hasattr(modules["core"], "Skippable")
-    assert "SkippableSlot" not in modules["core"].MainTopLevel.model_fields
-
-
-@pytest.mark.xfail()
 def test_inline_with_identifier(imported_schema):
     """
     By default, if a class has an identifier attribute, it is inlined
@@ -256,7 +133,6 @@ def test_inline_with_identifier(imported_schema):
     assert stillanother is imported_schema["core"].StillAnotherClass
 
 
-@pytest.mark.xfail()
 def test_namespace(imported_schema):
     """
     Namespace schema import all classes from the other schema
@@ -269,23 +145,39 @@ def test_namespace(imported_schema):
         ("MainThing", "test_schema.imported"),
         ("Arraylike", "test_schema.imported"),
         ("MainTopLevel", "test_schema.core"),
-        ("Skippable", "test_schema.core"),
         ("OtherClass", "test_schema.core"),
         ("StillAnotherClass", "test_schema.core"),
     ):
         assert hasattr(ns, classname)
         if imported_schema["split"]:
-            assert getattr(ns, classname).__module__ == modname
+            module_end_name = ".".join(getattr(ns, classname).__module__.split(".")[-2:])
+            assert module_end_name == modname
 
 
-@pytest.mark.xfail()
-def test_get_set_item(imported_schema):
-    """We can get and set without explicitly addressing array"""
-    cls = imported_schema["core"].MainTopLevel(array=np.array([[1, 2, 3], [4, 5, 6]]))
-    cls[0] = 50
-    assert (cls[0] == 50).all()
-    assert (cls.array[0] == 50).all()
+def test_get_item(imported_schema):
+    """We can get without explicitly addressing array"""
+    cls = imported_schema["core"].MainTopLevel(value=np.array([[1, 2, 3], [4, 5, 6]], dtype=float))
+    assert np.array_equal(cls[0], np.array([1, 2, 3], dtype=float))
 
-    cls[1, 1] = 100
-    assert cls[1, 1] == 100
-    assert cls.array[1, 1] == 100
+
+def test_named_slot(imported_schema):
+    """
+    Slots that have a ``named`` annotation should get their ``name`` attribute set automatically
+    """
+    OtherClass = imported_schema["core"].OtherClass
+    MainClass = imported_schema["core"].MainTopLevel
+
+    # We did in fact get the outer annotation
+    # this is a wild ass way to get the function name but hey
+    annotation = MainClass.model_fields["named_slot"].annotation.__args__[0]
+    validation_fn_name = annotation.__metadata__[0].func.__name__
+    assert validation_fn_name == "_get_name"
+
+    # we can't instantiate OtherClass without the ``name``
+    with pytest.raises(ValidationError, match=".*name.*"):
+        _ = OtherClass()
+
+    # but when we instantiate MainClass the name gets set automatically
+    instance = MainClass(named_slot={})
+    assert isinstance(instance.named_slot, OtherClass)
+    assert instance.named_slot.name == "named_slot"

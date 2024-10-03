@@ -38,6 +38,7 @@ from ...core.v2_2_0.core_nwb_ecephys import (
     ClusterWaveforms,
     Clustering,
     ElectricalSeries,
+    ElectricalSeriesData,
     ElectrodeGroup,
     ElectrodeGroupPosition,
     EventDetection,
@@ -46,6 +47,7 @@ from ...core.v2_2_0.core_nwb_ecephys import (
     FilteredEphys,
     LFP,
     SpikeEventSeries,
+    SpikeEventSeriesData,
 )
 from ...core.v2_2_0.core_nwb_epoch import TimeIntervals, TimeIntervalsTimeseries
 from ...core.v2_2_0.core_nwb_file import (
@@ -85,8 +87,10 @@ from ...core.v2_2_0.core_nwb_image import (
     GrayscaleImage,
     ImageMaskSeries,
     ImageSeries,
+    ImageSeriesData,
     ImageSeriesExternalFile,
     IndexSeries,
+    IndexSeriesData,
     OpticalSeries,
     RGBAImage,
     RGBImage,
@@ -95,14 +99,22 @@ from ...core.v2_2_0.core_nwb_misc import (
     AbstractFeatureSeries,
     AbstractFeatureSeriesData,
     AnnotationSeries,
+    AnnotationSeriesData,
     DecompositionSeries,
     DecompositionSeriesBands,
     DecompositionSeriesData,
     IntervalSeries,
+    IntervalSeriesData,
     Units,
     UnitsSpikeTimes,
+    UnitsWaveformMean,
+    UnitsWaveformSd,
 )
-from ...core.v2_2_0.core_nwb_ogen import OptogeneticSeries, OptogeneticStimulusSite
+from ...core.v2_2_0.core_nwb_ogen import (
+    OptogeneticSeries,
+    OptogeneticSeriesData,
+    OptogeneticStimulusSite,
+)
 from ...core.v2_2_0.core_nwb_ophys import (
     DfOverF,
     Fluorescence,
@@ -114,6 +126,7 @@ from ...core.v2_2_0.core_nwb_ophys import (
     MotionCorrection,
     OpticalChannel,
     RoiResponseSeries,
+    RoiResponseSeriesData,
     TwoPhotonSeries,
 )
 from ...core.v2_2_0.core_nwb_retinotopy import (

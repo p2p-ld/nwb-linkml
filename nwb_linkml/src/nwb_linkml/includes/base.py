@@ -44,7 +44,7 @@ BASEMODEL_CAST_WITH_VALUE = """
                 raise e1
 """
 
-BASEMODEL_COERCE_CHILD = """
+BASEMODEL_COERCE_SUBCLASS = """
     @field_validator("*", mode="before")
     @classmethod
     def coerce_subclass(cls, v: Any, info) -> Any:

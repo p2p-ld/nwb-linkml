@@ -169,23 +169,15 @@ class CSRMatrix(Container):
             "linkml_meta": {"array": {"dimensions": [{"alias": "number_of_rows_in_the_matrix_1"}]}}
         },
     )
-    data: CSRMatrixData = Field(..., description="""The non-zero values in the matrix.""")
-
-
-class CSRMatrixData(ConfiguredBaseModel):
-    """
-    The non-zero values in the matrix.
-    """
-
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({"from_schema": "hdmf-common.sparse"})
-
-    name: Literal["data"] = Field(
-        "data",
-        json_schema_extra={"linkml_meta": {"equals_string": "data", "ifabsent": "string(data)"}},
+    data: NDArray[Shape["* number_of_non_zero_values"], Any] = Field(
+        ...,
+        description="""The non-zero values in the matrix.""",
+        json_schema_extra={
+            "linkml_meta": {"array": {"dimensions": [{"alias": "number_of_non_zero_values"}]}}
+        },
     )
 
 
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 CSRMatrix.model_rebuild()
-CSRMatrixData.model_rebuild()

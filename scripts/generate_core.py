@@ -102,7 +102,7 @@ def generate_versions(
 
                     build_progress.update(linkml_task, advance=1, action="Build LinkML")
 
-                    linkml_res = linkml_provider.build(core_ns)
+                    linkml_res = linkml_provider.build(core_ns, force=True)
                     build_progress.update(linkml_task, advance=1, action="Built LinkML")
 
                     # build pydantic
@@ -115,7 +115,7 @@ def generate_versions(
                         pbar_string = schema.parts[-3]
                         build_progress.update(pydantic_task, action=pbar_string)
                         pydantic_provider.build(
-                            schema, versions=core_ns.versions, split=True, parallel=True
+                            schema, versions=core_ns.versions, split=True, parallel=True, force=True
                         )
                         build_progress.update(pydantic_task, advance=1)
                     build_progress.update(pydantic_task, action="Built Pydantic")

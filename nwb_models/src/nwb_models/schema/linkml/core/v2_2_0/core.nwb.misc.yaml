@@ -30,6 +30,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -37,7 +38,7 @@ classes:
         description: Values of each feature at each time.
         range: AbstractFeatureSeries__data
         required: true
-        multivalued: false
+        inlined: true
       feature_units:
         name: feature_units
         description: Units of each feature.
@@ -64,9 +65,33 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Since there can be different units for different features, store
@@ -96,18 +121,63 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Annotations made during an experiment.
+        range: AnnotationSeries__data
+        required: true
+        inlined: true
+    tree_root: true
+  AnnotationSeries__data:
+    name: AnnotationSeries__data
+    description: Annotations made during an experiment.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data. Annotations
+          have no units, so the value is fixed to -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: true
+        equals_number: -1
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Annotations
+          have no units, so the value is fixed to 'n/a'.
+        ifabsent: string(n/a)
+        range: text
+        required: true
+        equals_string: n/a
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_times
         range: text
-        required: true
-        multivalued: false
-    tree_root: true
   IntervalSeries:
     name: IntervalSeries
     description: Stores intervals of data. The timestamps field stores the beginning
@@ -121,18 +191,63 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
         name: data
         description: Use values >0 if interval started, <0 if interval ended.
+        range: IntervalSeries__data
+        required: true
+        inlined: true
+    tree_root: true
+  IntervalSeries__data:
+    name: IntervalSeries__data
+    description: Use values >0 if interval started, <0 if interval ended.
+    attributes:
+      name:
+        name: name
+        ifabsent: string(data)
+        identifier: true
+        range: string
+        required: true
+        equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data. Annotations
+          have no units, so the value is fixed to -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: true
+        equals_number: -1
+      unit:
+        name: unit
+        description: Base unit of measurement for working with the data. Annotations
+          have no units, so the value is fixed to 'n/a'.
+        ifabsent: string(n/a)
+        range: text
+        required: true
+        equals_string: n/a
+      value:
+        name: value
         array:
           dimensions:
           - alias: num_times
         range: int8
-        required: true
-        multivalued: false
-    tree_root: true
   DecompositionSeries:
     name: DecompositionSeries
     description: Spectral analysis of a time series, e.g. of an LFP or a speech signal.
@@ -140,6 +255,7 @@ classes:
     attributes:
       name:
         name: name
+        identifier: true
         range: string
         required: true
       data:
@@ -147,28 +263,27 @@ classes:
         description: Data decomposed into frequency bands.
         range: DecompositionSeries__data
         required: true
-        multivalued: false
+        inlined: true
       metric:
         name: metric
         description: The metric used, e.g. phase, amplitude, power.
         range: text
         required: true
-        multivalued: false
       bands:
         name: bands
         description: Table for describing the bands that this series was generated
           from. There should be one row in this table for each band.
         range: DecompositionSeries__bands
         required: true
-        multivalued: false
+        inlined: true
+        inlined_as_list: true
       source_timeseries:
         name: source_timeseries
         annotations:
           source_type:
             tag: source_type
             value: link
-        required: false
-        multivalued: false
+        inlined: true
         any_of:
         - range: TimeSeries
         - range: string
@@ -180,9 +295,33 @@ classes:
       name:
         name: name
         ifabsent: string(data)
+        identifier: true
         range: string
         required: true
         equals_string: data
+      conversion:
+        name: conversion
+        description: Scalar to multiply each element in data to convert it to the
+          specified 'unit'. If the data are stored in acquisition system units or
+          other units that require a conversion to be interpretable, multiply the
+          data by 'conversion' to convert the data to the specified 'unit'. e.g. if
+          the data acquisition system stores values in this object as signed 16-bit
+          integers (int16 range -32,768 to 32,767) that correspond to a 5V range (-2.5V
+          to 2.5V), and the data acquisition system gain is 8000X, then the 'conversion'
+          multiplier to get from raw data acquisition values to recorded volts is
+          2.5/32768/8000 = 9.5367e-9.
+        ifabsent: float(1.0)
+        range: float32
+        required: false
+      resolution:
+        name: resolution
+        description: Smallest meaningful difference between values in data, stored
+          in the specified by unit, e.g., the change in value of the least significant
+          bit, or a larger number if signal noise is known to be present. If unknown,
+          use -1.0.
+        ifabsent: float(-1.0)
+        range: float32
+        required: false
       unit:
         name: unit
         description: Base unit of measurement for working with the data. Actual stored
@@ -208,6 +347,7 @@ classes:
       name:
         name: name
         ifabsent: string(bands)
+        identifier: true
         range: string
         required: true
         equals_string: bands
@@ -259,10 +399,21 @@ classes:
       name:
         name: name
         ifabsent: string(Units)
+        identifier: true
         range: string
         required: true
-      spike_times_index:
-        name: spike_times_index
+      electrode_group:
+        name: electrode_group
+        description: Electrode group that each spike unit came from.
+        array:
+          minimum_number_dimensions: 1
+          maximum_number_dimensions: false
+        range: ElectrodeGroup
+        required: false
+        multivalued: false
+        inlined: true
+      electrodes:
+        name: electrodes
         annotations:
           named:
             tag: named
@@ -270,14 +421,30 @@ classes:
           source_type:
             tag: source_type
             value: neurodata_type_inc
-        description: Index into the spike_times dataset.
+        description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
+        range: DynamicTableRegion
+        inlined: true
+      electrodes_index:
+        name: electrodes_index
+        annotations:
+          named:
+            tag: named
+            value: true
+          source_type:
+            tag: source_type
+            value: neurodata_type_inc
+        description: Index into electrodes.
         range: VectorIndex
-        required: false
-        multivalued: false
-      spike_times:
-        name: spike_times
-        description: Spike times for each unit.
-        range: Units__spike_times
+        inlined: true
+      obs_intervals:
+        name: obs_intervals
+        description: Observation intervals for each unit.
+        array:
+          dimensions:
+          - alias: num_intervals
+          - alias: start_end
+            exact_cardinality: 2
+        range: float64
         required: false
         multivalued: false
       obs_intervals_index:
@@ -291,21 +458,14 @@ classes:
             value: neurodata_type_inc
         description: Index into the obs_intervals dataset.
         range: VectorIndex
-        required: false
-        multivalued: false
-      obs_intervals:
-        name: obs_intervals
-        description: Observation intervals for each unit.
-        array:
-          dimensions:
-          - alias: num_intervals
-          - alias: start_end
-            exact_cardinality: 2
-        range: float64
-        required: false
-        multivalued: false
-      electrodes_index:
-        name: electrodes_index
+        inlined: true
+      spike_times:
+        name: spike_times
+        description: Spike times for each unit.
+        range: Units__spike_times
+        inlined: true
+      spike_times_index:
+        name: spike_times_index
         annotations:
           named:
             tag: named
@@ -313,61 +473,19 @@ classes:
           source_type:
             tag: source_type
             value: neurodata_type_inc
-        description: Index into electrodes.
+        description: Index into the spike_times dataset.
         range: VectorIndex
-        required: false
-        multivalued: false
-      electrodes:
-        name: electrodes
-        annotations:
-          named:
-            tag: named
-            value: true
-          source_type:
-            tag: source_type
-            value: neurodata_type_inc
-        description: Electrode that each spike unit came from, specified using a DynamicTableRegion.
-        range: DynamicTableRegion
-        required: false
-        multivalued: false
-      electrode_group:
-        name: electrode_group
-        description: Electrode group that each spike unit came from.
-        range: ElectrodeGroup
-        required: false
-        multivalued: true
+        inlined: true
       waveform_mean:
         name: waveform_mean
         description: Spike waveform mean for each spike unit.
-        range: float32
-        required: false
-        multivalued: false
-        any_of:
-        - array:
-            dimensions:
-            - alias: num_units
-            - alias: num_samples
-        - array:
-            dimensions:
-            - alias: num_units
-            - alias: num_samples
-            - alias: num_electrodes
+        range: Units__waveform_mean
+        inlined: true
       waveform_sd:
         name: waveform_sd
         description: Spike waveform standard deviation for each spike unit.
-        range: float32
-        required: false
-        multivalued: false
-        any_of:
-        - array:
-            dimensions:
-            - alias: num_units
-            - alias: num_samples
-        - array:
-            dimensions:
-            - alias: num_units
-            - alias: num_samples
-            - alias: num_electrodes
+        range: Units__waveform_sd
+        inlined: true
     tree_root: true
   Units__spike_times:
     name: Units__spike_times
@@ -377,6 +495,7 @@ classes:
       name:
         name: name
         ifabsent: string(spike_times)
+        identifier: true
         range: string
         required: true
         equals_string: spike_times
@@ -389,3 +508,51 @@ classes:
           for the spike time to be between samples.
         range: float64
         required: false
+  Units__waveform_mean:
+    name: Units__waveform_mean
+    description: Spike waveform mean for each spike unit.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(waveform_mean)
+        identifier: true
+        range: string
+        required: true
+        equals_string: waveform_mean
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        ifabsent: string(volts)
+        range: text
+        required: false
+        equals_string: volts
+  Units__waveform_sd:
+    name: Units__waveform_sd
+    description: Spike waveform standard deviation for each spike unit.
+    is_a: VectorData
+    attributes:
+      name:
+        name: name
+        ifabsent: string(waveform_sd)
+        identifier: true
+        range: string
+        required: true
+        equals_string: waveform_sd
+      sampling_rate:
+        name: sampling_rate
+        description: Sampling rate, in hertz.
+        range: float32
+        required: false
+      unit:
+        name: unit
+        description: Unit of measurement. This value is fixed to 'volts'.
+        ifabsent: string(volts)
+        range: text
+        required: false
+        equals_string: volts
