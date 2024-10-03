@@ -73,8 +73,14 @@ def test_nwbfile_dump(read_nwbfile):
     electrodes = read_nwbfile.general.extracellular_ephys.electrodes.model_dump_json(
         round_trip=True
     )
+    data = read_nwbfile.general.model_dump_json(round_trip=True)
+
+    file = read_nwbfile.model_dump_json(
+        round_trip=True, exclude_none=True, exclude_unset=True, exclude_defaults=True
+    )
+
     # data = read_nwbfile.model_dump_json(round_trip=True, serialize_as_any=True)
-    # pdb.set_trace()
+    pdb.set_trace()
 
 
 def test_timeseries(read_nwbfile, read_pynwb):
