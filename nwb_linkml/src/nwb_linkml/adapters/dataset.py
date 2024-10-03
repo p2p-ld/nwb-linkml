@@ -642,7 +642,7 @@ class MapNVectors(DatasetMap):
             cls.name is None
             and cls.neurodata_type_def is None
             and cls.neurodata_type_inc
-            and cls.neurodata_type_inc != "VectorData"
+            and cls.neurodata_type_inc not in ("VectorData", "VectorIndex")
             and cls.quantity in ("*", "+")
         )
 
@@ -681,10 +681,10 @@ class MapNVectorData(DatasetMap):
         Check for being an unnamed multivalued vector class that IS VectorData
         """
         return (
-            (cls.name is None or cls.name == "vector_data")
+            (cls.name is None or cls.name in ("vector_data", "vector_index"))
             and cls.neurodata_type_def is None
             and cls.neurodata_type_inc
-            and cls.neurodata_type_inc == "VectorData"
+            and cls.neurodata_type_inc in ("VectorData", "VectorIndex")
             and cls.quantity in ("*", "+")
         )
 
