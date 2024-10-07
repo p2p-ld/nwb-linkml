@@ -104,19 +104,6 @@ MAP_HDMF_DATATYPE_INC = KeyMap(
 )
 
 
-class MAP_TYPES(StrEnum):
-    """
-    Types of mapping that can exist
-
-    .. todo::
-
-        This is likely deprecated, check usage.
-    """
-
-    key = "key"
-    """Mapping the name of one key to another key"""
-
-
 def apply_postload(ns_dict: dict) -> dict:
     """Apply all post-load maps to a YAML schema"""
     maps = [m for m in KeyMap.instances if m.phase == PHASES.postload]

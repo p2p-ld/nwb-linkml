@@ -3,8 +3,13 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from nwb_linkml.io.hdf5 import HDF5IO, filter_dependency_graph, hdf_dependency_graph, truncate_file
-from nwb_linkml.maps.hdf5 import resolve_hardlink
+from nwb_linkml.io.hdf5 import (
+    HDF5IO,
+    filter_dependency_graph,
+    hdf_dependency_graph,
+    truncate_file,
+    resolve_hardlink,
+)
 
 
 @pytest.mark.skip()

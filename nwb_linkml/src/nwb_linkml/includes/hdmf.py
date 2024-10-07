@@ -13,10 +13,10 @@ from typing import (
     List,
     Optional,
     Tuple,
-    TypeVar,
     Union,
     overload,
 )
+from typing_extensions import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -36,8 +36,8 @@ from pydantic import (
 if TYPE_CHECKING:  # pragma: no cover
     from nwb_models.models import VectorData, VectorIndex
 
-T = TypeVar("T", bound=NDArray)
-T_INJECT = 'T = TypeVar("T", bound=NDArray)'
+T = TypeVar("T", default=NDArray)
+T_INJECT = 'T = TypeVar("T", default=NDArray)'
 
 if "pytest" in sys.modules:
     from nwb_models.models import ConfiguredBaseModel
@@ -71,7 +71,7 @@ class DynamicTableMixin(ConfiguredBaseModel):
     """
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-    __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
+    __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin"]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "id",
         "name",
@@ -899,10 +899,10 @@ DYNAMIC_TABLE_IMPORTS = Imports(
                 ObjectImport(name="Generic"),
                 ObjectImport(name="Iterable"),
                 ObjectImport(name="Tuple"),
-                ObjectImport(name="TypeVar"),
                 ObjectImport(name="overload"),
             ],
         ),
+        Import(module="typing_extensions", objects=[ObjectImport(name="TypeVar")]),
         Import(
             module="numpydantic", objects=[ObjectImport(name="NDArray"), ObjectImport(name="Shape")]
         ),

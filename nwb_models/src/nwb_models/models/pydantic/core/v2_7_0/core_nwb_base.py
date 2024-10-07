@@ -17,10 +17,10 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    TypeVar,
     Union,
     overload,
 )
+from typing_extensions import TypeVar
 
 import numpy as np
 from numpydantic import NDArray, Shape
@@ -154,7 +154,7 @@ class LinkMLMeta(RootModel):
 
 NUMPYDANTIC_VERSION = "1.2.1"
 
-T = TypeVar("T", bound=NDArray)
+T = TypeVar("T", default=NDArray)
 
 
 class VectorDataMixin(ConfiguredBaseModel, Generic[T]):
@@ -364,7 +364,7 @@ class TimeSeriesReferenceVectorData(TimeSeriesReferenceVectorDataMixin, VectorDa
         description="""Number of data samples available in this time series, during this epoch""",
         json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},
     )
-    timeseries: NDArray[Shape["*"], TimeSeries] = Field(
+    timeseries: List[TimeSeries] = Field(
         ...,
         description="""The TimeSeries that this index applies to""",
         json_schema_extra={"linkml_meta": {"array": {"exact_number_dimensions": 1}}},

@@ -4,10 +4,23 @@ Base class for adapters
 
 import os
 import sys
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Any, Generator, List, Literal, Optional, Tuple, Type, TypeVar, Union, overload
+from typing import (
+    Any,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    overload,
+    Sequence,
+    Mapping,
+)
 
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import (
@@ -271,6 +284,23 @@ class Adapter(BaseModel):
         for item in self.walk(input):
             if any([type(item) is atype for atype in get_type]):
                 yield item
+
+
+class Map(ABC):
+    """
+    The generic top-level mapping class is just a classmethod for checking if the map applies and a
+    method for applying the check if it does
+    """
+
+    @classmethod
+    @abstractmethod
+    def check(cls, *args: Sequence, **kwargs: Mapping) -> bool:
+        """Check if this map applies to the given item to read"""
+
+    @classmethod
+    @abstractmethod
+    def apply(cls, *args: Sequence, **kwargs: Mapping) -> Any:
+        """Actually apply the map!"""
 
 
 def is_1d(cls: Dataset | Attribute) -> bool:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pdb
 import re
 import sys
 from datetime import date, datetime, time
@@ -15,10 +16,10 @@ from typing import (
     Literal,
     Optional,
     Tuple,
-    TypeVar,
     Union,
     overload,
 )
+from typing_extensions import TypeVar
 
 import numpy as np
 import pandas as pd
@@ -153,7 +154,8 @@ class LinkMLMeta(RootModel):
 
 NUMPYDANTIC_VERSION = "1.2.1"
 
-T = TypeVar("T", bound=NDArray)
+T = TypeVar("T", default=NDArray)
+U = TypeVar("U", default=NDArray)
 
 
 class VectorDataMixin(ConfiguredBaseModel, Generic[T]):
@@ -364,7 +366,7 @@ class DynamicTableMixin(ConfiguredBaseModel):
     """
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-    __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin", "NDArray", list]]
+    __pydantic_extra__: Dict[str, Union["VectorDataMixin", "VectorIndexMixin"]]
     NON_COLUMN_FIELDS: ClassVar[tuple[str]] = (
         "id",
         "name",
@@ -657,10 +659,14 @@ class DynamicTableMixin(ConfiguredBaseModel):
         Ensure that all columns are equal length
         """
         lengths = [len(v) for v in self._columns.values() if v is not None] + [len(self.id)]
-        assert all([length == lengths[0] for length in lengths]), (
-            "DynamicTable columns are not of equal length! "
-            f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
-        )
+
+        try:
+            assert all([length == lengths[0] for length in lengths]), (
+                "DynamicTable columns are not of equal length! "
+                f"Got colnames:\n{self.colnames}\nand lengths: {lengths}"
+            )
+        except AssertionError:
+            pdb.set_trace()
         return self
 
     @field_validator("*", mode="wrap")
@@ -958,7 +964,7 @@ class ElementIdentifiers(ElementIdentifiersMixin, Data):
     name: str = Field(
         "element_id", json_schema_extra={"linkml_meta": {"ifabsent": "string(element_id)"}}
     )
-    value: Optional[T] = Field(
+    value: Optional[NDArray] = Field(
         None,
         json_schema_extra={"linkml_meta": {"array": {"dimensions": [{"alias": "num_elements"}]}}},
     )
