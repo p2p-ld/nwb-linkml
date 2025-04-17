@@ -12,10 +12,7 @@ sphinx:
 
 python:
   install:
-    - method: pip
-      path: nwb_linkml
-      extra_requirements:
-        - docs
+    - requirements: requirements-docs.txt
 
 
 build:
