@@ -64,7 +64,7 @@ jupyter-cache==1.0.0
 jupyter_client==8.6.2
 jupyter_core==5.7.2
 jupyterlab_widgets==3.0.13
-linkml @ git+https://github.com/sneakers-the-rat/linkml@0247c0b1e1a87366e0e047449e604881870c4e98
+linkml @ git+https://github.com/sneakers-the-rat/linkml@nwb-linkml
 linkml-dataops==0.1.0
 linkml-runtime==1.8.2
 markdown-it-py==3.0.0
