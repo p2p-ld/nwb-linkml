@@ -34,4 +34,4 @@ def test_peek_yaml(key, expected, root, first, yaml_file):
         with pytest.raises(KeyError):
             _ = yaml_peek(key, yaml_file, root=root, first=first)
     else:
-        assert yaml_peek(key, yaml_file, root=root, first=first)
+        assert yaml_peek(key, yaml_file, root=root, first=first) == expected

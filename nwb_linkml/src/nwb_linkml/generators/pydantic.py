@@ -284,9 +284,9 @@ class AfterGenerateClass:
             cls.cls.bases = ["AlignedDynamicTableMixin", "DynamicTable"]
         elif cls.cls.name == "ElementIdentifiers":
             cls.cls.bases = ["ElementIdentifiersMixin", "Data"]
-            # make ``value`` generic on T
+            # Formerly make this generic, but that breaks json serialization
             if "value" in cls.cls.attributes:
-                cls.cls.attributes["value"].range = "Optional[T]"
+                cls.cls.attributes["value"].range = "Optional[NDArray]"
         elif cls.cls.name == "TimeSeriesReferenceVectorData":
             # in core.nwb.base, so need to inject and import again
             cls.cls.bases = ["TimeSeriesReferenceVectorDataMixin", "VectorData"]

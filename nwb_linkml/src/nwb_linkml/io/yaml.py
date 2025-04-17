@@ -55,9 +55,9 @@ def yaml_peek(
         str
     """
     if root:
-        pattern = re.compile(rf"^(?P<key>{key}):\s*(?P<value>\S.*)")
+        pattern = re.compile(rf"^(?P<key>{key}):\s*(?P<value>\S.*)", flags=re.MULTILINE)
     else:
-        pattern = re.compile(rf"^\s*(?P<key>{key}):\s*(?P<value>\S.*)")
+        pattern = re.compile(rf"^\s*(?P<key>{key}):\s*(?P<value>\S.*)", flags=re.MULTILINE)
 
     res = None
     if first:

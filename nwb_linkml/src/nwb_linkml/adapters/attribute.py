@@ -7,9 +7,8 @@ from typing import ClassVar, Optional, Type, TypedDict
 
 from linkml_runtime.linkml_model.meta import SlotDefinition
 
-from nwb_linkml.adapters.adapter import Adapter, BuildResult, defaults, is_1d
+from nwb_linkml.adapters.adapter import Adapter, BuildResult, defaults, is_1d, Map
 from nwb_linkml.adapters.array import ArrayAdapter
-from nwb_linkml.maps import Map
 from nwb_linkml.maps.dtype import handle_dtype, inlined
 from nwb_schema_language import Attribute
 
