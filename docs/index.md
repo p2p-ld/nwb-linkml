@@ -251,6 +251,7 @@ intro/translation
 
 guide/quickstart
 guide/overview
+guide/examples
 ```
 
 ````{only} minimal

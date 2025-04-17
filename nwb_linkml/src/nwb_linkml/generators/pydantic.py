@@ -46,7 +46,7 @@ class NWBPydanticGenerator(PydanticGenerator):
     """
     Subclass of pydantic generator, custom behavior is in overridden lifecycle methods :)
     """
-
+    metadata_mode = None
     injected_fields: List[str] = (
         (
             'hdf5_path: Optional[str] = Field(None, description="The absolute path that this object'
@@ -148,11 +148,14 @@ class NWBPydanticGenerator(PydanticGenerator):
 
     def before_render_template(self, template: PydanticModule, sv: SchemaView) -> PydanticModule:
         """
-        Remove source file from metadata
+        - Remove source file from metadata
+        - put typing_extensions imports at the end
         """
         if "source_file" in template.meta:
             del template.meta["source_file"]
+        template.python_imports = sorted(template.python_imports, key=lambda x: x.module == "typing_extensions")
         return template
+
 
 
 class AfterGenerateSlot:

@@ -20,7 +20,7 @@ from typing_extensions import TypeVar
 
 import numpy as np
 import pandas as pd
-from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport
+from linkml.generators.pydanticgen.template import Import, Imports, ObjectImport, ConditionalImport
 from numpydantic import NDArray, Shape
 from pydantic import (
     BaseModel,
@@ -892,6 +892,7 @@ class ElementIdentifiersMixin(VectorDataMixin):
 DYNAMIC_TABLE_IMPORTS = Imports(
     imports=[
         Import(module="pandas", alias="pd"),
+        Import(module="sys"),
         Import(
             module="typing",
             objects=[
@@ -902,7 +903,9 @@ DYNAMIC_TABLE_IMPORTS = Imports(
                 ObjectImport(name="overload"),
             ],
         ),
-        Import(module="typing_extensions", objects=[ObjectImport(name="TypeVar")]),
+        ConditionalImport(condition="sys.version_info < (3, 13)", module="typing_extensions", objects=[ObjectImport(name="TypeVar")],
+                          alternative=Import(module="typing", objects=[ObjectImport(name="TypeVar")])
+                          ),
         Import(
             module="numpydantic", objects=[ObjectImport(name="NDArray"), ObjectImport(name="Shape")]
         ),
@@ -937,16 +940,19 @@ DYNAMIC_TABLE_INJECTS = [
 
 TSRVD_IMPORTS = Imports(
     imports=[
+        Import(module="sys"),
         Import(
             module="typing",
             objects=[
                 ObjectImport(name="Generic"),
                 ObjectImport(name="Iterable"),
                 ObjectImport(name="Tuple"),
-                ObjectImport(name="TypeVar"),
                 ObjectImport(name="overload"),
             ],
         ),
+        ConditionalImport(condition="sys.version_info < (3, 13)", module="typing_extensions", objects=[ObjectImport(name="TypeVar")],
+                          alternative=Import(module="typing", objects=[ObjectImport(name="TypeVar")])
+                          ),
         Import(module="pydantic", objects=[ObjectImport(name="model_validator")]),
     ]
 )

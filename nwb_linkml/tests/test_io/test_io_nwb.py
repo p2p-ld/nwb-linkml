@@ -122,3 +122,4 @@ def test_read_from_yaml(nwb_file):
     Read data from a yaml-fied NWB file
     """
     pass
+

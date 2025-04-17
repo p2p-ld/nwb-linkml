@@ -45,6 +45,7 @@ docs = [
     "ipykernel>=6.25.2",
     "ipywidgets>=8.1.1",
     "sphinx-jinja>=2.0.2",
+    "great-tables>=0.17.0",
 ]
 plot = [
     "dash<3.0.0,>=2.12.1",
