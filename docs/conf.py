@@ -40,11 +40,11 @@ extensions = [
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.venv', "jupyter_execute"]
-if os.environ.get('SPHINX_MINIMAL', None) == 'True':
-    exclude_patterns.append('**/models')
-    tags.add('minimal')
-else:
-    tags.add('full')
+# if os.environ.get('SPHINX_MINIMAL', None) == 'True':
+exclude_patterns.append('**/models')
+tags.add('minimal')
+# else:
+#     tags.add('full')
 
 
 
