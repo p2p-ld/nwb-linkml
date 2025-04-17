@@ -38,7 +38,6 @@ greenlet==3.0.3
 h11==0.14.0
 h5py==3.11.0
 hbreader==0.9.1
-hdmf==4.0.0
 htmltools==0.6.0
 idna==3.8
 imagesize==1.4.1
@@ -105,7 +104,7 @@ pydantic-settings==2.4.0
 pydantic_core==2.20.1
 Pygments==2.18.0
 PyJSG==0.11.10
-pynwb==3.0.0
+pynwb==2.8.3
 pyparsing==3.1.4
 PyShEx==0.8.1
 PyShExC==0.9.1
