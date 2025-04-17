@@ -75,12 +75,9 @@ def test_nwbfile_dump(read_nwbfile):
     )
     data = read_nwbfile.general.model_dump_json(round_trip=True)
 
-    file = read_nwbfile.model_dump_json(
-        round_trip=True, exclude_none=True, exclude_unset=True, exclude_defaults=True
-    )
+    file = read_nwbfile.model_dump_json(round_trip=True, exclude_none=True, exclude_unset=True)
 
-    # data = read_nwbfile.model_dump_json(round_trip=True, serialize_as_any=True)
-    pdb.set_trace()
+    data = read_nwbfile.model_dump_json(round_trip=True)
 
 
 def test_timeseries(read_nwbfile, read_pynwb):
