@@ -26,7 +26,6 @@ import h5py
 from myst_nb import glue
 from rich import print
 from rich.pretty import pprint
-from great_tables import GT, html
 from IPython.display import display, Markdown
 import pandas as pd
 import numpy as np

@@ -33,7 +33,7 @@ repository = "https://github.com/p2p-ld/nwb-linkml/"
 documentation = "https://nwb-linkml.readthedocs.io"
 
 [project.optional-dependencies]
-nwb = ["pynwb>=2.8.1"]
+nwb = ["pynwb>=2.8.1", "hdmf>=3.14.3"]
 docs = [
     "nwb-linkml[nwb]",
     "sphinx<8.0.0,>=7.2.5",
