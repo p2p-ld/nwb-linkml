@@ -33,7 +33,9 @@ repository = "https://github.com/p2p-ld/nwb-linkml/"
 documentation = "https://nwb-linkml.readthedocs.io"
 
 [project.optional-dependencies]
+nwb = ["pynwb>=2.8.1"]
 docs = [
+
     "sphinx<8.0.0,>=7.2.5",
     "furo>=2023.8.19",
     "myst-parser>=2.0.0",
@@ -45,19 +47,18 @@ docs = [
     "ipykernel>=6.25.2",
     "ipywidgets>=8.1.1",
     "sphinx-jinja>=2.0.2",
-    "great-tables>=0.17.0",
 ]
 plot = [
     "dash<3.0.0,>=2.12.1",
     "dash-cytoscape<1.0.0,>=0.3.0",
 ]
 tests = [
+    "nwb-linkml[nwb]",
     "pytest>=8.0.0",
     "pytest-depends<2.0.0,>=1.0.1",
     "pytest-cov<5.0.0,>=4.1.0",
     "sybil>=6.0.3",
     "requests-cache>=1.2.1",
-    "pynwb>=2.8.1",
 ]
 dev = [
     "nwb-linkml[tests,docs]",
