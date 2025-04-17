@@ -35,7 +35,7 @@ documentation = "https://nwb-linkml.readthedocs.io"
 [project.optional-dependencies]
 nwb = ["pynwb>=2.8.1"]
 docs = [
-
+    "nwb-linkml[nwb]",
     "sphinx<8.0.0,>=7.2.5",
     "furo>=2023.8.19",
     "myst-parser>=2.0.0",
